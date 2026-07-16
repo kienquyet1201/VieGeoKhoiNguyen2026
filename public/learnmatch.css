@@ -1,0 +1,129 @@
+/* ============================================================
+   VieGeo - CORE DESIGN SYSTEM (viegeo.css)
+   Shared variables & utility classes
+   Synced with loginout.css & bento.css
+============================================================ */
+
+:root {
+    /* Base Colors */
+    --bg-main: #0a1628;
+    --bg-card: #101d30;
+    --bg-hover: rgba(255,255,255,0.05);
+
+    --text-primary: #ffffff;
+    --text-muted: #8b97a8;
+    --text-dark: #3c3c3c;
+
+    /* Brand Accents */
+    --green: #58cc02;
+    --green-shadow: #48a302;
+    --green-light: #d7ffb8;
+
+    --blue: #1cb0f6;
+    --blue-shadow: #1899d6;
+
+    --purple: #ce82ff;
+    --purple-shadow: #a568cc;
+
+    --red: #ff4b4b;
+    --red-shadow: #ea2b2b;
+    --red-light: #ffdfe0;
+
+    --gold: #ffc800;
+    --gold-shadow: #cfa000;
+
+    --gray-bg: #1a2a3a;
+    --gray-border: rgba(255,255,255,0.10);
+    --gray-light-border: rgba(255,255,255,0.08);
+
+    --font-heading: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+}
+
+/* ── GAMIFIED BUTTONS ── */
+.btn-game {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 14px;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.btn-game:active {
+    transform: translateY(3px);
+    box-shadow: 0 0 0 transparent !important;
+}
+
+.btn-primary {
+    background: var(--green);
+    color: white;
+    box-shadow: 0 4px 0 var(--green-shadow);
+}
+.btn-primary:hover { filter: brightness(1.1); }
+
+.btn-secondary {
+    background: var(--blue);
+    color: white;
+    box-shadow: 0 4px 0 var(--blue-shadow);
+}
+.btn-secondary:hover { filter: brightness(1.1); }
+
+.btn-outline {
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--gray-border);
+    box-shadow: 0 4px 0 rgba(255,255,255,0.05);
+}
+.btn-outline:hover { background: var(--bg-hover); }
+
+/* ── FORM ELEMENTS ── */
+.form-input {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid var(--gray-border);
+    color: white;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    border-color: var(--blue);
+    background: rgba(28,176,246,0.06);
+    box-shadow: 0 0 0 3px rgba(28,176,246,0.10);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}

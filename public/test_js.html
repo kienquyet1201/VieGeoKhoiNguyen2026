@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test JS Errors</title>
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            var msg = `Error: ${message}\nSource: ${source}\nLine: ${lineno}:${colno}\nStack: ${error ? error.stack : ''}`;
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:8081/log_error", false);
+            xhr.send(encodeURIComponent(msg));
+            return false;
+        };
+        // Mock dependencies
+        window.db = { collection: function() { return { doc: function() { return { get: async function() { return {exists:false}; } } } } } };
+        window.firebase = {};
+        window.emailjs = { init: function(){}, send: async function(){} };
+        localStorage.setItem('lm_session', JSON.stringify({email: 'test@gmail.com', name: 'Test User'}));
+    </script>
+</head>
+<body>
+    <div id="btnConfirmPremium"></div>
+    <div id="premiumTransferContent"></div>
+    <div id="qrCodeImage"></div>
+    
+    <!-- Load scripts -->
+    <script src="gamedata.js"></script>
+    <script src="app-core.js"></script>
+    <script>
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:8081/log_error", false);
+        xhr.send(encodeURIComponent("SUCCESS: No syntax errors detected!"));
+    </script>
+</body>
+</html>

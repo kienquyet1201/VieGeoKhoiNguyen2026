@@ -1,0 +1,531 @@
+/* ============================================================
+   VieGeo - BENTO UI (bento.css)
+   Premium Dark Glassmorphism — Synced with loginout.css
+   Base: #0a1628 | Accents: blue #1cb0f6, green #58cc02,
+   purple #ce82ff, red #ff4b4b, gold #ffc800
+============================================================ */
+
+:root {
+    --bg-dark: #0a1628;
+    --bg-card: rgba(255,255,255,0.04);
+    --bento-border: rgba(255,255,255,0.08);
+
+    /* Accent Colors */
+    --blue: #1cb0f6;
+    --green: #58cc02;
+    --purple: #ce82ff;
+    --red: #ff4b4b;
+    --gold: #ffc800;
+
+    /* Gradients */
+    --holo-1: linear-gradient(135deg, #ff6b6b, #556270);
+    --holo-2: linear-gradient(135deg, #1cb0f6, #ce82ff);
+    --holo-3: linear-gradient(135deg, #58cc02, #00b09b);
+
+    /* Text */
+    --text-main: #f0f4f8;
+    --text-dim: rgba(255,255,255,0.45);
+    --text-primary: #ffffff;
+
+    /* Radius */
+    --radius-lg: 28px;
+    --radius-md: 20px;
+    --radius-sm: 14px;
+
+    --blur: blur(24px);
+
+    --font-heading: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Plus Jakarta Sans', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg-dark);
+    background-image:
+        radial-gradient(ellipse 80% 60% at 15% 80%, rgba(28,176,246,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 20%, rgba(206,130,255,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 40% at 50% 50%, rgba(88,204,2,0.05) 0%, transparent 60%);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+}
+
+/* ── LAYOUT ── */
+.app-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* ── SIDEBAR ── */
+.bento-sidebar {
+    width: 240px;
+    background: var(--bg-card);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--bento-border);
+    border-radius: var(--radius-lg);
+    padding: 28px 18px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.app-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 36px;
+    padding: 0 12px;
+    letter-spacing: 0.5px;
+}
+
+.app-logo i {
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #1cb0f6, #58cc02);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 6px rgba(28,176,246,0.3));
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    font-family: var(--font-body);
+}
+
+.nav-btn i {
+    font-size: 1.2rem;
+    width: 22px;
+    text-align: center;
+}
+
+.nav-btn:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-main);
+}
+
+.nav-btn.active {
+    background: rgba(28,176,246,0.08);
+    color: #fff;
+    border: 1px solid rgba(28,176,246,0.15);
+}
+
+.nav-btn.active i {
+    background: linear-gradient(135deg, #1cb0f6, #ce82ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ── MAIN CONTENT ── */
+.bento-main {
+    flex: 1;
+    background: var(--bg-card);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border: 1px solid var(--bento-border);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+/* ── TABS ── */
+.tab-pane {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 40px;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(16px);
+    transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+
+.tab-pane.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.tab-pane::-webkit-scrollbar { width: 6px; }
+.tab-pane::-webkit-scrollbar-track { background: transparent; }
+.tab-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
+.tab-pane::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+/* ── STATS HEADER (Top Right Pills) ── */
+.stats-header {
+    position: absolute;
+    top: 20px; right: 36px;
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+}
+
+.stat-pill {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--bento-border);
+    backdrop-filter: blur(12px);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ── BENTO CARDS ── */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.bento-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--bento-border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+.bento-card:hover {
+    background: rgba(255,255,255,0.06);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+}
+
+.bento-card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bento-card-desc {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+/* ── BENTO BUTTONS ── */
+.bento-btn {
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.bento-btn:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-2px);
+}
+
+/* ── ISLAND PATH (Learning Nodes) ── */
+.island-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 100px;
+    position: relative;
+}
+
+.island-line {
+    position: absolute;
+    top: 0; bottom: 0; left: 50%;
+    width: 2px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.15) 50%, transparent 50%);
+    background-size: 2px 20px;
+    z-index: 0;
+}
+
+.island-node {
+    position: relative;
+    z-index: 1;
+    width: 140px;
+    height: 140px;
+    margin: 30px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s;
+}
+
+.island-node:nth-child(even) { transform: translateX(100px); }
+.island-node:nth-child(odd)  { transform: translateX(-100px); }
+
+.island-btn {
+    width: 100px;
+    height: 100px;
+    border-radius: 28px;
+    border: none;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+    color: white;
+    font-size: 2.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.island-btn.current {
+    background: var(--holo-3);
+    box-shadow: 0 12px 30px rgba(88,204,2,0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+    animation: floatIsland 3s ease-in-out infinite;
+}
+
+.island-btn.completed {
+    background: var(--holo-2);
+    box-shadow: 0 12px 24px rgba(28,176,246,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.island-btn.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: rgba(0,0,0,0.4);
+}
+
+.island-btn:not(.locked):hover {
+    transform: translateY(-5px) scale(1.05);
+}
+
+@keyframes floatIsland {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+/* ── NODE BUTTONS (for map.js lesson view) ── */
+.node-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.node-btn.current {
+    animation: floatIsland 3s ease-in-out infinite;
+}
+
+.node-btn.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.node-btn:not(.locked):hover {
+    transform: translateY(-4px) scale(1.08);
+}
+
+/* ── LEADERBOARD ── */
+.lb-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lb-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
+    transition: background 0.2s;
+}
+
+.lb-item:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+.lb-item.is-me {
+    background: rgba(255,200,0,0.08);
+    border-color: rgba(255,200,0,0.20);
+}
+
+.lb-rank {
+    font-size: 1.4rem;
+    font-weight: 800;
+    width: 40px;
+    color: var(--text-dim);
+}
+
+.lb-avatar {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4rem;
+    margin-right: 14px;
+}
+
+.lb-info { flex: 1; }
+.lb-name { font-weight: 700; font-size: 1rem; }
+.lb-xp   { font-weight: 800; color: var(--blue); }
+
+/* ── GRADE FILTER CHIPS ── */
+.grade-chip {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.grade-chip:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.08);
+}
+
+.grade-chip.active {
+    background: var(--blue);
+    color: white;
+    box-shadow: 0 4px 12px rgba(28,176,246,0.3);
+}
+
+/* ── ACHIEVEMENTS ── */
+.completed-achievement {
+    animation: glowPulse 2s infinite alternate !important;
+}
+
+@keyframes glowPulse {
+    from { box-shadow: 0 0 8px rgba(255,200,0,0.15); }
+    to   { box-shadow: 0 0 24px rgba(255,200,0,0.6); }
+}
+
+/* ── AVATAR PRESETS ── */
+.avatar-preset {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid transparent;
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    font-size: 1.4rem;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-preset:hover {
+    border-color: var(--blue);
+    background: rgba(28,176,246,0.1);
+    transform: scale(1.1);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .app-container {
+        flex-direction: column;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .bento-sidebar {
+        width: 100%;
+        flex-direction: row;
+        padding: 12px;
+        border-radius: 16px;
+        overflow-x: auto;
+    }
+
+    .app-logo {
+        display: none;
+    }
+
+    .nav-menu {
+        flex-direction: row;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .nav-btn {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .nav-btn span { display: none; }
+
+    .bento-main {
+        border-radius: 16px;
+    }
+
+    .tab-pane {
+        padding: 20px;
+    }
+
+    .stats-header {
+        top: 12px; right: 16px;
+    }
+
+    .bento-grid {
+        grid-template-columns: 1fr;
+    }
+}

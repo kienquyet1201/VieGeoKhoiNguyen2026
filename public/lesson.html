@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Bài Học</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="lesson.css">
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <header class="top-bar">
+        <button class="btn-close" onclick="window.location.href='map.html'"><i class="fa-solid fa-xmark"></i></button>
+        
+        <!-- NORMAL UI (Progress + Hearts) -->
+        <div class="progress-container" id="normalProgress">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="hearts-container" id="hearts-count">
+            <i class="fa-solid fa-heart"></i> 5
+        </div>
+        <div id="normalTimer" style="background: rgba(255, 75, 75, 0.2); color: #ff4b4b; border: 1px solid #ff4b4b; border-radius: 15px; padding: 5px 12px; margin-left: 10px; font-weight: bold; font-family: var(--font-heading); display: none;">
+            <i class="fa-solid fa-clock"></i> <span id="normalTimerText">30s</span>
+        </div>
+
+        <!-- ── ARENA TUG OF WAR UI (Hidden by default) ── -->
+        <div id="arenaTugOfWar" style="display: none; flex: 1; margin: 0 20px; position: relative; height: 30px; background: var(--bg-dark); border-radius: 15px; overflow: hidden; border: 2px solid var(--gray-border);">
+            <!-- Dải màu Đỏ (Đối thủ) và Xanh (Mình) -->
+            <div id="arenaTowOpponent" style="position: absolute; top: 0; right: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #ff4b4b, #ff7676); transition: width 0.3s ease;"></div>
+            <div id="arenaTowMe" style="position: absolute; top: 0; left: 0; height: 100%; width: 50%; background: linear-gradient(90deg, #1cb0f6, #4bcaff); transition: width 0.3s ease;"></div>
+            <!-- Đồng hồ đếm ngược -->
+            <div id="arenaTimerDisplay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-main); color: #ffc800; padding: 2px 10px; border-radius: 10px; font-weight: bold; border: 2px solid #ffc800; font-family: var(--font-heading); z-index: 10;">
+                60s
+            </div>
+        </div>
+
+        <!-- ── ARENA BUFFS ── -->
+        <div id="arenaBuffs" style="display: none; gap: 10px;">
+            <button id="btnUseDouble" class="bento-btn" style="padding: 5px 10px; font-size: 0.9rem; background: rgba(255,200,0,0.2); color: #ffc800; border: 1px solid #ffc800;">
+                <i class="fa-solid fa-bolt"></i> x2 (<span id="countDouble">0</span>)
+            </button>
+            <button id="btnUse5050" class="bento-btn" style="padding: 5px 10px; font-size: 0.9rem; background: rgba(206,130,255,0.2); color: #ce82ff; border: 1px solid #ce82ff;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 50/50 (<span id="count5050">0</span>)
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN QUIZ AREA -->
+    <main class="quiz-container" id="quizContainer">
+        <h2 class="question-text" id="questionText">Đang tải câu hỏi...</h2>
+        
+        <div class="options-grid" id="optionsGrid">
+            <!-- Options injected by JS -->
+        </div>
+    </main>
+
+    <!-- THEORY READING AREA -->
+    <main class="theory-container" id="theoryContainer" style="display: none; max-width: 800px; margin: 20px auto; padding: 30px; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px solid var(--gray-border);">
+        <h2 id="theoryTitle" style="font-size: 2.5rem; color: var(--blue); margin-bottom: 20px; text-align: center;"></h2>
+        <img id="theoryImage" src="" style="width: 100%; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <p id="theoryContent" style="font-size: 1.2rem; line-height: 1.8; color: var(--text-main); margin-bottom: 40px; text-align: justify;"></p>
+        <button id="btnFinishTheory" class="bento-btn" style="width: 100%; font-size: 1.2rem; background: var(--green); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0 #46a302; font-weight: 800;">HOÀN THÀNH BÀI ĐỌC</button>
+    </main>
+
+    <!-- ── BOTTOM ACTION BAR ── -->
+    <footer class="bottom-bar" id="bottomBar">
+        <div class="feedback-msg" id="feedbackMsg">
+            <div class="feedback-icon" id="feedbackIcon"><i class="fa-solid fa-check"></i></div>
+            <div>
+                <div class="feedback-text" id="feedbackText">Tuyệt vời!</div>
+                <!-- THÊM PHẦN GIẢI THÍCH (EXPLANATION) -->
+                <div id="feedbackExplanation" style="margin-top: 5px; color: var(--text-primary); font-size: 1rem; max-width: 600px; display: none; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px;">
+                    <!-- JS renders explanation here -->
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn-check" id="btnCheck">Kiểm tra</button>
+    </footer>
+
+    <!-- Audio Effects -->
+    <audio id="sfxCorrect" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="sfxWrong" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sfxWin" src="https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3"></audio>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+
+    <script src="lesson.js"></script>
+</body>
+</html>
+

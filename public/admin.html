@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Admin Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-init.js"></script>
+    <!-- Mammoth.js for parsing Word Documents -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-dim: #94a3b8;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --gold: #f59e0b;
+        }
+        body {
+            margin: 0; padding: 20px; font-family: 'Inter', sans-serif;
+            background: var(--bg-dark); color: var(--text-primary);
+        }
+        h1 { color: var(--gold); border-bottom: 2px solid var(--bg-card); padding-bottom: 10px; }
+        .req-card {
+            background: var(--bg-card); padding: 15px; margin-bottom: 15px;
+            border-radius: 10px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .req-info h3 { margin: 0 0 5px 0; color: var(--blue); }
+        .req-info p { margin: 0; color: var(--text-dim); }
+        .btn-approve {
+            background: var(--green); color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+        .btn-approve:hover { opacity: 0.8; }
+        .btn-reject {
+            background: #ef4444; color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+        .btn-reject:hover { opacity: 0.8; }
+        #toast {
+            position: fixed; bottom: 20px; right: 20px; background: var(--blue);
+            color: white; padding: 15px; border-radius: 8px; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1><i class="fa-solid fa-screwdriver-wrench"></i> Quản Trị Hệ Thống VieGeo</h1>
+    
+    <!-- TABS -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--bg-card); padding-bottom: 10px;">
+        <button id="tabUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quản Lý Người Dùng & Premium</button>
+        <button id="tabUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload Câu Hỏi</button>
+        <button class="bento-btn" onclick="window.location.href='loginout.html'" style="margin-left: auto; background: rgba(255, 75, 75, 0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+    </div>
+
+    <!-- TAB: QUẢN LÝ NGƯỜI DÙNG -->
+    <div id="tabUsersContent">
+        <p>Danh sách các yêu cầu Nâng cấp Premium đang chờ duyệt:</p>
+
+        <div id="requestsList">Đang tải dữ liệu...</div>
+
+        <h2 style="color: var(--gold); margin-top: 40px;"><i class="fa-solid fa-users"></i> Quản Lý Người Dùng</h2>
+        <p>Danh sách người dùng hệ thống. Bạn có thể kick (buộc đăng xuất) họ ngay lập tức:</p>
+    
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="searchUser" placeholder="Tìm kiếm theo email..." style="padding: 10px; width: 100%; max-width: 400px; border-radius: 8px; border: 1px solid var(--gray-border); background: var(--bg-card); color: white; outline: none;">
+        <button onclick="loadUsers()" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-left: 10px;">Tìm</button>
+    </div>
+
+    <div id="usersList">Đang tải người dùng...</div>
+    </div> <!-- END TAB QUẢN LÝ -->
+
+    <!-- TAB: UPLOAD WORD -->
+    <div id="tabUploadContent" style="display: none;">
+        <h2 style="color: var(--gold);"><i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên Bộ Câu Hỏi (.docx / .txt)</h2>
+        <p style="color: var(--text-dim); margin-bottom: 20px;">Hệ thống sẽ bóc tách văn bản thành dạng câu hỏi trắc nghiệm và cập nhật vào Firebase.</p>
+        
+        <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 2px dashed var(--blue); text-align: center; margin-bottom: 20px;">
+            <i class="fa-solid fa-file-word" style="font-size: 3rem; color: var(--blue); margin-bottom: 15px;"></i><br>
+            <input type="file" id="fileUpload" accept=".docx,.txt" style="display: none;">
+            <button onclick="document.getElementById('fileUpload').click()" style="padding: 12px 25px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                Chọn File
+            </button>
+            <p id="fileNameDisplay" style="margin-top: 15px; color: var(--green); font-weight: bold;"></p>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <div style="flex: 1;">
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Gắn vào Khối Lớp:</label>
+                <select id="importGrade" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+                    <option value="5">Lớp 5</option>
+                    <option value="9">Lớp 9</option>
+                    <option value="12">Lớp 12</option>
+                </select>
+            </div>
+            <div style="flex: 1;">
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mã Bài Học (Lesson ID):</label>
+                <input type="text" id="importLessonId" placeholder="VD: node_5_0_1" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+            </div>
+        </div>
+
+        <button onclick="processUpload()" id="btnProcessUpload" style="padding: 15px; width: 100%; background: var(--green); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px;">
+            <i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật
+        </button>
+
+        <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">
+            Kết quả preview sẽ hiển thị ở đây...
+        </div>
+    </div> <!-- END TAB UPLOAD -->
+
+    <div id="toast">Thông báo</div>
+
+    <script>
+        function switchTab(tabId) {
+            const btnUsers = document.getElementById('tabUsersBtn');
+            const btnUpload = document.getElementById('tabUploadBtn');
+            const contentUsers = document.getElementById('tabUsersContent');
+            const contentUpload = document.getElementById('tabUploadContent');
+
+            if (tabId === 'users') {
+                btnUsers.style.background = 'var(--blue)';
+                btnUsers.style.color = 'white';
+                btnUsers.style.border = 'none';
+                
+                btnUpload.style.background = 'transparent';
+                btnUpload.style.color = 'var(--text-dim)';
+                btnUpload.style.border = '1px solid var(--text-dim)';
+
+                contentUsers.style.display = 'block';
+                contentUpload.style.display = 'none';
+            } else {
+                btnUpload.style.background = 'var(--blue)';
+                btnUpload.style.color = 'white';
+                btnUpload.style.border = 'none';
+                
+                btnUsers.style.background = 'transparent';
+                btnUsers.style.color = 'var(--text-dim)';
+                btnUsers.style.border = '1px solid var(--text-dim)';
+
+                contentUsers.style.display = 'none';
+                contentUpload.style.display = 'block';
+            }
+        }
+
+        // ==========================================
+        // UPLOAD & PARSE LOGIC
+        // ==========================================
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                document.getElementById('fileNameDisplay').textContent = "Đã chọn: " + e.target.files[0].name;
+            }
+        });
+
+        async function processUpload() {
+            const fileInput = document.getElementById('fileUpload');
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast("Vui lòng chọn file!");
+                return;
+            }
+
+            const grade = document.getElementById('importGrade').value;
+            const lessonId = document.getElementById('importLessonId').value.trim();
+            if (!lessonId) {
+                showToast("Vui lòng nhập Mã Bài Học (Lesson ID)!");
+                return;
+            }
+
+            const btn = document.getElementById('btnProcessUpload');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+            btn.disabled = true;
+
+            try {
+                let textContent = "";
+                if (file.name.endsWith('.txt')) {
+                    textContent = await file.text();
+                } else if (file.name.endsWith('.docx')) {
+                    if (typeof mammoth === 'undefined') {
+                        throw new Error("Thư viện Mammoth.js chưa được tải!");
+                    }
+                    const arrayBuffer = await file.arrayBuffer();
+                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    textContent = result.value;
+                } else {
+                    throw new Error("Định dạng file không hỗ trợ!");
+                }
+
+                // Parse logic (Simple rule: Question lines start with "Câu", answers with A/B/C/D)
+                const questions = parseTextToQuestions(textContent);
+                
+                document.getElementById('uploadPreview').textContent = JSON.stringify(questions, null, 2);
+
+                if (questions.length === 0) {
+                    throw new Error("Không trích xuất được câu hỏi nào từ file!");
+                }
+
+                // Simulate saving to Firebase (in reality, it modifies the central pool)
+                await db.collection('imported_questions').doc(lessonId).set({
+                    grade: grade,
+                    lessonId: lessonId,
+                    questions: questions,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: JSON.parse(localStorage.getItem('lm_session')).email
+                });
+
+                showToast(`Đã import thành công ${questions.length} câu hỏi!`);
+            } catch (err) {
+                console.error(err);
+                showToast("Lỗi: " + err.message);
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật';
+            btn.disabled = false;
+        }
+
+        function parseTextToQuestions(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const questions = [];
+            let currentQ = null;
+
+            lines.forEach(line => {
+                if (line.toLowerCase().startsWith('câu')) {
+                    if (currentQ) questions.push(currentQ);
+                    currentQ = { question: line, options: [], correctAnswer: 0, explanation: "Không có giải thích." };
+                } else if (currentQ && /^[A-D][\.\:]/.test(line)) {
+                    currentQ.options.push(line);
+                } else if (currentQ && line.toLowerCase().startsWith('đáp án:')) {
+                    const ans = line.split(':')[1].trim().toUpperCase();
+                    if (ans === 'A') currentQ.correctAnswer = 0;
+                    if (ans === 'B') currentQ.correctAnswer = 1;
+                    if (ans === 'C') currentQ.correctAnswer = 2;
+                    if (ans === 'D') currentQ.correctAnswer = 3;
+                } else if (currentQ && line.toLowerCase().startsWith('giải thích:')) {
+                    currentQ.explanation = line.substring(11).trim();
+                }
+            });
+            if (currentQ) questions.push(currentQ);
+            
+            // Clean up options if needed
+            return questions;
+        }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        async function loadRequests() {
+            const list = document.getElementById('requestsList');
+            try {
+                const snapshot = await db.collection('premium_requests').where('status', '==', 'pending').get();
+                if (snapshot.empty) {
+                    list.innerHTML = '<p style="color: var(--green);">Không có yêu cầu nào đang chờ!</p>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'N/A';
+                    
+                    const div = document.createElement('div');
+                    div.className = 'req-card';
+                    div.innerHTML = `
+                        <div class="req-info">
+                            <h3><i class="fa-solid fa-user"></i> ${data.name}</h3>
+                            <p><i class="fa-solid fa-envelope"></i> ${data.email} | Yêu cầu lúc: ${date}</p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-approve" onclick="approveRequest('${doc.id}', '${data.email}')">
+                                <i class="fa-solid fa-check"></i> Duyệt
+                            </button>
+                            <button class="btn-reject" onclick="rejectRequest('${doc.id}', '${data.email}')">
+                                <i class="fa-solid fa-xmark"></i> Từ chối
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            } catch(e) {
+                list.innerHTML = `<p style="color: red;">Lỗi tải dữ liệu: ${e.message}</p>`;
+            }
+        }
+
+        window.approveRequest = async function(reqId, email) {
+            if(!confirm(`Xác nhận cấp Premium cho ${email}?`)) return;
+            try {
+                // Update User
+                await db.collection('users').doc(email).update({ accountStatus: 'premium' });
+                // Update Request status
+                await db.collection('premium_requests').doc(reqId).update({ status: 'approved' });
+                showToast(`Đã duyệt Premium cho ${email}!`);
+                loadRequests();
+            } catch(e) {
+                showToast("Lỗi: " + e.message);
+            }
+        };
+
+        window.rejectRequest = async function(reqId, email) {
+            if(!confirm(`Xác nhận TỪ CHỐI yêu cầu Premium của ${email}?`)) return;
+            try {
+                // Update Request status
+                await db.collection('premium_requests').doc(reqId).update({ status: 'rejected' });
+                showToast(`Đã từ chối Premium của ${email}!`);
+                loadRequests();
+            } catch(e) {
+                showToast("Lỗi: " + e.message);
+            }
+        };
+
+        async function loadUsers() {
+            const list = document.getElementById('usersList');
+            const searchKeyword = document.getElementById('searchUser').value.trim().toLowerCase();
+            try {
+                // Get all users (or filter if you had many, but here we pull max 50 for admin view)
+                const snapshot = await db.collection('users').limit(50).get();
+                list.innerHTML = '';
+                let count = 0;
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const email = doc.id.toLowerCase();
+                    
+                    if (searchKeyword && !email.includes(searchKeyword)) return;
+                    
+                    const lastActive = data.lastActive || 0;
+                    const isOnline = (Date.now() - lastActive) <= 60000;
+                    const statusHtml = isOnline ? 
+                        '<span style="color:var(--green); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Đang Online</span>' : 
+                        '<span style="color:var(--text-dim); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Offline</span>';
+
+                    count++;
+                    const div = document.createElement('div');
+                    div.className = 'req-card';
+                    div.innerHTML = `
+                        <div class="req-info">
+                            <h3><i class="fa-solid fa-user"></i> ${data.name || 'Người dùng'} ${statusHtml}</h3>
+                            <p><i class="fa-solid fa-envelope"></i> ${doc.id} | Quyền: <span style="color:${data.accountStatus === 'premium' ? 'var(--gold)' : 'var(--green)'};">${(data.accountStatus || 'free').toUpperCase()}</span></p>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-reject" onclick="kickUser('${doc.id}')" title="Buộc đăng xuất ra sảnh">
+                                <i class="fa-solid fa-ban"></i> Kick
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+
+                if (count === 0) {
+                    list.innerHTML = '<p style="color: var(--text-dim);">Không tìm thấy người dùng nào.</p>';
+                }
+            } catch(e) {
+                list.innerHTML = `<p style="color: red;">Lỗi tải người dùng: ${e.message}</p>`;
+            }
+        }
+
+        window.kickUser = async function(email) {
+            if(!confirm(`Xác nhận KICK người dùng ${email} khỏi hệ thống ngay lập tức?`)) return;
+            try {
+                await db.collection('users').doc(email).update({ forceLogout: true });
+                showToast(`Đã ra lệnh KICK đối với ${email}!`);
+            } catch(e) {
+                showToast("Lỗi: " + e.message);
+            }
+        };
+
+        // Load initially
+        setTimeout(() => {
+            const sessionData = localStorage.getItem('lm_session');
+            if (!sessionData) {
+                alert("Vui lòng đăng nhập trước!");
+                window.location.href = 'loginout.html';
+                return;
+            }
+            const sessionUser = JSON.parse(sessionData);
+            
+            // RBAC Check for Admin
+            if (!sessionUser.roles || !sessionUser.roles.includes('admin')) {
+                alert("Bạn không có quyền truy cập trang quản trị Admin!");
+                if (sessionUser.roles && sessionUser.roles.includes('cs')) {
+                    window.location.href = 'cs.html';
+                } else {
+                    window.location.href = 'map.html';
+                }
+                return;
+            }
+
+            if(typeof db !== 'undefined') {
+                loadRequests();
+                loadUsers();
+            }
+            else document.getElementById('requestsList').innerText = "Firebase chưa khởi tạo!";
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Chăm Sóc Khách Hàng</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-init.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --gold: #f59e0b;
+            --gray-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar - Conversation List */
+        .sidebar {
+            width: 350px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--gray-border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .conv-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .conv-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--gray-border);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .conv-item:hover, .conv-item.active {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .conv-item h4 {
+            margin: 0 0 5px 0;
+            color: var(--blue);
+            font-size: 1rem;
+        }
+
+        .conv-item p {
+            margin: 0;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Main Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-dark);
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--gray-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .msg-bubble {
+            max-width: 60%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .msg-user {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom-left-radius: 5px;
+        }
+
+        .msg-cs {
+            align-self: flex-end;
+            background: var(--blue);
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--gray-border);
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--gray-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .btn-send {
+            background: var(--blue);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .btn-end {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .bento-btn {
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            background: var(--bg-dark);
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2 style="margin: 0; font-size: 1.2rem; color: var(--gold);"><i class="fa-solid fa-headset"></i> CS Dashboard</h2>
+            <button class="bento-btn" onclick="window.location.href='loginout.html'" style="background: rgba(255, 255, 255, 0.1);"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
+        <div class="conv-list" id="convList">
+            <!-- Render via JS -->
+            <div style="padding: 20px; text-align: center; color: var(--text-dim);">Đang tải...</div>
+        </div>
+    </aside>
+
+    <!-- Chat Area -->
+    <main class="chat-area">
+        <div class="chat-header">
+            <div>
+                <h3 id="chatUserName" style="margin: 0; color: white;">Vui lòng chọn hội thoại</h3>
+                <p id="chatUserEmail" style="margin: 5px 0 0 0; color: var(--text-dim); font-size: 0.85rem;">...</p>
+            </div>
+            <button class="btn-end" id="btnEndChat" style="display: none;" onclick="endChatSession()"><i class="fa-solid fa-check"></i> Kết thúc hỗ trợ</button>
+        </div>
+        
+        <div class="messages-container" id="messagesContainer">
+            <div style="margin: auto; color: var(--text-dim); text-align: center;">
+                <i class="fa-brands fa-rocketchat" style="font-size: 4rem; margin-bottom: 20px; opacity: 0.5;"></i>
+                <p>Chọn một cuộc hội thoại bên trái để bắt đầu chat.</p>
+            </div>
+        </div>
+        
+        <div class="chat-input-area" id="chatInputArea" style="visibility: hidden;">
+            <input type="text" id="chatInput" placeholder="Nhập tin nhắn hỗ trợ...">
+            <button class="btn-send" id="btnSend"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </main>
+
+    <script>
+        let currentSessionUser = null;
+        let activeChatId = null;
+        let unsubscribeChat = null;
+
+        window.onload = () => {
+            const sessionData = localStorage.getItem('lm_session');
+            if (!sessionData) {
+                alert("Vui lòng đăng nhập!");
+                window.location.href = 'loginout.html';
+                return;
+            }
+            currentSessionUser = JSON.parse(sessionData);
+
+            if (!currentSessionUser.roles || (!currentSessionUser.roles.includes('cs') && !currentSessionUser.roles.includes('admin'))) {
+                alert("Bạn không có quyền truy cập trang Chăm sóc khách hàng!");
+                window.location.href = 'map.html';
+                return;
+            }
+
+            if(typeof db !== 'undefined') {
+                listenToConversations();
+            }
+        };
+
+        function listenToConversations() {
+            db.collection('support_chats').orderBy('lastUpdated', 'desc').onSnapshot(snapshot => {
+                const list = document.getElementById('convList');
+                list.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-dim);">Không có hội thoại nào.</div>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isClosed = data.status === 'closed';
+                    
+                    const div = document.createElement('div');
+                    div.className = `conv-item ${doc.id === activeChatId ? 'active' : ''}`;
+                    div.style.opacity = isClosed ? '0.5' : '1';
+                    
+                    div.innerHTML = `
+                        <h4>${data.userName || data.userEmail} ${isClosed ? '(Đã đóng)' : ''}</h4>
+                        <p>${data.lastMessage || '...'}</p>
+                    `;
+                    
+                    div.onclick = () => loadChat(doc.id, data);
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        function loadChat(chatId, data) {
+            activeChatId = chatId;
+            document.getElementById('chatUserName').textContent = data.userName || "Người dùng";
+            document.getElementById('chatUserEmail').textContent = data.userEmail;
+            
+            const isClosed = data.status === 'closed';
+            
+            document.getElementById('chatInputArea').style.visibility = isClosed ? 'hidden' : 'visible';
+            const btnEnd = document.getElementById('btnEndChat');
+            btnEnd.style.display = isClosed ? 'none' : 'block';
+
+            // Highlight active in sidebar
+            document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+            // It will be re-rendered soon by the snapshot, but we just re-listen.
+
+            if (unsubscribeChat) unsubscribeChat();
+            
+            const msgContainer = document.getElementById('messagesContainer');
+            msgContainer.innerHTML = ''; // Loading
+
+            unsubscribeChat = db.collection('support_chats').doc(chatId).collection('messages').orderBy('timestamp', 'asc').onSnapshot(msgs => {
+                msgContainer.innerHTML = '';
+                
+                msgs.forEach(m => {
+                    const md = m.data();
+                    const b = document.createElement('div');
+                    b.className = `msg-bubble ${md.senderRole === 'user' ? 'msg-user' : 'msg-cs'}`;
+                    b.textContent = md.text;
+                    msgContainer.appendChild(b);
+                });
+                
+                if (isClosed && data.rating) {
+                    const rb = document.createElement('div');
+                    rb.style.cssText = 'margin: 20px auto; text-align: center; padding: 10px 20px; background: rgba(255,200,0,0.1); color: var(--gold); border-radius: 12px;';
+                    let stars = '';
+                    for(let i=0; i<data.rating; i++) stars += '<i class="fa-solid fa-star"></i>';
+                    rb.innerHTML = `Khách hàng đã đánh giá CSKH: <br><span style="font-size: 1.2rem;">${stars}</span>`;
+                    msgContainer.appendChild(rb);
+                }
+
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+            });
+        }
+
+        async function sendMsg() {
+            const inp = document.getElementById('chatInput');
+            const txt = inp.value.trim();
+            if (!txt || !activeChatId) return;
+
+            inp.value = '';
+
+            try {
+                await db.collection('support_chats').doc(activeChatId).collection('messages').add({
+                    text: txt,
+                    senderRole: 'cs',
+                    senderEmail: currentSessionUser.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('support_chats').doc(activeChatId).update({
+                    lastMessage: "CS: " + txt,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        document.getElementById('btnSend').onclick = sendMsg;
+        document.getElementById('chatInput').onkeypress = (e) => {
+            if (e.key === 'Enter') sendMsg();
+        };
+
+        window.endChatSession = async function() {
+            if (!activeChatId) return;
+            if (!confirm("Kết thúc phiên hỗ trợ và gửi form đánh giá (Rating) cho người dùng?")) return;
+
+            try {
+                await db.collection('support_chats').doc(activeChatId).update({
+                    status: 'closed', // Will trigger rating on user side
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('chatInputArea').style.visibility = 'hidden';
+                document.getElementById('btnEndChat').style.display = 'none';
+            } catch(e) {
+                console.error(e);
+            }
+        };
+    </script>
+</body>
+</html>

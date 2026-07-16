@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Khởi Nguyên</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="loginout.css">
+</head>
+<body>
+
+    <main class="auth-wrapper">
+        
+        <!-- LEFT PANEL: BRANDING -->
+        <section class="auth-left">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-earth-asia"></i> VieGeo
+                </div>
+                <h1 class="brand-slogan">Khám Phá Việt Nam<br>Trong Tầm Tay.</h1>
+                <p class="brand-desc">Học địa lý chưa bao giờ thú vị đến thế. Tham gia đấu trường, vượt qua thử thách và trở thành nhà thám hiểm tài ba ngay hôm nay!</p>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: AUTH FORM -->
+        <section class="auth-right">
+            <div class="auth-card">
+
+                <!-- LOGIN PANEL -->
+                <div class="panel active" id="loginPanel">
+                    <h2 class="auth-title">Chào mừng trở lại</h2>
+                    <p class="auth-sub">Đăng nhập để tiếp tục hành trình của bạn</p>
+
+                    <form id="loginForm" novalidate>
+                        <div class="field-group">
+                            <input type="email" id="loginEmail" class="form-input" placeholder=" " required>
+                            <label class="field-label">Tài khoản Email</label>
+                        </div>
+                        <div class="field-group">
+                            <input type="password" id="loginPassword" class="form-input" placeholder=" " required>
+                            <label class="field-label">Mật khẩu</label>
+                        </div>
+
+                        <div class="toggle-mode" style="text-align: right; font-size: 0.85rem; margin-top: -5px; margin-bottom: 15px;">
+                            <a id="showForgotPassword" style="cursor: pointer; color: var(--blue);">Quên mật khẩu?</a>
+                        </div>
+
+                        <div id="loginMessage" style="color: #ff4b4b; font-size: 0.9rem; margin-bottom: 15px; text-align: center;"></div>
+
+                        <button type="submit" class="btn-auth btn-login">
+                            Đăng Nhập <i class="fa-solid fa-arrow-right" style="margin-left: 6px;"></i>
+                        </button>
+                    </form>
+
+                    <div class="toggle-mode">
+                        Chưa có tài khoản? <a id="showRegister">Tạo ngay</a>
+                    </div>
+                </div>
+
+                <!-- REGISTER PANEL -->
+                <div class="panel" id="registerPanel">
+                    <h2 class="auth-title">Bắt đầu hành trình</h2>
+                    <p class="auth-sub">Tạo tài khoản VieGeo miễn phí</p>
+
+                    <form id="registerForm" novalidate>
+                        <div class="field-group">
+                            <input type="text" id="regName" class="form-input" placeholder=" " required>
+                            <label class="field-label">Tên hiển thị</label>
+                        </div>
+                        <div class="field-group">
+                            <input type="email" id="regEmail" class="form-input" placeholder=" " required>
+                            <label class="field-label">Email</label>
+                        </div>
+                        <div class="field-group">
+                            <input type="password" id="regPassword" class="form-input" placeholder=" " required>
+                            <label class="field-label">Mật khẩu (từ 6 ký tự)</label>
+                        </div>
+                        <div class="field-group">
+                            <input type="password" id="regPasswordConfirm" class="form-input" placeholder=" " required>
+                            <label class="field-label">Xác nhận mật khẩu</label>
+                        </div>
+
+                        <div id="registerMessage" style="color: #ff4b4b; font-size: 0.9rem; margin-bottom: 15px; text-align: center;"></div>
+
+                        <button type="submit" class="btn-auth btn-reg">
+                            Tạo Tài Khoản <i class="fa-solid fa-user-plus" style="margin-left: 6px;"></i>
+                        </button>
+                    </form>
+
+                    <div class="toggle-mode">
+                        Đã có tài khoản? <a id="showLogin">Đăng nhập</a>
+                    </div>
+                </div>
+
+                <!-- FORGOT PASSWORD PANEL -->
+                <div class="panel" id="forgotPasswordPanel">
+                    <h2 class="auth-title">Quên Mật Khẩu</h2>
+                    <p class="auth-sub">Nhập email để nhận mã xác minh</p>
+
+                    <form id="forgotPasswordForm" novalidate>
+                        <div class="field-group">
+                            <input type="email" id="forgotEmail" class="form-input" placeholder=" " required>
+                            <label class="field-label">Tài khoản Email</label>
+                        </div>
+
+                        <div id="forgotMessage" style="color: #ff4b4b; font-size: 0.9rem; margin-bottom: 15px; text-align: center;"></div>
+
+                        <button type="submit" class="btn-auth btn-login">
+                            Gửi mã OTP <i class="fa-solid fa-paper-plane" style="margin-left: 6px;"></i>
+                        </button>
+                    </form>
+
+                    <div class="toggle-mode">
+                        <a id="showLoginFromForgot" style="cursor: pointer;"><i class="fa-solid fa-arrow-left"></i> Quay lại Đăng nhập</a>
+                    </div>
+                </div>
+
+                <!-- RESET PASSWORD PANEL -->
+                <div class="panel" id="resetPasswordPanel">
+                    <h2 class="auth-title">Đặt lại Mật khẩu</h2>
+                    <p class="auth-sub">Nhập mật khẩu mới của bạn</p>
+
+                    <form id="resetPasswordForm" novalidate>
+                        <div class="field-group">
+                            <input type="password" id="resetPasswordInput" class="form-input" placeholder=" " required>
+                            <label class="field-label">Mật khẩu mới (từ 6 ký tự)</label>
+                        </div>
+                        <div class="field-group">
+                            <input type="password" id="resetPasswordConfirm" class="form-input" placeholder=" " required>
+                            <label class="field-label">Xác nhận mật khẩu</label>
+                        </div>
+
+                        <div id="resetMessage" style="color: #ff4b4b; font-size: 0.9rem; margin-bottom: 15px; text-align: center;"></div>
+
+                        <button type="submit" class="btn-auth btn-reg">
+                            Lưu mật khẩu mới <i class="fa-solid fa-check" style="margin-left: 6px;"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ADMIN LOGIN PANEL -->
+                <div class="panel" id="adminLoginPanel">
+                    <h2 class="auth-title">Khu vực Quản trị</h2>
+                    <p class="auth-sub">Dành riêng cho Giáo viên & Quản trị viên</p>
+
+                    <form id="adminLoginForm" novalidate>
+                        <div class="field-group">
+                            <input type="text" id="adminSecret" class="form-input" placeholder=" " required>
+                            <label class="field-label">Mã bí mật (Secret Code)</label>
+                        </div>
+                        <div id="adminLoginMessage" style="color: #ff4b4b; font-size: 0.9rem; margin-bottom: 15px; text-align: center;"></div>
+                        
+                        <button type="submit" class="btn-auth" style="background: linear-gradient(135deg, #ce82ff, #a855f7); color: white;">
+                            Truy Cập Admin <i class="fa-solid fa-shield-halved" style="margin-left: 6px;"></i>
+                        </button>
+                    </form>
+
+                    <div class="toggle-mode">
+                        <a id="showLoginFromAdmin"><i class="fa-solid fa-arrow-left"></i> Quay lại Đăng nhập</a>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Link ẩn cho Admin -->
+            <div style="position: absolute; bottom: 20px; right: 20px;">
+                <button id="showAdminLogin" style="background: none; border: none; color: rgba(255,255,255,0.1); cursor: pointer; font-size: 0.8rem;">
+                    <i class="fa-solid fa-lock"></i>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- OTP MODAL -->
+    <div id="otpModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 22, 40, 0.85); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5); text-align: center; max-width: 400px; width: 90%;">
+            <i class="fa-solid fa-envelope-open-text" style="font-size: 3rem; color: #1cb0f6; margin-bottom: 20px;"></i>
+            <h2 style="font-size: 1.5rem; margin-bottom: 10px;">Xác thực Email</h2>
+            <p style="color: rgba(255,255,255,0.6); margin-bottom: 10px; font-size: 0.95rem;">Mã xác thực gồm 6 chữ số đã được gửi đến:<br><strong id="otpEmailTarget" style="color: white;"></strong></p>
+            <p style="color: #ffc800; margin-bottom: 25px; font-size: 0.85rem;"><i class="fa-solid fa-circle-exclamation"></i> Vui lòng kiểm tra cả Hòm thư rác (Spam/Junk) nếu không thấy ở Hộp thư đến.</p>
+            
+            <input type="text" id="otpInput" placeholder="Nhập mã OTP..." style="width: 100%; padding: 16px; margin-bottom: 15px; text-align: center; font-size: 1.2rem; letter-spacing: 4px; border-radius: 14px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; outline: none;" maxlength="6">
+            
+            <div id="otpMessage" style="color: #ff4b4b; margin-bottom: 15px; font-size: 0.9rem; display: none;"></div>
+            
+            <button id="buttonConfirmOtp" class="btn-auth btn-login">Xác Nhận <i class="fa-solid fa-check"></i></button>
+            <button id="buttonCancelOtp" onclick="document.getElementById('otpModalOverlay').style.display='none'" style="margin-top: 15px; background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;">Hủy bỏ</button>
+        </div>
+    </div>
+
+    <!-- ROLE SELECTION GATEWAY MODAL -->
+    <div id="gatewayModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 22, 40, 0.85); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center;">
+        <div style="background: rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5); text-align: center; max-width: 400px; width: 90%;">
+            <i class="fa-solid fa-users-gear" style="font-size: 3rem; color: #ce82ff; margin-bottom: 20px;"></i>
+            <h2 style="font-size: 1.5rem; margin-bottom: 10px;">Lựa chọn Không gian</h2>
+            <p style="color: rgba(255,255,255,0.6); margin-bottom: 25px; font-size: 0.95rem;">Bạn có quyền truy cập vào nhiều hệ thống. Vui lòng chọn:</p>
+            
+            <div id="roleSelectionContainer" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Buttons injected by JS -->
+            </div>
+            
+            <button onclick="document.getElementById('gatewayModalOverlay').style.display='none'; localStorage.clear(); window.location.reload();" style="margin-top: 25px; background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;">Đăng xuất</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification (Added manually here since we call it in loginout.js) -->
+    <div id="toastNotification" style="position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #22C55E; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transition: 0.3s; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="loginout.js"></script>
+</body>
+</html>

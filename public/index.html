@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc nghiệm Phong cách Học tập | Khám phá Bản thân</title>
+    <!-- Google Fonts: Plus Jakarta Sans & Be Vietnam Pro (Highly optimized for Vietnamese) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome for modern icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom stylesheet -->
+    <link rel="stylesheet" href="VieGeo.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Auth guard: redirect to login if no session -->
+    <script>
+        (function(){
+            var sess = localStorage.getItem('lm_session');
+            if (sess) {
+                window.location.replace('map.html');
+            } else {
+                window.location.replace('loginout.html?tab=register');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- Background Glow Elements -->
+    <div class="glow-bg">
+        <div class="glow-circle glow-circle-1"></div>
+        <div class="glow-circle glow-circle-2"></div>
+        <div class="glow-circle glow-circle-3"></div>
+    </div>
+
+    <!-- Floating Theme Toggle Button -->
+    <button id="theme-toggle" class="theme-toggle-btn" title="Chuyển đổi giao diện Sáng/Tối">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <!-- Logout Button -->
+    <button id="logout-btn" class="logout-btn" title="Đăng xuất" onclick="(function(){localStorage.removeItem('lm_session');window.location.href='loginout.html';})()">
+        <i class="fa-solid fa-right-from-bracket"></i>
+    </button>
+
+    <div class="container">
+        <!-- WELCOME SCREEN -->
+        <div id="welcome-screen" class="card active">
+            <div class="badge"><i class="fa-solid fa-graduation-cap"></i> Khảo Sát Kiến Thức Địa Lý</div>
+            <h1>Chào mừng đến với Việt Nam Khám Phá!</h1>
+            <p class="subtitle">Hãy hoàn thành 10 câu hỏi Địa lý cơ bản dưới đây để đánh giá sự hiểu biết của bạn về đất nước ta.</p>
+            
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon bg-active"><i class="fa-solid fa-map"></i></div>
+                    <h3>100 Câu Hỏi Tổng Quan</h3>
+                    <p>Kiểm tra kiến thức bao quát về địa lý toàn Việt Nam.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon bg-example"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <h3>Khám Phá Các Tỉnh Thành</h3>
+                    <p>Mở khóa bản đồ từng tỉnh thành sau đợt sáp nhập hành chính mới nhất.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon bg-sequential"><i class="fa-solid fa-globe"></i></div>
+                    <h3>Đánh Giá Khách Quan</h3>
+                    <p>Hệ thống tự động xếp loại năng lực dựa trên điểm số của bạn.</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon bg-analytical"><i class="fa-solid fa-crown"></i></div>
+                    <h3>Tính Năng Độc Quyền</h3>
+                    <p>Trải nghiệm đầy đủ 100% nội dung khi nâng cấp tài khoản.</p>
+                </div>
+            </div>
+
+            <div class="action-area">
+                <button id="start-btn" class="btn-game btn-primary">
+                    Bắt đầu Kiểm tra <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="quiz-screen" class="card">
+            <div class="quiz-header">
+                <button id="back-btn" class="btn btn-icon" title="Quay lại câu trước">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="progress-container">
+                    <div class="progress-bar-wrapper">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <span id="progress-text" class="progress-text">Câu hỏi 1 / 15</span>
+                </div>
+            </div>
+
+            <div class="question-container">
+                <h2 id="question-text" class="question-title">Đang tải câu hỏi...</h2>
+                <div id="options-container" class="options-grid">
+                    <!-- Options will be generated dynamically by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="quiz-footer">
+                <span class="quiz-tip"><i class="fa-solid fa-circle-info"></i> Hãy chọn một đáp án đúng nhất.</span>
+                <button id="next-btn" class="btn btn-primary" disabled>
+                    Tiếp tục <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="result-screen" class="card result-card">
+            <div class="result-header text-center">
+                <div class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Hoàn thành đánh giá</div>
+                <h1>Kết Quả Đánh Giá Năng Lực Của Bạn</h1>
+            </div>
+
+            <div class="result-layout">
+
+                <!-- Right column: Detailed Analysis & Advice -->
+                <div class="result-details-section">
+                    <div class="primary-style-banner">
+                        <div class="banner-icon-container" id="primary-icon">
+                            <i class="fa-solid fa-ranking-star"></i>
+                        </div>
+                        <div>
+                            <span class="banner-title-label">Năng lực đánh giá</span>
+                            <h2 id="primary-style-name">Lớp 12</h2>
+                        </div>
+                    </div>
+
+                    <!-- Score Feedback Box -->
+                    <div class="analysis-box time-box" id="time-analysis-box">
+                        <h3><i class="fa-solid fa-bullseye text-teal"></i> Điểm số Đánh giá</h3>
+                        <p id="time-feedback-text">Số câu trả lời đúng: 10/10.</p>
+                    </div>
+
+                    <div class="analysis-box">
+                        <h3><i class="fa-solid fa-comment-dots text-primary"></i> Đánh giá tổng quan</h3>
+                        <p id="style-description">Đang phân tích...</p>
+                    </div>
+
+                    <div class="analysis-box highlight-box">
+                        <h3><i class="fa-solid fa-map-location-dot text-warning"></i> Lộ trình Đề xuất</h3>
+                        <ul id="style-tips" class="custom-list">
+                            <!-- Dynamically loaded -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer section: Action buttons and other stats -->
+            <div class="result-footer">
+                <button id="restart-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-rotate-left"></i> Làm lại
+                </button>
+                <a href="map.html" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                    Vào Trang Chủ <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="app.js"></script>
+<script src="seed.js"></script></body>
+</html>
+

@@ -1,0 +1,17 @@
+# Project Context & AI Instructions
+
+## Build & Run Commands
+- Cài đặt dependencies: `npm install`
+- Khởi chạy môi trường Dev: `npm run dev`
+- Chạy kiểm thử (Test): `npm run test`
+
+## Code Style & Conventions
+- Luôn viết code ngắn gọn, rõ ràng, tránh vòng lặp dư thừa.
+- Đặt tên biến và hàm bằng tiếng Anh, tuân thủ chuẩn `camelCase`.
+- Sử dụng Comment (ghi chú) đầy đủ cho các hàm xử lý logic phức tạp.
+- Ưu tiên sử dụng Functional Components và Hooks nếu dùng React.
+- Tuyệt đối không xóa các dòng code cũ nếu chưa hiểu rõ logic, hãy comment chúng lại thay vì xóa hẳn.
+
+## Project Architecture
+- Dự án này sử dụng kiến trúc [Tên kiến trúc/Framework của bạn, vd: Next.js + Tailwind].
+- Mọi hình ảnh và tài nguyên tĩnh phải đặt vào thư mục `/public`.
