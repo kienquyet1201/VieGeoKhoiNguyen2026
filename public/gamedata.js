@@ -219,98 +219,86 @@ const ARENA_MATCHES = [
 ];
 
 // â”€â”€ GEOGRAPHY CONTENT (Theo SGK) â”€â”€
-const PROVINCES_LIST = [
-    "Hà N?i", "Hà Giang", "Cao B?ng", "B?c K?n", "Tuyên Quang", "Lào Cai", "Ði?n Biên", "Lai Châu", "Son La", "Yên Bái", 
-    "Hòa Bình", "Thái Nguyên", "L?ng Son", "Qu?ng Ninh", "B?c Giang", "Phú Th?", "Vinh Phúc", "B?c Ninh", "H?i Duong", "H?i Phòng", 
-    "Hung Yên", "Thái Bình", "Hà Nam", "Nam Ð?nh", "Ninh Bình", "Thanh Hóa", "Ngh? An", "Hà Tinh", "Qu?ng Bình", "Qu?ng Tr?", 
-    "Th?a Thiên Hu?", "Ðà N?ng", "Qu?ng Nam", "Qu?ng Ngãi", "Bình Ð?nh", "Phú Yên", "Khánh Hòa", "Ninh Thu?n", "Bình Thu?n", "Kon Tum", 
-    "Gia Lai", "Ð?k L?k", "Ð?k Nông", "Lâm Ð?ng", "Bình Phu?c", "Tây Ninh", "Bình Duong", "Ð?ng Nai", "Bà R?a - Vung Tàu", "H? Chí Minh", 
-    "Long An", "Ti?n Giang", "B?n Tre", "Trà Vinh", "Vinh Long", "Ð?ng Tháp", "An Giang", "Kiên Giang", "C?n Tho", "H?u Giang", 
-    "Sóc Trang", "B?c Liêu", "Cà Mau"
-];
-
-function generateDynamicRegions() {
-    let provincesData = [];
-    
-    // Generate 63 Provinces + Boss Islands
-    for (let i = 0; i < PROVINCES_LIST.length; i++) {
-        let provName = PROVINCES_LIST[i];
-        
-        let lessons = [
+const LEARNING_REGIONS = [
+    {
+        id: "region_north",
+        name: "Mi?n B?c",
+        color: "#ff4b4b",
+        provinces: [
             {
-                id: "prov_" + i + "_1",
-                type: "theory",
-                title: "Lý thuy?t: " + provName,
-                content: "Ki?n th?c d?a lý co b?n v? " + provName + ".",
-                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ho_Hoan_Kiem.jpg/800px-Ho_Hoan_Kiem.jpg"
-            },
-            {
-                id: "prov_" + i + "_2",
-                type: "quiz",
-                title: "Tr?c nghi?m: " + provName,
-                questions: [
-                    { q: "Ðâu là d?c di?m c?a " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 0, explanation: "Gi?i thích." }
-                ]
-            }
-        ];
-        
-        provincesData.push({
-            id: "prov_" + i,
-            name: provName,
-            color: "#1cb0f6",
-            isBoss: false,
-            lessons: lessons
-        });
-        
-        // Add Boss Island every 10 provinces
-        if ((i + 1) % 10 === 0) {
-            let bossId = "boss_" + Math.floor((i + 1) / 10);
-            provincesData.push({
-                id: bossId,
-                name: "Ð?O BOSS " + Math.floor((i + 1) / 10),
-                color: "#ff4b4b",
-                isBoss: true,
+                id: "prov_hanoi",
+                name: "Hà N?i",
+                color: "#1cb0f6",
                 lessons: [
                     {
-                        id: bossId + "_1",
+                        id: "hanoi_1",
+                        type: "theory",
+                        title: "Lý thuy?t: V? trí Ð?a lý",
+                        content: "Hà N?i là th? dô c?a nu?c CHXHCN Vi?t Nam...",
+                        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ho_Hoan_Kiem.jpg/800px-Ho_Hoan_Kiem.jpg"
+                    },
+                    {
+                        id: "hanoi_2",
                         type: "quiz",
-                        title: "TH? THÁCH Ð?O BOSS",
+                        title: "Bài t?p 1: V? trí",
                         questions: [
-                            { q: "Câu h?i Boss?", options: ["Khó", "R?t Khó", "Siêu Khó", "B?t kh? thi"], correctAnswer: 0, explanation: "Vu?t qua boss!" }
+                            { q: "Hà N?i n?m ? dâu?", options: ["Ð?ng b?ng sông H?ng", "Ð?ng b?ng sông C?u Long", "Tây Nguyên", "Mi?n núi phía B?c"], correctAnswer: 0, explanation: "Hà N?i n?m ? trung tâm d?ng b?ng sông H?ng." }
+                        ]
+                    },
+                    {
+                        id: "hanoi_midterm_1",
+                        type: "quiz",
+                        title: "Ki?m tra Gi?a khóa 1",
+                        questions: [
+                            { q: "Hà N?i giáp v?i t?nh nào sau dây?", options: ["Thái Bình", "B?c Ninh", "Nam Ð?nh", "Ninh Bình"], correctAnswer: 1, explanation: "Hà N?i giáp B?c Ninh ? phía Ðông." }
+                        ]
+                    },
+                    {
+                        id: "hanoi_3",
+                        type: "theory",
+                        title: "Lý thuy?t: Van hóa - Xã h?i",
+                        content: "Hà N?i có b? dày l?ch s? ngàn nam van hi?n...",
+                        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Temple_of_Literature%2C_Hanoi.jpg/800px-Temple_of_Literature%2C_Hanoi.jpg"
+                    },
+                    {
+                        id: "hanoi_4",
+                        type: "quiz",
+                        title: "Bài t?p 2: Van hóa",
+                        questions: [
+                            { q: "Bi?u tu?ng c?a Hà N?i là gì?", options: ["Ch? B?n Thành", "Khuê Van Các", "C?u R?ng", "V?nh H? Long"], correctAnswer: 1, explanation: "Khuê Van Các là bi?u tu?ng chính th?c c?a th? dô." }
+                        ]
+                    },
+                    {
+                        id: "hanoi_midterm_2",
+                        type: "quiz",
+                        title: "Ki?m tra Gi?a khóa 2",
+                        questions: [
+                            { q: "Món an d?c trung c?a Hà N?i?", options: ["Mì Qu?ng", "Ph?", "Bún Bò", "H? ti?u"], correctAnswer: 1, explanation: "Ph? là món an n?i ti?ng c?a Hà N?i." }
+                        ]
+                    },
+                    {
+                        id: "hanoi_final",
+                        type: "quiz",
+                        title: "Ki?m tra T?ng h?p Hà N?i",
+                        questions: [
+                            { q: "Hà N?i chính th?c m? r?ng d?a gi?i hành chính vào nam nào?", options: ["1999", "2008", "2010", "2020"], correctAnswer: 1, explanation: "Hà N?i m? r?ng nam 2008." },
+                            { q: "Di tích nào ? Hà N?i du?c UNESCO công nh?n?", options: ["Hoàng thành Thang Long", "Chùa M?t C?t", "H? Guom", "Lang Bác"], correctAnswer: 0, explanation: "Hoàng thành Thang Long du?c UNESCO công nh?n là di s?n van hóa th? gi?i." }
                         ]
                     }
                 ]
-            });
-        }
+            }
+        ]
+    },
+    {
+        id: "region_central",
+        name: "Mi?n Trung",
+        color: "#ffc800",
+        provinces: []
+    },
+    {
+        id: "region_south",
+        name: "Mi?n Nam",
+        color: "#58cc02",
+        provinces: []
     }
-    
-    // Generate 100 Islands
-    for (let j = 1; j <= 100; j++) {
-        provincesData.push({
-            id: "island_" + j,
-            name: "Huy?n Ð?o " + j,
-            color: "#0D9488",
-            isBoss: false,
-            lessons: [
-                {
-                    id: "island_" + j + "_1",
-                    type: "theory",
-                    title: "Khám phá Huy?n Ð?o " + j,
-                    content: "Thông tin v? bi?n d?o Vi?t Nam.",
-                    image: ""
-                }
-            ]
-        });
-    }
-
-    return [
-        {
-            id: "region_vietnam",
-            name: "Hành Trình Vi?t Nam",
-            color: "#ff4b4b",
-            provinces: provincesData
-        }
-    ];
-}
-
-const LEARNING_REGIONS = generateDynamicRegions();
+];

@@ -1,3 +1,19 @@
+function generateAIInsight(state) {
+    if (!state.nodeResults || Object.keys(state.nodeResults).length === 0) {
+        return "H? th?ng AI dang thu th?p thêm d? li?u t? các bài ki?m tra c?a b?n d? dua ra nh?n xét chi ti?t nh?t. Hãy ti?p t?c h?c t?p nhé!";
+    }
+
+    let results = Object.values(state.nodeResults);
+    let avgAccuracy = results.reduce((sum, r) => sum + r.accuracy, 0) / results.length;
+    
+    if (avgAccuracy >= 80) {
+        return "AI phân tích: B?n c?c k? am hi?u v? Ð?a lý Mi?n B?c (di?m trung bình " + Math.round(avgAccuracy) + "%), ki?n th?c r?t v?ng vàng! Ti?p t?c phát huy th? m?nh này nhé.";
+    } else if (avgAccuracy >= 50) {
+        return "AI phân tích: B?n n?m du?c ki?n th?c co b?n v? Ð?a lý (di?m trung bình " + Math.round(avgAccuracy) + "%), nhung c?n ôn t?p thêm m?t s? chuyên d? d? d?t k?t qu? xu?t s?c hon.";
+    } else {
+        return "AI phân tích: B?n dang g?p m?t chút khó khan v?i Ð?a lý (di?m trung bình " + Math.round(avgAccuracy) + "%). Ð?ng lo l?ng, hãy xem l?i các bài h?c lý thuy?t nhé!";
+    }
+}
 // ============================================================================
 // VieGeo - app-core.js (SPA Logic & Rendering - Arena Update)
 // ============================================================================
@@ -1446,3 +1462,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+

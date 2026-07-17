@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 /* ==========================================================================
    DESIGN SYSTEM & VARIABLES
    ========================================================================== */
@@ -45,19 +46,14 @@
 }
 
 body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: var(--bg-dark);
     color: var(--text-primary);
-    font-family: var(--font-body);
-    min-height: 100vh;
+    margin: 0;
+    padding: 0;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow-x: hidden;
-    position: relative;
-    padding: 20px;
-    line-height: 1.6;
-    transition: background-color 0.5s ease, color 0.3s ease;
-}
+    height: 100vh;
+    overflow: hidden;}
 
 /* Background Glow Effects */
 .glow-bg {
@@ -1238,8 +1234,14 @@ body.theme-female.light-mode .highlight-box {
 
 @media (max-width: 600px) {
     body {
-        padding: 12px;
-    }
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;}
 
     .card {
         padding: 24px 16px;
@@ -1390,5 +1392,6 @@ body.theme-female.light-mode .highlight-box {
     50% { box-shadow: 0 0 25px rgba(255, 200, 0, 0.6); }
     100% { box-shadow: 0 0 10px rgba(255, 200, 0, 0.2); }
 }
+
 
 

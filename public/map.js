@@ -129,7 +129,7 @@ function renderLessons() {
         let nodeColor = 'rgba(255,255,255,0.1)';
         let iconColor = 'var(--text-dim)';
         if (isCompleted) {
-            const result = state.lessonResults && state.lessonResults[lesson.id];
+            const result = state.nodeResults && state.nodeResults[lesson.id];
             if (result && result.color) {
                 if (result.color === 'green') { nodeColor = '#58cc02'; iconColor = '#fff'; }
                 if (result.color === 'yellow') { nodeColor = '#ffc800'; iconColor = '#fff'; }
@@ -183,7 +183,7 @@ function renderLessons() {
                 `;
                 
                 if (isCompleted) {
-                    const result = state.lessonResults && state.lessonResults[lesson.id];
+                    const result = state.nodeResults && state.nodeResults[lesson.id];
                     const pts = result ? result.score : 0;
                     modalHtml += `<div style="margin-bottom: 25px; font-size: 1.2rem; color: #ffc800;"><i class="fa-solid fa-star"></i> Điểm cao nhất: <b>${pts}</b></div>`;
                 } else {
@@ -282,4 +282,5 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
         };
     }
 }
+
 

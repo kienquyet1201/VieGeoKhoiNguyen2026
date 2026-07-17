@@ -550,6 +550,20 @@ function finishLesson() {
             state.questsProgress.q2 += 1; 
         }
 
+                if (!state.nodeResults) state.nodeResults = {};
+        
+        // Traffic light logic based on accuracy/mode
+        let accuracy = 100;
+        if (mode === 'normal' && typeof currentQuestions !== 'undefined' && currentQuestions.length > 0) {
+            accuracy = (correctCount / currentQuestions.length) * 100;
+        }
+        
+        let lightColor = 'green';
+        if (accuracy < 50) lightColor = 'red';
+        else if (accuracy < 80) lightColor = 'yellow';
+        
+        state.nodeResults[nodeId] = { accuracy: Math.round(accuracy), color: lightColor };
+
         if (!state.completedNodes.includes(nodeId)) {
             state.completedNodes.push(nodeId);
         }
@@ -714,4 +728,6 @@ window.useBooster = function(type) {
         }
     }
 };
+
+
 
