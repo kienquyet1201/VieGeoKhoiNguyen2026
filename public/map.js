@@ -251,8 +251,18 @@ function renderLessons() {
 }
 
 // Initial render
-updateStatsUI();
-renderMap();
+document.addEventListener('DOMContentLoaded', () => {
+    updateStatsUI();
+    
+    // Explicitly ensure mapContainer is visible and styled properly
+    if (mapContainer) {
+        mapContainer.style.position = 'relative';
+        mapContainer.style.zIndex = '10';
+        mapContainer.style.minHeight = '60vh'; // Ensure it takes up space
+    }
+    
+    renderMap();
+});
 
 // ONBOARDING SURVEY LOGIC
 if (state.learningProfile && !state.learningProfile.surveyDone) {
@@ -282,5 +292,7 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
         };
     }
 }
+
+
 
 

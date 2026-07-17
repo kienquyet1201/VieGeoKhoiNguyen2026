@@ -219,86 +219,143 @@ const ARENA_MATCHES = [
 ];
 
 // â”€â”€ GEOGRAPHY CONTENT (Theo SGK) â”€â”€
-const LEARNING_REGIONS = [
-    {
-        id: "region_north",
-        name: "Mi?n B?c",
-        color: "#ff4b4b",
-        provinces: [
-            {
-                id: "prov_hanoi",
-                name: "Hà N?i",
-                color: "#1cb0f6",
-                lessons: [
-                    {
-                        id: "hanoi_1",
-                        type: "theory",
-                        title: "Lý thuy?t: V? trí Ð?a lý",
-                        content: "Hà N?i là th? dô c?a nu?c CHXHCN Vi?t Nam...",
-                        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ho_Hoan_Kiem.jpg/800px-Ho_Hoan_Kiem.jpg"
-                    },
-                    {
-                        id: "hanoi_2",
-                        type: "quiz",
-                        title: "Bài t?p 1: V? trí",
-                        questions: [
-                            { q: "Hà N?i n?m ? dâu?", options: ["Ð?ng b?ng sông H?ng", "Ð?ng b?ng sông C?u Long", "Tây Nguyên", "Mi?n núi phía B?c"], correctAnswer: 0, explanation: "Hà N?i n?m ? trung tâm d?ng b?ng sông H?ng." }
-                        ]
-                    },
-                    {
-                        id: "hanoi_midterm_1",
-                        type: "quiz",
-                        title: "Ki?m tra Gi?a khóa 1",
-                        questions: [
-                            { q: "Hà N?i giáp v?i t?nh nào sau dây?", options: ["Thái Bình", "B?c Ninh", "Nam Ð?nh", "Ninh Bình"], correctAnswer: 1, explanation: "Hà N?i giáp B?c Ninh ? phía Ðông." }
-                        ]
-                    },
-                    {
-                        id: "hanoi_3",
-                        type: "theory",
-                        title: "Lý thuy?t: Van hóa - Xã h?i",
-                        content: "Hà N?i có b? dày l?ch s? ngàn nam van hi?n...",
-                        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Temple_of_Literature%2C_Hanoi.jpg/800px-Temple_of_Literature%2C_Hanoi.jpg"
-                    },
-                    {
-                        id: "hanoi_4",
-                        type: "quiz",
-                        title: "Bài t?p 2: Van hóa",
-                        questions: [
-                            { q: "Bi?u tu?ng c?a Hà N?i là gì?", options: ["Ch? B?n Thành", "Khuê Van Các", "C?u R?ng", "V?nh H? Long"], correctAnswer: 1, explanation: "Khuê Van Các là bi?u tu?ng chính th?c c?a th? dô." }
-                        ]
-                    },
-                    {
-                        id: "hanoi_midterm_2",
-                        type: "quiz",
-                        title: "Ki?m tra Gi?a khóa 2",
-                        questions: [
-                            { q: "Món an d?c trung c?a Hà N?i?", options: ["Mì Qu?ng", "Ph?", "Bún Bò", "H? ti?u"], correctAnswer: 1, explanation: "Ph? là món an n?i ti?ng c?a Hà N?i." }
-                        ]
-                    },
-                    {
-                        id: "hanoi_final",
-                        type: "quiz",
-                        title: "Ki?m tra T?ng h?p Hà N?i",
-                        questions: [
-                            { q: "Hà N?i chính th?c m? r?ng d?a gi?i hành chính vào nam nào?", options: ["1999", "2008", "2010", "2020"], correctAnswer: 1, explanation: "Hà N?i m? r?ng nam 2008." },
-                            { q: "Di tích nào ? Hà N?i du?c UNESCO công nh?n?", options: ["Hoàng thành Thang Long", "Chùa M?t C?t", "H? Guom", "Lang Bác"], correctAnswer: 0, explanation: "Hoàng thành Thang Long du?c UNESCO công nh?n là di s?n van hóa th? gi?i." }
-                        ]
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        id: "region_central",
-        name: "Mi?n Trung",
-        color: "#ffc800",
-        provinces: []
-    },
-    {
-        id: "region_south",
-        name: "Mi?n Nam",
-        color: "#58cc02",
-        provinces: []
-    }
+const N_PROVINCES = [
+    "Hà N?i", "H?i Phòng", "Qu?ng Ninh", "Hà Giang", "Lào Cai", "Lai Châu", "Ði?n Biên", "Son La", "Yên Bái", "Hòa Bình", 
+    "Phú Th?", "Tuyên Quang", "Cao B?ng", "B?c K?n", "Thái Nguyên", "L?ng Son", "B?c Giang", "B?c Ninh", "H?i Duong", 
+    "Hung Yên", "Vinh Phúc", "Hà Nam", "Nam Ð?nh", "Ninh Bình", "Thái Bình"
 ];
+
+const C_PROVINCES = [
+    "Thanh Hóa", "Ngh? An", "Hà Tinh", "Qu?ng Bình", "Qu?ng Tr?", "Th?a Thiên Hu?", "Ðà N?ng", "Qu?ng Nam", "Qu?ng Ngãi", 
+    "Bình Ð?nh", "Phú Yên", "Khánh Hòa", "Ninh Thu?n", "Bình Thu?n", "Kon Tum", "Gia Lai", "Ð?k L?k", "Ð?k Nông", "Lâm Ð?ng"
+];
+
+const S_PROVINCES = [
+    "H? Chí Minh", "C?n Tho", "Bình Phu?c", "Tây Ninh", "Bình Duong", "Ð?ng Nai", "Bà R?a - Vung Tàu", "Long An", 
+    "Ti?n Giang", "B?n Tre", "Trà Vinh", "Vinh Long", "Ð?ng Tháp", "An Giang", "Kiên Giang", "H?u Giang", "Sóc Trang", 
+    "B?c Liêu", "Cà Mau"
+];
+
+function generateProvinceLessons(provName, provId) {
+    try {
+        const topics = [
+            { id: "vt", name: "V? trí d?a lý" },
+            { id: "tn", name: "Ði?u ki?n t? nhiên" },
+            { id: "dc", name: "Dân cu" },
+            { id: "vh", name: "Van hóa" },
+            { id: "kt", name: "Kinh t?" },
+            { id: "dl", name: "Du l?ch" }
+        ];
+
+        let lessons = [];
+        
+        topics.forEach((topic, index) => {
+            // Lý thuy?t
+            lessons.push({
+                id: provId + "_th_" + topic.id,
+                type: "theory",
+                title: "Lý thuy?t: " + topic.name,
+                content: "Ðo?n d?c ng?n v? " + topic.name + " c?a " + provName + "...",
+                image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ho_Hoan_Kiem.jpg/800px-Ho_Hoan_Kiem.jpg"
+            });
+            // Tr?c nghi?m
+            lessons.push({
+                id: provId + "_qz_" + topic.id,
+                type: "quiz",
+                title: "Luy?n t?p: " + topic.name,
+                questions: [
+                    { q: "Ð?c di?m " + topic.name.toLowerCase() + " c?a " + provName + " là gì?", options: ["A", "B", "C", "D"], correctAnswer: 0, explanation: "Ðáp án dúng." }
+                ]
+            });
+
+            // Midterm 1 sau 3 bài d?u
+            if (index === 2) {
+                lessons.push({
+                    id: provId + "_midterm_1",
+                    type: "quiz_midterm",
+                    title: "Ki?m tra Gi?a khóa 1 (" + provName + ")",
+                    questions: [
+                        { q: "T?ng h?p ki?n th?c ph?n 1 v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 1, explanation: "T?t." }
+                    ]
+                });
+            }
+            // Midterm 2 sau 3 bài cu?i
+            if (index === 5) {
+                lessons.push({
+                    id: provId + "_midterm_2",
+                    type: "quiz_midterm",
+                    title: "Ki?m tra Gi?a khóa 2 (" + provName + ")",
+                    questions: [
+                        { q: "T?ng h?p ki?n th?c ph?n 2 v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 2, explanation: "Gi?i." }
+                    ]
+                });
+            }
+        });
+
+        // Final quiz
+        lessons.push({
+            id: provId + "_final",
+            type: "quiz_final",
+            title: "Ki?m tra T?ng h?p " + provName,
+            questions: [
+                { q: "Ki?n th?c t?ng quát v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 3, explanation: "Xu?t s?c." }
+            ]
+        });
+
+        return lessons;
+    } catch (e) {
+        console.error("L?i khi t?o d? li?u bài h?c cho " + provName, e);
+        return []; // Fallback an toàn
+    }
+}
+
+function generateRegions() {
+    try {
+        let northProvinces = N_PROVINCES.map((name, i) => ({
+            id: "n_prov_" + i,
+            name: name,
+            color: "#1cb0f6",
+            lessons: generateProvinceLessons(name, "n_prov_" + i)
+        }));
+
+        let centralProvinces = C_PROVINCES.map((name, i) => ({
+            id: "c_prov_" + i,
+            name: name,
+            color: "#ff9600",
+            lessons: generateProvinceLessons(name, "c_prov_" + i)
+        }));
+
+        let southProvinces = S_PROVINCES.map((name, i) => ({
+            id: "s_prov_" + i,
+            name: name,
+            color: "#58cc02",
+            lessons: generateProvinceLessons(name, "s_prov_" + i)
+        }));
+
+        return [
+            {
+                id: "region_north",
+                name: "Mi?n B?c",
+                color: "#ff4b4b",
+                provinces: northProvinces
+            },
+            {
+                id: "region_central",
+                name: "Mi?n Trung",
+                color: "#ffc800",
+                provinces: centralProvinces
+            },
+            {
+                id: "region_south",
+                name: "Mi?n Nam",
+                color: "#58cc02",
+                provinces: southProvinces
+            }
+        ];
+    } catch (e) {
+        console.error("L?i khi t?o danh sách các Mi?n", e);
+        return [];
+    }
+}
+
+const LEARNING_REGIONS = generateRegions();

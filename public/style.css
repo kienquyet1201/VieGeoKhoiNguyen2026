@@ -983,6 +983,19 @@ body.light-mode {
     --card-shadow: 0 20px 40px -15px rgba(2, 132, 199, 0.08);
 }
 
+/* Ép màu ch? trong Light Mode */
+body.light-mode h1,
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode h4,
+body.light-mode h5,
+body.light-mode p,
+body.light-mode span,
+body.light-mode a,
+body.light-mode button {
+    color: var(--text-primary) !important;
+}
+
 body.light-mode .glow-circle {
     opacity: 0.08;
 }
@@ -1392,6 +1405,7 @@ body.theme-female.light-mode .highlight-box {
     50% { box-shadow: 0 0 25px rgba(255, 200, 0, 0.6); }
     100% { box-shadow: 0 0 10px rgba(255, 200, 0, 0.2); }
 }
+
 
 
 

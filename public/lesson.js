@@ -552,11 +552,7 @@ function finishLesson() {
 
                 if (!state.nodeResults) state.nodeResults = {};
         
-        // Traffic light logic based on accuracy/mode
-        let accuracy = 100;
-        if (mode === 'normal' && typeof currentQuestions !== 'undefined' && currentQuestions.length > 0) {
-            accuracy = (correctCount / currentQuestions.length) * 100;
-        }
+        // Traffic light logic based on accuracy
         
         let lightColor = 'green';
         if (accuracy < 50) lightColor = 'red';
@@ -728,6 +724,7 @@ window.useBooster = function(type) {
         }
     }
 };
+
 
 
 
