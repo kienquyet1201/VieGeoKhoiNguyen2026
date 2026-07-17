@@ -72,7 +72,7 @@
                     <option value="12">Lớp 12</option>
                 </select>
 
-                <a href="/exam-arena" class="bento-btn w-full flex items-center justify-start px-4 py-3 shadow-sm transition transform hover:scale-105 rounded-xl font-bold mb-2" style="background: #ef4444; color: white; text-decoration: none;"><i class="fa-solid fa-graduation-cap mr-3 w-5 text-center"></i> Đấu trường</a>
+                
                 
                 <button class="bento-btn w-full flex items-center justify-start px-4 py-3 shadow-sm transition transform hover:scale-105 rounded-xl font-bold mb-2" onclick="openParentModal()" title="Dành cho Phụ Huynh" style="background: #ce82ff; color: white;"><i class="fa-solid fa-users mr-3 w-5 text-center"></i> Phụ Huynh</button>
 
@@ -141,7 +141,7 @@
                 
                 
 <div class="flex justify-between items-center w-full max-w-5xl mx-auto px-4">
-    <h2 id="mapTitle" class="text-3xl font-bold text-slate-900 dark:text-white mt-12 mb-8 ml-4 block">Khám Phá Việt Nam</h2>
+    <h2 id="mapTitle" class="text-3xl font-bold text-slate-900 dark:text-white mt-12 mb-8 ml-4 block pt-6">Khám Phá Việt Nam</h2>
     <button id="btnMapBack" class="bento-btn mt-12 mb-8 px-4 py-2 hidden bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg shadow"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
 </div>
 
@@ -514,7 +514,7 @@ window.switchRoleClientOnly = function(selectedRole) {
         // Reset dropdown to prevent stuck state
         document.getElementById('roleSwitcher').value = '';
     } else if (selectedRole === 'admin') {
-        window.location.href = '/admin-dashboard';
+        window.location.href = '/admin';
     } else if (selectedRole === 'cs') {
         window.location.href = '/cs-dashboard';
     }
