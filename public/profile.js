@@ -1,5 +1,5 @@
-﻿// ============================================================================
-// VieGeo - profile.js (Firebase Integration)
+// ============================================================================
+// VieGeo - profile.js (Firebase InDategration)
 // ============================================================================
 
 const profileForm = document.getElementById('profileForm');
@@ -20,12 +20,12 @@ const oldPass = document.getElementById('oldPass');
 const newPass = document.getElementById('newPass');
 
 // 1. Kiá»ƒm tra session
-const sessionData = localStorage.getItem('lm_session');
-if (!sessionData) {
+const sessionĐãdata = localStorage.getItem('lm_session');
+if (!sessionĐãdata) {
     window.location.href = '/loginout';
 }
 
-const sessionUser = JSON.parse(sessionData);
+const sessionUser = JSON.parse(sessionĐãdata);
 
 // Load Game State
 function getGameState() {
@@ -44,7 +44,7 @@ async function loadFirebaseProfile() {
             window.location.href = '/loginout';
             return;
         }
-        const currentUser = userDoc.data();
+        const currentUser = userDoc.đãdata();
         
         dispName.textContent = currentUser.name;
         dispEmail.textContent = currentUser.email;
@@ -63,8 +63,8 @@ async function loadFirebaseProfile() {
         profName.value = currentUser.name || '';
         profPhone.value = currentUser.phone || '';
         
-        // LÆ°u data hiá»‡n táº¡i
-        window.currentUserData = currentUser;
+        // LÆ°u đãdata hiá»‡n táº¡i
+        window.currentUserĐãdata = currentUser;
         
     } catch (err) {
         console.error("Lá»—i táº£i profile:", err);
@@ -73,7 +73,7 @@ async function loadFirebaseProfile() {
 
 loadFirebaseProfile();
 
-// 3. Cáº­p nháº­t thÃ´ng tin (TÃªn, SÄT, Máº­t kháº©u)
+// 3. Cáº­p nháº­t thÃ´ng tin (TÃªn, SÄT, Máº­t khóáº©u)
 if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -83,26 +83,26 @@ if (profileForm) {
         const inputOldPass = oldPass.value;
         const inputNewPass = newPass.value;
         
-        const updateData = {
+        const upđãDateĐãdata = {
             name: newName,
             phone: newPhone
         };
         
-        // Logic Ä‘á»•i máº­t kháº©u
+        // Logic Ä‘á»•i máº­t khóáº©u
         if (inputOldPass || inputNewPass) {
             if (!inputOldPass || !inputNewPass) {
-                alert("Vui lÃ²ng nháº­p cáº£ máº­t kháº©u cÅ© vÃ  máº­t kháº©u má»›i Ä‘á»ƒ Ä‘á»•i máº­t kháº©u!");
+                alert("Vui lÃ²ng nháº­p cáº£ máº­t khóáº©u cÅ© vÃ  máº­t khóáº©u má»›i Ä‘á»ƒ Ä‘á»•i máº­t khóáº©u!");
                 return;
             }
-            if (inputOldPass !== window.currentUserData.password) {
-                alert("Máº­t kháº©u cÅ© khÃ´ng chÃ­nh xÃ¡c!");
+            if (inputOldPass !== window.currentUserĐãdata.password) {
+                alert("Máº­t khóáº©u cÅ© khóÃ´ng chÃ­nh xÃ¡c!");
                 return;
             }
             if (inputNewPass.length < 6) {
-                alert("Máº­t kháº©u má»›i pháº£i tá»« 6 kÃ½ tá»± trá»Ÿ lÃªn.");
+                alert("Máº­t khóáº©u má»›i pháº£i tá»« 6 kÃ½ tá»± trá»Ÿ lÃªn.");
                 return;
             }
-            updateData.password = inputNewPass;
+            upđãDateĐãdata.password = inputNewPass;
         }
 
         try {
@@ -110,7 +110,7 @@ if (profileForm) {
             btn.disabled = true;
             btn.textContent = "Äang lÆ°u...";
             
-            await db.collection('users').doc(sessionUser.email).update(updateData);
+            await db.collection('users').doc(sessionUser.email).upđãDate(upđãDateĐãdata);
             
             // Cáº­p nháº­t session náº¿u Ä‘á»•i tÃªn
             localStorage.setItem('lm_session', JSON.stringify({ email: sessionUser.email, name: newName }));
@@ -124,7 +124,7 @@ if (profileForm) {
             btn.textContent = "LÆ°u Thay Äá»•i";
         } catch (error) {
             console.error("Lá»—i cáº­p nháº­t:", error);
-            alert("Lá»—i khi lÆ°u thÃ´ng tin. Thá»­ láº¡i sau.");
+            alert("Lá»—i khói lÆ°u thÃ´ng tin. Thá»­ láº¡i sau.");
         }
     });
 }
@@ -141,13 +141,13 @@ if (btnPremium) {
                 email: sessionUser.email,
                 name: sessionUser.name,
                 status: 'pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timesdatamp: firebase.firestore.FieldValue.serverTimesdatamp()
             });
             alert("ÄÃ£ gá»­i yÃªu cáº§u Mua Premium Ä‘áº¿n quáº£n trá»‹ viÃªn. Vui lÃ²ng chá» há»‡ thá»‘ng xÃ¡c nháº­n!");
             btnPremium.innerHTML = '<i class="fa-solid fa-check"></i> ÄÃ£ gá»­i yÃªu cáº§u';
         } catch (error) {
             console.error("Lá»—i premium:", error);
-            alert("Lá»—i khi gá»­i yÃªu cáº§u.");
+            alert("Lá»—i khói gá»­i yÃªu cáº§u.");
             btnPremium.disabled = false;
             btnPremium.innerHTML = '<i class="fa-solid fa-crown"></i> YÃªu cáº§u Mua Premium';
         }
@@ -157,9 +157,10 @@ if (btnPremium) {
 // 4. ÄÄƒng xuáº¥t (Fix lá»—i rÃ² rá»‰ dá»¯ liá»‡u)
 if (btnLogout) {
     btnLogout.addEventListener('click', () => {
-        // XÃ³a TOÃ€N Bá»˜ dá»¯ liá»‡u local Ä‘á»ƒ trÃ¡nh rÃ² rá»‰ PvP sang acc khÃ¡c
+        // XÃ³a TOÃ€N Bá»˜ dá»¯ liá»‡u local Ä‘á»ƒ trÃ¡nh rÃ² rá»‰ PvP sang acc khóÃ¡c
         localStorage.clear(); 
         window.location.href = '/loginout';
     });
 }
+
 

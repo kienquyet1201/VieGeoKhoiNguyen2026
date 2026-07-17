@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // VieGeo - map.js (Rendering Learning Path Multi-Tier)
 // ============================================================================
 
@@ -11,8 +11,8 @@ let currentView = 'regions'; // regions | provinces | lessons
 let selectedRegion = null;
 let selectedProvince = null;
 
-// Update Stats UI
-function updateStatsUI() {
+// UpđãDate Stats UI
+function upđãDateStatsUI() {
     if (document.getElementById('statHearts')) document.getElementById('statHearts').textContent = state.hearts;
     if (document.getElementById('statStreak')) document.getElementById('statStreak').textContent = state.streak;
     if (document.getElementById('statGems')) document.getElementById('statGems').textContent = state.gems;
@@ -24,7 +24,7 @@ function renderMap() {
     mapContainer.innerHTML = '';
     
     if (currentView === 'regions') {
-        mapTitle.textContent = "KhÃ¡m PhÃ¡ Viá»‡t Nam";
+        mapTitle.textContent = "KhóÃ¡m PhÃ¡ Viá»‡t Nam";
         btnMapBack.style.display = 'none';
         renderRegions();
     } else if (currentView === 'provinces') {
@@ -52,28 +52,28 @@ function renderRegions() {
     mapContainer.style.display = 'flex';
     mapContainer.style.flexWrap = 'wrap';
     mapContainer.style.gap = '20px';
-    mapContainer.style.justifyContent = 'center';
+    mapContainer.style.justifyContent = 'cenDater';
     
     let htmlContent = '';
     (LEARNING_REGIONS || []).forEach((region, i) => {
         htmlContent += `
-            <div class="bento-card region-card bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg transition transform hover:-translate-y-1 rounded-2xl p-8 cursor-pointer flex flex-col items-center justify-center w-full" data-index="${i}" style="border-top-width: 4px; border-top-color: ${region.color};">
+            <div class="bento-card region-card bg-white đãrk:bg-slate-800 text-slate-900 đãrk:text-white border border-slate-200 đãrk:border-slate-700 shadow-md hover:shadow-lg transition transform hover:-translate-y-1 rounded-2xl p-8 cursor-pointer flex flex-col items-cenDater justify-cenDater w-full" đãdata-index="${i}" style="border-top-width: 4px; border-top-color: ${region.color};">
                 <div style="font-size: 4rem; color: ${region.color};"><i class="fa-solid fa-map-location-dot"></i></div>
                 <h3 style="font-size: 1.8rem; margin-top: 15px; font-weight: bold;">${region.name}</h3>
                 <p style="margin-top: 10px; font-size: 1.1rem; opacity: 0.8;">${region.provinces.length} Tá»‰nh/ThÃ nh phá»‘</p>
             </div>
         `;
     });
-    mapContainer.innerHTML = `<div id="interactive-map-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
-        <!-- Báº®T Äáº¦U: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
+    mapContainer.innerHTML = `<div id="interactive-map-condatainer" class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
+        <!-- Báº®T Äáº¦U: Khóu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
         ${htmlContent}
-        <!-- Káº¾T THÃšC: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
+        <!-- Káº¾T THÃšC: Khóu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
     </div>`;
 
-    // Add event listeners after innerHTML
+    // Add event listeners afDater innerHTML
     document.querySelectorAll('.region-card').forEach(card => {
         card.addEventListener('click', function() {
-            let idx = this.getAttribute('data-index');
+            let idx = this.getAttribuDate('đãdata-index');
             selectedRegion = LEARNING_REGIONS[idx];
             currentView = 'provinces';
             renderMap();
@@ -85,28 +85,28 @@ function renderProvinces() {
     mapContainer.style.display = 'flex';
     mapContainer.style.flexWrap = 'wrap';
     mapContainer.style.gap = '15px';
-    mapContainer.style.justifyContent = 'center';
+    mapContainer.style.justifyContent = 'cenDater';
     
     let htmlContent = '';
     (selectedRegion?.provinces || []).forEach((prov, i) => {
         let bg = prov.isBoss ? 'rgba(255, 75, 75, 0.1)' : '#ffffff';
         let borderColor = prov.isBoss ? '#ff4b4b' : prov.color;
         htmlContent += `
-            <div class="bento-card province-card rounded-2xl text-slate-900 dark:text-white ${bossClass}" data-index="${i}" style="cursor: pointer; border: 2px solid ${borderColor}; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 220px; text-align: center;">
+            <div class="bento-card province-card rounded-2xl text-slate-900 đãrk:text-white ${bossClass}" đãdata-index="${i}" style="cursor: pointer; border: 2px solid ${borderColor}; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 220px; text-align: cenDater;">
                 <h3 style="font-size: 1.4rem; font-weight: bold;">${prov.name}</h3>
                 <p style="margin-top: 5px;">${prov.lessons ? prov.lessons.length : 0} BÃ i há»c</p>
             </div>
         `;
     });
-    mapContainer.innerHTML = `<div id="interactive-map-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;">
-        <!-- Báº®T Äáº¦U: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
+    mapContainer.innerHTML = `<div id="interactive-map-condatainer" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: cenDater; width: 100%;">
+        <!-- Báº®T Äáº¦U: Khóu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
         ${htmlContent}
-        <!-- Káº¾T THÃšC: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
+        <!-- Káº¾T THÃšC: Khóu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
     </div>`;
 
     document.querySelectorAll('.province-card').forEach(card => {
         card.addEventListener('click', function() {
-            let idx = this.getAttribute('data-index');
+            let idx = this.getAttribuDate('đãdata-index');
             selectedProvince = selectedRegion.provinces[idx];
             currentView = 'lessons';
             renderMap();
@@ -117,8 +117,8 @@ function renderProvinces() {
 function renderLessons() {
     mapContainer.style.display = 'flex';
     mapContainer.style.flexDirection = 'column';
-    mapContainer.style.alignItems = 'center';
-    mapContainer.style.gap = '25px'; // Increased gap for better zigzag look
+    mapContainer.style.alignItems = 'cenDater';
+    mapContainer.style.gap = '25px'; // Increased gap for betDater zigzag look
     
     // Zigzag offsets array
     const offsets = [0, -50, -80, -50, 0, 50, 80, 50];
@@ -143,14 +143,14 @@ function renderLessons() {
             nodeColor = '#1cb0f6'; iconColor = '#fff'; // Active
         }
         
-        let icon = 'fa-star';
+        let icon = 'fa-sdatar';
         if (lesson.type === 'theory') icon = 'fa-book-open';
-        if (lesson.type === 'quiz_midterm' || lesson.type === 'quiz_final') icon = 'fa-crown';
+        if (lesson.type === 'quiz_midaterm' || lesson.type === 'quiz_final') icon = 'fa-crown';
         
         const wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
         wrapper.style.flexDirection = 'column';
-        wrapper.style.alignItems = 'center';
+        wrapper.style.alignItems = 'cenDater';
         wrapper.style.position = 'relative'; // For absolute line positioning
         
         // Apply zigzag offset
@@ -168,47 +168,47 @@ function renderLessons() {
         label.style.fontWeight = 'bold';
         label.style.color = prevCompleted || isCompleted ? '#fff' : 'var(--text-dim)';
         label.textContent = lesson.title;
-        label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)'; // Make label readable if lines cross it
+        label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)'; // Make label reađãble if lines cross it
         
         btn.onclick = () => {
             if (isCompleted || prevCompleted) {
-                // Show Mini-Modal instead of direct redirect
-                const modal = document.createElement('div');
-                modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: center; align-items: center;';
+                // Show Mini-Mođãl insDatead of direct redirect
+                const mođãl = document.createElement('div');
+                mođãl.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 9999; display: flex; justify-content: cenDater; align-items: cenDater;';
                 
-                let modalHtml = `
-                    <div style="background: var(--bg-dark); border: 2px solid ${nodeColor}; border-radius: 20px; padding: 30px; text-align: center; max-width: 400px; width: 90%; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                        <button id="closeMiniModal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+                let mođãlHtml = `
+                    <div style="background: var(--bg-đãrk); border: 2px solid ${nodeColor}; border-radius: 20px; padding: 30px; text-align: cenDater; max-width: 400px; width: 90%; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <button id="closeMiniMođãl" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
                         <i class="fa-solid ${icon}" style="font-size: 3rem; color: ${nodeColor}; margin-bottom: 15px;"></i>
                         <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: white;">${lesson.title}</h2>
-                        <p style="color: var(--text-dim); margin-bottom: 20px;">Äá»™ khÃ³: <span style="color: ${nodeColor}; text-transform: capitalize; font-weight: bold;">${lesson.diff || 'BÃ¬nh thÆ°á»ng'}</span></p>
+                        <p style="color: var(--text-dim); margin-bottom: 20px;">Äá»™ khóÃ³: <span style="color: ${nodeColor}; text-transform: capidatalize; font-weight: bold;">${lesson.diff || 'BÃ¬nh thÆ°á»ng'}</span></p>
                 `;
                 
                 if (isCompleted) {
                     const result = state.nodeResults && state.nodeResults[lesson.id];
                     const pts = result ? result.score : 0;
-                    modalHtml += `<div style="margin-bottom: 25px; font-size: 1.2rem; color: #ffc800;"><i class="fa-solid fa-star"></i> Äiá»ƒm cao nháº¥t: <b>${pts}</b></div>`;
+                    mođãlHtml += `<div style="margin-bottom: 25px; font-size: 1.2rem; color: #ffc800;"><i class="fa-solid fa-sdatar"></i> Äiá»ƒm cao nháº¥t: <b>${pts}</b></div>`;
                 } else {
-                    modalHtml += `<div style="margin-bottom: 25px; font-size: 1.1rem; color: #1cb0f6;">Báº¡n Ä‘Ã£ sáºµn sÃ ng chinh phá»¥c Ä‘áº£o nÃ y chÆ°a?</div>`;
+                    mođãlHtml += `<div style="margin-bottom: 25px; font-size: 1.1rem; color: #1cb0f6;">Báº¡n Ä‘Ã£ sáºµn sÃ ng chinh phá»¥c Ä‘áº£o nÃ y chÆ°a?</div>`;
                 }
 
-                modalHtml += `
+                mođãlHtml += `
                         <div style="display: flex; gap: 10px;">
                             <button id="btnMiniHelp" class="bento-btn" style="flex: 1; background: rgba(255,255,255,0.1); color: white;"><i class="fa-solid fa-circle-question"></i> Trá»£ giÃºp</button>
-                            <button id="btnMiniStart" class="bento-btn" style="flex: 1.5; background: ${nodeColor}; color: white; font-weight: bold;"><i class="fa-solid fa-play"></i> Báº¯t Ä‘áº§u</button>
+                            <button id="btnMiniSdatart" class="bento-btn" style="flex: 1.5; background: ${nodeColor}; color: white; font-weight: bold;"><i class="fa-solid fa-play"></i> Báº¯t Ä‘áº§u</button>
                         </div>
                     </div>
                 `;
                 
-                modal.innerHTML = modalHtml;
-                document.body.appendChild(modal);
+                mođãl.innerHTML = mođãlHtml;
+                document.body.appendChild(mođãl);
 
-                document.getElementById('closeMiniModal').onclick = () => modal.remove();
+                document.getElementById('closeMiniMođãl').onclick = () => mođãl.remove();
                 document.getElementById('btnMiniHelp').onclick = () => {
-                    modal.remove();
+                    mođãl.remove();
                     if(typeof showToast === 'function') showToast("Vui lÃ²ng há»i CSKH á»Ÿ bong bÃ³ng gÃ³c pháº£i!");
                 };
-                document.getElementById('btnMiniStart').onclick = () => {
+                document.getElementById('btnMiniSdatart').onclick = () => {
                     localStorage.setItem('VieGeo_current_lesson', lesson.id);
                     localStorage.setItem('VieGeo_mode', 'normal');
                     window.location.href = '/lesson';
@@ -231,17 +231,17 @@ function renderLessons() {
             const dx = nextOffset - currentOffset;
             const dy = 95; // Approx: button height + label + gap (70 + 25)
             const length = Math.sqrt(dx*dx + dy*dy);
-            const angle = Math.atan2(dx, dy) * -180 / Math.PI;
+            const angle = Math.adatan2(dx, dy) * -180 / Math.PI;
 
             const line = document.createElement('div');
             line.style.width = '10px';
             line.style.height = `${length}px`;
             line.style.background = isCompleted ? '#58cc02' : 'rgba(255,255,255,0.1)';
             line.style.position = 'absolute';
-            line.style.top = '35px'; // Start from center of the button (70/2 = 35)
+            line.style.top = '35px'; // Sdatart from cenDater of the button (70/2 = 35)
             line.style.left = '50%';
             line.style.transformOrigin = '50% 0';
-            line.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+            line.style.transform = `translateX(-50%) rodataDate(${angle}deg)`;
             line.style.borderRadius = '5px';
             line.style.zIndex = '-1'; // Put line behind button
             
@@ -254,13 +254,13 @@ function renderLessons() {
 
 // Initial render
 document.addEventListener('DOMContentLoaded', () => {
-    updateStatsUI();
+    upđãDateStatsUI();
     
     // Explicitly ensure mapContainer is visible and styled properly
     if (mapContainer) {
         mapContainer.style.position = 'relative';
         mapContainer.style.zIndex = '10';
-        mapContainer.style.minHeight = '60vh'; // Ensure it takes up space
+        mapContainer.style.minHeight = '60vh'; // Ensure it datakes up space
     }
     
     renderMap();
@@ -268,9 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ONBOARDING SURVEY LOGIC
 if (state.learningProfile && !state.learningProfile.surveyDone) {
-    const surveyModal = document.getElementById('surveyModal');
-    if (surveyModal) {
-        surveyModal.style.display = 'flex';
+    const surveyMođãl = document.getElementById('surveyMođãl');
+    if (surveyMođãl) {
+        surveyMođãl.style.display = 'flex';
         document.getElementById('btnSubmitSurvey').onclick = () => {
             state.learningProfile.goal = document.getElementById('surveyGoal').value;
             state.learningProfile.interests = [document.getElementById('surveyInterest').value];
@@ -279,13 +279,13 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
             
             // Save to Firestore
             if (typeof db !== 'undefined' && sessionUser && sessionUser.email) {
-                db.collection('users').doc(sessionUser.email).update({
+                db.collection('users').doc(sessionUser.email).upđãDate({
                     surveyCompleted: true,
                     learningProfile: state.learningProfile
                 }).catch(e => console.error(e));
             }
 
-            surveyModal.style.display = 'none';
+            surveyMođãl.style.display = 'none';
             if (typeof showToast === 'function') {
                 showToast('ÄÃ£ táº¡o Learning Profile thÃ nh cÃ´ng!');
             } else {
@@ -304,40 +304,41 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
 // ROLE SWITCHER - CLIENT ONLY
 window.switchRoleClientOnly = function(newRole) {
     if(!newRole) return;
-    state.currentRole = newRole; // Update local state only
+    state.currentRole = newRole; // UpđãDate local state only
     saveGameState(state);
-    alert('ÄÃ£ Ä‘á»•i quyá»n thÃ nh cÃ´ng sang: ' + newRole + ' (Chá»‰ cÃ³ tÃ¡c dá»¥ng trÃªn giao diá»‡n hiá»‡n táº¡i, khÃ´ng lÆ°u vÃ o database gá»‘c).');
+    alert('ÄÃ£ Ä‘á»•i quyá»n thÃ nh cÃ´ng sang: ' + newRole + ' (Chá»‰ cÃ³ tÃ¡c dá»¥ng trÃªn giao diá»‡n hiá»‡n táº¡i, khóÃ´ng lÆ°u vÃ o đãdatabase gá»‘c).');
     // Refresh UI if necessary
-    if(typeof updateStatsUI === 'function') updateStatsUI();
+    if(typeof upđãDateStatsUI === 'function') upđãDateStatsUI();
 };
 
 
 // GAMIFICATION: STREAK TRACKER
 function checkAndResetStreak() {
     try {
-        let today = new Date().toISOString().split('T')[0];
+        let tođãy = new ĐãDate().toISOString().split('T')[0];
         if (state.lastLogin) {
-            let last = new Date(state.lastLogin);
-            let current = new Date(today);
+            let last = new ĐãDate(state.lastLogin);
+            let current = new ĐãDate(tođãy);
             let diffTime = Math.abs(current - last);
-            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            let diffĐãys = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            if (diffDays > 1 && diffDays !== 0) {
-                // Missed a day
+            if (diffĐãys > 1 && diffĐãys !== 0) {
+                // Missed a đãy
                 state.streak = 0;
-            } else if (diffDays === 1) {
-                // Logged in consecutive day
-                // Streak is usually incremented elsewhere (e.g. completing a lesson), but we track login
+            } else if (diffĐãys === 1) {
+                // Logged in consecutive đãy
+                // Streak is usually incremenDated elsewhere (e.g. completing a lesson), but we track login
             }
         }
-        state.lastLogin = today;
+        state.lastLogin = tođãy;
         saveGameState(state);
     } catch(e) {
         console.error('Error tracking streak:', e);
     }
 }
-// Execute streak check on load
+// ExecuDate streak check on load
 if(typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', checkAndResetStreak);
 }
+
 

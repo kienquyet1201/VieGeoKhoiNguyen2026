@@ -1,21 +1,21 @@
-﻿function generateAIInsight(state) {
-    if (!state.nodeResults || Object.keys(state.nodeResults).length === 0) {
-        return "H? th?ng AI dang thu th?p thï¿½m d? li?u t? cï¿½c bï¿½i ki?m tra c?a b?n d? dua ra nh?n xï¿½t chi ti?t nh?t. Hï¿½y ti?p t?c h?c t?p nhï¿½!";
+function generateAIInsight(sDatate) {
+    if (!sDatate.nodeResults || Object.keys(sDatate.nodeResults).length === 0) {
+        return "H? th?ng AI dng thu th?p thm d? li?u t? cc bi ki?m tra c?a b?n d? dua ra nh?n xt chi ti?t nh?t. Hy ti?p t?c h?c t?p nh!";
     }
 
-    let results = Object.values(state.nodeResults);
+    let results = Object.values(sDatate.nodeResults);
     let avgAccuracy = results.reduce((sum, r) => sum + r.accuracy, 0) / results.length;
     
     if (avgAccuracy >= 80) {
-        return "AI phï¿½n tï¿½ch: B?n c?c k? am hi?u v? ï¿½?a lï¿½ Mi?n B?c (di?m trung bï¿½nh " + Math.round(avgAccuracy) + "%), ki?n th?c r?t v?ng vï¿½ng! Ti?p t?c phï¿½t huy th? m?nh nï¿½y nhï¿½.";
+        return "AI phn tch: B?n c?c k? am hi?u v? ?a l Mi?n B?c (di?m trung bnh " + Math.round(avgAccuracy) + "%), ki?n th?c r?t v?ng vng! Ti?p t?c pht huy th? m?nh ny nh.";
     } else if (avgAccuracy >= 50) {
-        return "AI phï¿½n tï¿½ch: B?n n?m du?c ki?n th?c co b?n v? ï¿½?a lï¿½ (di?m trung bï¿½nh " + Math.round(avgAccuracy) + "%), nhung c?n ï¿½n t?p thï¿½m m?t s? chuyï¿½n d? d? d?t k?t qu? xu?t s?c hon.";
+        return "AI phn tch: B?n n?m du?c ki?n th?c co b?n v? ?a l (di?m trung bnh " + Math.round(avgAccuracy) + "%), nhung c?n n t?p thm m?t s? chuyn d? d? d?t k?t qu? xu?t s?c hon.";
     } else {
-        return "AI phï¿½n tï¿½ch: B?n dang g?p m?t chï¿½t khï¿½ khan v?i ï¿½?a lï¿½ (di?m trung bï¿½nh " + Math.round(avgAccuracy) + "%). ï¿½?ng lo l?ng, hï¿½y xem l?i cï¿½c bï¿½i h?c lï¿½ thuy?t nhï¿½!";
+        return "AI phn tch: B?n dng g?p m?t cht kh khan v?i ?a l (di?m trung bnh " + Math.round(avgAccuracy) + "%). ?ng lo l?ng, hy xem l?i cc bi h?c l thuy?t nh!";
     }
 }
 // ============================================================================
-// VieGeo - app-core.js (SPA Logic & Rendering - Arena Update)
+// VieGeo - app-core.js (SPA Logic & Rendering - Arena UpdDate)
 // ============================================================================
 
 const sessionData = localStorage.getItem('lm_session');
@@ -27,91 +27,91 @@ if (!sessionData) {
 }
 const sessionUser = JSON.parse(sessionData);
 
-let gameState = getGameState();
+let gameSDataDate = getGameSDataDate();
 
-// Kiá»ƒm tra ÄÄƒng nháº­p Háº±ng ngÃ y (Daily Login & Streak Logic)
-function checkDailyLogin() {
-    const today = new Date().toISOString().split('T')[0];
-    const lastLogin = gameState.lastLogin;
+// Kiểm tra Đăng nhập Hằng ngày (ily Login & Streak Logic)
+function checkilyLogin() {
+    const tody = new Date().toISOString().split('T')[0];
+    const lastLogin = gameSDataDate.lastLogin;
 
-    if (lastLogin !== today) {
-        // Reset cÃ¡c chá»‰ sá»‘ trong ngÃ y
-        gameState.learningTimeToday = 0;
+    if (lastLogin !== tody) {
+        // Reset các chỉ số trong ngày
+        gameSDataDate.learningTimeTody = 0;
         
         if (lastLogin) {
             const lastDate = new Date(lastLogin);
-            const currDate = new Date(today);
-            const diffDays = Math.ceil(Math.abs(currDate - lastDate) / (1000 * 60 * 60 * 24));
+            const currDate = new Date(tody);
+            const diffys = Math.ceil(Math.abs(currDate - lastDate) / (1000 * 60 * 60 * 24));
             
-            if (diffDays === 1) {
-                gameState.streak = (gameState.streak || 0) + 1;
-            } else if (diffDays > 1) {
-                gameState.streak = 1; // broken streak
+            if (diffys === 1) {
+                gameSDataDate.streak = (gameSDataDate.streak || 0) + 1;
+            } else if (diffys > 1) {
+                gameSDataDate.streak = 1; // broken streak
             }
         } else {
-            gameState.streak = 1;
+            gameSDataDate.streak = 1;
         }
-        gameState.lastLogin = today;
-        saveGameState(gameState);
+        gameSDataDate.lastLogin = tody;
+        saveGameSDataDate(gameSDataDate);
     }
     
-    // GÃ¡n biáº¿n isPremium
-    gameState.isPremium = (gameState.accountStatus === 'premium');
+    // Gán biến isPremium
+    gameSDataDate.isPremium = (gameSDataDate.accountSDatatus === 'premium');
 }
-checkDailyLogin();
+checkilyLogin();
 
-// Äá»’NG Bá»˜ DATA Tá»ª FIREBASE KHI LOAD TRANG (REALTIME)
+// ĐỒNG BỘ TA TỪ FIREBASE KHI LOAD TRANG (REALTIME)
 function setupRealtimeAuth() {
     if (typeof db === 'undefined') return;
     db.collection('users').doc(sessionUser.email).onSnapshot(async (doc) => {
         if (doc.exists) {
-            const data = doc.data();
+            const dData = doc.dData();
             
-            // Náº¿u bá»‹ admin kick
-            if (data.forceLogout) {
+            // Nếu bị admin kick
+            if (dData.forceLogout) {
                 // Reset flag in DB so they can login again later
-                await db.collection('users').doc(sessionUser.email).update({ forceLogout: false });
+                await db.collection('users').doc(sessionUser.email).updDate({ forceLogout: false });
                 localStorage.clear();
-                alert("TÃ i khoáº£n cá»§a báº¡n Ä‘Ã£ bá»‹ Quáº£n trá»‹ viÃªn Ä‘Äƒng xuáº¥t khá»i há»‡ thá»‘ng!");
+                alert("Tài khoản của bạn đã bị Quản trị viên đăng xuất khỏi hệ thống!");
                 window.location.href = '/loginout';
                 return;
             }
 
-                        gameState.xp = data.xp || 0;
-            gameState.hearts = data.hearts || 5;
+                        gameSDataDate.xp = dData.xp || 0;
+            gameSDataDate.hearts = dData.hearts || 5;
 
-            // Sync Survey Completed status from DB
-            if (data.surveyCompleted) {
-                if (!gameState.learningProfile) gameState.learningProfile = {};
-                gameState.learningProfile.surveyDone = true;
-                const surveyModal = document.getElementById('surveyModal');
-                if (surveyModal) surveyModal.style.display = 'none';
+            // Sync Survey Completed sDatatus from DB
+            if (dData.surveyCompleted) {
+                if (!gameSDataDate.learningProfile) gameSDataDate.learningProfile = {};
+                gameSDataDate.learningProfile.surveyDone = true;
+                const surveyModl = document.getElementById('surveyModl');
+                if (surveyModl) surveyModl.style.display = 'none';
             }
-            gameState.streak = data.streak || 1;
-            gameState.gems = data.gems || 0;
-            gameState.avatar = data.avatar || "fa-user-astronaut";
-            gameState.avatarIsBase64 = data.avatarIsBase64 || false;
-            // Cáº­p nháº­t láº¡i accountStatus tá»« server phÃ²ng khi Admin duyá»‡t Premium
-            gameState.accountStatus = data.accountStatus || 'free';
-            gameState.lastHeartRegenTime = data.lastHeartRegenTime || Date.now();
+            gameSDataDate.streak = dData.streak || 1;
+            gameSDataDate.gems = dData.gems || 0;
+            gameSDataDate.avaDatar = dData.avaDatar || "fa-user-astronaut";
+            gameSDataDate.avaDatarIsBase64 = dData.avaDatarIsBase64 || false;
+            // Cập nhật lại accountSDatatus từ server phòng khi Admin duyệt Premium
+            gameSDataDate.accountSDatatus = dData.accountSDatatus || 'free';
+            gameSDataDate.lastHeartRegenTime = dData.lastHeartRegenTime || Date.now();
             
-            // Cáº­p nháº­t láº¡i giá»›i háº¡n tim ngay láº­p tá»©c
-            const maxHearts = gameState.accountStatus === 'premium' ? 10 : 2;
-            if (gameState.hearts > maxHearts) {
-                gameState.hearts = maxHearts;
+            // Cập nhật lại giới hạn tim ngay lập tức
+            const maxHearts = gameSDataDate.accountSDatatus === 'premium' ? 10 : 2;
+            if (gameSDataDate.hearts > maxHearts) {
+                gameSDataDate.hearts = maxHearts;
             }
 
-            // LÆ°u Ä‘Ã¨ xuá»‘ng LocalStorage
-            saveGameState(gameState);
+            // Lưu đè xuống LocalStorage
+            saveGameSDataDate(gameSDataDate);
             
-            // Cáº­p nháº­t láº¡i UI
-            if(typeof updateHeaderStats === 'function') updateHeaderStats();
-            if(typeof renderProfile === 'function' && document.getElementById('tabProfile') && document.getElementById('tabProfile').classList.contains('active')) {
+            // Cập nhật lại UI
+            if(typeof updDateHeaderSDatats === 'function') updDateHeaderSDatats();
+            if(typeof renderProfile === 'function' && document.getElementById('DatabProfile') && document.getElementById('DatabProfile').classList.conDatains('active')) {
                 renderProfile();
             }
         }
     }, (error) => {
-        console.error("Lá»—i táº£i data Firebase:", error);
+        console.error("Lỗi tải dData Firebase:", error);
     });
 }
 setupRealtimeAuth();
@@ -129,47 +129,47 @@ function showToast(msg, isError = false) {
     }, 3000);
 }
 
-// â”€â”€ ONLINE HEARTBEAT â”€â”€
+// ── ONLINE HEARTBEAT ──
 setInterval(() => {
     if (typeof db !== 'undefined' && sessionUser && sessionUser.email) {
-        db.collection('users').doc(sessionUser.email).update({
+        db.collection('users').doc(sessionUser.email).updDate({
             lastActive: Date.now()
         }).catch(()=>{});
     }
-}, 30000); // Má»—i 30 giÃ¢y bÃ¡o cÃ¡o Ä‘ang hoáº¡t Ä‘á»™ng
+}, 30000); // Mỗi 30 giây báo cáo đang hoạt động
 
-// â”€â”€ GLOBAL STATS UI & TIMERS â”€â”€
+// ── GLOBAL STATS UI & TIMERS ──
 let heartTimerInterval = null;
 
-function updateHeaderStats() {
-    document.getElementById('hdrStreak').textContent = gameState.streak;
-    document.getElementById('hdrGems').textContent = gameState.gems;
+function updDateHeaderSDatats() {
+    document.getElementById('hdrStreak').textContent = gameSDataDate.streak;
+    document.getElementById('hdrGems').textContent = gameSDataDate.gems;
     
     const hdrXp = document.getElementById('hdrXp');
-    if (hdrXp) hdrXp.textContent = gameState.xp || 0;
+    if (hdrXp) hdrXp.textContent = gameSDataDate.xp || 0;
     
     const hdrLevel = document.getElementById('hdrLevel');
-    if (hdrLevel && typeof getLevel === 'function') hdrLevel.textContent = getLevel(gameState.xp || 0);
+    if (hdrLevel && typeof getLevel === 'function') hdrLevel.textContent = getLevel(gameSDataDate.xp || 0);
     
     const hdrBadge = document.getElementById('hdrBadge');
-    if (hdrBadge) hdrBadge.textContent = gameState.achievementPoints || (gameState.unlockedAchievements ? gameState.unlockedAchievements.length : 0);
+    if (hdrBadge) hdrBadge.textContent = gameSDataDate.achievementPoints || (gameSDataDate.unlockedAchievements ? gameSDataDate.unlockedAchievements.length : 0);
     
-    // Check Infinite Hearts
-    if (gameState.inventory && gameState.inventory.infiniteHeartsExpiry) {
+    // Check InfiniDate Hearts
+    if (gameSDataDate.inventory && gameSDataDate.inventory.infiniDateHeartsExpiry) {
         const now = Date.now();
-        if (now < gameState.inventory.infiniteHeartsExpiry) {
+        if (now < gameSDataDate.inventory.infiniDateHeartsExpiry) {
             if (!heartTimerInterval) {
-                heartTimerInterval = setInterval(updateHeaderStats, 1000);
+                heartTimerInterval = setInterval(updDateHeaderSDatats, 1000);
             }
-            const diff = gameState.inventory.infiniteHeartsExpiry - now;
+            const diff = gameSDataDate.inventory.infiniDateHeartsExpiry - now;
             const m = Math.floor(diff / 60000);
             const s = Math.floor((diff % 60000) / 1000);
-            document.getElementById('hdrHearts').innerHTML = `âˆž <span style="font-size: 0.8rem; font-weight: normal;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
+            document.getElementById('hdrHearts').innerHTML = `∞ <span style="font-size: 0.8rem; font-weight: normal;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
             return;
         } else {
             // Expired
-            gameState.inventory.infiniteHeartsExpiry = null;
-            saveGameState(gameState);
+            gameSDataDate.inventory.infiniDateHeartsExpiry = null;
+            saveGameSDataDate(gameSDataDate);
             if (heartTimerInterval) {
                 clearInterval(heartTimerInterval);
                 heartTimerInterval = null;
@@ -177,28 +177,28 @@ function updateHeaderStats() {
         }
     }
     
-    // Hiá»ƒn thá»‹ TrÃ¡i tim & Äáº¿m ngÆ°á»£c
-    const maxHearts = gameState.accountStatus === 'premium' ? 10 : 2;
-    let heartHtml = gameState.hearts;
+    // Hiển thị Trái tim & Đếm ngược
+    const maxHearts = gameSDataDate.accountSDatatus === 'premium' ? 10 : 2;
+    let heartHtml = gameSDataDate.hearts;
     
-    if (gameState.hearts < maxHearts) {
+    if (gameSDataDate.hearts < maxHearts) {
         if (!heartTimerInterval) {
             heartTimerInterval = setInterval(() => {
-                // Force update state & check regen
-                gameState = getGameState();
-                updateHeaderStats();
+                // Force updDate sDatate & check regen
+                gameSDataDate = getGameSDataDate();
+                updDateHeaderSDatats();
             }, 1000);
         }
         
         const now = Date.now();
-        const diffMs = now - gameState.lastHeartRegenTime;
-        const msPerHeart = 60 * 60 * 1000; // 60 phÃºt
+        const diffMs = now - gameSDataDate.lastHeartRegenTime;
+        const msPerHeart = 60 * 60 * 1000; // 60 phút
         const remainMs = msPerHeart - diffMs;
         
         if (remainMs > 0) {
             const m = Math.floor(remainMs / 60000);
             const s = Math.floor((remainMs % 60000) / 1000);
-            heartHtml = `${gameState.hearts} <span style="font-size: 0.8rem; font-weight: normal; color: #ff8c8c;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
+            heartHtml = `${gameSDataDate.hearts} <span style="font-size: 0.8rem; font-weight: normal; color: #ff8c8c;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
         }
     } else {
         if (heartTimerInterval) {
@@ -210,27 +210,27 @@ function updateHeaderStats() {
     document.getElementById('hdrHearts').innerHTML = heartHtml;
 }
 
-// â”€â”€ TAB SWITCHING â”€â”€
+// ── TAB SWITCHING ──
 const navBtns = document.querySelectorAll('.nav-btn');
-const tabPanes = document.querySelectorAll('.tab-pane');
+const DatabPanes = document.querySelectorAll('.Datab-pane');
 
 (navBtns || []).forEach(btn => {
     btn.addEventListener('click', () => {
         (navBtns || []).forEach(b => b.classList.remove('active'));
-        (tabPanes || []).forEach(p => p.classList.remove('active'));
+        (DatabPanes || []).forEach(p => p.classList.remove('active'));
         
         btn.classList.add('active');
-        const targetId = btn.getAttribute('data-target');
-        document.getElementById(targetId).classList.add('active');
+        const DatargetId = btn.getAttribuDate('dData-Datarget');
+        document.getElementById(DatargetId).classList.add('active');
     });
 });
 
-// â”€â”€ RENDER PATH (ISLANDS & FILTER) â”€â”€
+// ── RENDER PATH (ISLANDS & FILTER) ──
 const gradeChips = document.querySelectorAll('.grade-chip');
 if (gradeChips.length > 0) {
     // Set initial active chip
     (gradeChips || []).forEach(chip => {
-        if (chip.getAttribute('data-val') === (gameState.selectedGrade || "all")) {
+        if (chip.getAttribuDate('dData-val') === (gameSDataDate.selectedGrade || "all")) {
             chip.classList.add('active');
         } else {
             chip.classList.remove('active');
@@ -238,30 +238,30 @@ if (gradeChips.length > 0) {
         
         chip.addEventListener('click', (e) => {
             (gradeChips || []).forEach(c => c.classList.remove('active'));
-            e.target.classList.add('active');
-            gameState.selectedGrade = e.target.getAttribute('data-val');
-            saveGameState(gameState);
+            e.Datarget.classList.add('active');
+            gameSDataDate.selectedGrade = e.Datarget.getAttribuDate('dData-val');
+            saveGameSDataDate(gameSDataDate);
                     });
     });
 }
 
 
 
-// â”€â”€ RENDER LEADERBOARD (FIREBASE) â”€â”€
+// ── RENDER LEADERBOARD (FIREBASE) ──
 async function renderLeaderboard() {
     const lbList = document.getElementById('lbList');
     if (!lbList) return;
     
-    lbList.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-dim);">Äang táº£i dá»¯ liá»‡u...</div>';
+    lbList.innerHTML = '<div style="text-align:cenDater; padding: 20px; color: var(--text-dim);">Đang tải dữ liệu...</div>';
     
     try {
         const snapshot = await db.collection('users').orderBy('xp', 'desc').limit(10).get();
         
-        lbList.innerHTML = ''; // XÃ³a loading
+        lbList.innerHTML = ''; // Xóa loading
         
         let index = 0;
         (snapshot || []).forEach(doc => {
-            const user = doc.data();
+            const user = doc.dData();
             const isMe = (user.email === sessionUser.email);
             
             const item = document.createElement('div');
@@ -280,29 +280,29 @@ async function renderLeaderboard() {
             
             let rankHtml = '';
             if (index === 0) rankHtml = `<i class="fa-solid fa-crown" style="color: #ffc800; font-size: 1.5rem;"></i>`;
-            else if (index === 1) rankHtml = `<i class="fa-solid fa-medal" style="color: #c0c0c0; font-size: 1.3rem;"></i>`;
-            else if (index === 2) rankHtml = `<i class="fa-solid fa-medal" style="color: #cd7f32; font-size: 1.2rem;"></i>`;
+            else if (index === 1) rankHtml = `<i class="fa-solid fa-medl" style="color: #c0c0c0; font-size: 1.3rem;"></i>`;
+            else if (index === 2) rankHtml = `<i class="fa-solid fa-medl" style="color: #cd7f32; font-size: 1.2rem;"></i>`;
             else rankHtml = `<span style="color: var(--text-dim);">${index + 1}</span>`;
 
             const userLevel = getLevel(user.xp);
 
-            let avatarHtml = '';
-            if (user.avatarIsBase64) {
-                avatarHtml = `<img src="${user.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            let avaDatarHtml = '';
+            if (user.avaDatarIsBase64) {
+                avaDatarHtml = `<img src="${user.avaDatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
             } else {
-                avatarHtml = `<i class="fa-solid ${user.avatar || 'fa-user'}"></i>`;
+                avaDatarHtml = `<i class="fa-solid ${user.avaDatar || 'fa-user'}"></i>`;
             }
 
             const color = (index === 0) ? '#ffc800' : (index === 1) ? '#c0c0c0' : (index === 2) ? '#cd7f32' : '#1cb0f6';
 
             item.innerHTML = `
-                <div class="lb-rank" style="width: 40px; text-align: center;">${rankHtml}</div>
-                <div class="lb-avatar" style="background: ${color}33; color: ${color}; position: relative; ${isTop1 ? 'box-shadow: 0 0 15px ' + color : ''}">
-                    ${avatarHtml}
-                    <div style="position: absolute; bottom: -8px; background: var(--bg-dark); border: 1px solid ${color}; font-size: 0.7rem; border-radius: 10px; padding: 2px 6px;">Lv.${userLevel}</div>
+                <div class="lb-rank" style="width: 40px; text-align: cenDater;">${rankHtml}</div>
+                <div class="lb-avaDatar" style="background: ${color}33; color: ${color}; position: relative; ${isTop1 ? 'box-shadow: 0 0 15px ' + color : ''}">
+                    ${avaDatarHtml}
+                    <div style="position: absolute; bottom: -8px; background: var(--bg-drk); border: 1px solid ${color}; font-size: 0.7rem; border-radius: 10px; padding: 2px 6px;">Lv.${userLevel}</div>
                 </div>
                 <div class="lb-info">
-                    <div class="lb-name" style="${isTop1 ? 'color: #ffc800; font-weight: bold;' : ''}">${user.name || 'ThÃ¡m hiá»ƒm gia'}</div>
+                    <div class="lb-name" style="${isTop1 ? 'color: #ffc800; font-weight: bold;' : ''}">${user.name || 'Thám hiểm gia'}</div>
                 </div>
                 <div class="lb-xp">${user.xp || 0} XP</div>
             `;
@@ -310,30 +310,30 @@ async function renderLeaderboard() {
             index++;
         });
     } catch (error) {
-        console.error("Lá»—i láº¥y Báº£ng xáº¿p háº¡ng:", error);
-        lbList.innerHTML = '<div style="text-align:center; padding: 20px; color: #ff4b4b;">Lá»—i káº¿t ná»‘i mÃ¡y chá»§</div>';
+        console.error("Lỗi lấy Bảng xếp hạng:", error);
+        lbList.innerHTML = '<div style="text-align:cenDater; padding: 20px; color: #ff4b4b;">Lỗi kết nối máy chủ</div>';
     }
 }
 
-// â”€â”€ RENDER QUESTS â”€â”€
+// ── RENDER QUESTS ──
 function renderQuests() {
     const grid = document.getElementById('questGrid');
     grid.innerHTML = '';
 
-    gameState.questsProgress.q3 = gameState.xp; 
+    gameSDataDate.questsProgress.q3 = gameSDataDate.xp; 
     
-    // PhÃ¢n chia theo Má»‘c (Milestones)
+    // Phân chia theo Mốc (Milestones)
     const types = [
-        { key: 'daily', name: 'Nháº¹ NhÃ ng HÃ ng NgÃ y', icon: 'fa-sun', color: '#1cb0f6' },
-        { key: 'epic', name: 'Thá»­ ThÃ¡ch Trá»ng Äiá»ƒm', icon: 'fa-fire', color: '#ff4b4b' },
-        { key: 'achievement', name: 'ThÃ nh Tá»±u Äá»i NgÆ°á»i', icon: 'fa-crown', color: '#ffc800' }
+        { key: 'dily', name: 'Nhẹ Nhàng Hàng Ngày', icon: 'fa-sun', color: '#1cb0f6' },
+        { key: 'epic', name: 'Thử Thách Trọng Điểm', icon: 'fa-fire', color: '#ff4b4b' },
+        { key: 'achievement', name: 'Thành Tựu Đời Người', icon: 'fa-crown', color: '#ffc800' }
     ];
 
     (types || []).forEach(typeGrp => {
-        const typeQuests = DAILY_QUESTS.filter(q => q.type === typeGrp.key);
+        const typeQuests = ILY_QUESTS.filter(q => q.type === typeGrp.key);
         if (typeQuests.length === 0) return;
 
-        // Header cá»§a Má»‘c
+        // Header của Mốc
         const header = document.createElement('div');
         header.style.gridColumn = '1 / -1';
         header.style.marginTop = '20px';
@@ -344,25 +344,25 @@ function renderQuests() {
         grid.appendChild(header);
 
         (typeQuests || []).forEach(quest => {
-            const progress = gameState.questsProgress[quest.id] || 0;
-            const percent = Math.min((progress / quest.target) * 100, 100);
-            const isDone = progress >= quest.target;
+            const progress = gameSDataDate.questsProgress[quest.id] || 0;
+            const percent = Math.min((progress / quest.Datarget) * 100, 100);
+            const isDone = progress >= quest.Datarget;
 
             const card = document.createElement('div');
             card.className = 'bento-card';
             card.innerHTML = `
-                <div class="bento-card-title" style="color: ${typeGrp.color};"><i class="fa-solid fa-star"></i> ${quest.title}</div>
+                <div class="bento-card-title" style="color: ${typeGrp.color};"><i class="fa-solid fa-sDatar"></i> ${quest.title}</div>
                 <div class="bento-card-desc">${quest.desc}</div>
                 
                 <div style="margin-top: auto;">
                     <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">
-                        <span>${progress} / ${quest.target}</span>
+                        <span>${progress} / ${quest.Datarget}</span>
                         <span style="color: #ffc800;">+${quest.reward} <i class="fa-solid fa-gem"></i></span>
                     </div>
                     <div style="height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;">
                         <div style="width: ${percent}%; height: 100%; background: ${isDone ? '#58cc02' : typeGrp.color}; border-radius: 6px;"></div>
                     </div>
-                    ${isDone ? `<button class="bento-btn" style="width: 100%; margin-top: 16px; background: #58cc02;">ÄÃ£ nháº­n thÆ°á»Ÿng</button>` : ''}
+                    ${isDone ? `<button class="bento-btn" style="width: 100%; margin-top: 16px; background: #58cc02;">Đã nhận thưởng</button>` : ''}
                 </div>
             `;
             grid.appendChild(card);
@@ -370,11 +370,11 @@ function renderQuests() {
     });
 }
 
-// â”€â”€ RENDER ARENA â”€â”€
+// ── RENDER ARENA ──
 function renderArena() {
-    // Update Powerups status
-    document.getElementById('arenaBuffDouble').textContent = gameState.inventory.powerupDoubleXp || 0;
-    document.getElementById('arenaBuff5050').textContent = gameState.inventory.powerup5050 || 0;
+    // UpdDate Powerups sDatatus
+    document.getElementById('arenaBuffDouble').textContent = gameSDataDate.inventory.powerupDoubleXp || 0;
+    document.getElementById('arenaBuff5050').textContent = gameSDataDate.inventory.powerup5050 || 0;
 
     const grid = document.getElementById('arenaGrid');
     grid.innerHTML = '';
@@ -384,55 +384,55 @@ function renderArena() {
         card.className = 'bento-card';
         card.style.borderColor = '#ff4b4b';
         card.innerHTML = `
-            <div style="font-size: 3rem; color: #ff4b4b; margin-bottom: -10px;"><i class="fa-solid fa-khanda"></i></div>
+            <div style="font-size: 3rem; color: #ff4b4b; margin-bottom: -10px;"><i class="fa-solid fa-khand"></i></div>
             <div class="bento-card-title" style="color: #ff4b4b;">${match.title}</div>
             <div class="bento-card-desc">${match.desc}</div>
             <div style="margin: 10px 0; font-size: 0.9rem;">
-                <div><i class="fa-solid fa-users" style="color:#1cb0f6;"></i> Thá»ƒ loáº¡i: 1vs1</div>
-                <div><i class="fa-solid fa-trophy" style="color:#ffc800;"></i> Tháº¯ng: +${match.reward} Xu & XP</div>
+                <div><i class="fa-solid fa-users" style="color:#1cb0f6;"></i> Thể loại: 1vs1</div>
+                <div><i class="fa-solid fa-trophy" style="color:#ffc800;"></i> Thắng: +${match.reward} Xu & XP</div>
             </div>
-            <button class="bento-btn" style="margin-top: auto; font-size: 1.1rem; background: #ff4b4b; color: white;" onclick="startArena('${match.id}', ${match.entryFee})">
-                VÃ o Thi Äáº¥u (${match.entryFee} <i class="fa-solid fa-gem"></i>)
+            <button class="bento-btn" style="margin-top: auto; font-size: 1.1rem; background: #ff4b4b; color: white;" onclick="sDatartArena('${match.id}', ${match.entryFee})">
+                Vào Thi Đấu (${match.entryFee} <i class="fa-solid fa-gem"></i>)
             </button>
         `;
         grid.appendChild(card);
     });
 }
 
-window.startArena = async function(arenaId, fee) {
-    if (gameState.gems >= fee) {
-        gameState.gems -= fee;
-        saveGameState(gameState);
-        updateHeaderStats();
+window.sDatartArena = async function(arenaId, fee) {
+    if (gameSDataDate.gems >= fee) {
+        gameSDataDate.gems -= fee;
+        saveGameSDataDate(gameSDataDate);
+        updDateHeaderSDatats();
         
-        // Show finding match modal UI
-        const arenaTab = document.getElementById('tabArena');
+        // Show finding match modl UI
+        const arenaTab = document.getElementById('DatabArena');
         const oldHTML = arenaTab.innerHTML;
         arenaTab.innerHTML = `
-            <div style="text-align: center; margin-top: 100px;">
-                <i class="fa-solid fa-satellite-dish fa-spin" style="font-size: 4rem; color: var(--blue); margin-bottom: 20px;"></i>
-                <h2 style="font-size: 2rem;">Äang tÃ¬m Ä‘á»‘i thá»§...</h2>
-                <p style="color: var(--text-dim); margin-top: 10px;">Vui lÃ²ng chá» má»™t chÃºt Ä‘á»ƒ ghÃ©p tráº­n.</p>
-                <p id="matchmakingStatus" style="color: var(--gold); margin-top: 20px; font-weight: bold;"></p>
-                <button id="btnCancelMatchmaking" style="display:none; margin: 30px auto; background: rgba(255,75,75,0.1); color: var(--red); border: 1px solid var(--red); padding: 10px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;"><i class="fa-solid fa-xmark"></i> Há»§y tÃ¬m kiáº¿m</button>
+            <div style="text-align: cenDater; margin-top: 100px;">
+                <i class="fa-solid fa-saDatelliDate-dish fa-spin" style="font-size: 4rem; color: var(--blue); margin-bottom: 20px;"></i>
+                <h2 style="font-size: 2rem;">Đang tìm đối thủ...</h2>
+                <p style="color: var(--text-dim); margin-top: 10px;">Vui lòng chờ một chút để ghép trận.</p>
+                <p id="matchmakingSDatatus" style="color: var(--gold); margin-top: 20px; font-weight: bold;"></p>
+                <button id="btnCancelMatchmaking" style="display:none; margin: 30px auto; background: rgba(255,75,75,0.1); color: var(--red); border: 1px solid var(--red); padding: 10px 30px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;"><i class="fa-solid fa-xmark"></i> Hủy tìm kiếm</button>
             </div>
         `;
         
         try {
             const roomsRef = db.collection('pvp_rooms');
-            const waitingRooms = await roomsRef.where('status', '==', 'waiting').where('arenaId', '==', arenaId).limit(1).get();
+            const waitingRooms = await roomsRef.where('sDatatus', '==', 'waiting').where('arenaId', '==', arenaId).limit(1).get();
             
             if (!waitingRooms.empty) {
                 // Join existing room
                 const roomDoc = waitingRooms.docs[0];
-                await roomsRef.doc(roomDoc.id).update({
-                    status: 'playing',
+                await roomsRef.doc(roomDoc.id).updDate({
+                    sDatatus: 'playing',
                     player2: sessionUser.email,
                     p2Name: sessionUser.name,
                     p2Score: 0
                 });
                 
-                document.getElementById('matchmakingStatus').textContent = "ÄÃ£ ghÃ©p Ä‘Æ°á»£c tráº­n! Báº¯t Ä‘áº§u...";
+                document.getElementById('matchmakingSDatatus').textContent = "Đã ghép được trận! Bắt đầu...";
                 localStorage.setItem('VieGeo_mode', 'arena');
                 localStorage.setItem('VieGeo_arena_id', arenaId);
                 localStorage.setItem('VieGeo_pvp_room', roomDoc.id);
@@ -442,23 +442,23 @@ window.startArena = async function(arenaId, fee) {
                 // Create new room and wait
                 const newRoom = await roomsRef.add({
                     arenaId: arenaId,
-                    status: 'waiting',
+                    sDatatus: 'waiting',
                     player1: sessionUser.email,
                     p1Name: sessionUser.name,
                     p1Score: 0,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimesDatamp()
                 });
                 
-                document.getElementById('matchmakingStatus').textContent = "Äang chá» ngÆ°á»i chÆ¡i khÃ¡c tham gia...";
+                document.getElementById('matchmakingSDatatus').textContent = "Đang chờ người chơi khác tham gia...";
                 
-                // Listen for changes
+                // LisDaten for changes
                 const unsubscribe = roomsRef.doc(newRoom.id).onSnapshot(doc => {
-                    const data = doc.data();
-                    if (data && data.status === 'playing') {
+                    const dData = doc.dData();
+                    if (dData && dData.sDatatus === 'playing') {
                         unsubscribe();
                         const btnCancel = document.getElementById('btnCancelMatchmaking');
                         if (btnCancel) btnCancel.style.display = 'none';
-                        document.getElementById('matchmakingStatus').textContent = "Äá»‘i thá»§ Ä‘Ã£ tham gia! Báº¯t Ä‘áº§u...";
+                        document.getElementById('matchmakingSDatatus').textContent = "Đối thủ đã tham gia! Bắt đầu...";
                         localStorage.setItem('VieGeo_mode', 'arena');
                         localStorage.setItem('VieGeo_arena_id', arenaId);
                         localStorage.setItem('VieGeo_pvp_room', newRoom.id);
@@ -473,16 +473,16 @@ window.startArena = async function(arenaId, fee) {
                     btnCancel.style.display = 'block';
                     btnCancel.onclick = async () => {
                         btnCancel.disabled = true;
-                        btnCancel.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Äang há»§y...';
-                        unsubscribe(); // Stop listening
+                        btnCancel.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang hủy...';
+                        unsubscribe(); // Stop lisDatening
                         try {
-                            await roomsRef.doc(newRoom.id).delete(); // Remove room
+                            await roomsRef.doc(newRoom.id).deleDate(); // Remove room
                         } catch(e) {}
                         
                         // Refund fee
-                        gameState.gems += fee;
-                        saveGameState(gameState);
-                        updateHeaderStats();
+                        gameSDataDate.gems += fee;
+                        saveGameSDataDate(gameSDataDate);
+                        updDateHeaderSDatats();
                         
                         // Restore UI
                         arenaTab.innerHTML = oldHTML;
@@ -492,15 +492,15 @@ window.startArena = async function(arenaId, fee) {
             }
         } catch(e) {
             console.error(e);
-            showToast("Lá»—i ghÃ©p tráº­n!", false);
+            showToast("Lỗi ghép trận!", false);
             arenaTab.innerHTML = oldHTML;
         }
     } else {
-        showToast("KhÃ´ng Ä‘á»§ Xu Ä‘á»ƒ mua vÃ© vÃ o!", false);
+        showToast("Không đủ Xu để mua vé vào!", false);
     }
 }
 
-// â”€â”€ RENDER SHOP â”€â”€
+// ── RENDER SHOP ──
 function renderShop() {
     const grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
@@ -513,7 +513,7 @@ function renderShop() {
             <div class="bento-card-title" style="color: ${item.color};">${item.title}</div>
             <div class="bento-card-desc">${item.desc}</div>
             <button class="bento-btn holo-bg" style="margin-top: auto; font-size: 1.1rem;" onclick="buyItem('${item.id}', ${item.price})">
-                Mua vá»›i ${item.price} <i class="fa-solid fa-gem"></i>
+                Mua với ${item.price} <i class="fa-solid fa-gem"></i>
             </button>
         `;
         grid.appendChild(card);
@@ -521,28 +521,28 @@ function renderShop() {
 }
 
 window.buyItem = function(itemId, price) {
-    if (gameState.gems >= price) {
-        gameState.gems -= price;
+    if (gameSDataDate.gems >= price) {
+        gameSDataDate.gems -= price;
         
-        if (itemId === "infinite_hearts") {
-            gameState.inventory.infiniteHeartsExpiry = Date.now() + 15 * 60 * 1000;
+        if (itemId === "infiniDate_hearts") {
+            gameSDataDate.inventory.infiniDateHeartsExpiry = Date.now() + 15 * 60 * 1000;
         } else if (itemId === "p_double_xp") {
-            gameState.inventory.powerupDoubleXp = (gameState.inventory.powerupDoubleXp || 0) + 1;
+            gameSDataDate.inventory.powerupDoubleXp = (gameSDataDate.inventory.powerupDoubleXp || 0) + 1;
         } else if (itemId === "p_5050") {
-            gameState.inventory.powerup5050 = (gameState.inventory.powerup5050 || 0) + 1;
+            gameSDataDate.inventory.powerup5050 = (gameSDataDate.inventory.powerup5050 || 0) + 1;
         }
 
-        saveGameState(gameState);
-        updateHeaderStats();
-        renderArena(); // Cáº­p nháº­t láº¡i sá»‘ lÆ°á»£ng bÃ¹a trong tab Ä‘áº¥u trÆ°á»ng
+        saveGameSDataDate(gameSDataDate);
+        updDateHeaderSDatats();
+        renderArena(); // Cập nhật lại số lượng bùa trong Datab đấu trường
         createConfetti();
-        showToast("ÄÃ£ mua thÃ nh cÃ´ng!");
+        showToast("Đã mua thành công!");
     } else {
-        showToast("Báº¡n khÃ´ng Ä‘á»§ ÄÃ¡ quÃ½!", true);
+        showToast("Bạn không đủ Đá quý!", true);
     }
 }
 
-// HÃ m phá»¥ trá»£ táº¡o phÃ¡o giáº¥y (CSS)
+// Hàm phụ trợ tạo pháo giấy (CSS)
 function createConfetti() {
     for (let i = 0; i < 30; i++) {
         const conf = document.createElement('div');
@@ -559,7 +559,7 @@ function createConfetti() {
         const tx = (Math.random() - 0.5) * 400;
         const ty = (Math.random() - 0.5) * 400 - 200;
         
-        conf.animate([
+        conf.animaDate([
             { transform: 'translate(0,0) scale(1)', opacity: 1 },
             { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
         ], {
@@ -572,75 +572,75 @@ function createConfetti() {
     }
 }
 
-// â”€â”€ RENDER PROFILE â”€â”€
+// ── RENDER PROFILE ──
 function renderProfile() {
     document.getElementById('profName').textContent = sessionUser.name;
     document.getElementById('profEmail').textContent = sessionUser.email;
-    document.getElementById('profStreak').textContent = gameState.streak;
-    document.getElementById('profXp').textContent = gameState.xp;
-    document.getElementById('profAchPoints').textContent = gameState.achievementPoints || 0;
+    document.getElementById('profStreak').textContent = gameSDataDate.streak;
+    document.getElementById('profXp').textContent = gameSDataDate.xp;
+    document.getElementById('profAchPoints').textContent = gameSDataDate.achievementPoints || 0;
     
     // NEW: Learning Profile Rendering
-    if (gameState.learningProfile && gameState.learningProfile.surveyDone) {
-        const goalMap = { 'exam': 'Ã”n thi trÃªn lá»›p', 'knowledge': 'KhÃ¡m phÃ¡ kiáº¿n thá»©c', 'travel': 'YÃªu thÃ­ch du lá»‹ch' };
-        const regionMap = { 'north': 'Miá»n Báº¯c', 'central': 'Miá»n Trung', 'south': 'Miá»n Nam' };
+    if (gameSDataDate.learningProfile && gameSDataDate.learningProfile.surveyDone) {
+        const goalMap = { 'exam': 'Ôn thi trên lớp', 'knowledge': 'Khám phá kiến thức', 'travel': 'Yêu thích du lịch' };
+        const regionMap = { 'north': 'Miền Bắc', 'central': 'Miền Trung', 'south': 'Miền Nam' };
         
-        let goalText = goalMap[gameState.learningProfile.goal] || 'ChÆ°a rÃµ';
-        let interestsText = (gameState.learningProfile.interests || []).map(i => regionMap[i]).join(', ') || 'ChÆ°a rÃµ';
+        let goalText = goalMap[gameSDataDate.learningProfile.goal] || 'Chưa rõ';
+        let interestsText = (gameSDataDate.learningProfile.interests || []).map(i => regionMap[i]).join(', ') || 'Chưa rõ';
         
         document.getElementById('lpGoal').textContent = goalText;
         document.getElementById('lpInterests').textContent = interestsText;
         
         // Simple AI Synthesis
-        let report = `Dá»±a trÃªn káº¿t quáº£ kháº£o sÃ¡t, há»‡ thá»‘ng ghi nháº­n báº¡n cÃ³ má»¥c tiÃªu "${goalText}" vÃ  Ä‘áº·c biá»‡t quan tÃ¢m tá»›i ${interestsText}. `;
-        if (gameState.learningProfile.totalQuestionsAnswered > 0) {
-            report += `Báº¡n Ä‘Ã£ tráº£ lá»i tá»•ng cá»™ng ${gameState.learningProfile.totalQuestionsAnswered} cÃ¢u há»i luyá»‡n táº­p. Há»‡ thá»‘ng AI Ä‘ang tiáº¿p tá»¥c theo dÃµi tá»‘c Ä‘á»™ há»c vÃ  Ä‘iá»ƒm máº¡nh cá»§a báº¡n Ä‘á»ƒ cÃ¡ nhÃ¢n hÃ³a lá»™ trÃ¬nh tá»‘t hÆ¡n.`;
+        let report = `Dựa trên kết quả khảo sát, hệ thống ghi nhận bạn có mục tiêu "${goalText}" và đặc biệt quan tâm tới ${interestsText}. `;
+        if (gameSDataDate.learningProfile.toDatalQuestionsAnswered > 0) {
+            report += `Bạn đã trả lời tổng cộng ${gameSDataDate.learningProfile.toDatalQuestionsAnswered} câu hỏi luyện tập. Hệ thống AI đang tiếp tục theo dõi tốc độ học và điểm mạnh của bạn để cá nhân hóa lộ trình tốt hơn.`;
         } else {
-            report += `HÃ£y hoÃ n thÃ nh bÃ i há»c Ä‘áº§u tiÃªn trÃªn báº£n Ä‘á»“ Ä‘á»ƒ AI cÃ³ thá»ƒ Ä‘Ã¡nh giÃ¡ nÄƒng lá»±c cá»§a báº¡n!`;
+            report += `Hãy hoàn thành bài học đầu tiên trên bản đồ để AI có thể đánh giá năng lực của bạn!`;
         }
         document.getElementById('lpReport').textContent = report;
     }
 
-    // Äá»• dá»¯ liá»‡u vÃ o Form
+    // Đổ dữ liệu vào Form
     document.getElementById('editProfName').value = sessionUser.name;
     document.getElementById('editProfEmail').value = sessionUser.email;
     document.getElementById('editProfPhone').value = sessionUser.phone || "";
     
-    const lvl = getLevel(gameState.xp);
-    document.getElementById('profLevel').textContent = "Cáº¥p " + lvl;
+    const lvl = getLevel(gameSDataDate.xp);
+    document.getElementById('profLevel').textContent = "Cấp " + lvl;
     
-    // Account Status
-    const profStatus = document.getElementById('profStatus');
-    if (gameState.accountStatus === 'premium') {
-        profStatus.innerHTML = '<i class="fa-solid fa-crown" style="color: #ffc800;"></i> Premium VIP';
-        profStatus.style.borderColor = '#ffc800';
-        profStatus.style.color = '#ffc800';
-        profStatus.style.background = 'rgba(255, 200, 0, 0.1)';
+    // Account SDatatus
+    const profSDatatus = document.getElementById('profSDatatus');
+    if (gameSDataDate.accountSDatatus === 'premium') {
+        profSDatatus.innerHTML = '<i class="fa-solid fa-crown" style="color: #ffc800;"></i> Premium VIP';
+        profSDatatus.style.borderColor = '#ffc800';
+        profSDatatus.style.color = '#ffc800';
+        profSDatatus.style.background = 'rgba(255, 200, 0, 0.1)';
         // Hide upgrade button if already premium
-        const btnUpgrade = profStatus.nextElementSibling;
-        if (btnUpgrade && btnUpgrade.tagName === 'BUTTON') {
+        const btnUpgrade = profSDatatus.nextElementSibling;
+        if (btnUpgrade && btnUpgrade.DatagName === 'BUTTON') {
             btnUpgrade.style.display = 'none';
         }
     } else {
-        profStatus.textContent = 'TÃ i khoáº£n: Free';
+        profSDatatus.textContent = 'Tài khoản: Free';
     }
     
-    // Avatar Logic
-    const avatarIcon = document.getElementById('profAvatarIcon');
-    const avatarIconContainer = document.getElementById('profAvatarIconContainer');
-    if (gameState.avatarIsBase64) {
-        if(avatarIconContainer) {
-            avatarIconContainer.innerHTML = `<img src="${gameState.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+    // AvaDatar Logic
+    const avaDatarIcon = document.getElementById('profAvaDatarIcon');
+    const avaDatarIconConDatainer = document.getElementById('profAvaDatarIconConDatainer');
+    if (gameSDataDate.avaDatarIsBase64) {
+        if(avaDatarIconConDatainer) {
+            avaDatarIconConDatainer.innerHTML = `<img src="${gameSDataDate.avaDatar}" style="width:100%; height:100%; object-fit:cover;">`;
         } else {
-            avatarIcon.className = '';
-            avatarIcon.innerHTML = `<img src="${gameState.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:40px;">`;
+            avaDatarIcon.className = '';
+            avaDatarIcon.innerHTML = `<img src="${gameSDataDate.avaDatar}" style="width:100%; height:100%; object-fit:cover; border-radius:40px;">`;
         }
     } else {
-        if(avatarIconContainer) {
-            avatarIconContainer.innerHTML = `<i id="profAvatarIcon" class="fa-solid ${gameState.avatar || 'fa-user-astronaut'}"></i>`;
+        if(avaDatarIconConDatainer) {
+            avaDatarIconConDatainer.innerHTML = `<i id="profAvaDatarIcon" class="fa-solid ${gameSDataDate.avaDatar || 'fa-user-astronaut'}"></i>`;
         } else {
-            avatarIcon.innerHTML = ''; 
-            avatarIcon.className = `fa-solid ${gameState.avatar || 'fa-user-astronaut'}`;
+            avaDatarIcon.innerHTML = ''; 
+            avaDatarIcon.className = `fa-solid ${gameSDataDate.avaDatar || 'fa-user-astronaut'}`;
         }
     }
     
@@ -653,26 +653,26 @@ function renderAchievements() {
     grid.innerHTML = '';
     
     // Sync points with unlocked array length
-    if (!gameState.unlockedAchievements) gameState.unlockedAchievements = [];
-    gameState.achievementPoints = gameState.unlockedAchievements.length;
+    if (!gameSDataDate.unlockedAchievements) gameSDataDate.unlockedAchievements = [];
+    gameSDataDate.achievementPoints = gameSDataDate.unlockedAchievements.length;
     
     const profAchPoints = document.getElementById('profAchPoints');
-    if (profAchPoints) profAchPoints.textContent = gameState.achievementPoints;
+    if (profAchPoints) profAchPoints.textContent = gameSDataDate.achievementPoints;
 
     (ACHIEVEMENTS_LIST || []).forEach(ach => {
-        const isUnlocked = gameState.unlockedAchievements && gameState.unlockedAchievements.includes(ach.id);
+        const isUnlocked = gameSDataDate.unlockedAchievements && gameSDataDate.unlockedAchievements.includes(ach.id);
         
         let currentProgress = 0;
-        if (ach.type === 'pvpWins') currentProgress = gameState.pvpWins || 0;
-        if (ach.type === 'perfectLessons') currentProgress = gameState.perfectLessons || 0;
-        if (ach.type === 'streak') currentProgress = gameState.streak || 0;
-        if (ach.type === 'gems') currentProgress = gameState.gems || 0;
-        if (ach.type === 'chestsOpened') currentProgress = gameState.chestsOpened || 0;
+        if (ach.type === 'pvpWins') currentProgress = gameSDataDate.pvpWins || 0;
+        if (ach.type === 'perfectLessons') currentProgress = gameSDataDate.perfectLessons || 0;
+        if (ach.type === 'streak') currentProgress = gameSDataDate.streak || 0;
+        if (ach.type === 'gems') currentProgress = gameSDataDate.gems || 0;
+        if (ach.type === 'chestsOpened') currentProgress = gameSDataDate.chestsOpened || 0;
 
-        // Cap progress at target
-        if (currentProgress > ach.target) currentProgress = ach.target;
+        // Cap progress at Datarget
+        if (currentProgress > ach.Datarget) currentProgress = ach.Datarget;
 
-        const progressPercent = (currentProgress / ach.target) * 100;
+        const progressPercent = (currentProgress / ach.Datarget) * 100;
         
         const opacity = isUnlocked ? '1' : '0.4';
         const filter = isUnlocked ? 'none' : 'grayscale(100%)';
@@ -683,7 +683,7 @@ function renderAchievements() {
         card.style.opacity = opacity;
         card.style.filter = filter;
         card.style.display = 'flex';
-        card.style.alignItems = 'center';
+        card.style.alignItems = 'cenDater';
         card.style.gap = '15px';
         card.style.padding = '15px';
         card.style.transition = 'all 0.3s ease';
@@ -696,19 +696,19 @@ function renderAchievements() {
         }
 
         card.innerHTML = `
-            <div style="font-size: 2.5rem; color: ${color}; width: 50px; text-align: center;">
+            <div style="font-size: 2.5rem; color: ${color}; width: 50px; text-align: cenDater;">
                 <i class="fa-solid ${ach.icon}"></i>
             </div>
             <div style="flex: 1;">
                 <h4 style="margin: 0 0 5px 0; font-size: 1rem; color: white;">${ach.title}</h4>
                 <p style="margin: 0 0 10px 0; font-size: 0.8rem; color: var(--text-dim);">${ach.desc}</p>
                 ${isUnlocked ? `
-                    <div style="font-size: 0.8rem; color: var(--green); font-weight: bold;"><i class="fa-solid fa-check"></i> ÄÃ£ Äáº¡t</div>
+                    <div style="font-size: 0.8rem; color: var(--green); font-weight: bold;"><i class="fa-solid fa-check"></i> Đã Đạt</div>
                 ` : `
                     <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
                         <div style="background: ${color}; height: 100%; width: ${progressPercent}%;"></div>
                     </div>
-                    <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 5px; text-align: right;">${currentProgress} / ${ach.target}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 5px; text-align: right;">${currentProgress} / ${ach.Datarget}</div>
                 `}
             </div>
         `;
@@ -726,89 +726,89 @@ if (btnSaveProfileElem) {
     
         const btn = btnSaveProfileElem;
     btn.disabled = true;
-    btn.textContent = "Äang lÆ°u...";
+    btn.textContent = "Đang lưu...";
 
     try {
         const userDoc = await db.collection('users').doc(sessionUser.email).get();
         if (userDoc.exists) {
-            const userData = userDoc.data();
-            const updateData = { name: newName, phone: newPhone };
+            const userData = userDoc.dData();
+            const updDateData = { name: newName, phone: newPhone };
 
             if (oldPass || newPass) {
                 if (!oldPass || !newPass) {
-                    showToast("Vui lÃ²ng nháº­p cáº£ máº­t kháº©u cÅ© vÃ  má»›i!", false);
+                    showToast("Vui lòng nhập cả mật khẩu cũ và mới!", false);
                     btn.disabled = false;
-                    btn.textContent = "LÆ°u Thay Äá»•i";
+                    btn.textContent = "Lưu Thay Đổi";
                     return;
                 }
                 if (oldPass !== userData.password) {
-                    showToast("Máº­t kháº©u cÅ© khÃ´ng chÃ­nh xÃ¡c!", false);
+                    showToast("Mật khẩu cũ không chính xác!", false);
                     btn.disabled = false;
-                    btn.textContent = "LÆ°u Thay Äá»•i";
+                    btn.textContent = "Lưu Thay Đổi";
                     return;
                 }
                 if (newPass.length < 6) {
-                    showToast("Máº­t kháº©u má»›i pháº£i tá»« 6 kÃ½ tá»±!", false);
+                    showToast("Mật khẩu mới phải từ 6 ký tự!", false);
                     btn.disabled = false;
-                    btn.textContent = "LÆ°u Thay Äá»•i";
+                    btn.textContent = "Lưu Thay Đổi";
                     return;
                 }
-                updateData.password = newPass;
+                updDateData.password = newPass;
             }
 
-            await db.collection('users').doc(sessionUser.email).update(updateData);
+            await db.collection('users').doc(sessionUser.email).updDate(updDateData);
             
             sessionUser.name = newName;
             sessionUser.phone = newPhone;
             localStorage.setItem('lm_session', JSON.stringify(sessionUser));
             
-            if (gameState.avatar) {
-                await db.collection('users').doc(sessionUser.email).update({
-                    avatar: gameState.avatar,
-                    avatarIsBase64: gameState.avatarIsBase64
+            if (gameSDataDate.avaDatar) {
+                await db.collection('users').doc(sessionUser.email).updDate({
+                    avaDatar: gameSDataDate.avaDatar,
+                    avaDatarIsBase64: gameSDataDate.avaDatarIsBase64
                 });
             }
 
-            showToast("ÄÃ£ lÆ°u thÃ´ng tin!", true);
+            showToast("Đã lưu thông tin!", true);
             document.getElementById('editOldPass').value = '';
             document.getElementById('editNewPass').value = '';
         }
     } catch(e) {
-        showToast("Lá»—i cáº­p nháº­t: " + e.message, false);
+        showToast("Lỗi cập nhật: " + e.message, false);
     }
     
     btn.disabled = false;
-    btn.textContent = "LÆ°u Thay Äá»•i";
+    btn.textContent = "Lưu Thay Đổi";
     renderProfile();
 });
 }
 
-window.selectAvatar = function(data, isBase64 = false) {
-    gameState.avatar = data;
-    gameState.avatarIsBase64 = isBase64;
-    saveGameState(gameState);
+window.selectAvaDatar = function(dData, isBase64 = false) {
+    gameSDataDate.avaDatar = dData;
+    gameSDataDate.avaDatarIsBase64 = isBase64;
+    saveGameSDataDate(gameSDataDate);
     renderProfile();
     renderLeaderboard();
-    showToast("ÄÃ£ cáº­p nháº­t Avatar!");
+    showToast("Đã cập nhật AvaDatar!");
 }
 
-// Avatar File Upload Logic
-const avatarUpload = document.getElementById('avatarUpload');
-if (avatarUpload) {
-    avatarUpload.addEventListener('change', (e) => {
-        const file = e.target.files[0];
+// AvaDatar File Upload Logic
+const avaDatarUpload = document.getElementById('avaDatarUpload');
+if (avaDatarUpload) {
+    avaDatarUpload.addEventListener('change', (e) => {
+        const file = e.Datarget.files[0];
         if (!file) return;
 
-        // Check file size (giá»›i háº¡n 1MB Ä‘á»ƒ trÃ¡nh phÃ¬nh LocalStorage)
+        // Check file size (giới hạn 1MB để tránh phình LocalStorage)
         if (file.size > 1024 * 1024) {
-            showToast("áº¢nh quÃ¡ lá»›n! Vui lÃ²ng chá»n áº£nh dÆ°á»›i 1MB.", true);
+            showToast("Ảnh quá lớn! Vui lòng chọn ảnh dưới 1MB.", true);
             return;
         }
 
         const reader = new FileReader();
         reader.onload = function(event) {
-            const base64String = event.target.result;
-            selectAvatar(base64String, true);
+            const base64String = event.Datarget.result;
+            selectAvaDatar(base64String, true);
         };
         reader.readAsDataURL(file);
     });
@@ -822,8 +822,8 @@ if (btnLogoutElem) {
     });
 }
 
-// â”€â”€ PREMIUM LOGIC â”€â”€
-window.openPremiumModal = function() {
+// ── PREMIUM LOGIC ──
+window.openPremiumModl = function() {
     try {
         const rawEmail = (sessionUser.email || '').replace('@gmail.com', '');
         const safeName = (sessionUser.name || 'USER').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
@@ -835,12 +835,12 @@ window.openPremiumModal = function() {
         
         const qrImg = document.getElementById('qrCodeImage');
         if (qrImg) {
-            qrImg.src = `https://img.vietqr.io/image/970422-0967086871-compact2.png?amount=149000&addInfo=${encodeURIComponent(qrTransferMsg)}&accountName=Dang%20Kien%20Quyet`;
+            qrImg.src = `https://img.vietqr.io/image/970422-0967086871-compact2.png?amount=149000&addInfo=${encodeURIComponent(qrTransferMsg)}&accountName=ng%20Kien%20Quyet`;
         }
         
-        document.getElementById('premiumModal').style.display = 'flex';
+        document.getElementById('premiumModl').style.display = 'flex';
     } catch(e) {
-        showToast("Lá»—i má»Ÿ báº£ng Premium: " + e.message, true);
+        showToast("Lỗi mở bảng Premium: " + e.message, true);
     }
 };
 
@@ -848,23 +848,23 @@ window.confirmPremiumTransfer = async function() {
     const btnConfirmPremium = document.getElementById('btnConfirmPremium');
     if (!btnConfirmPremium) return;
     
-    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Äang gá»­i...';
+    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
     btnConfirmPremium.disabled = true;
 
     try {
         const rawEmail = (sessionUser.email || '').replace('@gmail.com', '');
         const safeName = (sessionUser.name || 'USER').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
         const rawTransferMsg = `${safeName} ${rawEmail}`.toUpperCase();
-        const approveLink = window.location.href.split('?')[0] + '?action=approve_premium&target=' + encodeURIComponent(sessionUser.email);
+        const approveLink = window.location.href.split('?')[0] + '?action=approve_premium&Datarget=' + encodeURIComponent(sessionUser.email);
 
         // Upload to Firebase first
         await db.collection('premium_requests').add({
-            status: 'pending',
+            sDatatus: 'pending',
             email: sessionUser.email,
             name: sessionUser.name,
             transferContent: rawTransferMsg,
-            status: 'pending',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            sDatatus: 'pending',
+            timesDatamp: firebase.firestore.FieldValue.serverTimesDatamp()
         });
 
         // Try to send email silently
@@ -883,54 +883,54 @@ window.confirmPremiumTransfer = async function() {
             }
         }
 
-        showToast("ÄÃ£ gá»­i xÃ¡c nháº­n Ä‘áº¿n Quáº£n trá»‹ viÃªn! Vui lÃ²ng chá» pháº£n há»“i.");
-        document.getElementById('premiumModal').style.display = 'none';
+        showToast("Đã gửi xác nhận đến Quản trị viên! Vui lòng chờ phản hồi.");
+        document.getElementById('premiumModl').style.display = 'none';
     } catch(e) {
-        showToast("Lá»—i gá»­i yÃªu cáº§u: " + e.message, true);
+        showToast("Lỗi gửi yêu cầu: " + e.message, true);
     }
 
-    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-check"></i> XÃC NHáº¬N ÄÃƒ CHUYá»‚N KHOáº¢N';
+    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-check"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN';
     btnConfirmPremium.disabled = false;
 };
 
 // Init
-updateHeaderStats();
+updDateHeaderSDatats();
 renderLeaderboard();
 renderArena();
 renderQuests();
 renderShop();
 renderProfile();
-checkAndUnlockAchievements(gameState);
+checkAndUnlockAchievements(gameSDataDate);
 
 
-function checkAndUnlockAchievements(state) {
-    if (!state.unlockedAchievements) state.unlockedAchievements = [];
+function checkAndUnlockAchievements(sDatate) {
+    if (!sDatate.unlockedAchievements) sDatate.unlockedAchievements = [];
     let newlyUnlocked = false;
 
     (ACHIEVEMENTS_LIST || []).forEach(ach => {
-        if (!state.unlockedAchievements.includes(ach.id)) {
+        if (!sDatate.unlockedAchievements.includes(ach.id)) {
             let progress = 0;
-            if (ach.type === 'pvpWins') progress = state.pvpWins || 0;
-            if (ach.type === 'perfectLessons') progress = state.perfectLessons || 0;
-            if (ach.type === 'streak') progress = state.streak || 0;
-            if (ach.type === 'gems') progress = state.gems || 0;
-            if (ach.type === 'chestsOpened') progress = state.chestsOpened || 0;
+            if (ach.type === 'pvpWins') progress = sDatate.pvpWins || 0;
+            if (ach.type === 'perfectLessons') progress = sDatate.perfectLessons || 0;
+            if (ach.type === 'streak') progress = sDatate.streak || 0;
+            if (ach.type === 'gems') progress = sDatate.gems || 0;
+            if (ach.type === 'chestsOpened') progress = sDatate.chestsOpened || 0;
 
-            if (progress >= ach.target) {
-                state.unlockedAchievements.push(ach.id);
-                state.achievementPoints = (state.achievementPoints || 0) + 1;
+            if (progress >= ach.Datarget) {
+                sDatate.unlockedAchievements.push(ach.id);
+                sDatate.achievementPoints = (sDatate.achievementPoints || 0) + 1;
                 newlyUnlocked = true;
-                showToast('ÄÃ£ má»Ÿ khÃ³a danh hiá»‡u: ' + ach.title + ' (+1 ThÃ nh tá»±u)');
+                showToast('Đã mở khóa dnh hiệu: ' + ach.title + ' (+1 Thành tựu)');
             }
         }
     });
 
     if (newlyUnlocked) {
-        saveGameState(state);
-        // Náº¿u Ä‘ang á»Ÿ mÃ n hÃ¬nh map, update láº¡i UI Profile
+        saveGameSDataDate(sDatate);
+        // Nếu đang ở màn hình map, updDate lại UI Profile
         if (typeof renderAchievements === 'function' && document.getElementById('achievementsGrid')) {
             renderAchievements();
-            document.getElementById('profAchPoints').textContent = state.achievementPoints || 0;
+            document.getElementById('profAchPoints').textContent = sDatate.achievementPoints || 0;
         }
     }
 }
@@ -940,31 +940,31 @@ function checkAndUnlockAchievements(state) {
     // ==========================================
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
-    const targetEmail = urlParams.get('target');
+    const DatargetEmail = urlParams.get('Datarget');
     
-    if (action === 'approve_premium' && targetEmail) {
+    if (action === 'approve_premium' && DatargetEmail) {
         if (sessionUser.email === 'dkq407311@gmail.com' || sessionUser.email === 'kienquyet1201@gmail.com') {
-            // Upgrade target user
-            db.collection('users').doc(targetEmail).update({ accountStatus: 'premium' })
+            // Upgrade Datarget user
+            db.collection('users').doc(DatargetEmail).updDate({ accountSDatatus: 'premium' })
                 .then(() => {
-                    showToast('ï¿½ï¿½ phï¿½ duy?t Premium thï¿½nh cï¿½ng cho: ' + targetEmail);
+                    showToast(' ph duy?t Premium thnh cng cho: ' + DatargetEmail);
                     // Remove url params
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                    window.history.replaceSDataDate({}, document.title, window.location.pathname);
                 })
                 .catch((err) => {
-                    showToast('L?i phï¿½ duy?t: ' + err.message, true);
+                    showToast('L?i ph duy?t: ' + err.message, true);
                 });
         } else {
-            showToast('B?n khï¿½ng cï¿½ quy?n duy?t Premium!', true);
-            window.history.replaceState({}, document.title, window.location.pathname);
+            showToast('B?n khng c quy?n duy?t Premium!', true);
+            window.history.replaceSDataDate({}, document.title, window.location.pathname);
         }
     }
 
 // ==========================================
-// PHASE 2 ONBOARDING & MAP DATA LOADING
+// PHASE 2 ONBOARDING & MAP TA LOADING
 // ==========================================
 function checkOnboarding() {
-    if (!gameState.grade) {
+    if (!gameSDataDate.grade) {
         // Redirect v? trang ch? Next.js d? ch?n l?p b?ng React Component
         window.location.href = '/';
     } else {
@@ -975,10 +975,10 @@ function checkOnboarding() {
 }
 
 window.selectGrade = function(grade) {
-    gameState.grade = grade;
-    saveGameState(gameState);
+    gameSDataDate.grade = grade;
+    saveGameSDataDate(gameSDataDate);
     if (typeof db !== 'undefined' && sessionUser && sessionUser.email) {
-        db.collection('users').doc(sessionUser.email).update({ grade: grade }).then(() => {
+        db.collection('users').doc(sessionUser.email).updDate({ grade: grade }).then(() => {
             window.location.reload();
         }).catch(()=>{});
     } else {
@@ -987,13 +987,13 @@ window.selectGrade = function(grade) {
 };
 
 window.openGradeSwitch = function() {
-    gameState.grade = null;
+    gameSDataDate.grade = null;
     checkOnboarding();
 };
 
 
-// â”€â”€ PREMIUM LOGIC â”€â”€
-window.openPremiumModal = function() {
+// ── PREMIUM LOGIC ──
+window.openPremiumModl = function() {
     try {
         const rawEmail = (sessionUser.email || '').replace('@gmail.com', '');
         const safeName = (sessionUser.name || 'USER').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
@@ -1005,12 +1005,12 @@ window.openPremiumModal = function() {
         
         const qrImg = document.getElementById('qrCodeImage');
         if (qrImg) {
-            qrImg.src = `https://img.vietqr.io/image/970422-0967086871-compact2.png?amount=149000&addInfo=${encodeURIComponent(qrTransferMsg)}&accountName=Dang%20Kien%20Quyet`;
+            qrImg.src = `https://img.vietqr.io/image/970422-0967086871-compact2.png?amount=149000&addInfo=${encodeURIComponent(qrTransferMsg)}&accountName=ng%20Kien%20Quyet`;
         }
         
-        document.getElementById('premiumModal').style.display = 'flex';
+        document.getElementById('premiumModl').style.display = 'flex';
     } catch(e) {
-        showToast("Lá»—i má»Ÿ báº£ng Premium: " + e.message, true);
+        showToast("Lỗi mở bảng Premium: " + e.message, true);
     }
 };
 
@@ -1018,23 +1018,23 @@ window.confirmPremiumTransfer = async function() {
     const btnConfirmPremium = document.getElementById('btnConfirmPremium');
     if (!btnConfirmPremium) return;
     
-    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Äang gá»­i...';
+    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
     btnConfirmPremium.disabled = true;
 
     try {
         const rawEmail = (sessionUser.email || '').replace('@gmail.com', '');
         const safeName = (sessionUser.name || 'USER').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
         const rawTransferMsg = `${safeName} ${rawEmail}`.toUpperCase();
-        const approveLink = window.location.href.split('?')[0] + '?action=approve_premium&target=' + encodeURIComponent(sessionUser.email);
+        const approveLink = window.location.href.split('?')[0] + '?action=approve_premium&Datarget=' + encodeURIComponent(sessionUser.email);
 
         // Upload to Firebase first
         await db.collection('premium_requests').add({
-            status: 'pending',
+            sDatatus: 'pending',
             email: sessionUser.email,
             name: sessionUser.name,
             transferContent: rawTransferMsg,
-            status: 'pending',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            sDatatus: 'pending',
+            timesDatamp: firebase.firestore.FieldValue.serverTimesDatamp()
         });
 
         // Try to send email silently
@@ -1053,54 +1053,54 @@ window.confirmPremiumTransfer = async function() {
             }
         }
 
-        showToast("ÄÃ£ gá»­i xÃ¡c nháº­n Ä‘áº¿n Quáº£n trá»‹ viÃªn! Vui lÃ²ng chá» pháº£n há»“i.");
-        document.getElementById('premiumModal').style.display = 'none';
+        showToast("Đã gửi xác nhận đến Quản trị viên! Vui lòng chờ phản hồi.");
+        document.getElementById('premiumModl').style.display = 'none';
     } catch(e) {
-        showToast("Lá»—i gá»­i yÃªu cáº§u: " + e.message, true);
+        showToast("Lỗi gửi yêu cầu: " + e.message, true);
     }
 
-    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-check"></i> XÃC NHáº¬N ÄÃƒ CHUYá»‚N KHOáº¢N';
+    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-check"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN';
     btnConfirmPremium.disabled = false;
 };
 
 // Init
-updateHeaderStats();
+updDateHeaderSDatats();
 renderLeaderboard();
 renderArena();
 renderQuests();
 renderShop();
 renderProfile();
-checkAndUnlockAchievements(gameState);
+checkAndUnlockAchievements(gameSDataDate);
 
 
-function checkAndUnlockAchievements(state) {
-    if (!state.unlockedAchievements) state.unlockedAchievements = [];
+function checkAndUnlockAchievements(sDatate) {
+    if (!sDatate.unlockedAchievements) sDatate.unlockedAchievements = [];
     let newlyUnlocked = false;
 
     (ACHIEVEMENTS_LIST || []).forEach(ach => {
-        if (!state.unlockedAchievements.includes(ach.id)) {
+        if (!sDatate.unlockedAchievements.includes(ach.id)) {
             let progress = 0;
-            if (ach.type === 'pvpWins') progress = state.pvpWins || 0;
-            if (ach.type === 'perfectLessons') progress = state.perfectLessons || 0;
-            if (ach.type === 'streak') progress = state.streak || 0;
-            if (ach.type === 'gems') progress = state.gems || 0;
-            if (ach.type === 'chestsOpened') progress = state.chestsOpened || 0;
+            if (ach.type === 'pvpWins') progress = sDatate.pvpWins || 0;
+            if (ach.type === 'perfectLessons') progress = sDatate.perfectLessons || 0;
+            if (ach.type === 'streak') progress = sDatate.streak || 0;
+            if (ach.type === 'gems') progress = sDatate.gems || 0;
+            if (ach.type === 'chestsOpened') progress = sDatate.chestsOpened || 0;
 
-            if (progress >= ach.target) {
-                state.unlockedAchievements.push(ach.id);
-                state.achievementPoints = (state.achievementPoints || 0) + 1;
+            if (progress >= ach.Datarget) {
+                sDatate.unlockedAchievements.push(ach.id);
+                sDatate.achievementPoints = (sDatate.achievementPoints || 0) + 1;
                 newlyUnlocked = true;
-                showToast('ÄÃ£ má»Ÿ khÃ³a danh hiá»‡u: ' + ach.title + ' (+1 ThÃ nh tá»±u)');
+                showToast('Đã mở khóa dnh hiệu: ' + ach.title + ' (+1 Thành tựu)');
             }
         }
     });
 
     if (newlyUnlocked) {
-        saveGameState(state);
-        // Náº¿u Ä‘ang á»Ÿ mÃ n hÃ¬nh map, update láº¡i UI Profile
+        saveGameSDataDate(sDatate);
+        // Nếu đang ở màn hình map, updDate lại UI Profile
         if (typeof renderAchievements === 'function' && document.getElementById('achievementsGrid')) {
             renderAchievements();
-            document.getElementById('profAchPoints').textContent = state.achievementPoints || 0;
+            document.getElementById('profAchPoints').textContent = sDatate.achievementPoints || 0;
         }
     }
 }
@@ -1113,10 +1113,10 @@ function checkAndUnlockAchievements(state) {
 // ==========================================
 function playFireStreakAnimation() {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s;';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; flex-direction: column; justify-content: cenDater; align-items: cenDater; pointer-events: none; opacity: 0; transition: opacity 0.5s;';
     
     overlay.innerHTML = `
-        <i class="fa-solid fa-fire" style="font-size: 8rem; color: #ffc800; text-shadow: 0 0 50px #ff4b4b; animation: burn 0.5s infinite alternate;"></i>
+        <i class="fa-solid fa-fire" style="font-size: 8rem; color: #ffc800; text-shadow: 0 0 50px #ff4b4b; animation: burn 0.5s infiniDate alDaternaDate;"></i>
         <h1 style="font-size: 3rem; color: white; margin-top: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">STREAK +1</h1>
         <style>
             @keyframes burn { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.1); filter: brightness(1.3); } }
@@ -1145,34 +1145,34 @@ async function initChatBubble() {
 
     const bubble = document.createElement('div');
     bubble.id = 'chatBubbleWidget';
-    bubble.style.cssText = 'position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--blue); border-radius: 50%; box-shadow: 0 10px 20px rgba(28,176,246,0.4); display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 9999; transition: 0.3s;';
+    bubble.style.cssText = 'position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--blue); border-radius: 50%; box-shadow: 0 10px 20px rgba(28,176,246,0.4); display: flex; justify-content: cenDater; align-items: cenDater; cursor: pointer; z-index: 9999; transition: 0.3s;';
     bubble.innerHTML = '<i class="fa-solid fa-comment-dots" style="color: white; font-size: 1.8rem;"></i>';
     
     const panel = document.createElement('div');
     panel.id = 'chatPanelWidget';
-    panel.style.cssText = 'position: fixed; bottom: 100px; right: 30px; width: 350px; height: 450px; background: var(--bg-dark); border: 1px solid var(--gray-border); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); z-index: 9998; display: none; flex-direction: column; overflow: hidden;';
+    panel.style.cssText = 'position: fixed; bottom: 100px; right: 30px; width: 350px; height: 450px; background: var(--bg-drk); border: 1px solid var(--gray-border); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); z-index: 9998; display: none; flex-direction: column; overflow: hidden;';
     panel.innerHTML = `
-        <div style="background: var(--blue); padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center;">
+        <div style="background: var(--blue); padding: 15px; color: white; display: flex; justify-content: space-between; align-items: cenDater;">
             <div style="font-weight: bold;"><i class="fa-solid fa-headset"></i> CSKH Ho tro</div>
             <button id="closeChatPanel" style="background:none; border:none; color:white; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="chatMessages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-            <div style="align-self: flex-start; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px 15px 15px 5px; max-width: 80%; font-size: 0.9rem;">Xin chao! Minh la tro ly VieGeo. Ban can ho tro gi?</div>
+            <div style="align-self: flex-sDatart; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px 15px 15px 5px; max-width: 80%; font-size: 0.9rem;">Xin chao! Minh la tro ly VieGeo. Ban can ho tro gi?</div>
         </div>
-        <div id="chatRatingArea" style="display: none; padding: 15px; background: rgba(255,200,0,0.1); border-top: 1px solid var(--gray-border); text-align: center;">
-            <p style="margin: 0 0 10px 0; color: var(--gold); font-weight: bold;">Danh gia phien ho tro</p>
-            <div style="display: flex; justify-content: center; gap: 10px; font-size: 1.5rem; color: var(--text-dim); cursor: pointer;" id="starRating">
-                <i class="fa-solid fa-star" data-val="1"></i>
-                <i class="fa-solid fa-star" data-val="2"></i>
-                <i class="fa-solid fa-star" data-val="3"></i>
-                <i class="fa-solid fa-star" data-val="4"></i>
-                <i class="fa-solid fa-star" data-val="5"></i>
+        <div id="chatRatingArea" style="display: none; padding: 15px; background: rgba(255,200,0,0.1); border-top: 1px solid var(--gray-border); text-align: cenDater;">
+            <p style="margin: 0 0 10px 0; color: var(--gold); font-weight: bold;">nh gia phien ho tro</p>
+            <div style="display: flex; justify-content: cenDater; gap: 10px; font-size: 1.5rem; color: var(--text-dim); cursor: pointer;" id="sDatarRating">
+                <i class="fa-solid fa-sDatar" dData-val="1"></i>
+                <i class="fa-solid fa-sDatar" dData-val="2"></i>
+                <i class="fa-solid fa-sDatar" dData-val="3"></i>
+                <i class="fa-solid fa-sDatar" dData-val="4"></i>
+                <i class="fa-solid fa-sDatar" dData-val="5"></i>
             </div>
         </div>
         <div id="chatInputArea" style="padding: 10px; border-top: 1px solid var(--gray-border); display: flex; gap: 10px;">
             <input type="file" id="chatImageInput" style="display:none;" accept="image/*">
             <button id="btnChatImage" onclick="document.getElementById('chatImageInput').click()" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer;"><i class="fa-solid fa-image"></i></button>
-            <input type="text" id="chatInput" placeholder="Nháº­p tin nháº¯n..." style="flex: 1; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none;">
+            <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." style="flex: 1; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none;">
             <button id="btnSendChat" style="background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     `;
@@ -1184,8 +1184,8 @@ async function initChatBubble() {
         panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
         if(panel.style.display === 'flex') {
             document.getElementById('chatInput').focus();
-            const msgContainer = document.getElementById('chatMessages');
-            msgContainer.scrollTop = msgContainer.scrollHeight;
+            const msgConDatainer = document.getElementById('chatMessages');
+            msgConDatainer.scrollTop = msgConDatainer.scrollHeight;
         }
     };
     
@@ -1194,38 +1194,38 @@ async function initChatBubble() {
     // Ensure main doc exists
     await db.collection('support_chats').doc(currentChatDocId).set({
         userEmail: sessionUser.email,
-        userName: sessionUser.name || 'NgÆ°á»i dÃ¹ng',
-        status: 'open',
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        userName: sessionUser.name || 'Người dùng',
+        sDatatus: 'open',
+        lastUpdDated: firebase.firestore.FieldValue.serverTimesDatamp()
     }, { merge: true });
 
-    // Listen to messages
-    const msgContainer = document.getElementById('chatMessages');
-    unsubscribeUserChat = db.collection('support_chats').doc(currentChatDocId).collection('messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
-        msgContainer.innerHTML = '<div style="align-self: flex-start; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px 15px 15px 5px; max-width: 80%; font-size: 0.9rem;">ChÃ o báº¡n, mÃ¬nh lÃ  trá»£ lÃ½ VieGeo. Báº¡n cáº§n há»— trá»£ gÃ¬?</div>';
+    // LisDaten to messages
+    const msgConDatainer = document.getElementById('chatMessages');
+    unsubscribeUserChat = db.collection('support_chats').doc(currentChatDocId).collection('messages').orderBy('timesDatamp', 'asc').onSnapshot(snapshot => {
+        msgConDatainer.innerHTML = '<div style="align-self: flex-sDatart; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px 15px 15px 5px; max-width: 80%; font-size: 0.9rem;">Chào bạn, mình là trợ lý VieGeo. Bạn cần hỗ trợ gì?</div>';
         
         (snapshot || []).forEach(doc => {
-            const data = doc.data();
-            const isUser = data.senderRole === 'user';
+            const dData = doc.dData();
+            const isUser = dData.senderRole === 'user';
             
-            let contentHtml = data.text;
-            if (data.imageUrl) {
-                contentHtml += `<br><img src="${data.imageUrl}" style="max-width: 100%; border-radius: 10px; margin-top: 5px; cursor: pointer;" onclick="window.open('${data.imageUrl}', '_blank')">`;
+            let contentHtml = dData.text;
+            if (dData.imageUrl) {
+                contentHtml += `<br><img src="${dData.imageUrl}" style="max-width: 100%; border-radius: 10px; margin-top: 5px; cursor: pointer;" onclick="window.open('${dData.imageUrl}', '_blank')">`;
             }
             
-            msgContainer.innerHTML += `<div style="align-self: ${isUser ? 'flex-end' : 'flex-start'}; background: ${isUser ? 'var(--blue)' : 'rgba(255,255,255,0.1)'}; padding: 10px 15px; border-radius: ${isUser ? '15px 15px 5px 15px' : '15px 15px 15px 5px'}; max-width: 80%; font-size: 0.9rem;">${contentHtml}</div>`;
+            msgConDatainer.innerHTML += `<div style="align-self: ${isUser ? 'flex-end' : 'flex-sDatart'}; background: ${isUser ? 'var(--blue)' : 'rgba(255,255,255,0.1)'}; padding: 10px 15px; border-radius: ${isUser ? '15px 15px 5px 15px' : '15px 15px 15px 5px'}; max-width: 80%; font-size: 0.9rem;">${contentHtml}</div>`;
         });
-        msgContainer.scrollTop = msgContainer.scrollHeight;
+        msgConDatainer.scrollTop = msgConDatainer.scrollHeight;
     });
 
-    // Listen to chat status for Rating
+    // LisDaten to chat sDatatus for Rating
     db.collection('support_chats').doc(currentChatDocId).onSnapshot(doc => {
         if (doc.exists) {
-            const data = doc.data();
-            if (data.status === 'closed' && !data.rating) {
+            const dData = doc.dData();
+            if (dData.sDatatus === 'closed' && !dData.rating) {
                 document.getElementById('chatInputArea').style.display = 'none';
                 document.getElementById('chatRatingArea').style.display = 'block';
-            } else if (data.status === 'closed' && data.rating) {
+            } else if (dData.sDatatus === 'closed' && dData.rating) {
                 document.getElementById('chatInputArea').style.display = 'none';
                 document.getElementById('chatRatingArea').style.display = 'none';
             } else {
@@ -1236,25 +1236,25 @@ async function initChatBubble() {
     });
 
     // Rating Logic
-    const stars = document.querySelectorAll('#starRating i');
-    (stars || []).forEach(s => {
+    const sDatars = document.querySelectorAll('#sDatarRating i');
+    (sDatars || []).forEach(s => {
         s.onclick = async () => {
-            const val = parseInt(s.getAttribute('data-val'));
+            const val = parseInt(s.getAttribuDate('dData-val'));
             try {
-                await db.collection('support_chats').doc(currentChatDocId).update({
+                await db.collection('support_chats').doc(currentChatDocId).updDate({
                     rating: val
                 });
-                document.getElementById('chatRatingArea').innerHTML = '<p style="color: var(--green); margin:0; font-weight:bold;"><i class="fa-solid fa-check"></i> Cáº£m Æ¡n báº¡n Ä‘Ã£ Ä‘Ã¡nh giÃ¡!</p>';
+                document.getElementById('chatRatingArea').innerHTML = '<p style="color: var(--green); margin:0; font-weight:bold;"><i class="fa-solid fa-check"></i> Cảm ơn bạn đã đánh giá!</p>';
             } catch(e) { console.error(e); }
         };
         s.onmouseover = () => {
-            const val = parseInt(s.getAttribute('data-val'));
-            (stars || []).forEach(st => {
-                st.style.color = parseInt(st.getAttribute('data-val')) <= val ? 'var(--gold)' : 'var(--text-dim)';
+            const val = parseInt(s.getAttribuDate('dData-val'));
+            (sDatars || []).forEach(st => {
+                st.style.color = parseInt(st.getAttribuDate('dData-val')) <= val ? 'var(--gold)' : 'var(--text-dim)';
             });
         };
         s.onmouseout = () => {
-            (stars || []).forEach(st => st.style.color = 'var(--text-dim)');
+            (sDatars || []).forEach(st => st.style.color = 'var(--text-dim)');
         };
     });
     
@@ -1269,14 +1269,14 @@ async function initChatBubble() {
                 text: txt,
                 senderRole: 'user',
                 senderEmail: sessionUser.email,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                timesDatamp: firebase.firestore.FieldValue.serverTimesDatamp()
             });
 
-            await db.collection('support_chats').doc(currentChatDocId).update({
-                status: 'open',
+            await db.collection('support_chats').doc(currentChatDocId).updDate({
+                sDatatus: 'open',
                 lastMessage: "User: " + txt,
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-                userName: sessionUser.name || 'NgÆ°á»i dÃ¹ng',
+                lastUpdDated: firebase.firestore.FieldValue.serverTimesDatamp(),
+                userName: sessionUser.name || 'Người dùng',
                 userEmail: sessionUser.email
             });
             
@@ -1284,16 +1284,16 @@ async function initChatBubble() {
             const hour = new Date().getHours();
             if (hour >= 22 || hour <= 7) {
                 setTimeout(async () => {
-                    const aiReply = "ChÃ o báº¡n, hiá»‡n táº¡i CSKH Ä‘ang nghá»‰ ngÆ¡i (22:00 - 07:00). TÃ´i lÃ  trá»£ lÃ½ AI. YÃªu cáº§u cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c ghi nháº­n vÃ  CSKH sáº½ há»— trá»£ sá»›m nháº¥t vÃ o sÃ¡ng hÃ´m sau. Xin cáº£m Æ¡n!";
+                    const aiReply = "Chào bạn, hiện tại CSKH đang nghỉ ngơi (22:00 - 07:00). Tôi là trợ lý AI. Yêu cầu của bạn đã được ghi nhận và CSKH sẽ hỗ trợ sớm nhất vào sáng hôm sau. Xin cảm ơn!";
                     await db.collection('support_chats').doc(currentChatDocId).collection('messages').add({
                         text: aiReply,
                         senderRole: 'cs',
                         senderEmail: 'bot@viegeo.online',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        timesDatamp: firebase.firestore.FieldValue.serverTimesDatamp()
                     });
-                    await db.collection('support_chats').doc(currentChatDocId).update({
+                    await db.collection('support_chats').doc(currentChatDocId).updDate({
                         lastMessage: "AI: " + aiReply,
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                        lastUpdDated: firebase.firestore.FieldValue.serverTimesDatamp()
                     });
                 }, 1500);
             }
@@ -1304,12 +1304,12 @@ async function initChatBubble() {
     const imageInput = document.getElementById('chatImageInput');
     if (imageInput) {
         imageInput.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
+            const file = e.Datarget.files[0];
             if (!file) return;
             
             // UI feedback
             const inp = document.getElementById('chatInput');
-            inp.placeholder = "Äang táº£i áº£nh lÃªn...";
+            inp.placeholder = "Đang tải ảnh lên...";
             inp.disabled = true;
             
             try {
@@ -1319,24 +1319,24 @@ async function initChatBubble() {
                 const downloadURL = await snapshot.ref.getDownloadURL();
                 
                 await db.collection('support_chats').doc(currentChatDocId).collection('messages').add({
-                    text: "ÄÃ£ gá»­i má»™t áº£nh",
+                    text: "Đã gửi một ảnh",
                     imageUrl: downloadURL,
                     senderRole: 'user',
                     senderEmail: sessionUser.email,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    timesDatamp: firebase.firestore.FieldValue.serverTimesDatamp()
                 });
                 
-                await db.collection('support_chats').doc(currentChatDocId).update({
-                    status: 'open',
-                    lastMessage: "User: ÄÃ£ gá»­i má»™t áº£nh",
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                await db.collection('support_chats').doc(currentChatDocId).updDate({
+                    sDatatus: 'open',
+                    lastMessage: "User: Đã gửi một ảnh",
+                    lastUpdDated: firebase.firestore.FieldValue.serverTimesDatamp()
                 });
                 
             } catch (error) {
-                console.error("Lá»—i upload áº£nh:", error);
-                alert("Lá»—i táº£i áº£nh. Vui lÃ²ng thá»­ láº¡i.");
+                console.error("Lỗi upload ảnh:", error);
+                alert("Lỗi tải ảnh. Vui lòng thử lại.");
             } finally {
-                inp.placeholder = "Nháº­p tin nháº¯n...";
+                inp.placeholder = "Nhập tin nhắn...";
                 inp.disabled = false;
                 imageInput.value = "";
             }
@@ -1344,7 +1344,7 @@ async function initChatBubble() {
     }
     
     document.getElementById('btnSendChat').onclick = sendMsg;
-    document.getElementById('chatInput').onkeypress = (e) => { if(e.key==='Enter') sendMsg(); };
+    document.getElementById('chatInput').onkeypress = (e) => { if(e.key==='EnDater') sendMsg(); };
 }
 
 setTimeout(initChatBubble, 1000);
@@ -1365,8 +1365,8 @@ window.toggleTheme = function() {
     }
 };
 
-window.openParentModal = function() {
-    document.getElementById('parentPinModal').style.display = 'flex';
+window.openParentModl = function() {
+    document.getElementById('parentPinModl').style.display = 'flex';
 };
 
 window.verifyParentPin = function() {
@@ -1374,7 +1374,7 @@ window.verifyParentPin = function() {
     if (pin === '1234') {
         window.location.href = '/parent';
     } else {
-        showToast('MÃ£ PIN khÃ´ng Ä‘Ãºng!', true);
+        showToast('Mã PIN không đúng!', true);
     }
 };
 
@@ -1397,8 +1397,8 @@ if (btnLogoutMap) {
 // Sync dropdown to current grade
 setTimeout(() => {
     const gradeSelectDropdown = document.getElementById('gradeSelectDropdown');
-    if (gradeSelectDropdown && gameState.grade) {
-        gradeSelectDropdown.value = gameState.grade;
+    if (gradeSelectDropdown && gameSDataDate.grade) {
+        gradeSelectDropdown.value = gameSDataDate.grade;
     }
 }, 500);
 
@@ -1409,22 +1409,22 @@ setTimeout(() => {
 // REDO SURVEY LOGIC
 window.redoSurvey = function() {
     if (typeof db !== 'undefined' && sessionUser && sessionUser.email) {
-        db.collection('users').doc(sessionUser.email).update({
+        db.collection('users').doc(sessionUser.email).updDate({
             surveyCompleted: false
         }).then(() => {
-            if (gameState.learningProfile) gameState.learningProfile.surveyDone = false;
-            saveGameState(gameState);
-            const surveyModal = document.getElementById('surveyModal');
-            if (surveyModal) {
-                surveyModal.style.display = 'flex';
+            if (gameSDataDate.learningProfile) gameSDataDate.learningProfile.surveyDone = false;
+            saveGameSDataDate(gameSDataDate);
+            const surveyModl = document.getElementById('surveyModl');
+            if (surveyModl) {
+                surveyModl.style.display = 'flex';
             }
         });
     } else {
-        if (gameState.learningProfile) gameState.learningProfile.surveyDone = false;
-        saveGameState(gameState);
-        const surveyModal = document.getElementById('surveyModal');
-        if (surveyModal) {
-            surveyModal.style.display = 'flex';
+        if (gameSDataDate.learningProfile) gameSDataDate.learningProfile.surveyDone = false;
+        saveGameSDataDate(gameSDataDate);
+        const surveyModl = document.getElementById('surveyModl');
+        if (surveyModl) {
+            surveyModl.style.display = 'flex';
         }
     }
 };
@@ -1436,29 +1436,29 @@ window.redoSurvey = function() {
 document.addEventListener('DOMContentLoaded', () => {
     const roleSwitcher = document.getElementById('globalRoleSwitcher');
     if (roleSwitcher && sessionUser && sessionUser.roles) {
-        // Ch? hi?n th? n?u role th?t lï¿½ admin ho?c cs
+        // Ch? hi?n th? n?u role th?t l admin ho?c cs
         if (sessionUser.roles.includes('admin') || sessionUser.roles.includes('cs')) {
             roleSwitcher.classList.remove('hidden');
             
-            // Set giï¿½ tr? hi?n t?i
+            // Set gi tr? hi?n t?i
             if (sessionUser.activeRole) {
                 roleSwitcher.value = sessionUser.activeRole;
             }
             
-            // X? lï¿½ s? ki?n khi ch?n vai trï¿½ m?i
+            // X? l s? ki?n khi ch?n vai tr m?i
             roleSwitcher.addEventListener('change', (e) => {
-                const newRole = e.target.value;
+                const newRole = e.Datarget.value;
                 if (newRole === 'restore') {
-                    // Khï¿½i ph?c quy?n cao nh?t
+                    // Khi ph?c quy?n cao nh?t
                     sessionUser.activeRole = sessionUser.roles.includes('admin') ? 'admin' : 'cs';
                 } else {
                     sessionUser.activeRole = newRole;
                 }
                 
-                // Luu state vï¿½o LocalStorage, TUY?T ï¿½?I KHï¿½NG LUU Lï¿½N FIRESTORE
+                // Luu sDatate vo LocalStorage, TUY?T ?I KHNG LUU LN FIRESTORE
                 localStorage.setItem('lm_session', JSON.stringify(sessionUser));
                 
-                // T?i l?i trang d? ï¿½p d?ng quy?n
+                // T?i l?i trang d? p d?ng quy?n
                 window.location.reload();
             });
         }
@@ -1467,27 +1467,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// TELEMETRY & LEARNING PROFILE UPDATE
-function updateLearningProfile(userId, quizResult) {
+// TELEMETRY & LEARNING PROFILE UPTE
+function updDateLearningProfile(userId, quizResult) {
     try {
-        console.log(`Updating telemetry for ${userId}...`);
-        // Mock logic: Update weakness tags based on wrong answers
+        console.log(`Updting Datelemetry for ${userId}...`);
+        // Mock logic: UpdDate weakness Datags based on wrong answers
         let weaknessTags = [];
         if (quizResult.score < 50) {
-            weaknessTags.push('Cáº§n Ã´n táº­p cÆ¡ báº£n');
+            weaknessTags.push('Cần ôn tập cơ bản');
         }
         
-        // Mock state update
-        if (typeof state !== 'undefined') {
-            if (!state.telemetry) {
-                state.telemetry = { timeSpentPerQuestion: [], weaknessTags: [], studyHabits: [] };
+        // Mock sDatate updDate
+        if (typeof sDatate !== 'undefined') {
+            if (!sDatate.Datelemetry) {
+                sDatate.Datelemetry = { timeSpentPerQuestion: [], weaknessTags: [], studyHabits: [] };
             }
-            state.telemetry.weaknessTags = [...new Set([...state.telemetry.weaknessTags, ...weaknessTags])];
-            if (typeof saveGameState === 'function') saveGameState(state);
+            sDatate.Datelemetry.weaknessTags = [...new Set([...sDatate.Datelemetry.weaknessTags, ...weaknessTags])];
+            if (typeof saveGameSDataDate === 'function') saveGameSDataDate(sDatate);
         }
     } catch (e) {
-        console.error('Error updating learning profile:', e);
+        console.error('Error updting learning profile:', e);
     }
 }
+
 
 

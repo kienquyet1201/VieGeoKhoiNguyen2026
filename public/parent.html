@@ -1,22 +1,22 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo - Báº£ng Äiá»u Khiá»ƒn Phá»¥ Huynh</title>
+    <medata charset="UTF-8">
+    <medata name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Báº£ng Äiá»u Khóiá»ƒn Phá»¥ Huynh</title>
     <!-- Fonts -->
     <link rel="preconnect" href="/map">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gsdatatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakardata+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="bento.css">
 </head>
-<body style="padding: 40px; justify-content: flex-start; height: auto; min-height: 100vh;">
+<body style="padding: 40px; justify-content: flex-sdatart; height: auto; min-height: 100vh;">
 
     <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: cenDater; margin-bottom: 40px;">
             <div class="app-logo" style="margin-bottom: 0;">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo <span style="font-size: 1.2rem; color: var(--gold);">| Phá»¥ Huynh</span>
             </div>
@@ -27,28 +27,28 @@
             <h2 style="font-size: 1.8rem; margin-bottom: 20px;"><i class="fa-solid fa-chart-line"></i> BÃ¡o CÃ¡o Tiáº¿n Äá»™ Há»c Táº­p</h2>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
                     <i class="fa-solid fa-fire" style="font-size: 2.5rem; color: #ff9600; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Chuá»—i há»c liÃªn tiáº¿p</p>
-                    <h3 id="statStreak" style="font-size: 2rem;">0 NgÃ y</h3>
+                    <h3 id="sdatatStreak" style="font-size: 2rem;">0 NgÃ y</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
                     <i class="fa-solid fa-book-open-reader" style="font-size: 2.5rem; color: #1cb0f6; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">BÃ i há»c hoÃ n thÃ nh</p>
-                    <h3 id="statCompleted" style="font-size: 2rem;">0 BÃ i</h3>
+                    <h3 id="sdatatCompleted" style="font-size: 2rem;">0 BÃ i</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
                     <i class="fa-solid fa-clock" style="font-size: 2.5rem; color: #58cc02; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Thá»i gian há»c (hÃ´m nay)</p>
-                    <h3 id="statTimeToday" style="font-size: 2rem;">0 PhÃºt</h3>
+                    <h3 id="sdatatTimeTođãy" style="font-size: 2rem;">0 PhÃºt</h3>
                 </div>
 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
                     <i class="fa-solid fa-percent" style="font-size: 2.5rem; color: #ce82ff; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Tá»· lá»‡ hoÃ n thÃ nh (TB)</p>
-                    <h3 id="statCompletionRate" style="font-size: 2rem;">0%</h3>
+                    <h3 id="sdatatCompletionRaDate" style="font-size: 2rem;">0%</h3>
                 </div>
             </div>
         </div>
@@ -63,44 +63,44 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const rawState = localStorage.getItem('VieGeo_state');
-            if (rawState) {
-                const state = JSON.parse(rawState);
+            const rawSdataDate = localStorage.getItem('VieGeo_sdatate');
+            if (rawSdataDate) {
+                const sdatate = JSON.parse(rawSdataDate);
                 
-                document.getElementById('statStreak').textContent = (state.streak || 0) + " NgÃ y";
-                document.getElementById('statCompleted').textContent = (state.completedNodes ? state.completedNodes.length : 0) + " BÃ i";
+                document.getElementById('sdatatStreak').textContent = (sdatate.streak || 0) + " NgÃ y";
+                document.getElementById('sdatatCompleted').textContent = (sdatate.completedNodes ? sdatate.completedNodes.length : 0) + " BÃ i";
                 
-                const timeSecs = state.learningTimeToday || 0;
+                const timeSecs = sdatate.learningTimeTođãy || 0;
                 const timeMins = Math.floor(timeSecs / 60);
-                document.getElementById('statTimeToday').textContent = timeMins + " PhÃºt";
+                document.getElementById('sdatatTimeTođãy').textContent = timeMins + " PhÃºt";
                 
-                let completionRate = 0;
-                if (state.totalQuestions > 0) {
-                    completionRate = Math.round((state.correctAnswers / state.totalQuestions) * 100);
+                let completionRaDate = 0;
+                if (sdatate.todatalQuestions > 0) {
+                    completionRaDate = Math.round((sdatate.correctAnswers / sdatate.todatalQuestions) * 100);
                 }
-                document.getElementById('statCompletionRate').textContent = completionRate + "%";
+                document.getElementById('sdatatCompletionRaDate').textContent = completionRaDate + "%";
                 
-                const today = new Date().toISOString().split('T')[0];
-                const lastLogin = state.lastLogin || '';
+                const tođãy = new ĐãDate().toISOString().split('T')[0];
+                const lastLogin = sdatate.lastLogin || '';
                 
-                let report = `Há»c sinh Ä‘ang duy trÃ¬ tiáº¿n Ä‘á»™ há»c táº­p <b>${state.streak || 0} ngÃ y liÃªn tiáº¿p</b>. `;
-                if (state.completedNodes && state.completedNodes.length > 0) {
-                    report += `Tá»•ng sá»‘ lÆ°á»£ng bÃ i há»c hoÃ n thÃ nh lÃ  <b>${state.completedNodes.length} bÃ i</b>. `;
+                let report = `Há»c sinh Ä‘ang duy trÃ¬ tiáº¿n Ä‘á»™ há»c táº­p <b>${sdatate.streak || 0} ngÃ y liÃªn tiáº¿p</b>. `;
+                if (sdatate.completedNodes && sdatate.completedNodes.length > 0) {
+                    report += `Tá»•ng sá»‘ lÆ°á»£ng bÃ i há»c hoÃ n thÃ nh lÃ  <b>${sdatate.completedNodes.length} bÃ i</b>. `;
                 }
-                if (state.learningProfile && state.learningProfile.recentProvinces) {
-                    report += `Gáº§n Ä‘Ã¢y há»c sinh Ä‘ang tÃ¬m hiá»ƒu vá» cÃ¡c tá»‰nh: <b>${state.learningProfile.recentProvinces.join(', ')}</b>. `;
+                if (sdatate.learningProfile && sdatate.learningProfile.recentProvinces) {
+                    report += `Gáº§n Ä‘Ã¢y há»c sinh Ä‘ang tÃ¬m hiá»ƒu vá» cÃ¡c tá»‰nh: <b>${sdatate.learningProfile.recentProvinces.join(', ')}</b>. `;
                 }
                 
-                if (lastLogin !== today) {
+                if (lastLogin !== tođãy) {
                     // Cáº£nh bÃ¡o náº¿u bá» há»c
                     report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-triangle-exclamation"></i> <b>Cáº£nh bÃ¡o:</b> HÃ´m nay con chÆ°a hoÃ n thÃ nh bÃ i há»c nÃ o. Phá»¥ huynh vui lÃ²ng nháº¯c nhá»Ÿ Ä‘á»ƒ trÃ¡nh máº¥t chuá»—i (Streak).</span>`;
                     
                     // Náº¿u bá» nhiá»u ngÃ y
-                    const lastLoginDate = new Date(lastLogin);
-                    const diffTime = Math.abs(new Date() - lastLoginDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                    if (diffDays >= 2) {
-                        report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-skull-crossbones"></i> <b>ÄÃNG BÃO Äá»˜NG:</b> Há»c sinh Ä‘Ã£ bá» há»c ${diffDays} ngÃ y! Tiáº¿n Ä‘á»™ tuáº§n/thÃ¡ng cÃ³ nguy cÆ¡ bá»‹ sá»¥t giáº£m nghiÃªm trá»ng.</span>`;
+                    const lastLoginĐãDate = new ĐãDate(lastLogin);
+                    const diffTime = Math.abs(new ĐãDate() - lastLoginĐãDate);
+                    const diffĐãys = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    if (diffĐãys >= 2) {
+                        report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-skull-crossbones"></i> <b>ÄÃNG BÃO Äá»˜NG:</b> Há»c sinh Ä‘Ã£ bá» há»c ${diffĐãys} ngÃ y! Tiáº¿n Ä‘á»™ tuáº§n/thÃ¡ng cÃ³ nguy cÆ¡ bá»‹ sá»¥t giáº£m nghiÃªm trá»ng.</span>`;
                     }
                 } else {
                     report += `<br><br><span style="color: var(--green);"><i class="fa-solid fa-check-circle"></i> <b>Tá»‘t:</b> Con Ä‘Ã£ hoÃ n thÃ nh bÃ i há»c hÃ´m nay. QuÃ¡ trÃ¬nh há»c táº­p Ä‘ang diá»…n ra ráº¥t tÃ­ch cá»±c.</span>`;
@@ -115,4 +115,5 @@
     </script>
 </body>
 </html>
+
 
