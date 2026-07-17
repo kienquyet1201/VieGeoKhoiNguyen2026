@@ -966,24 +966,9 @@ body.theme-female .highlight-box {
 /* ==========================================================================
    LIGHT MODE SYSTEM (DEFAULT/MALE)
    ========================================================================== */
-body.light-mode {
-    --bg-dark: #f0f9ff;
-    --card-bg: rgba(255, 255, 255, 0.8);
-    --border-color: #bae6fd;
-    
-    --text-primary: #082f49;
-    --text-secondary: #0c4a6e;
-    --text-muted: #64748b;
-    
-    --primary: #0284c7;       /* Sky 600 */
-    --primary-glow: rgba(2, 132, 199, 0.1);
-    --secondary: #0369a1;     /* Sky 700 */
-    --teal: #0284c7;          /* Sky 600 */
-    
-    --card-shadow: 0 20px 40px -15px rgba(2, 132, 199, 0.08);
-}
 
-/* Ép màu ch? trong Light Mode */
+
+/* ï¿½p mï¿½u ch? trong Light Mode */
 body.light-mode h1,
 body.light-mode h2,
 body.light-mode h3,
@@ -1409,3 +1394,25 @@ body.theme-female.light-mode .highlight-box {
 
 
 
+
+body.light-mode {
+    --bg-dark: #f0f9ff !important;
+    --card-bg: rgba(255, 255, 255, 0.9) !important;
+    --border-color: #bae6fd !important;
+    --text-primary: #0c4a6e !important;
+    --text-secondary: #082f49 !important;
+    --text-dim: #38bdf8 !important;
+    background-color: #f0f9ff !important;
+    color: #0c4a6e !important;
+}
+body.light-mode * {
+    color: #0c4a6e;
+}
+body.light-mode .bento-card {
+    background-color: #ffffff !important;
+    color: #0c4a6e !important;
+    border-color: #7dd3fc !important;
+}
+body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode h1, body.light-mode h2, body.light-mode h3, body.light-mode p {
+    color: #0c4a6e !important;
+}

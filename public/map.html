@@ -78,8 +78,8 @@
                 <div class="stat-pill" style="color: #58cc02;"><i class="fa-solid fa-star"></i> <span id="hdrXp">0</span></div>
                 <div class="stat-pill" style="color: #ce82ff;"><i class="fa-solid fa-shield-halved"></i> Lv.<span id="hdrLevel">1</span></div>
                 <div class="stat-pill" style="color: #ff9600;"><i class="fa-solid fa-medal"></i> <span id="hdrBadge">0</span></div>
-                                <div class="flex flex-nowrap items-center gap-2 md:gap-4 ml-auto justify-end overflow-x-auto max-w-full pb-1 scrollbar-hide" id="taskbarContainer">
-                    <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" class="bg-white/20 text-white border-none outline-none px-3 py-2 leading-normal rounded-full cursor-pointer min-w-max whitespace-nowrap flex-shrink-0 px-3 py-2 leading-normal">
+                                <div class="flex flex-wrap items-center gap-4 ml-auto justify-end w-full" id="taskbarContainer">
+                    <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" class="bg-sky-600 text-white border-none outline-none px-4 py-2 rounded-full cursor-pointer min-w-max whitespace-nowrap flex-shrink-0">
                         <option value="5" class="text-black">L?p 5</option>
                         <option value="9" class="text-black">L?p 9</option>
                         <option value="12" class="text-black">L?p 12</option>
@@ -93,18 +93,17 @@
                         <i class="fa-solid fa-gear"></i>
                     </button>
 
-                    <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-3 py-2 leading-normal" onclick="openParentModal()" title="D�nh cho Ph? Huynh" style="background: #ce82ff;  border-radius: 20px; color: white; font-size: 0.9rem;">
+                    <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" onclick="openParentModal()" title="D�nh cho Ph? Huynh" style="background: #ce82ff;  border-radius: 20px; color: white; font-size: 0.9rem;">
                         <i class="fa-solid fa-users"></i> Ph? Huynh
                     </button>
 
-                    <select id="globalRoleSwitcher" class="hidden bg-sky-600 text-white outline-none px-3 py-2 leading-normal rounded-full cursor-pointer min-w-max whitespace-nowrap flex-shrink-0 px-3 py-2 leading-normal">
-                        <option value="" disabled selected>�?i quy?n...</option>
-                        <option value="admin">Admin</option>
-                        <option value="cs">CS</option>
-                        <option value="user">H?c sinh</option>
-                        <option value="parent">Ph? huynh</option>
-                        <option value="restore">Kh�i ph?c quy?n g?c</option>
-                    </select>
+                    <select id="globalRoleSwitcher" onchange="switchRoleClientOnly(this.value)" class="hidden bg-sky-600 text-white outline-none px-4 py-2 rounded-full cursor-pointer min-w-max whitespace-nowrap flex-shrink-0">
+                <option value="" disabled selected>Đổi quyền...</option>
+                <option value="admin">Quản trị viên (Admin)</option>
+                <option value="cs">Chăm sóc KH (CS)</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="student">Học sinh</option>
+            </select>
 
                     <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-3 py-2 leading-normal" id="btnLogoutMap" title="�ang Xu?t" style="background: #ff4b4b;  border-radius: 20px; color: white; font-size: 0.9rem;">
                         <i class="fa-solid fa-right-from-bracket"></i>

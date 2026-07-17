@@ -49,79 +49,60 @@ btnMapBack.addEventListener('click', () => {
 });
 
 function renderRegions() {
-    mapContainer.style.display = 'grid';
-    mapContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
+    mapContainer.style.display = 'flex';
+    mapContainer.style.flexWrap = 'wrap';
     mapContainer.style.gap = '20px';
+    mapContainer.style.justifyContent = 'center';
     
-    LEARNING_REGIONS.forEach(region => {
-        const card = document.createElement('div');
-        card.className = 'bento-card';
-        card.style.cursor = 'pointer';
-        card.style.border = '2px solid ' + region.color;
-        card.style.background = '#ffffff';
-        card.style.color = '#0c4a6e';
-        card.style.position = 'relative';
-        card.style.zIndex = '50';
-        card.style.borderRadius = '20px';
-        card.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
-        card.innerHTML = `
-            <div style="font-size: 3rem; color: ${region.color};"><i class="fa-solid fa-map"></i></div>
-            <h3 style="font-size: 1.5rem; margin-top: 10px;">${region.name}</h3>
-            <p style="color: var(--text-dim); margin-top: 5px;">${region.provinces.length} Tỉnh/Thành phố</p>
+    let htmlContent = '';
+    LEARNING_REGIONS.forEach((region, i) => {
+        htmlContent += `
+            <div class="bento-card region-card" data-index="${i}" style="cursor: pointer; border: 2px solid ${region.color}; background: #ffffff; color: #0c4a6e; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 280px; text-align: center;">
+                <div style="font-size: 4rem; color: ${region.color};"><i class="fa-solid fa-map-location-dot"></i></div>
+                <h3 style="font-size: 1.8rem; margin-top: 15px; font-weight: bold;">${region.name}</h3>
+                <p style="margin-top: 10px; font-size: 1.1rem;">${region.provinces.length} Tỉnh/Thành phố</p>
+            </div>
         `;
-        card.onclick = () => {
-            selectedRegion = region;
+    });
+    mapContainer.innerHTML = htmlContent;
+
+    // Add event listeners after innerHTML
+    document.querySelectorAll('.region-card').forEach(card => {
+        card.addEventListener('click', function() {
+            let idx = this.getAttribute('data-index');
+            selectedRegion = LEARNING_REGIONS[idx];
             currentView = 'provinces';
             renderMap();
-        };
-        mapContainer.appendChild(card);
+        });
     });
 }
 
 function renderProvinces() {
-    mapContainer.style.display = 'grid';
-    mapContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
-    mapContainer.style.gap = '20px';
+    mapContainer.style.display = 'flex';
+    mapContainer.style.flexWrap = 'wrap';
+    mapContainer.style.gap = '15px';
+    mapContainer.style.justifyContent = 'center';
     
-    selectedRegion.provinces.forEach(prov => {
-        // Calculate completion
-        let completed = 0;
-        prov.lessons.forEach(l => {
-            if (state.completedNodes && state.completedNodes.includes(l.id)) completed++;
-        });
-        const percent = Math.round((completed / prov.lessons.length) * 100) || 0;
-        
-                const card = document.createElement('div');
-        card.className = 'bento-card';
-        card.style.cursor = 'pointer';
-        
-        
-        if (prov.isBoss) {
-            card.style.border = '2px solid #ff4b4b';
-            card.style.background = 'rgba(255, 75, 75, 0.1)';
-            card.style.boxShadow = '0 0 15px rgba(255, 75, 75, 0.4)';
-        } else {
-            card.style.border = '2px solid ' + prov.color;
-            card.style.background = '#ffffff';
-            card.style.color = '#0c4a6e';
-            card.style.position = 'relative';
-            card.style.zIndex = '50';
-            card.style.borderRadius = '15px';
-            card.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
-        }
-        card.innerHTML = `
-            <h3 style="font-size: 1.3rem;">${prov.name}</h3>
-            <div style="margin-top: 10px; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px;">
-                <div style="background: ${prov.color}; width: ${percent}%; height: 100%; border-radius: 4px;"></div>
+    let htmlContent = '';
+    selectedRegion.provinces.forEach((prov, i) => {
+        let bg = prov.isBoss ? 'rgba(255, 75, 75, 0.1)' : '#ffffff';
+        let borderColor = prov.isBoss ? '#ff4b4b' : prov.color;
+        htmlContent += `
+            <div class="bento-card province-card" data-index="${i}" style="cursor: pointer; border: 2px solid ${borderColor}; background: ${bg}; color: #0c4a6e; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 220px; text-align: center;">
+                <h3 style="font-size: 1.4rem; font-weight: bold;">${prov.name}</h3>
+                <p style="margin-top: 5px;">${prov.lessons ? prov.lessons.length : 0} Bài học</p>
             </div>
-            <p style="color: var(--text-dim); margin-top: 5px; font-size: 0.9rem;">Tiến độ: ${percent}%</p>
         `;
-        card.onclick = () => {
-            selectedProvince = prov;
+    });
+    mapContainer.innerHTML = htmlContent;
+
+    document.querySelectorAll('.province-card').forEach(card => {
+        card.addEventListener('click', function() {
+            let idx = this.getAttribute('data-index');
+            selectedProvince = selectedRegion.provinces[idx];
             currentView = 'lessons';
             renderMap();
-        };
-        mapContainer.appendChild(card);
+        });
     });
 }
 
@@ -310,3 +291,14 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
 
 
 
+
+
+// ROLE SWITCHER - CLIENT ONLY
+window.switchRoleClientOnly = function(newRole) {
+    if(!newRole) return;
+    state.currentRole = newRole; // Update local state only
+    saveGameState(state);
+    alert('Đã đổi quyền thành công sang: ' + newRole + ' (Chỉ có tác dụng trên giao diện hiện tại, không lưu vào database gốc).');
+    // Refresh UI if necessary
+    if(typeof updateStatsUI === 'function') updateStatsUI();
+};
