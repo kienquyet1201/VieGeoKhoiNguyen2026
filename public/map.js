@@ -55,7 +55,7 @@ function renderRegions() {
     mapContainer.style.justifyContent = 'center';
     
     let htmlContent = '';
-    LEARNING_REGIONS.forEach((region, i) => {
+    (LEARNING_REGIONS || []).forEach((region, i) => {
         htmlContent += `
             <div class="bento-card region-card bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg transition transform hover:-translate-y-1 rounded-2xl p-8 cursor-pointer flex flex-col items-center justify-center w-full" data-index="${i}" style="border-top-width: 4px; border-top-color: ${region.color};">
                 <div style="font-size: 4rem; color: ${region.color};"><i class="fa-solid fa-map-location-dot"></i></div>
@@ -88,7 +88,7 @@ function renderProvinces() {
     mapContainer.style.justifyContent = 'center';
     
     let htmlContent = '';
-    selectedRegion.provinces.forEach((prov, i) => {
+    (selectedRegion?.provinces || []).forEach((prov, i) => {
         let bg = prov.isBoss ? 'rgba(255, 75, 75, 0.1)' : '#ffffff';
         let borderColor = prov.isBoss ? '#ff4b4b' : prov.color;
         htmlContent += `
@@ -123,7 +123,7 @@ function renderLessons() {
     // Zigzag offsets array
     const offsets = [0, -50, -80, -50, 0, 50, 80, 50];
     
-    selectedProvince.lessons.forEach((lesson, index) => {
+    (selectedProvince?.lessons || []).forEach((lesson, index) => {
         const isCompleted = state.completedNodes && state.completedNodes.includes(lesson.id);
         const prevCompleted = index === 0 || (state.completedNodes && state.completedNodes.includes(selectedProvince.lessons[index-1].id));
         

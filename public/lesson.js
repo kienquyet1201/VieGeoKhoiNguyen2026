@@ -65,8 +65,8 @@ function initNormal() {
     let foundNode = null;
     let foundProvince = null;
     if (typeof LEARNING_REGIONS !== 'undefined') {
-        LEARNING_REGIONS.forEach(region => {
-            region.provinces.forEach(prov => {
+        (LEARNING_REGIONS || []).forEach(region => {
+            (region?.provinces || []).forEach(prov => {
                 const n = prov.lessons.find(x => x.id === nodeId);
                 if (n) {
                     foundNode = n;
@@ -131,7 +131,7 @@ function initArena() {
     if (typeof PVP_POOL !== 'undefined') {
         const matchingPool = PVP_POOL.find(p => p.grade === matchData.gradeFilter);
         if (matchingPool && matchingPool.nodes) {
-            matchingPool.nodes.forEach(node => {
+            matchingPool.(nodes || []).forEach(node => {
                 if (node.questions) {
                     allQs = allQs.concat(node.questions);
                 }
@@ -139,7 +139,7 @@ function initArena() {
         }
     } else if (typeof GAME_UNITS !== 'undefined') {
         // Fallback for old cache
-        GAME_UNITS.forEach(u => {
+        (GAME_UNITS || []).forEach(u => {
             if (u.grade === matchData.gradeFilter) {
                 u.nodes.filter(n => n.type === 'lesson').forEach(n => allQs = allQs.concat(n.questions));
             }
@@ -175,7 +175,7 @@ function initArena() {
             const q = currentQuestions[currentIndex];
             let hiddenCount = 0;
             const btns = optionsGrid.querySelectorAll('.option-btn');
-            btns.forEach((btn, idx) => {
+            (btns || []).forEach((btn, idx) => {
                 if (idx !== q.correctAnswer && hiddenCount < 2) {
                     btn.style.visibility = 'hidden';
                     hiddenCount++;
@@ -235,7 +235,7 @@ function renderArenaLeaderboard() {
     
     // Sort
     const sorted = [...arenaBots].sort((a,b) => b.score - a.score);
-    sorted.forEach((b, idx) => {
+    (sorted || []).forEach((b, idx) => {
         const div = document.createElement('div');
         div.style.display = 'flex';
         div.style.justifyContent = 'space-between';
@@ -292,15 +292,15 @@ function loadQuestion() {
     const q = currentQuestions[currentIndex];
     questionText.textContent = q.question;
     
-    optionsGrid.innerHTML = q.options.map((opt, idx) => `
+    optionsGrid.innerHTML = (q?.options || []).map((opt, idx) => `
         <button class="option-btn" data-index="${idx}">${opt}</button>
     `).join('');
 
     const btns = optionsGrid.querySelectorAll('.option-btn');
-    btns.forEach(btn => {
+    (btns || []).forEach(btn => {
         btn.addEventListener('click', () => {
             if (isAnswerChecked) return;
-            btns.forEach(b => b.classList.remove('selected'));
+            (btns || []).forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedOptionIndex = parseInt(btn.dataset.index);
             btnCheck.classList.add('active');
@@ -579,8 +579,8 @@ function finishLesson() {
         
         // Find Province from NodeId to track
         if (typeof LEARNING_REGIONS !== 'undefined') {
-            LEARNING_REGIONS.forEach(region => {
-                region.provinces.forEach(prov => {
+            (LEARNING_REGIONS || []).forEach(region => {
+                (region?.provinces || []).forEach(prov => {
                     const n = prov.lessons.find(x => x.id === nodeId);
                     if (n && !state.learningProfile.recentProvinces.includes(prov.name)) {
                         state.learningProfile.recentProvinces.push(prov.name);
@@ -688,7 +688,7 @@ window.useBooster = function(type) {
     else if (type === '5050') {
         const options = document.querySelectorAll('.option-card:not(.disabled)');
         let wrongOptions = [];
-        options.forEach(opt => {
+        (options || []).forEach(opt => {
             if (opt.textContent.trim() !== q.answer) {
                 wrongOptions.push(opt);
             }
@@ -709,7 +709,7 @@ window.useBooster = function(type) {
     else if (type === 'remove1') {
         const options = document.querySelectorAll('.option-card:not(.disabled)');
         let wrongOptions = [];
-        options.forEach(opt => {
+        (options || []).forEach(opt => {
             if (opt.textContent.trim() !== q.answer) {
                 wrongOptions.push(opt);
             }

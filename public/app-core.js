@@ -214,10 +214,10 @@ function updateHeaderStats() {
 const navBtns = document.querySelectorAll('.nav-btn');
 const tabPanes = document.querySelectorAll('.tab-pane');
 
-navBtns.forEach(btn => {
+(navBtns || []).forEach(btn => {
     btn.addEventListener('click', () => {
-        navBtns.forEach(b => b.classList.remove('active'));
-        tabPanes.forEach(p => p.classList.remove('active'));
+        (navBtns || []).forEach(b => b.classList.remove('active'));
+        (tabPanes || []).forEach(p => p.classList.remove('active'));
         
         btn.classList.add('active');
         const targetId = btn.getAttribute('data-target');
@@ -229,7 +229,7 @@ navBtns.forEach(btn => {
 const gradeChips = document.querySelectorAll('.grade-chip');
 if (gradeChips.length > 0) {
     // Set initial active chip
-    gradeChips.forEach(chip => {
+    (gradeChips || []).forEach(chip => {
         if (chip.getAttribute('data-val') === (gameState.selectedGrade || "all")) {
             chip.classList.add('active');
         } else {
@@ -237,7 +237,7 @@ if (gradeChips.length > 0) {
         }
         
         chip.addEventListener('click', (e) => {
-            gradeChips.forEach(c => c.classList.remove('active'));
+            (gradeChips || []).forEach(c => c.classList.remove('active'));
             e.target.classList.add('active');
             gameState.selectedGrade = e.target.getAttribute('data-val');
             saveGameState(gameState);
@@ -260,7 +260,7 @@ async function renderLeaderboard() {
         lbList.innerHTML = ''; // Xóa loading
         
         let index = 0;
-        snapshot.forEach(doc => {
+        (snapshot || []).forEach(doc => {
             const user = doc.data();
             const isMe = (user.email === sessionUser.email);
             
@@ -329,7 +329,7 @@ function renderQuests() {
         { key: 'achievement', name: 'Thành Tựu Đời Người', icon: 'fa-crown', color: '#ffc800' }
     ];
 
-    types.forEach(typeGrp => {
+    (types || []).forEach(typeGrp => {
         const typeQuests = DAILY_QUESTS.filter(q => q.type === typeGrp.key);
         if (typeQuests.length === 0) return;
 
@@ -343,7 +343,7 @@ function renderQuests() {
         header.innerHTML = `<h3 style="color: ${typeGrp.color}; font-size: 1.2rem;"><i class="fa-solid ${typeGrp.icon}"></i> ${typeGrp.name}</h3>`;
         grid.appendChild(header);
 
-        typeQuests.forEach(quest => {
+        (typeQuests || []).forEach(quest => {
             const progress = gameState.questsProgress[quest.id] || 0;
             const percent = Math.min((progress / quest.target) * 100, 100);
             const isDone = progress >= quest.target;
@@ -379,7 +379,7 @@ function renderArena() {
     const grid = document.getElementById('arenaGrid');
     grid.innerHTML = '';
 
-    ARENA_MATCHES.forEach(match => {
+    (ARENA_MATCHES || []).forEach(match => {
         const card = document.createElement('div');
         card.className = 'bento-card';
         card.style.borderColor = '#ff4b4b';
@@ -505,7 +505,7 @@ function renderShop() {
     const grid = document.getElementById('shopGrid');
     grid.innerHTML = '';
 
-    SHOP_ITEMS.forEach(item => {
+    (SHOP_ITEMS || []).forEach(item => {
         const card = document.createElement('div');
         card.className = 'bento-card';
         card.innerHTML = `
@@ -586,7 +586,7 @@ function renderProfile() {
         const regionMap = { 'north': 'Miền Bắc', 'central': 'Miền Trung', 'south': 'Miền Nam' };
         
         let goalText = goalMap[gameState.learningProfile.goal] || 'Chưa rõ';
-        let interestsText = gameState.learningProfile.interests.map(i => regionMap[i]).join(', ') || 'Chưa rõ';
+        let interestsText = gameState.learningProfile.(interests || []).map(i => regionMap[i]).join(', ') || 'Chưa rõ';
         
         document.getElementById('lpGoal').textContent = goalText;
         document.getElementById('lpInterests').textContent = interestsText;
@@ -659,7 +659,7 @@ function renderAchievements() {
     const profAchPoints = document.getElementById('profAchPoints');
     if (profAchPoints) profAchPoints.textContent = gameState.achievementPoints;
 
-    ACHIEVEMENTS_LIST.forEach(ach => {
+    (ACHIEVEMENTS_LIST || []).forEach(ach => {
         const isUnlocked = gameState.unlockedAchievements && gameState.unlockedAchievements.includes(ach.id);
         
         let currentProgress = 0;
@@ -906,7 +906,7 @@ function checkAndUnlockAchievements(state) {
     if (!state.unlockedAchievements) state.unlockedAchievements = [];
     let newlyUnlocked = false;
 
-    ACHIEVEMENTS_LIST.forEach(ach => {
+    (ACHIEVEMENTS_LIST || []).forEach(ach => {
         if (!state.unlockedAchievements.includes(ach.id)) {
             let progress = 0;
             if (ach.type === 'pvpWins') progress = state.pvpWins || 0;
@@ -1075,7 +1075,7 @@ function checkAndUnlockAchievements(state) {
     if (!state.unlockedAchievements) state.unlockedAchievements = [];
     let newlyUnlocked = false;
 
-    ACHIEVEMENTS_LIST.forEach(ach => {
+    (ACHIEVEMENTS_LIST || []).forEach(ach => {
         if (!state.unlockedAchievements.includes(ach.id)) {
             let progress = 0;
             if (ach.type === 'pvpWins') progress = state.pvpWins || 0;
@@ -1202,7 +1202,7 @@ async function initChatBubble() {
     unsubscribeUserChat = db.collection('support_chats').doc(currentChatDocId).collection('messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => {
         msgContainer.innerHTML = '<div style="align-self: flex-start; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px 15px 15px 5px; max-width: 80%; font-size: 0.9rem;">Chào bạn, mình là trợ lý VieGeo. Bạn cần hỗ trợ gì?</div>';
         
-        snapshot.forEach(doc => {
+        (snapshot || []).forEach(doc => {
             const data = doc.data();
             const isUser = data.senderRole === 'user';
             
@@ -1235,7 +1235,7 @@ async function initChatBubble() {
 
     // Rating Logic
     const stars = document.querySelectorAll('#starRating i');
-    stars.forEach(s => {
+    (stars || []).forEach(s => {
         s.onclick = async () => {
             const val = parseInt(s.getAttribute('data-val'));
             try {
@@ -1247,12 +1247,12 @@ async function initChatBubble() {
         };
         s.onmouseover = () => {
             const val = parseInt(s.getAttribute('data-val'));
-            stars.forEach(st => {
+            (stars || []).forEach(st => {
                 st.style.color = parseInt(st.getAttribute('data-val')) <= val ? 'var(--gold)' : 'var(--text-dim)';
             });
         };
         s.onmouseout = () => {
-            stars.forEach(st => st.style.color = 'var(--text-dim)');
+            (stars || []).forEach(st => st.style.color = 'var(--text-dim)');
         };
     });
     
