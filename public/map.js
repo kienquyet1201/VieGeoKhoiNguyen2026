@@ -92,7 +92,7 @@ function renderProvinces() {
         let bg = prov.isBoss ? 'rgba(255, 75, 75, 0.1)' : '#ffffff';
         let borderColor = prov.isBoss ? '#ff4b4b' : prov.color;
         htmlContent += `
-            <div class="bento-card province-card" data-index="${i}" style="cursor: pointer; border: 2px solid ${borderColor}; background: ${bg}; color: #0c4a6e; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 220px; text-align: center;">
+            <div class="bento-card province-card rounded-2xl dark:bg-slate-800" data-index="${i}" style="cursor: pointer; border: 2px solid ${borderColor}; background: ${bg}; color: #0c4a6e; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 220px; text-align: center;">
                 <h3 style="font-size: 1.4rem; font-weight: bold;">${prov.name}</h3>
                 <p style="margin-top: 5px;">${prov.lessons ? prov.lessons.length : 0} Bài học</p>
             </div>
