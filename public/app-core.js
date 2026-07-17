@@ -586,7 +586,7 @@ function renderProfile() {
         const regionMap = { 'north': 'Miền Bắc', 'central': 'Miền Trung', 'south': 'Miền Nam' };
         
         let goalText = goalMap[gameState.learningProfile.goal] || 'Chưa rõ';
-        let interestsText = gameState.learningProfile.(interests || []).map(i => regionMap[i]).join(', ') || 'Chưa rõ';
+        let interestsText = (gameState.learningProfile.interests || []).map(i => regionMap[i]).join(', ') || 'Chưa rõ';
         
         document.getElementById('lpGoal').textContent = goalText;
         document.getElementById('lpInterests').textContent = interestsText;
