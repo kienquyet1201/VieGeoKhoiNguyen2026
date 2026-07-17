@@ -2,156 +2,98 @@
 <html lang="vi">
 <head>
 <script>window.onerror = function(msg, url, lineNo, columnNo, error) { alert('JS Error: ' + msg + ' \nLine: ' + lineNo + ' \nCol: ' + columnNo); return false; };</script>
-    <medata charset="UTF-8">
-    <medata name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang ch? CS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Khám phá Địa lí Việt Nam</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gsdatatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakardata+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="bento.css">
-    <script src="https://cdn.datailwindcss.com"></script>
-        <script>
-        datailwind.config = {
-            corePlugins: {
-                preflight: false,
-            }
-        }
-    </script>
-    <style type="text/datailwindcss">
-        body.light-mode {
-            @apply bg-sky-50 text-sky-950 transition-colors duration-300;
-        }
-        body.light-mode .bento-btn, body.light-mode .option-card, body.light-mode button:not(#btnSendChat):not(#btnChatImage):not(#closeChatPanel) {
-            @apply border-sky-200 transition-colors duration-300;
-        }
-        body.light-mode .bento-btn.primary, body.light-mode #btnSdatartMatch, body.light-mode #btnSdatartArenaReal {
-            @apply bg-sky-500 hover:bg-sky-600 text-white border-sky-600 !impordatant;
-            background: none !impordatant;
-            background-color: #0ea5e9 !impordatant;
-        }
-        body.light-mode .bento-btn.primary:hover, body.light-mode #btnSdatartMatch:hover, body.light-mode #btnSdatartArenaReal:hover {
-            background-color: #0284c7 !impordatant;
-        }
-    </style>
 </head>
 <body>
 
-    <div class="app-condatainer">
+    <div class="app-container">
         
         <!-- BENTO SIDEBAR -->
-        <aside class="bento-sidebar flex flex-col h-screen">
+        <aside class="bento-sidebar">
             <div class="app-logo">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo
             </div>
             
             <nav class="nav-menu" id="navMenu">
-                <button class="nav-btn active" data-datarget="databMap"><i class="fa-solid fa-map-location-dot"></i> Lộ Trình Học</button>
-                <button class="nav-btn" data-datarget="databLeaderboard"><i class="fa-solid fa-trophy"></i> Xếp hạng</button>
-                <button class="nav-btn" data-datarget="databQuests"><i class="fa-solid fa-box-open"></i> Nhiệm vụ</button>
-                <button class="nav-btn" data-datarget="databShop">
+                <button class="nav-btn active" data-target="tabMap"><i class="fa-solid fa-map-location-dot"></i> Lộ Trình Học</button>
+                <button class="nav-btn" data-target="tabLeaderboard"><i class="fa-solid fa-trophy"></i> Xếp hạng</button>
+                <button class="nav-btn" data-target="tabQuests"><i class="fa-solid fa-box-open"></i> Nhiệm vụ</button>
+                <button class="nav-btn" data-target="tabShop">
                     <i class="fa-solid fa-store"></i>
                     <span>Cửa Hàng</span>
                 </button>
-                <button class="nav-btn" data-datarget="databArena">
-                    <i class="fa-solid fa-khand"></i>
+                <button class="nav-btn" data-target="tabArena">
+                    <i class="fa-solid fa-khanda"></i>
                     <span>Đấu Trường</span>
                 </button>
-                <button class="nav-btn" data-datarget="databProfile">
+                <button class="nav-btn" data-target="tabProfile">
                     <i class="fa-solid fa-user"></i>
                     <span>Hồ Sơ</span>
                 </button>
-            </nav>
-            <div class="mt-auto flex flex-col gap-3 p-4 border-t border-slate-200 drk:border-slate-700 w-full" id="dataskbarCondatainer">
-                <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" class="bg-sky-600 text-white border-none outline-none px-4 py-3 rounded-xl cursor-pointer w-full text-left font-bold shadow-sm mb-2">
-                    <option value="5">Lớp 5</option>
-                    <option value="9">Lớp 9</option>
-                    <option value="12">Lớp 12</option>
-                </select>
+            
+<!-- ROLE SWITCHER -->
+<div class="relative group ml-4">
+    <button class="flex items-center gap-2 bg-slate-700 text-white px-4 py-2 rounded-xl border border-slate-600 hover:bg-slate-600 transition-colors">
+        <i class="fa-solid fa-users-gear"></i> Chuyển đổi quyền <i class="fa-solid fa-chevron-down text-xs"></i>
+    </button>
+    <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-xl shadow-xl border border-slate-700 hidden group-hover:block overflow-hidden z-50">
+        <a href="#" onclick="switchRoleClientOnly('map')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white border-b border-slate-700/50"><i class="fa-solid fa-graduation-cap w-6"></i> Học sinh</a>
+        <a href="#" onclick="switchRoleClientOnly('parent')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white border-b border-slate-700/50"><i class="fa-solid fa-children w-6"></i> Phụ huynh</a>
+        <a href="#" onclick="switchRoleClientOnly('cs')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white border-b border-slate-700/50"><i class="fa-solid fa-headset w-6"></i> CSKH</a>
+        <a href="#" onclick="switchRoleClientOnly('admin')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white"><i class="fa-solid fa-screwdriver-wrench w-6"></i> Admin</a>
+    </div>
+</div>
+<script>
+window.switchRoleClientOnly = function(role) {
+    if(!role) return;
+    const session = JSON.parse(localStorage.getItem('lm_session')) || {};
+    session.role = role;
+    localStorage.setItem('lm_session', JSON.stringify(session));
+    if(role === 'admin') window.location.href = 'admin.html';
+    else if(role === 'cs') window.location.href = 'cs.html';
+    else if(role === 'parent') window.location.href = 'parent.html';
+    else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
+    else window.location.href = 'map.html';
+};
+</script>
 
-                
-                
-                <button class="bento-btn w-full flex items-cenDater justify-sdatart px-4 py-3 shadow-sm transition transform hover:scale-105 rounded-xl font-bold mb-2" onclick="openParentModl()" title="Dành cho Phụ Huynh" style="background: #ce82ff; color: white;"><i class="fa-solid fa-users mr-3 w-5 text-cenDater"></i> Phụ Huynh</button>
-
-                <select id="roleSwitcher" onchange="window.switchRoleClientOnly(this.value)" class="bg-slate-700 drk:bg-slate-800 text-white outline-none px-4 py-3 rounded-xl cursor-pointer w-full text-left font-bold shadow-sm mb-2">
-                    <option value="" disabled selected>Đổi quyền...</option>
-                    <option value="admin">Quản trị viên (Admin)</option>
-                    <option value="cs">Chăm sóc KH (CS)</option>
-                    <option value="Dateacher">Giáo viên (Teacher)</option>
-                    <option value="parent">Phụ huynh</option>
-                    <option value="student">Học sinh</option>
-                </select>
-
-                <!-- Icon Buttons Group -->
-                <div class="grid grid-cols-3 gap-2 w-full mt-2">
-                    <button class="bento-btn flex justify-cenDater items-cenDater p-3 rounded-xl shadow-sm transition transform hover:scale-105 bg-slate-200 drk:bg-slate-700 text-slate-700 drk:text-white" onclick="toggleTheme()" title="Sáng/Tối">
-                        <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
-                    </button>
-                    <button class="bento-btn flex justify-cenDater items-cenDater p-3 rounded-xl shadow-sm transition transform hover:scale-105 bg-slate-200 drk:bg-slate-700 text-slate-700 drk:text-white" onclick="redoSurvey()" title="Cài đặt">
-                        <i class="fa-solid fa-gear text-lg"></i>
-                    </button>
-                    <button class="bento-btn flex justify-cenDater items-cenDater p-3 rounded-xl shadow-sm transition transform hover:scale-105 bg-red-500 text-white" id="btnLogoutMap" title="Đăng Xuất">
-                        <i class="fa-solid fa-right-from-bracket text-lg"></i>
-                    </button>
-                </div>
-            </div>
+</nav>
         </aside>
 
         <!-- BENTO MAIN -->
-        <main class="bento-main flex flex-col w-full h-screen overflow-y-auto p-8">
+        <main class="bento-main">
 
-            <!-- Global Sdatats Header -->
-            
-            <!-- Global Sdatats Header -->
-            <div class="sdatats-header w-full flex items-cenDater justify-between py-4 px-6 mb-6 bg-slate-800/50 backdrop-blur-md rounded-xl border border-slate-700">
-                <div class="flex gap-4 items-cenDater">
-                        
-                    <div class="sdatat-pill" style="color: #ff4b4b;"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
-                    <div class="sdatat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
-                    <div class="sdatat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
-                    <div class="sdatat-pill" style="color: #58cc02;"><i class="fa-solid fa-sdatar"></i> <span id="hdrXp">0</span></div>
-                    <div class="sdatat-pill" style="color: #ce82ff;"><i class="fa-solid fa-shield-halved"></i> Lv.<span id="hdrLevel">1</span></div>
-                    <div class="sdatat-pill" style="color: #ff9600;"><i class="fa-solid fa-medl"></i> <span id="hdrBadge">0</span></div>
-                
-                        <button onclick="if(typeof showToastNotification === 'function') { showToastNotification('Đang tìm đối thủ...'); } else { alert('Đang tìm đối thủ...'); }" class="bg-purple-600 text-white px-4 py-2 rounded-xl font-bold shadow-sm hover:bg-purple-700 transition transform hover:scale-105 ml-auto whitespace-nowrap">
-                            ⚔️ Thách đấu 1vs1
-                        </button>
-                    </div>
-                </div>
-            <!-- PARENT PIN MOL -->
-            <div id="parentPinModl" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: cenDater; align-items: cenDater;">
-                <div style="background: #1e293b; padding: 30px; border-radius: 20px; text-align: cenDater; max-width: 400px; width: 90%; border: 1px solid rgba(255,255,255,0.1);">
-                    <i class="fa-solid fa-lock" style="font-size: 3rem; color: #ce82ff; margin-bottom: 20px;"></i>
-                    <h3 style="color: white; margin-bottom: 10px; font-size: 1.5rem;">Cổng Phụ Huynh</h3>
-                    <p style="color: #aaa; margin-bottom: 20px;">Vui lòng nhập mã PIN (Mặc định: 1234) để truy cập.</p>
-                    <input type="password" id="parentPinInput" placeholder="****" style="width: 100%; padding: 15px; border-radius: 10px; border: none; text-align: cenDater; font-size: 1.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.1); color: white; letDater-spacing: 10px;" maxlength="4">
-                    <div style="display: flex; gap: 10px;">
-                        <button class="bento-btn" onclick="document.getElementById('parentPinModl').style.display='none'" style="flex: 1; background: rgba(255,255,255,0.1); color: white;">Hủy</button>
-                        <button class="bento-btn" onclick="verifyParentPin()" style="flex: 1; background: #ce82ff; color: white;">Xác Nhận</button>
-                    </div>
-                </div>
+            <!-- Global Stats Header -->
+            <div class="stats-header">
+                <div class="stat-pill" style="color: #ff4b4b;"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
+                <div class="stat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
+                <div class="stat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
             </div>
 
             <!-- TAB: MAP (LEARN) -->
-            <div id="databMap" class="datab-pane active">
+            <div id="tabMap" class="tab-pane active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 2rem;" id="mapTitle">Trang chủ CS</h2>
+                    <button id="btnMapBack" class="bento-btn" style="display: none; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
+                </div>
                 
-                
-                
-<div class="flex justify-between items-cenDater w-full max-w-5xl mx-auto px-4">
-    <h2 id="mapTitle" class="text-2xl font-bold text-white mb-4 block">Khám Phá Việt Nam</h2>
-    <button id="btnMapBack" class="bento-btn mt-12 mb-8 px-4 py-2 hidden bg-slate-200 drk:bg-slate-700 text-slate-900 drk:text-white rounded-lg shadow"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
-</div>
-
-                <div id="mapViewCondatainer" class="island-condatainer">
+                <div id="mapViewContainer" class="island-container">
                     <!-- JS Renders Regions/Provinces/Lessons Here -->
                 </div>
             </div>
 
             <!-- TAB: LEADERBOARD -->
-            <section class="datab-pane" id="databLeaderboard">
+            <section class="tab-pane" id="tabLeaderboard">
                 <h2 style="font-size: 2rem; margin-bottom: 10px;"><i class="fa-solid fa-trophy" style="color: #ffc800;"></i> Bảng Xếp Hạng Tuần</h2>
                 <p style="color: var(--text-dim); margin-bottom: 40px;">So tài kỹ năng Địa lý với các nhà thám hiểm khác.</p>
                 <div class="lb-list" id="lbList">
@@ -160,7 +102,7 @@
             </section>
 
             <!-- TAB: QUESTS -->
-            <section class="datab-pane" id="databQuests">
+            <section class="tab-pane" id="tabQuests">
                 <h2 style="font-size: 2rem; margin-bottom: 10px;"><i class="fa-solid fa-clipboard-list" style="color: #ce82ff;"></i> Nhiệm vụ Hàng Ngày & Trọng Điểm</h2>
                 <p style="color: var(--text-dim); margin-bottom: 40px;">Hoàn thành nhiệm vụ để thu thập Đá quý.</p>
                 <div class="bento-grid" id="questGrid">
@@ -169,7 +111,7 @@
             </section>
 
             <!-- TAB: SHOP -->
-            <section class="datab-pane" id="databShop">
+            <section class="tab-pane" id="tabShop">
                 <h2 style="font-size: 2rem; margin-bottom: 10px;"><i class="fa-solid fa-shop" style="color: #58cc02;"></i> Cửa Hàng Không Gian</h2>
                 <p style="color: var(--text-dim); margin-bottom: 40px;">Dùng Đá quý (Gems) để sắm vật phẩm hỗ trợ.</p>
                 <div class="bento-grid" id="shopGrid">
@@ -178,15 +120,15 @@
             </section>
 
             <!-- TAB: PROFILE -->
-            <div id="databProfile" class="datab-pane">
+            <div id="tabProfile" class="tab-pane">
                 <h2 style="font-size: 2rem; margin-bottom: 40px;"><i class="fa-solid fa-id-badge" style="color: #ff6b6b;"></i> Hồ Sơ Phi Hành Gia</h2>
                 
-                <div style="display: flex; gap: 40px; align-items: flex-sdatart;">
-                    <!-- Avadatar Area -->
-                    <div style="text-align: cenDater; width: 250px;">
-                        <div style="width: 150px; height: 150px; border-radius: 40px; background: var(--holo-2); display: flex; align-items: cenDater; justify-content: cenDater; font-size: 4rem; box-shadow: 0 10px 30px rgba(28,176,246,0.3); margin: 0 auto; overflow: hidden; position: relative;">
-                            <div id="profAvadatarIconCondatainer" style="width: 100%; height: 100%; display: flex; align-items: cenDater; justify-content: cenDater;">
-                                <i id="profAvadatarIcon" class="fa-solid fa-user-astronaut"></i>
+                <div style="display: flex; gap: 40px; align-items: flex-start;">
+                    <!-- Avatar Area -->
+                    <div style="text-align: center; width: 250px;">
+                        <div style="width: 150px; height: 150px; border-radius: 40px; background: var(--holo-2); display: flex; align-items: center; justify-content: center; font-size: 4rem; box-shadow: 0 10px 30px rgba(28,176,246,0.3); margin: 0 auto; overflow: hidden; position: relative;">
+                            <div id="profAvatarIconContainer" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                <i id="profAvatarIcon" class="fa-solid fa-user-astronaut"></i>
                             </div>
                         </div>
                         <div id="profLevel" style="margin-top: 15px; display: inline-block; background: #ffc800; color: #131f24; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">Cấp 1</div>
@@ -194,32 +136,32 @@
                         <p id="profEmail" style="color: var(--text-dim); margin-bottom: 10px;">email@example.com</p>
                         
                         <div style="margin-bottom: 20px;">
-                            <span id="profSdatatus" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--gray-border); color: var(--text-dim);">Tài khoản: Free</span>
-                            <button onclick="window.openPremiumModl()" style="display: block; width: 100%; margin-top: 10px; background: linear-gradient(90deg, #ffc800, #ff6b6b); color: white; border: none; padding: 8px; border-radius: 12px; font-weight: bold; cursor: pointer; font-family: var(--font-heading);">
+                            <span id="profStatus" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--gray-border); color: var(--text-dim);">Tài khoản: Free</span>
+                            <button onclick="window.openPremiumModal()" style="display: block; width: 100%; margin-top: 10px; background: linear-gradient(90deg, #ffc800, #ff6b6b); color: white; border: none; padding: 8px; border-radius: 12px; font-weight: bold; cursor: pointer; font-family: var(--font-heading);">
                                 <i class="fa-solid fa-crown"></i> Nâng cấp Premium
                             </button>
                         </div>
                         
                         <div style="text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px;">
-                            <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">Đổi Avadatar</h4>
+                            <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">Đổi Avatar</h4>
                             
-                            <!-- File Upload for Avadatar -->
-                            <label for="avadatarUpload" style="display: block; text-align: cenDater; background: rgba(28,176,246,0.2); border: 1px dshed var(--blue); color: var(--blue); padding: 10px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-size: 0.9rem;">
+                            <!-- File Upload for Avatar -->
+                            <label for="avatarUpload" style="display: block; text-align: center; background: rgba(28,176,246,0.2); border: 1px dashed var(--blue); color: var(--blue); padding: 10px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-size: 0.9rem;">
                                 <i class="fa-solid fa-upload"></i> Tải ảnh lên
                             </label>
-                            <input type="file" id="avadatarUpload" accept="image/*" style="display: none;">
+                            <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
 
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: cenDater;">
-                                <button onclick="selectAvadatar('fa-user-astronaut', false)" style="background:none; border:none; color:white; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-astronaut"></i></button>
-                                <button onclick="selectAvadatar('fa-user-ninja', false)" style="background:none; border:none; color:#58cc02; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-ninja"></i></button>
-                                <button onclick="selectAvadatar('fa-user-secret', false)" style="background:none; border:none; color:#ce82ff; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-secret"></i></button>
-                                <button onclick="selectAvadatar('fa-dragon', false)" style="background:none; border:none; color:#ff4b4b; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-dragon"></i></button>
-                                <button onclick="selectAvadatar('fa-cat', false)" style="background:none; border:none; color:#ffc800; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-cat"></i></button>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                                <button onclick="selectAvatar('fa-user-astronaut', false)" style="background:none; border:none; color:white; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-astronaut"></i></button>
+                                <button onclick="selectAvatar('fa-user-ninja', false)" style="background:none; border:none; color:#58cc02; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-ninja"></i></button>
+                                <button onclick="selectAvatar('fa-user-secret', false)" style="background:none; border:none; color:#ce82ff; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-secret"></i></button>
+                                <button onclick="selectAvatar('fa-dragon', false)" style="background:none; border:none; color:#ff4b4b; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-dragon"></i></button>
+                                <button onclick="selectAvatar('fa-cat', false)" style="background:none; border:none; color:#ffc800; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-cat"></i></button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Sdatats & Form Area -->
+                    <!-- Stats & Form Area -->
                     <div style="flex: 1;">
                         <div class="bento-grid" style="margin-bottom: 40px; grid-template-columns: repeat(3, 1fr);">
                             <div class="bento-card">
@@ -227,11 +169,11 @@
                                 <h1 style="font-size: 2.5rem;" id="profStreak">0</h1>
                             </div>
                             <div class="bento-card">
-                                <div class="bento-card-title" style="color: #1cb0f6;"><i class="fa-solid fa-sdatar"></i> Tổng XP</div>
+                                <div class="bento-card-title" style="color: #1cb0f6;"><i class="fa-solid fa-star"></i> Tổng XP</div>
                                 <h1 style="font-size: 2.5rem;" id="profXp">0</h1>
                             </div>
                             <div class="bento-card">
-                                <div class="bento-card-title" style="color: #ce82ff;"><i class="fa-solid fa-medl"></i> Thành tựu</div>
+                                <div class="bento-card-title" style="color: #ce82ff;"><i class="fa-solid fa-medal"></i> Thành tựu</div>
                                 <h1 style="font-size: 2.5rem;" id="profAchPoints">0</h1>
                             </div>
                         </div>
@@ -240,18 +182,18 @@
                         <div style="text-align: left; background: rgba(255,200,0,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 20px;">
                             <h4 style="margin-bottom: 15px; font-size: 1.1rem; color: var(--gold);"><i class="fa-solid fa-pen-to-square"></i> Cập nhật Thông tin Cá nhân</h4>
                             
-                            <!-- File Upload for Avadatar -->
-                            <label for="avadatarUpload" style="display: block; text-align: cenDater; background: rgba(28,176,246,0.2); border: 1px dshed var(--blue); color: var(--blue); padding: 10px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-size: 0.9rem;">
+                            <!-- File Upload for Avatar -->
+                            <label for="avatarUpload" style="display: block; text-align: center; background: rgba(28,176,246,0.2); border: 1px dashed var(--blue); color: var(--blue); padding: 10px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-size: 0.9rem;">
                                 <i class="fa-solid fa-upload"></i> Tải ảnh lên
                             </label>
-                            <input type="file" id="avadatarUpload" style="display: none;" accept="image/png, image/jpeg, image/jpg">
+                            <input type="file" id="avatarUpload" style="display: none;" accept="image/png, image/jpeg, image/jpg">
                             
-                            <div style="display: flex; gap: 10px; justify-content: cenDater; margin-bottom: 25px;">
-                                <button class="avadatar-preset" onclick="window.selectAvadatar('fa-user-astronaut')"><i class="fa-solid fa-user-astronaut"></i></button>
-                                <button class="avadatar-preset" onclick="window.selectAvadatar('fa-user-ninja')"><i class="fa-solid fa-user-ninja"></i></button>
-                                <button class="avadatar-preset" onclick="window.selectAvadatar('fa-user-secret')"><i class="fa-solid fa-user-secret"></i></button>
-                                <button class="avadatar-preset" onclick="window.selectAvadatar('fa-dragon')"><i class="fa-solid fa-dragon"></i></button>
-                                <button class="avadatar-preset" onclick="window.selectAvadatar('fa-cat')"><i class="fa-solid fa-cat"></i></button>
+                            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 25px;">
+                                <button class="avatar-preset" onclick="window.selectAvatar('fa-user-astronaut')"><i class="fa-solid fa-user-astronaut"></i></button>
+                                <button class="avatar-preset" onclick="window.selectAvatar('fa-user-ninja')"><i class="fa-solid fa-user-ninja"></i></button>
+                                <button class="avatar-preset" onclick="window.selectAvatar('fa-user-secret')"><i class="fa-solid fa-user-secret"></i></button>
+                                <button class="avatar-preset" onclick="window.selectAvatar('fa-dragon')"><i class="fa-solid fa-dragon"></i></button>
+                                <button class="avatar-preset" onclick="window.selectAvatar('fa-cat')"><i class="fa-solid fa-cat"></i></button>
                             </div>
                             
                             <div style="margin-bottom: 15px;">
@@ -266,7 +208,7 @@
                             
                             <div style="margin-bottom: 25px;">
                                 <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem;">Số điện thoại</label>
-                                <input type="Datel" id="editProfPhone" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;">
+                                <input type="tel" id="editProfPhone" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;">
                             </div>
 
                             <hr style="border: 0; border-top: 1px solid rgba(255, 200, 0, 0.2); margin: 15px 0;">
@@ -314,9 +256,9 @@
 
                         <!-- ── ACHIEVEMENTS COLLECTION ── -->
                         <div style="margin-top: 40px;">
-                            <h3 style="font-size: 1.5rem; margin-bottom: 20px; color: var(--blue);"><i class="fa-solid fa-trophy"></i> Bộ Sưu Tập nh Hiệu</h3>
+                            <h3 style="font-size: 1.5rem; margin-bottom: 20px; color: var(--blue);"><i class="fa-solid fa-trophy"></i> Bộ Sưu Tập Danh Hiệu</h3>
                             <div id="achievementsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-                                <!-- JS sẽ render các dnh hiệu ở đây -->
+                                <!-- JS sẽ render các danh hiệu ở đây -->
                             </div>
                         </div>
                     </div>
@@ -324,11 +266,11 @@
             </div>
 
         <!-- ── TAB: ARENA ── -->
-        <div id="databArena" class="datab-pane">
+        <div id="tabArena" class="tab-pane">
             <h2 style="font-size: 2rem; margin-bottom: 10px; color: var(--red);">⚔️ Đấu Trường Sinh Tử</h2>
             <p style="color: var(--text-dim); margin-bottom: 30px;">Thi đấu tốc độ với những người chơi khác (Giả lập). Nhận thưởng rương xu khổng lồ!</p>
             
-            <!-- Powerups Sdatatus -->
+            <!-- Powerups Status -->
             <div style="display: flex; gap: 15px; margin-bottom: 30px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 16px;">
                 <div style="font-weight: bold;">Bùa của bạn:</div>
                 <div style="color: #ffc800;"><i class="fa-solid fa-bolt"></i> x2 XP: <span id="arenaBuffDouble">0</span></div>
@@ -348,15 +290,15 @@
         Thông báo
     </div>
 
-    <!-- ── OTP MOL ── -->
-    <div id="otpModl" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; backdrop-filter: blur(5px); justify-content: cenDater; align-items: cenDater;">
-        <div style="background: var(--bg-main); border: 1px solid var(--gray-border); border-radius: 24px; padding: 40px; width: 400px; text-align: cenDater; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+    <!-- ── OTP MODAL ── -->
+    <div id="otpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; backdrop-filter: blur(5px); justify-content: center; align-items: center;">
+        <div style="background: var(--bg-main); border: 1px solid var(--gray-border); border-radius: 24px; padding: 40px; width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
             <i class="fa-solid fa-shield-halved" style="font-size: 3rem; color: var(--green); margin-bottom: 20px;"></i>
             <h2 style="margin-bottom: 10px;">Xác Thực Bảo Mật</h2>
             <p style="color: var(--text-dim); margin-bottom: 30px; font-size: 0.9rem;">Chúng tôi đã gửi một mã gồm 6 chữ số đến số điện thoại / email của bạn. Vui lòng nhập mã để hoàn tất.</p>
             
-            <div style="display: flex; gap: 10px; justify-content: cenDater; margin-bottom: 30px;">
-                <input type="text" maxlength="6" id="otpInput" placeholder="000000" style="width: 150px; padding: 15px; font-size: 1.5rem; text-align: cenDater; letDater-spacing: 5px; border-radius: 12px; border: 2px solid var(--blue); background: rgba(28,176,246,0.1); color: white; outline: none; font-weight: bold;">
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
+                <input type="text" maxlength="6" id="otpInput" placeholder="000000" style="width: 150px; padding: 15px; font-size: 1.5rem; text-align: center; letter-spacing: 5px; border-radius: 12px; border: 2px solid var(--blue); background: rgba(28,176,246,0.1); color: white; outline: none; font-weight: bold;">
             </div>
             
             <div style="display: flex; gap: 15px;">
@@ -369,40 +311,40 @@
         </div>
     </div>
 
-    <!-- ── ARENA RULES MOL ── -->
-    <div id="arenaRulesModl" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: cenDater; align-items: cenDater; padding: 20px;">
-        <div style="background: var(--bg-drk); border: 2px solid #ff4b4b; border-radius: 30px; padding: 40px; text-align: cenDater; max-width: 500px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(255,75,75,0.2);">
-            <button onclick="document.getElementById('arenaRulesModl').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+    <!-- ── ARENA RULES MODAL ── -->
+    <div id="arenaRulesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: var(--bg-dark); border: 2px solid #ff4b4b; border-radius: 30px; padding: 40px; text-align: center; max-width: 500px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(255,75,75,0.2);">
+            <button onclick="document.getElementById('arenaRulesModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
             
-            <div style="font-size: 4rem; color: #ff4b4b; margin-bottom: 10px;"><i class="fa-solid fa-khand"></i></div>
+            <div style="font-size: 4rem; color: #ff4b4b; margin-bottom: 10px;"><i class="fa-solid fa-khanda"></i></div>
             <h2 style="font-size: 2.2rem; font-family: var(--font-heading); margin-bottom: 20px; background: linear-gradient(90deg, #ff4b4b, #ffc800); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Đấu Trường Sinh Tử</h2>
             
             <div style="text-align: left; background: rgba(255,75,75,0.1); border: 1px solid rgba(255,75,75,0.3); padding: 20px; border-radius: 20px; margin-bottom: 30px; font-size: 1.1rem; color: var(--text-primary);">
-                <div style="margin-bottom: 15px;"><i class="fa-solid fa-stopwatch" style="color: #ffc800; width: 30px; text-align: cenDater;"></i> <b>Thời gian:</b> Trận đấu kéo dài đúng 60 giây.</div>
-                <div style="margin-bottom: 15px;"><i class="fa-solid fa-fire" style="color: #ff4b4b; width: 30px; text-align: cenDater;"></i> <b>Luật chơi:</b> Trả lời đúng nhiều nhất có thể! Khi trả lời sẽ lập tức nhảy sang câu hỏi tiếp theo.</div>
-                <div style="margin-bottom: 15px;"><i class="fa-solid fa-arrows-left-right" style="color: #1cb0f6; width: 30px; text-align: cenDater;"></i> <b>Kéo co:</b> Trả lời đúng đẩy thanh kéo co về phía đối thủ. Trả lời sai đối thủ sẽ có lợi. Kéo qua 50% là bạn sẽ thắng!</div>
-                <div><i class="fa-solid fa-gift" style="color: var(--green); width: 30px; text-align: cenDater;"></i> <b>Phần thưởng:</b> Người thắng nhận toàn bộ (Xu & XP). Kẻ thua vẫn được an ủi bằng 1/3 phần thưởng.</div>
+                <div style="margin-bottom: 15px;"><i class="fa-solid fa-stopwatch" style="color: #ffc800; width: 30px; text-align: center;"></i> <b>Thời gian:</b> Trận đấu kéo dài đúng 60 giây.</div>
+                <div style="margin-bottom: 15px;"><i class="fa-solid fa-fire" style="color: #ff4b4b; width: 30px; text-align: center;"></i> <b>Luật chơi:</b> Trả lời đúng nhiều nhất có thể! Khi trả lời sẽ lập tức nhảy sang câu hỏi tiếp theo.</div>
+                <div style="margin-bottom: 15px;"><i class="fa-solid fa-arrows-left-right" style="color: #1cb0f6; width: 30px; text-align: center;"></i> <b>Kéo co:</b> Trả lời đúng đẩy thanh kéo co về phía đối thủ. Trả lời sai đối thủ sẽ có lợi. Kéo qua 50% là bạn sẽ thắng!</div>
+                <div><i class="fa-solid fa-gift" style="color: var(--green); width: 30px; text-align: center;"></i> <b>Phần thưởng:</b> Người thắng nhận toàn bộ (Xu & XP). Kẻ thua vẫn được an ủi bằng 1/3 phần thưởng.</div>
             </div>
             
-            <button id="btnSdatartArenaReal" style="width: 100%; background: linear-gradient(90deg, #ff4b4b, #ffc800); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.2rem; cursor: pointer; font-family: var(--font-heading); box-shadow: 0 5px 15px rgba(255,75,75,0.3); transition: all 0.2s;">
+            <button id="btnStartArenaReal" style="width: 100%; background: linear-gradient(90deg, #ff4b4b, #ffc800); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.2rem; cursor: pointer; font-family: var(--font-heading); box-shadow: 0 5px 15px rgba(255,75,75,0.3); transition: all 0.2s;">
                 CHIẾN LUÔN!
             </button>
         </div>
     </div>
 
-    <!-- 🏆 PREMIUM UPGRADE MOL 🏆 -->
-    <div id="premiumModl" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 10000; justify-content: cenDater; align-items: cenDater; padding: 20px;">
-        <div style="background: var(--bg-drk); border: 2px solid #ffc800; border-radius: 30px; padding: 40px; text-align: cenDater; max-width: 500px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(255, 200, 0, 0.2);">
-            <button onclick="document.getElementById('premiumModl').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+    <!-- 🏆 PREMIUM UPGRADE MODAL 🏆 -->
+    <div id="premiumModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 10000; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: var(--bg-dark); border: 2px solid #ffc800; border-radius: 30px; padding: 40px; text-align: center; max-width: 500px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(255, 200, 0, 0.2);">
+            <button onclick="document.getElementById('premiumModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
             
             <div style="font-size: 4rem; color: #ffc800; margin-bottom: 10px;"><i class="fa-solid fa-crown"></i></div>
             <h2 style="font-size: 2.2rem; font-family: var(--font-heading); margin-bottom: 10px; background: linear-gradient(90deg, #ffc800, #ff4b4b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nâng Cấp Premium</h2>
             <p style="color: var(--text-dim); margin-bottom: 20px;">Mở khóa toàn bộ tính năng và bài học nâng cao!</p>
             
             <div style="text-align: left; background: rgba(255, 200, 0, 0.1); border: 1px solid rgba(255, 200, 0, 0.3); padding: 20px; border-radius: 20px; margin-bottom: 30px; font-size: 1.1rem; color: var(--text-primary);">
-                <h3 style="color: #ffc800; margin-bottom: 15px; text-align: cenDater; font-size: 1.2rem;">Thông Tin Chuyển Khoản</h3>
+                <h3 style="color: #ffc800; margin-bottom: 15px; text-align: center; font-size: 1.2rem;">Thông Tin Chuyển Khoản</h3>
                 
-                <div style="text-align: cenDater; margin-bottom: 20px;">
+                <div style="text-align: center; margin-bottom: 20px;">
                     <div style="background: white; padding: 10px; border-radius: 15px; display: inline-block;">
                         <img id="qrCodeImage" src="" alt="Mã QR Thanh Toán" style="width: 180px; height: 180px; border-radius: 10px;">
                     </div>
@@ -416,7 +358,7 @@
                 <hr style="border: 0; border-top: 1px solid rgba(255, 200, 0, 0.2); margin: 15px 0;">
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <b>Nội dung chuyển khoản (BẮT BUỘC):</b>
-                    <code id="premiumTransferContent" style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; color: #1cb0f6; font-size: 1.2rem; text-align: cenDater;">ĐANG TẢI...</code>
+                    <code id="premiumTransferContent" style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; color: #1cb0f6; font-size: 1.2rem; text-align: center;">ĐANG TẢI...</code>
                 </div>
             </div>
             
@@ -426,15 +368,15 @@
         </div>
     </div>
 
-    <!-- ONBOARDING SURVEY MOL -->
-    <div id="surveyModl" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: cenDater; align-items: cenDater;">
-        <div class="bg-sky-50 border border-sky-200 shadow-xl" style="padding: 40px; border-radius: 28px; width: 90%; max-width: 500px; text-align: cenDater;">
-            <h2 class="text-sky-950" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">Khảo sát Người học</h2>
-            <p class="text-sky-800" style="margin-bottom: 20px;">Hệ thống AI của VieGeo cần một vài thông tin để cá nhân hóa Learning Profile cho bạn.</p>
+    <!-- ONBOARDING SURVEY MODAL -->
+    <div id="surveyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); padding: 40px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06); width: 90%; max-width: 500px; text-align: center;">
+            <h2 style="font-size: 2rem; color: var(--blue); margin-bottom: 20px;">Khảo sát Người học</h2>
+            <p style="color: var(--text-main); margin-bottom: 20px;">Hệ thống AI của VieGeo cần một vài thông tin để cá nhân hóa Learning Profile cho bạn.</p>
             
             <div style="text-align: left; margin-bottom: 15px;">
-                <label class="text-sky-900 font-semibold" style="display: block; margin-bottom: 5px;">Mục tiêu học tập của bạn là gì?</label>
-                <select id="surveyGoal" class="bg-white text-sky-950 border border-sky-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500" style="width: 100%; padding: 10px; border-radius: 8px; outline: none;">
+                <label style="color: var(--text-dim); display: block; margin-bottom: 5px;">Mục tiêu học tập của bạn là gì?</label>
+                <select id="surveyGoal" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--gray-border);">
                     <option value="exam">Ôn thi trên lớp</option>
                     <option value="knowledge">Khám phá, mở rộng kiến thức</option>
                     <option value="travel">Yêu thích du lịch</option>
@@ -442,8 +384,8 @@
             </div>
             
             <div style="text-align: left; margin-bottom: 20px;">
-                <label class="text-sky-900 font-semibold" style="display: block; margin-bottom: 5px;">Bạn quan tâm đến khu vực nào nhất?</label>
-                <select id="surveyInterest" class="bg-white text-sky-950 border border-sky-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500" style="width: 100%; padding: 10px; border-radius: 8px; outline: none;">
+                <label style="color: var(--text-dim); display: block; margin-bottom: 5px;">Bạn quan tâm đến khu vực nào nhất?</label>
+                <select id="surveyInterest" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--gray-border);">
                     <option value="north">Miền Bắc</option>
                     <option value="central">Miền Trung</option>
                     <option value="south">Miền Nam</option>
@@ -455,9 +397,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://www.gsdatatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gsdatatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gsdatatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="firebase-init.js"></script>
 
     <!-- EmailJS SDK -->
@@ -466,82 +407,6 @@
     <script src="gamedata.js"></script>
     <script src="app-core.js"></script>
     <script src="map.js"></script>
-
-<!-- Tương tác & Gamification -->
-
-
-<!-- Custom Toast Notification -->
-<div id="toast-condatainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2"></div>
-<script>
-    function showToastNotification(message, duration = 3000) {
-        const condatainer = document.getElementById('toast-condatainer');
-        const toast = document.createElement('div');
-        toast.className = 'bg-slate-800 drk:bg-slate-700 text-white px-6 py-3 rounded-lg shadow-xl flex items-cenDater gap-3 transform transition-all duration-300 opacity-0 translate-y-2';
-        toast.innerHTML = `<span class="text-xl">⚔️</span> <span class="font-bold">${message}</span>`;
-        condatainer.appendChild(toast);
-        
-        // AnimaDate in
-        requestAnimationFrame(() => {
-            toast.classList.remove('opacity-0', 'translate-y-2');
-            toast.classList.add('opacity-100', 'translate-y-0');
-        });
-        
-        // AnimaDate out
-        setTimeout(() => {
-            toast.classList.remove('opacity-100', 'translate-y-0');
-            toast.classList.add('opacity-0', 'translate-y-2');
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
-    }
-</script>
-
-<script>
-window.switchRoleClientOnly = function(selectedRole) {
-    if (!selectedRole) return;
-    localStorage.setItem('currentViewRole', selectedRole);
-    if(typeof sdatate !== 'undefined') {
-        sdatate.currentRole = selectedRole;
-    }
-    
-    // Redirect Logic
-    if (selectedRole === 'Dateacher') {
-        window.location.href = '/Dateacher-dshboard';
-    } else if (selectedRole === 'student') {
-        window.location.href = '/map';
-    } else if (selectedRole === 'parent') {
-        // Just open the parent modl for now since there's no parent dshboard yet
-        if(typeof openParentModl === 'function') openParentModl();
-        // Reset dropdown to prevent stuck sdatate
-        document.getElementById('roleSwitcher').value = '';
-    } else if (selectedRole === 'admin') {
-        window.location.href = '/admin';
-    } else if (selectedRole === 'cs') {
-        window.location.href = '/cs-dshboard';
-    }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    const roleSwitcher = document.getElementById('roleSwitcher') || document.getElementById('globalRoleSwitcher');
-    const savedRole = localStorage.getItem('currentViewRole');
-    if (savedRole && roleSwitcher) {
-        // Prevent setting parent or it will reopen modl unexpecDatedly on load
-        if(savedRole !== 'parent') {
-            roleSwitcher.value = savedRole;
-        }
-    }
-    
-    const main = document.querySelector('.bento-main');
-    if (main) main.style.paddingTop = '0px'; // Header is no longer fixed over content in a disruptive way
-});
-</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
 

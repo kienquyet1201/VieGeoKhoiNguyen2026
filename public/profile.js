@@ -1,31 +1,31 @@
 // ============================================================================
-// VieGeo - profile.js (Firebase InDategration)
+// VieGeo - profile.js (Firebase Integration)
 // ============================================================================
 
 const profileForm = document.getElementById('profileForm');
 const btnLogout = document.getElementById('btnLogout');
-const btnPremium = document.getElementById('btnPremium'); // NÃºt Mua Premium má»›i
+const btnPremium = document.getElementById('btnPremium'); // Nút Mua Premium mới
 
-// CÃ¡c field hiá»ƒn thá»‹
+// Các field hiển thị
 const dispName = document.getElementById('dispName');
 const dispEmail = document.getElementById('dispEmail');
 const profStreak = document.getElementById('profStreak');
 const profXp = document.getElementById('profXp');
 const profStyle = document.getElementById('profStyle');
 
-// CÃ¡c field nháº­p liá»‡u
+// Các field nhập liệu
 const profName = document.getElementById('profName');
 const profPhone = document.getElementById('profPhone');
 const oldPass = document.getElementById('oldPass');
 const newPass = document.getElementById('newPass');
 
-// 1. Kiá»ƒm tra session
-const sessionĐãdata = localStorage.getItem('lm_session');
-if (!sessionĐãdata) {
-    window.location.href = '/loginout';
+// 1. Kiểm tra session
+const sessionData = localStorage.getItem('lm_session');
+if (!sessionData) {
+    window.location.href = 'loginout.html';
 }
 
-const sessionUser = JSON.parse(sessionĐãdata);
+const sessionUser = JSON.parse(sessionData);
 
 // Load Game State
 function getGameState() {
@@ -35,16 +35,16 @@ function getGameState() {
 }
 const gameState = getGameState();
 
-// 2. Táº£i thÃ´ng tin tá»« Firebase
+// 2. Tải thông tin từ Firebase
 async function loadFirebaseProfile() {
     try {
         const userDoc = await db.collection('users').doc(sessionUser.email).get();
         if (!userDoc.exists) {
             localStorage.removeItem('lm_session');
-            window.location.href = '/loginout';
+            window.location.href = 'loginout.html';
             return;
         }
-        const currentUser = userDoc.đãdata();
+        const currentUser = userDoc.data();
         
         dispName.textContent = currentUser.name;
         dispEmail.textContent = currentUser.email;
@@ -52,28 +52,28 @@ async function loadFirebaseProfile() {
         profStreak.textContent = gameState ? (gameState.streak || 0) : 0;
         profXp.textContent = gameState ? (gameState.xp || 0) : 0;
         
-        let evalText = "ChÆ°a test";
+        let evalText = "Chưa test";
         if (gameState && gameState.assessmentScore !== undefined) {
-            if (gameState.assessmentScore <= 4) evalText = "ChÆ°a cÃ³ kiáº¿n thá»©c";
-            else if (gameState.assessmentScore <= 8) evalText = "Kiáº¿n thá»©c cÆ¡ báº£n";
-            else evalText = "Hiá»ƒu biáº¿t thÃ¢m sÃ¢u";
+            if (gameState.assessmentScore <= 4) evalText = "Chưa có kiến thức";
+            else if (gameState.assessmentScore <= 8) evalText = "Kiến thức cơ bản";
+            else evalText = "Hiểu biết thâm sâu";
         }
         profStyle.textContent = evalText;
 
         profName.value = currentUser.name || '';
         profPhone.value = currentUser.phone || '';
         
-        // LÆ°u đãdata hiá»‡n táº¡i
-        window.currentUserĐãdata = currentUser;
+        // Lưu data hiện tại
+        window.currentUserData = currentUser;
         
     } catch (err) {
-        console.error("Lá»—i táº£i profile:", err);
+        console.error("Lỗi tải profile:", err);
     }
 }
 
 loadFirebaseProfile();
 
-// 3. Cáº­p nháº­t thÃ´ng tin (TÃªn, SÄT, Máº­t khóáº©u)
+// 3. Cập nhật thông tin (Tên, SĐT, Mật khẩu)
 if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -83,84 +83,81 @@ if (profileForm) {
         const inputOldPass = oldPass.value;
         const inputNewPass = newPass.value;
         
-        const upđãDateĐãdata = {
+        const updateData = {
             name: newName,
             phone: newPhone
         };
         
-        // Logic Ä‘á»•i máº­t khóáº©u
+        // Logic đổi mật khẩu
         if (inputOldPass || inputNewPass) {
             if (!inputOldPass || !inputNewPass) {
-                alert("Vui lÃ²ng nháº­p cáº£ máº­t khóáº©u cÅ© vÃ  máº­t khóáº©u má»›i Ä‘á»ƒ Ä‘á»•i máº­t khóáº©u!");
+                alert("Vui lòng nhập cả mật khẩu cũ và mật khẩu mới để đổi mật khẩu!");
                 return;
             }
-            if (inputOldPass !== window.currentUserĐãdata.password) {
-                alert("Máº­t khóáº©u cÅ© khóÃ´ng chÃ­nh xÃ¡c!");
+            if (inputOldPass !== window.currentUserData.password) {
+                alert("Mật khẩu cũ không chính xác!");
                 return;
             }
             if (inputNewPass.length < 6) {
-                alert("Máº­t khóáº©u má»›i pháº£i tá»« 6 kÃ½ tá»± trá»Ÿ lÃªn.");
+                alert("Mật khẩu mới phải từ 6 ký tự trở lên.");
                 return;
             }
-            upđãDateĐãdata.password = inputNewPass;
+            updateData.password = inputNewPass;
         }
 
         try {
             const btn = profileForm.querySelector('button[type="submit"]');
             btn.disabled = true;
-            btn.textContent = "Äang lÆ°u...";
+            btn.textContent = "Đang lưu...";
             
-            await db.collection('users').doc(sessionUser.email).upđãDate(upđãDateĐãdata);
+            await db.collection('users').doc(sessionUser.email).update(updateData);
             
-            // Cáº­p nháº­t session náº¿u Ä‘á»•i tÃªn
+            // Cập nhật session nếu đổi tên
             localStorage.setItem('lm_session', JSON.stringify({ email: sessionUser.email, name: newName }));
             
-            alert("ÄÃ£ lÆ°u thÃ´ng tin thÃ nh cÃ´ng!");
+            alert("Đã lưu thông tin thành công!");
             
             oldPass.value = '';
             newPass.value = '';
             
             btn.disabled = false;
-            btn.textContent = "LÆ°u Thay Äá»•i";
+            btn.textContent = "Lưu Thay Đổi";
         } catch (error) {
-            console.error("Lá»—i cáº­p nháº­t:", error);
-            alert("Lá»—i khói lÆ°u thÃ´ng tin. Thá»­ láº¡i sau.");
+            console.error("Lỗi cập nhật:", error);
+            alert("Lỗi khi lưu thông tin. Thử lại sau.");
         }
     });
 }
 
-// YÃªu cáº§u Premium
+// Yêu cầu Premium
 if (btnPremium) {
     btnPremium.addEventListener('click', async () => {
         btnPremium.disabled = true;
-        btnPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Äang gá»­i...';
+        btnPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
         
         try {
             await db.collection('premium_requests').add({
-                status: 'pending',
                 email: sessionUser.email,
                 name: sessionUser.name,
                 status: 'pending',
-                timesdatamp: firebase.firestore.FieldValue.serverTimesdatamp()
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert("ÄÃ£ gá»­i yÃªu cáº§u Mua Premium Ä‘áº¿n quáº£n trá»‹ viÃªn. Vui lÃ²ng chá» há»‡ thá»‘ng xÃ¡c nháº­n!");
-            btnPremium.innerHTML = '<i class="fa-solid fa-check"></i> ÄÃ£ gá»­i yÃªu cáº§u';
+            alert("Đã gửi yêu cầu Mua Premium đến quản trị viên. Vui lòng chờ hệ thống xác nhận!");
+            btnPremium.innerHTML = '<i class="fa-solid fa-check"></i> Đã gửi yêu cầu';
         } catch (error) {
-            console.error("Lá»—i premium:", error);
-            alert("Lá»—i khói gá»­i yÃªu cáº§u.");
+            console.error("Lỗi premium:", error);
+            alert("Lỗi khi gửi yêu cầu.");
             btnPremium.disabled = false;
-            btnPremium.innerHTML = '<i class="fa-solid fa-crown"></i> YÃªu cáº§u Mua Premium';
+            btnPremium.innerHTML = '<i class="fa-solid fa-crown"></i> Yêu cầu Mua Premium';
         }
     });
 }
 
-// 4. ÄÄƒng xuáº¥t (Fix lá»—i rÃ² rá»‰ dá»¯ liá»‡u)
+// 4. Đăng xuất (Fix lỗi rò rỉ dữ liệu)
 if (btnLogout) {
     btnLogout.addEventListener('click', () => {
-        // XÃ³a TOÃ€N Bá»˜ dá»¯ liá»‡u local Ä‘á»ƒ trÃ¡nh rÃ² rá»‰ PvP sang acc khóÃ¡c
+        // Xóa TOÀN BỘ dữ liệu local để tránh rò rỉ PvP sang acc khác
         localStorage.clear(); 
-        window.location.href = '/loginout';
+        window.location.href = 'loginout.html';
     });
 }
-
-

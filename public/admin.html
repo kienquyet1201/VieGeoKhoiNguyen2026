@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <medata charset="UTF-8">
-    <medata name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VieGeo - Admin Panel</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gsdatatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gsdatatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gsdatatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="firebase-init.js"></script>
     <!-- Mammoth.js for parsing Word Documents -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     
     <style>
         :root {
-            --bg-drk: #0f172a;
+            --bg-dark: #0f172a;
             --bg-card: #1e293b;
             --text-primary: #f8fafc;
             --text-dim: #94a3b8;
@@ -25,12 +25,12 @@
         }
         body {
             margin: 0; padding: 20px; font-family: 'Inter', sans-serif;
-            background: var(--bg-drk); color: var(--text-primary);
+            background: var(--bg-dark); color: var(--text-primary);
         }
         h1 { color: var(--gold); border-bottom: 2px solid var(--bg-card); padding-bottom: 10px; }
         .req-card {
             background: var(--bg-card); padding: 15px; margin-bottom: 15px;
-            border-radius: 10px; display: flex; justify-content: space-between; align-items: cenDater;
+            border-radius: 10px; display: flex; justify-content: space-between; align-items: center;
         }
         .req-info h3 { margin: 0 0 5px 0; color: var(--blue); }
         .req-info p { margin: 0; color: var(--text-dim); }
@@ -53,22 +53,12 @@
 <body>
 
     <h1><i class="fa-solid fa-screwdriver-wrench"></i> Quản Trị Hệ Thống VieGeo</h1>
-    
-    <!-- TABS -->
-    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--bg-card); padding-bottom: 10px;">
-        <button id="databUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quản Lý Người Dùng & Premium</button>
-        <button id="databUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload Câu Hỏi</button>
-        <button class="bento-btn" onclick="window.location.href="/loginout"" style="margin-left: auto; background: rgba(255, 75, 75, 0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
-    </div>
+    <p>Danh sách các yêu cầu Nâng cấp Premium đang chờ duyệt:</p>
 
-    <!-- TAB: QUẢN LÝ NGƯỜI DÙNG -->
-    <div id="databUsersContent">
-        <p>nh sách các yêu cầu Nâng cấp Premium đang chờ duyệt:</p>
+    <div id="requestsList">Đang tải dữ liệu...</div>
 
-        <div id="requestsList">Đang tải dữ liệu...</div>
-
-        <h2 style="color: var(--gold); margin-top: 40px;"><i class="fa-solid fa-users"></i> Quản Lý Người Dùng</h2>
-        <p>nh sách người dùng hệ thống. Bạn có thể kick (buộc đăng xuất) họ ngay lập tức:</p>
+    <h2 style="color: var(--gold); margin-top: 40px;"><i class="fa-solid fa-users"></i> Quản Lý Người Dùng</h2>
+    <p>Danh sách người dùng hệ thống. Bạn có thể kick (buộc đăng xuất) họ ngay lập tức:</p>
     
     <div style="margin-bottom: 20px;">
         <input type="text" id="searchUser" placeholder="Tìm kiếm theo email..." style="padding: 10px; width: 100%; max-width: 400px; border-radius: 8px; border: 1px solid var(--gray-border); background: var(--bg-card); color: white; outline: none;">
@@ -76,14 +66,18 @@
     </div>
 
     <div id="usersList">Đang tải người dùng...</div>
+
+    <div id="toast">Thông báo</div>
+
+    
     </div> <!-- END TAB QUẢN LÝ -->
 
     <!-- TAB: UPLOAD WORD -->
-    <div id="databUploadContent" style="display: none;">
+    <div id="tabUploadContent" style="display: none;">
         <h2 style="color: var(--gold);"><i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên Bộ Câu Hỏi (.docx / .txt)</h2>
         <p style="color: var(--text-dim); margin-bottom: 20px;">Hệ thống sẽ bóc tách văn bản thành dạng câu hỏi trắc nghiệm và cập nhật vào Firebase.</p>
         
-        <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 2px dshed var(--blue); text-align: cenDater; margin-bottom: 20px;">
+        <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 2px dashed var(--blue); text-align: center; margin-bottom: 20px;">
             <i class="fa-solid fa-file-word" style="font-size: 3rem; color: var(--blue); margin-bottom: 15px;"></i><br>
             <input type="file" id="fileUpload" accept=".docx,.txt" style="display: none;">
             <button onclick="document.getElementById('fileUpload').click()" style="padding: 12px 25px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
@@ -94,24 +88,24 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
             <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Thnh ph? (T?nh):</label>
-                <input type="text" id="importProvince" placeholder="VD: H N?i" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Thành phố (Tỉnh):</label>
+                <input type="text" id="importProvince" placeholder="VD: Hà Nội" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
             </div>
             <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">?o nh? (Bi h?c):</label>
-                <input type="text" id="importIsland" placeholder="VD: Khm ph H? Guom" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Đảo nhỏ (Bài học):</label>
+                <input type="text" id="importIsland" placeholder="VD: Khám phá Hồ Gươm" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
             </div>
             <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">M?c d?:</label>
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mức độ:</label>
                 <select id="importDifficulty" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
-                    <option value="easy">Co b?n (Easy)</option>
-                    <option value="medium">Trung bnh (Medium)</option>
-                    <option value="hard">Nng cao (Hard)</option>
+                    <option value="easy">Cơ bản (Easy)</option>
+                    <option value="medium">Trung bình (Medium)</option>
+                    <option value="hard">Nâng cao (Hard)</option>
                 </select>
             </div>
             <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">M Bi H?c (ID - Ty ch?n):</label>
-                <input type="text" id="importLessonId" placeholder="H? th?ng t? t?o n?u b? tr?ng" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mã Bài Học (ID - Tùy chọn):</label>
+                <input type="text" id="importLessonId" placeholder="Hệ thống tự tạo nếu bỏ trống" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
             </div>
         </div>
 
@@ -119,21 +113,19 @@
             <i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật
         </button>
 
-        <div id="uploadPreview" style="background: var(--bg-drk); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">
+        <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">
             Kết quả preview sẽ hiển thị ở đây...
         </div>
     </div> <!-- END TAB UPLOAD -->
 
-    <div id="toast">Thông báo</div>
-
     <script>
-        function switchTab(databId) {
-            const btnUsers = document.getElementById('databUsersBtn');
-            const btnUpload = document.getElementById('databUploadBtn');
-            const contentUsers = document.getElementById('databUsersContent');
-            const contentUpload = document.getElementById('databUploadContent');
+        function switchTab(tabId) {
+            const btnUsers = document.getElementById('tabUsersBtn');
+            const btnUpload = document.getElementById('tabUploadBtn');
+            const contentUsers = document.getElementById('tabUsersContent');
+            const contentUpload = document.getElementById('tabUploadContent');
 
-            if (databId === 'users') {
+            if (tabId === 'users') {
                 btnUsers.style.background = 'var(--blue)';
                 btnUsers.style.color = 'white';
                 btnUsers.style.border = 'none';
@@ -162,17 +154,16 @@
         // UPLOAD & PARSE LOGIC
         // ==========================================
         document.getElementById('fileUpload').addEventListener('change', function(e) {
-            if (e.datarget.files.length > 0) {
-                document.getElementById('fileNameDisplay').textContent = "Đã chọn: " + e.datarget.files[0].name;
+            if (e.target.files.length > 0) {
+                document.getElementById('fileNameDisplay').textContent = "Đã chọn: " + e.target.files[0].name;
             }
         });
-
         
         async function processUpload() {
             const fileInput = document.getElementById('fileUpload');
             const file = fileInput.files[0];
             if (!file) {
-                showToast("Vui lng ch?n file!");
+                showToast("Vui lòng chọn file!");
                 return;
             }
 
@@ -182,17 +173,16 @@
             let lessonId = document.getElementById('importLessonId').value.trim();
             
             if (!province || !island) {
-                showToast("Vui lng di?n Thnh ph? v ?o nh?!");
+                showToast("Vui lòng điền Thành phố và Đảo nhỏ!");
                 return;
             }
 
             if (!lessonId) {
-                // Auto generate lesson ID based on province and island names
                 lessonId = "node_" + province.toLowerCase().replace(/\s+/g, '') + "_" + new Date().getTime();
             }
 
             const btn = document.getElementById('btnProcessUpload');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ang x? l...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
             btn.disabled = true;
 
             try {
@@ -200,85 +190,90 @@
                 if (file.name.endsWith('.txt')) {
                     textContent = await file.text();
                 } else if (file.name.endsWith('.docx')) {
-                    if (typeof mammoth === 'undefined') {
-                        throw new Error("Thu vi?n Mammoth.js chua du?c t?i!");
-                    }
+                    if (typeof mammoth === 'undefined') throw new Error("Mammoth.js chưa tải!");
                     const arrayBuffer = await file.arrayBuffer();
                     const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
                     textContent = result.value;
                 } else {
-                    throw new Error("?nh d?ng file khng h? tr?!");
+                    throw new Error("Định dạng file không hỗ trợ!");
                 }
 
                 const questions = parseTextToQuestions(textContent);
                 document.getElementById('uploadPreview').textContent = JSON.stringify(questions, null, 2);
 
-                if (questions.length === 0) {
-                    throw new Error("khng trch xu?t du?c cu h?i no t? file! Hy ki?m tra d?nh d?ng.");
-                }
+                if (questions.length === 0) throw new Error("Không trích xuất được câu hỏi!");
 
-                // Simulate saving to Firebase
                 await db.collection('imported_questions').doc(lessonId).set({
                     province: province,
                     island: island,
                     difficulty: difficulty,
                     lessonId: lessonId,
                     questions: questions,
-                    updDatedAt: firebase.firestore.FieldValue.serverTimesdatamp(),
-                    updDatedBy: JSON.parse(localStorage.getItem('lm_session'))?.email || 'admin'
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: JSON.parse(localStorage.getItem('lm_session'))?.email || 'admin'
                 });
 
-                showToast("Bc tch v luu thnh cng " + questions.length + " cu h?i!");
-                
-                // Clear inputs
+                showToast("Bóc tách và lưu thành công " + questions.length + " câu hỏi!");
                 document.getElementById('fileUpload').value = '';
                 document.getElementById('fileNameDisplay').textContent = '';
-                
             } catch (error) {
-                console.error(error);
-                showToast("L?i x? l: " + error.message, true);
+                showToast("Lỗi xử lý: " + error.message, true);
             } finally {
-                btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bc Tch & C?p Nh?t';
+                btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật';
                 btn.disabled = false;
             }
         }
 
-function parseTextToQuestions(text) {
+        function parseTextToQuestions(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             const questions = [];
             let currentQ = null;
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i];
-                
-                // Matches "Cu 1:", "Cu 1.", "Cu h?i 1:"
-                if (/^c[a]u\s*\d+[:\.]?/i.test(line)) {
+                if (/^c[aâ]u\s*\d+[:\.]?/i.test(line)) {
                     if (currentQ) questions.push(currentQ);
-                    currentQ = {
-                        text: line.replace(/^c[a]u\s*\d+[:\.]?\s*/i, ''),
-                        options: [],
-                        correctAnswer: 0
-                    };
+                    currentQ = { text: line.replace(/^c[aâ]u\s*\d+[:\.]?\s*/i, ''), options: [], correctAnswer: 0 };
                 } else if (/^[A-D][\.\:]/i.test(line) && currentQ) {
                     currentQ.options.push(line.replace(/^[A-D][\.\:]\s*/i, ''));
-                } else if (/^[D][a]p\s*[a]n[:\.]?/i.test(line) && currentQ) {
-                    let ans = line.replace(/^[D][a]p\s*[a]n[:\.]?\s*/i, '').toUpperCase().trim();
+                } else if (/^[ĐD][aá]p\s*[aá]n[:\.]?/i.test(line) && currentQ) {
+                    let ans = line.replace(/^[ĐD][aá]p\s*[aá]n[:\.]?\s*/i, '').toUpperCase().trim();
                     if (ans === 'A') currentQ.correctAnswer = 0;
                     else if (ans === 'B') currentQ.correctAnswer = 1;
                     else if (ans === 'C') currentQ.correctAnswer = 2;
                     else if (ans === 'D') currentQ.correctAnswer = 3;
                 } else if (currentQ && currentQ.options.length === 0) {
-                    currentQ.text += "\n" + line; // multiline question text
+                    currentQ.text += "\n" + line;
                 }
             }
             if (currentQ) questions.push(currentQ);
             return questions;
         }
 
-async function loadRequests() {
+window.switchRoleClientOnly = function(role) {
+    if(!role) return;
+    const session = JSON.parse(localStorage.getItem('lm_session')) || {};
+    session.role = role;
+    localStorage.setItem('lm_session', JSON.stringify(session));
+    if(role === 'admin') window.location.href = 'admin.html';
+    else if(role === 'cs') window.location.href = 'cs.html';
+    else if(role === 'parent') window.location.href = 'parent.html';
+    else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
+    else window.location.href = 'map.html';
+};
+
+<script>
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        async function loadRequests() {
             const list = document.getElementById('requestsList');
             try {
-                const snapshot = await db.collection('premium_requests').where('sdatatus', '==', 'pending').get();
+                const snapshot = await db.collection('premium_requests').where('status', '==', 'pending').get();
                 if (snapshot.empty) {
                     list.innerHTML = '<p style="color: var(--green);">Không có yêu cầu nào đang chờ!</p>';
                     return;
@@ -287,14 +282,14 @@ async function loadRequests() {
                 list.innerHTML = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const dDate = data.timesdatamp ? data.timesdatamp.toDate().toLocaleString() : 'N/A';
+                    const date = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'N/A';
                     
                     const div = document.createElement('div');
                     div.className = 'req-card';
                     div.innerHTML = `
                         <div class="req-info">
                             <h3><i class="fa-solid fa-user"></i> ${data.name}</h3>
-                            <p><i class="fa-solid fa-envelope"></i> ${data.email} | Yêu cầu lúc: ${dDate}</p>
+                            <p><i class="fa-solid fa-envelope"></i> ${data.email} | Yêu cầu lúc: ${date}</p>
                         </div>
                         <div style="display: flex; gap: 10px;">
                             <button class="btn-approve" onclick="approveRequest('${doc.id}', '${data.email}')">
@@ -315,10 +310,10 @@ async function loadRequests() {
         window.approveRequest = async function(reqId, email) {
             if(!confirm(`Xác nhận cấp Premium cho ${email}?`)) return;
             try {
-                // UpdDate User
-                await db.collection('users').doc(email).updDate({ accountSdatatus: 'premium' });
-                // UpdDate Request sdatatus
-                await db.collection('premium_requests').doc(reqId).updDate({ sdatatus: 'approved' });
+                // Update User
+                await db.collection('users').doc(email).update({ accountStatus: 'premium' });
+                // Update Request status
+                await db.collection('premium_requests').doc(reqId).update({ status: 'approved' });
                 showToast(`Đã duyệt Premium cho ${email}!`);
                 loadRequests();
             } catch(e) {
@@ -329,8 +324,8 @@ async function loadRequests() {
         window.rejectRequest = async function(reqId, email) {
             if(!confirm(`Xác nhận TỪ CHỐI yêu cầu Premium của ${email}?`)) return;
             try {
-                // UpdDate Request sdatatus
-                await db.collection('premium_requests').doc(reqId).updDate({ sdatatus: 'rejected' });
+                // Update Request status
+                await db.collection('premium_requests').doc(reqId).update({ status: 'rejected' });
                 showToast(`Đã từ chối Premium của ${email}!`);
                 loadRequests();
             } catch(e) {
@@ -355,7 +350,7 @@ async function loadRequests() {
                     
                     const lastActive = data.lastActive || 0;
                     const isOnline = (Date.now() - lastActive) <= 60000;
-                    const sdatatusHtml = isOnline ? 
+                    const statusHtml = isOnline ? 
                         '<span style="color:var(--green); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Đang Online</span>' : 
                         '<span style="color:var(--text-dim); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Offline</span>';
 
@@ -364,8 +359,8 @@ async function loadRequests() {
                     div.className = 'req-card';
                     div.innerHTML = `
                         <div class="req-info">
-                            <h3><i class="fa-solid fa-user"></i> ${data.name || 'Người dùng'} ${sdatatusHtml}</h3>
-                            <p><i class="fa-solid fa-envelope"></i> ${doc.id} | Quyền: <span style="color:${data.accountSdatatus === 'premium' ? 'var(--gold)' : 'var(--green)'};">${(data.accountSdatatus || 'free').toUpperCase()}</span></p>
+                            <h3><i class="fa-solid fa-user"></i> ${data.name || 'Người dùng'} ${statusHtml}</h3>
+                            <p><i class="fa-solid fa-envelope"></i> ${doc.id} | Quyền: <span style="color:${data.accountStatus === 'premium' ? 'var(--gold)' : 'var(--green)'};">${(data.accountStatus || 'free').toUpperCase()}</span></p>
                         </div>
                         <div style="display: flex; gap: 10px;">
                             <button class="btn-reject" onclick="kickUser('${doc.id}')" title="Buộc đăng xuất ra sảnh">
@@ -387,7 +382,7 @@ async function loadRequests() {
         window.kickUser = async function(email) {
             if(!confirm(`Xác nhận KICK người dùng ${email} khỏi hệ thống ngay lập tức?`)) return;
             try {
-                await db.collection('users').doc(email).updDate({ forceLogout: true });
+                await db.collection('users').doc(email).update({ forceLogout: true });
                 showToast(`Đã ra lệnh KICK đối với ${email}!`);
             } catch(e) {
                 showToast("Lỗi: " + e.message);
@@ -396,22 +391,16 @@ async function loadRequests() {
 
         // Load initially
         setTimeout(() => {
-            const sessiondata = localStorage.getItem('lm_session');
-            if (!sessiondata) {
+            const sessionData = localStorage.getItem('lm_session');
+            if (!sessionData) {
                 alert("Vui lòng đăng nhập trước!");
-                window.location.href = '/loginout';
+                window.location.href = 'loginout.html';
                 return;
             }
-            const sessionUser = JSON.parse(sessiondata);
-            
-            // RBAC Check for Admin
-            /* if (sessionUser.activeRole ? sessionUser.activeRole !== 'admin' : ((!sessionUser.roles || !sessionUser.roles.includes('admin')) && sessionUser.role !== 'admin')) {
-                // alert("Bạn không có quyền truy cập trang quản trị Admin!");
-                if (sessionUser.roles && sessionUser.roles.includes('cs')) {
-                    window.location.href = '/cs';
-                } else {
-                    // window.location.href = "/map";
-                } */
+            const sessionUser = JSON.parse(sessionData);
+            if (sessionUser.email !== 'kienquyet1201@gmail.com') {
+                alert("Bạn không có quyền truy cập trang quản trị!");
+                window.location.href = 'map.html';
                 return;
             }
 
@@ -422,24 +411,5 @@ async function loadRequests() {
             else document.getElementById('requestsList').innerText = "Firebase chưa khởi tạo!";
         }, 1000);
     </script>
-
-<script>
-window.switchRoleClientOnly = function(role) {
-    if(!role) return;
-    const session = JSON.parse(localStorage.getItem('lm_session')) || {};
-    session.role = role;
-    localStorage.setItem('lm_session', JSON.stringify(session));
-    if(role === 'admin') window.location.href = '/admin';
-    else if(role === 'cs') window.location.href = '/cs';
-    else if(role === 'parent') window.location.href = '/parent';
-    else if(role === 'Dateacher') window.location.href = '/Dateacher-dshboard';
-    else window.location.href = '/map';
-};
-</script>
 </body>
 </html>
-
-
-
-
-

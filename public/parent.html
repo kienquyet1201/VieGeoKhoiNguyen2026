@@ -1,119 +1,96 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <medata charset="UTF-8">
-    <medata name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo - Báº£ng Äiá»u Khóiá»ƒn Phá»¥ Huynh</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Bảng Điều Khiển Phụ Huynh</title>
     <!-- Fonts -->
-    <link rel="preconnect" href="/map">
-    <link rel="preconnect" href="https://fonts.gsdatatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakardata+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="bento.css">
 </head>
-<body style="padding: 40px; justify-content: flex-sdatart; height: auto; min-height: 100vh;">
+<body style="padding: 40px; justify-content: flex-start; height: auto; min-height: 100vh;">
 
     <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
-        <div style="display: flex; justify-content: space-between; align-items: cenDater; margin-bottom: 40px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
             <div class="app-logo" style="margin-bottom: 0;">
-                <i class="fa-solid fa-earth-asia"></i> VieGeo <span style="font-size: 1.2rem; color: var(--gold);">| Phá»¥ Huynh</span>
+                <i class="fa-solid fa-earth-asia"></i> VieGeo <span style="font-size: 1.2rem; color: var(--gold);">| Phụ Huynh</span>
             </div>
-            <button class="bento-btn" onclick="window.location.href="/index"" style="background: rgba(255,255,255,0.1);">Trá»Ÿ vá» Trang chá»§</button>
+            <button class="bento-btn" onclick="window.location.href='index.html'" style="background: rgba(255,255,255,0.1);">Trở về Trang chủ</button>
         </div>
 
         <div class="bento-card" style="border-top: 4px solid var(--blue); margin-bottom: 30px;">
-            <h2 style="font-size: 1.8rem; margin-bottom: 20px;"><i class="fa-solid fa-chart-line"></i> BÃ¡o CÃ¡o Tiáº¿n Äá»™ Há»c Táº­p</h2>
+            <h2 style="font-size: 1.8rem; margin-bottom: 20px;"><i class="fa-solid fa-chart-line"></i> Báo Cáo Tiến Độ Học Tập</h2>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
                     <i class="fa-solid fa-fire" style="font-size: 2.5rem; color: #ff9600; margin-bottom: 10px;"></i>
-                    <p style="color: var(--text-dim); margin-bottom: 5px;">Chuá»—i há»c liÃªn tiáº¿p</p>
-                    <h3 id="sdatatStreak" style="font-size: 2rem;">0 NgÃ y</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 5px;">Chuỗi học liên tiếp</p>
+                    <h3 id="statStreak" style="font-size: 2rem;">0 Ngày</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
                     <i class="fa-solid fa-book-open-reader" style="font-size: 2.5rem; color: #1cb0f6; margin-bottom: 10px;"></i>
-                    <p style="color: var(--text-dim); margin-bottom: 5px;">BÃ i há»c hoÃ n thÃ nh</p>
-                    <h3 id="sdatatCompleted" style="font-size: 2rem;">0 BÃ i</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 5px;">Bài học hoàn thành</p>
+                    <h3 id="statCompleted" style="font-size: 2rem;">0 Bài</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
-                    <i class="fa-solid fa-clock" style="font-size: 2.5rem; color: #58cc02; margin-bottom: 10px;"></i>
-                    <p style="color: var(--text-dim); margin-bottom: 5px;">Thá»i gian há»c (hÃ´m nay)</p>
-                    <h3 id="sdatatTimeTođãy" style="font-size: 2rem;">0 PhÃºt</h3>
-                </div>
-
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: cenDater;">
-                    <i class="fa-solid fa-percent" style="font-size: 2.5rem; color: #ce82ff; margin-bottom: 10px;"></i>
-                    <p style="color: var(--text-dim); margin-bottom: 5px;">Tá»· lá»‡ hoÃ n thÃ nh (TB)</p>
-                    <h3 id="sdatatCompletionRaDate" style="font-size: 2rem;">0%</h3>
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                    <i class="fa-solid fa-stopwatch" style="font-size: 2.5rem; color: #ce82ff; margin-bottom: 10px;"></i>
+                    <p style="color: var(--text-dim); margin-bottom: 5px;">Hoạt động hôm nay</p>
+                    <h3 id="statActivity" style="font-size: 1.5rem; color: var(--green);">Đã học</h3>
                 </div>
             </div>
         </div>
         
         <div class="bento-card" style="border-top: 4px solid var(--green);">
-            <h2 style="font-size: 1.5rem; margin-bottom: 20px;"><i class="fa-solid fa-bell"></i> PhÃ¢n TÃ­ch & Cáº£nh BÃ¡o</h2>
+            <h2 style="font-size: 1.5rem; margin-bottom: 20px;"><i class="fa-solid fa-bell"></i> Phân Tích & Cảnh Báo</h2>
             <div id="parentReport" style="line-height: 1.8; color: var(--text-main); font-size: 1.1rem;">
-                Äang táº£i dá»¯ liá»‡u...
+                Đang tải dữ liệu...
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const rawSdataDate = localStorage.getItem('VieGeo_sdatate');
-            if (rawSdataDate) {
-                const sdatate = JSON.parse(rawSdataDate);
+            const rawState = localStorage.getItem('VieGeo_state');
+            if (rawState) {
+                const state = JSON.parse(rawState);
                 
-                document.getElementById('sdatatStreak').textContent = (sdatate.streak || 0) + " NgÃ y";
-                document.getElementById('sdatatCompleted').textContent = (sdatate.completedNodes ? sdatate.completedNodes.length : 0) + " BÃ i";
+                document.getElementById('statStreak').textContent = (state.streak || 0) + " Ngày";
+                document.getElementById('statCompleted').textContent = (state.completedNodes ? state.completedNodes.length : 0) + " Bài";
                 
-                const timeSecs = sdatate.learningTimeTođãy || 0;
-                const timeMins = Math.floor(timeSecs / 60);
-                document.getElementById('sdatatTimeTođãy').textContent = timeMins + " PhÃºt";
-                
-                let completionRaDate = 0;
-                if (sdatate.todatalQuestions > 0) {
-                    completionRaDate = Math.round((sdatate.correctAnswers / sdatate.todatalQuestions) * 100);
-                }
-                document.getElementById('sdatatCompletionRaDate').textContent = completionRaDate + "%";
-                
-                const tođãy = new ĐãDate().toISOString().split('T')[0];
-                const lastLogin = sdatate.lastLogin || '';
-                
-                let report = `Há»c sinh Ä‘ang duy trÃ¬ tiáº¿n Ä‘á»™ há»c táº­p <b>${sdatate.streak || 0} ngÃ y liÃªn tiáº¿p</b>. `;
-                if (sdatate.completedNodes && sdatate.completedNodes.length > 0) {
-                    report += `Tá»•ng sá»‘ lÆ°á»£ng bÃ i há»c hoÃ n thÃ nh lÃ  <b>${sdatate.completedNodes.length} bÃ i</b>. `;
-                }
-                if (sdatate.learningProfile && sdatate.learningProfile.recentProvinces) {
-                    report += `Gáº§n Ä‘Ã¢y há»c sinh Ä‘ang tÃ¬m hiá»ƒu vá» cÃ¡c tá»‰nh: <b>${sdatate.learningProfile.recentProvinces.join(', ')}</b>. `;
-                }
-                
-                if (lastLogin !== tođãy) {
-                    // Cáº£nh bÃ¡o náº¿u bá» há»c
-                    report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-triangle-exclamation"></i> <b>Cáº£nh bÃ¡o:</b> HÃ´m nay con chÆ°a hoÃ n thÃ nh bÃ i há»c nÃ o. Phá»¥ huynh vui lÃ²ng nháº¯c nhá»Ÿ Ä‘á»ƒ trÃ¡nh máº¥t chuá»—i (Streak).</span>`;
-                    
-                    // Náº¿u bá» nhiá»u ngÃ y
-                    const lastLoginĐãDate = new ĐãDate(lastLogin);
-                    const diffTime = Math.abs(new ĐãDate() - lastLoginĐãDate);
-                    const diffĐãys = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                    if (diffĐãys >= 2) {
-                        report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-skull-crossbones"></i> <b>ÄÃNG BÃO Äá»˜NG:</b> Há»c sinh Ä‘Ã£ bá» há»c ${diffĐãys} ngÃ y! Tiáº¿n Ä‘á»™ tuáº§n/thÃ¡ng cÃ³ nguy cÆ¡ bá»‹ sá»¥t giáº£m nghiÃªm trá»ng.</span>`;
-                    }
+                const today = new Date().toISOString().split('T')[0];
+                const lastLogin = state.lastLogin || '';
+                if (lastLogin === today) {
+                    document.getElementById('statActivity').textContent = "Đã học hôm nay";
+                    document.getElementById('statActivity').style.color = "var(--green)";
                 } else {
-                    report += `<br><br><span style="color: var(--green);"><i class="fa-solid fa-check-circle"></i> <b>Tá»‘t:</b> Con Ä‘Ã£ hoÃ n thÃ nh bÃ i há»c hÃ´m nay. QuÃ¡ trÃ¬nh há»c táº­p Ä‘ang diá»…n ra ráº¥t tÃ­ch cá»±c.</span>`;
+                    document.getElementById('statActivity').textContent = "Chưa học hôm nay";
+                    document.getElementById('statActivity').style.color = "var(--red)";
+                }
+                
+                let report = `Học sinh đang duy trì tiến độ học tập <b>${state.streak || 0} ngày liên tiếp</b>. `;
+                if (state.completedNodes && state.completedNodes.length > 0) {
+                    report += `Tổng số lượng bài học hoàn thành là <b>${state.completedNodes.length} bài</b>. `;
+                }
+                
+                if (lastLogin !== today) {
+                    report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-triangle-exclamation"></i> <b>Cảnh báo:</b> Hôm nay con chưa hoàn thành bài học nào. Phụ huynh vui lòng nhắc nhở để tránh mất chuỗi (Streak).</span>`;
+                } else {
+                    report += `<br><br><span style="color: var(--green);"><i class="fa-solid fa-check-circle"></i> <b>Tốt:</b> Con đã hoàn thành bài học hôm nay. Quá trình học tập đang diễn ra rất tích cực.</span>`;
                 }
                 
                 document.getElementById('parentReport').innerHTML = report;
                 
             } else {
-                document.getElementById('parentReport').innerHTML = "ChÆ°a cÃ³ dá»¯ liá»‡u há»c táº­p trÃªn thiáº¿t bá»‹ nÃ y. Vui lÃ²ng cho há»c sinh Ä‘Äƒng nháº­p vÃ  hoÃ n thÃ nh bÃ i há»c Ä‘áº§u tiÃªn.";
+                document.getElementById('parentReport').innerHTML = "Chưa có dữ liệu học tập trên thiết bị này. Vui lòng cho học sinh đăng nhập và hoàn thành bài học đầu tiên.";
             }
         });
     </script>
 </body>
 </html>
-
-
