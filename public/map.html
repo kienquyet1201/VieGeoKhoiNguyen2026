@@ -13,6 +13,30 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="bento.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body.light-mode {
+            @apply bg-sky-50 text-sky-950 transition-colors duration-300;
+        }
+        body.light-mode .bento-btn, body.light-mode .option-card, body.light-mode button:not(#btnSendChat):not(#btnChatImage):not(#closeChatPanel) {
+            @apply border-sky-200 transition-colors duration-300;
+        }
+        body.light-mode .bento-btn.primary, body.light-mode #btnStartMatch, body.light-mode #btnStartArenaReal {
+            @apply bg-sky-500 hover:bg-sky-600 text-white border-sky-600 !important;
+            background: none !important;
+            background-color: #0ea5e9 !important;
+        }
+        body.light-mode .bento-btn.primary:hover, body.light-mode #btnStartMatch:hover, body.light-mode #btnStartArenaReal:hover {
+            background-color: #0284c7 !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -56,17 +80,21 @@
                 <div class="stat-pill" style="color: #ff9600;"><i class="fa-solid fa-medal"></i> <span id="hdrBadge">0</span></div>
                 <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
                     <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" style="background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; color: white; border: none; outline: none; font-family: inherit;">
-                        <option value="5" style="color: black;">Lớp 5</option>
-                        <option value="9" style="color: black;">Lớp 9</option>
-                        <option value="12" style="color: black;">Lớp 12</option>
+                        <option value="5" style="color: black;">L?p 5</option>
+                        <option value="9" style="color: black;">L?p 9</option>
+                        <option value="12" style="color: black;">L?p 12</option>
                     </select>
 
-                    <button class="bento-btn" onclick="toggleTheme()" title="Sáng/Tối" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                    <button class="bento-btn" onclick="toggleTheme()" title="S�ng/T?i" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
                         <i id="themeIcon" class="fa-solid fa-moon"></i>
                     </button>
 
-                    <button class="bento-btn" onclick="openParentModal()" title="Dành cho Phụ Huynh" style="background: #ce82ff; padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
-                        <i class="fa-solid fa-users"></i> Phụ Huynh
+                    <button class="bento-btn" onclick="redoSurvey()" title="C�i d?t (L�m l?i kh?o s�t)" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+
+                    <button class="bento-btn" onclick="openParentModal()" title="D�nh cho Ph? Huynh" style="background: #ce82ff; padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                        <i class="fa-solid fa-users"></i> Ph? Huynh
                     </button>
 
                     <button class="bento-btn" id="btnLogoutMap" title="Đăng Xuất" style="background: #ff4b4b; padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
@@ -379,13 +407,13 @@
 
     <!-- ONBOARDING SURVEY MODAL -->
     <div id="surveyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); padding: 40px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06); width: 90%; max-width: 500px; text-align: center;">
-            <h2 style="font-size: 2rem; color: var(--blue); margin-bottom: 20px;">Khảo sát Người học</h2>
-            <p style="color: var(--text-main); margin-bottom: 20px;">Hệ thống AI của VieGeo cần một vài thông tin để cá nhân hóa Learning Profile cho bạn.</p>
+        <div class="bg-sky-50 border border-sky-200 shadow-xl" style="padding: 40px; border-radius: 28px; width: 90%; max-width: 500px; text-align: center;">
+            <h2 class="text-sky-950" style="font-size: 2rem; font-weight: bold; margin-bottom: 20px;">Khảo sát Người học</h2>
+            <p class="text-sky-800" style="margin-bottom: 20px;">Hệ thống AI của VieGeo cần một vài thông tin để cá nhân hóa Learning Profile cho bạn.</p>
             
             <div style="text-align: left; margin-bottom: 15px;">
-                <label style="color: var(--text-dim); display: block; margin-bottom: 5px;">Mục tiêu học tập của bạn là gì?</label>
-                <select id="surveyGoal" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--gray-border);">
+                <label class="text-sky-900 font-semibold" style="display: block; margin-bottom: 5px;">Mục tiêu học tập của bạn là gì?</label>
+                <select id="surveyGoal" class="bg-white text-sky-950 border border-sky-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500" style="width: 100%; padding: 10px; border-radius: 8px; outline: none;">
                     <option value="exam">Ôn thi trên lớp</option>
                     <option value="knowledge">Khám phá, mở rộng kiến thức</option>
                     <option value="travel">Yêu thích du lịch</option>
@@ -393,8 +421,8 @@
             </div>
             
             <div style="text-align: left; margin-bottom: 20px;">
-                <label style="color: var(--text-dim); display: block; margin-bottom: 5px;">Bạn quan tâm đến khu vực nào nhất?</label>
-                <select id="surveyInterest" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--gray-border);">
+                <label class="text-sky-900 font-semibold" style="display: block; margin-bottom: 5px;">Bạn quan tâm đến khu vực nào nhất?</label>
+                <select id="surveyInterest" class="bg-white text-sky-950 border border-sky-300 focus:border-sky-500 focus:ring-1 focus:ring-sky-500" style="width: 100%; padding: 10px; border-radius: 8px; outline: none;">
                     <option value="north">Miền Bắc</option>
                     <option value="central">Miền Trung</option>
                     <option value="south">Miền Nam</option>
@@ -419,4 +447,6 @@
     <script src="map.js"></script>
 </body>
 </html>
+
+
 

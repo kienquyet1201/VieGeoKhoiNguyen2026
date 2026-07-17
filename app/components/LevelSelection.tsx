@@ -58,7 +58,7 @@ export default function LevelSelection() {
     }
   }, []);
 
-  const handleSelectGrade = async (grade: number) => {
+  const loadGradeData = async (grade: number) => {
     if (!session || !session.email) return;
     
     setLoading(true);
@@ -101,19 +101,19 @@ export default function LevelSelection() {
         
         <div className="flex flex-col gap-4">
           <button 
-            onClick={() => handleSelectGrade(5)}
+            onClick={() => loadGradeData(5)}
             className="px-6 py-3 text-xl font-bold text-white bg-green-500 rounded-xl hover:bg-green-600 transition"
           >
             Khối Lớp 5
           </button>
           <button 
-            onClick={() => handleSelectGrade(9)}
+            onClick={() => loadGradeData(9)}
             className="px-6 py-3 text-xl font-bold text-white bg-yellow-500 rounded-xl hover:bg-yellow-600 transition"
           >
             Khối Lớp 9
           </button>
           <button 
-            onClick={() => handleSelectGrade(12)}
+            onClick={() => loadGradeData(12)}
             className="px-6 py-3 text-xl font-bold text-white bg-red-500 rounded-xl hover:bg-red-600 transition"
           >
             Khối Lớp 12

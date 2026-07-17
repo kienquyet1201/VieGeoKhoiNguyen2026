@@ -254,9 +254,18 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
         surveyModal.style.display = 'flex';
         document.getElementById('btnSubmitSurvey').onclick = () => {
             state.learningProfile.goal = document.getElementById('surveyGoal').value;
-            state.learningProfile.interests.push(document.getElementById('surveyInterest').value);
+            state.learningProfile.interests = [document.getElementById('surveyInterest').value];
             state.learningProfile.surveyDone = true;
             saveGameState(state);
+            
+            // Save to Firestore
+            if (typeof db !== 'undefined' && sessionUser && sessionUser.email) {
+                db.collection('users').doc(sessionUser.email).update({
+                    surveyCompleted: true,
+                    learningProfile: state.learningProfile
+                }).catch(e => console.error(e));
+            }
+
             surveyModal.style.display = 'none';
             if (typeof showToast === 'function') {
                 showToast('Đã tạo Learning Profile thành công!');
