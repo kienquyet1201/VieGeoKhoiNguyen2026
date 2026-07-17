@@ -57,7 +57,13 @@ function renderRegions() {
         const card = document.createElement('div');
         card.className = 'bento-card';
         card.style.cursor = 'pointer';
-        card.style.borderTop = `4px solid ${region.color}`;
+        card.style.border = '2px solid ' + region.color;
+        card.style.background = '#ffffff';
+        card.style.color = '#0c4a6e';
+        card.style.position = 'relative';
+        card.style.zIndex = '50';
+        card.style.borderRadius = '20px';
+        card.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
         card.innerHTML = `
             <div style="font-size: 3rem; color: ${region.color};"><i class="fa-solid fa-map"></i></div>
             <h3 style="font-size: 1.5rem; margin-top: 10px;">${region.name}</h3>
@@ -89,12 +95,19 @@ function renderProvinces() {
         card.className = 'bento-card';
         card.style.cursor = 'pointer';
         
+        
         if (prov.isBoss) {
             card.style.border = '2px solid #ff4b4b';
             card.style.background = 'rgba(255, 75, 75, 0.1)';
             card.style.boxShadow = '0 0 15px rgba(255, 75, 75, 0.4)';
         } else {
-            card.style.borderTop = `4px solid ${prov.color}`;
+            card.style.border = '2px solid ' + prov.color;
+            card.style.background = '#ffffff';
+            card.style.color = '#0c4a6e';
+            card.style.position = 'relative';
+            card.style.zIndex = '50';
+            card.style.borderRadius = '15px';
+            card.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
         }
         card.innerHTML = `
             <h3 style="font-size: 1.3rem;">${prov.name}</h3>
@@ -292,6 +305,7 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
         };
     }
 }
+
 
 
 
