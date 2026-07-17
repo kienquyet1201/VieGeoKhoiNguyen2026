@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<script>window.onerror = function(msg, url, lineNo, columnNo, error) { alert('JS Error: ' + msg + ' \nLine: ' + lineNo + ' \nCol: ' + columnNo); return false; };</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo - Khám phá Địa lí Việt Nam</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="bento.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+        tailwind.config = {
+            corePlugins: {
+                preflight: false,
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body.light-mode {
+            @apply bg-sky-50 text-sky-950 transition-colors duration-300;
+        }
+        body.light-mode .bento-btn, body.light-mode .option-card, body.light-mode button:not(#btnSendChat):not(#btnChatImage):not(#closeChatPanel) {
+            @apply border-sky-200 transition-colors duration-300;
+        }
+        body.light-mode .bento-btn.primary, body.light-mode #btnStartMatch, body.light-mode #btnStartArenaReal {
+            @apply bg-sky-500 hover:bg-sky-600 text-white border-sky-600 !important;
+            background: none !important;
+            background-color: #0ea5e9 !important;
+        }
+        body.light-mode .bento-btn.primary:hover, body.light-mode #btnStartMatch:hover, body.light-mode #btnStartArenaReal:hover {
+            background-color: #0284c7 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- BENTO SIDEBAR -->
+        <aside class="bento-sidebar">
+            <div class="app-logo">
+                <i class="fa-solid fa-earth-asia"></i> VieGeo
+            </div>
+            
+            <nav class="nav-menu" id="navMenu">
+                <button class="nav-btn active" data-target="tabMap"><i class="fa-solid fa-map-location-dot"></i> Lộ Trình Học</button>
+                <button class="nav-btn" data-target="tabLeaderboard"><i class="fa-solid fa-trophy"></i> Xếp hạng</button>
+                <button class="nav-btn" data-target="tabQuests"><i class="fa-solid fa-box-open"></i> Nhiệm vụ</button>
+                <button class="nav-btn" data-target="tabShop">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Cửa Hàng</span>
+                </button>
+                <button class="nav-btn" data-target="tabArena">
+                    <i class="fa-solid fa-khanda"></i>
+                    <span>Đấu Trường</span>
+                </button>
+                <button class="nav-btn" data-target="tabProfile">
+                    <i class="fa-solid fa-user"></i>
+                    <span>Hồ Sơ</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- BENTO MAIN -->
+        <main class="bento-main">
+
+            <!-- Global Stats Header -->
+            <div class="stats-header">
+                <div class="stat-pill" style="color: #ff4b4b;"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
+                <div class="stat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
+                <div class="stat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
+                <div class="stat-pill" style="color: #58cc02;"><i class="fa-solid fa-star"></i> <span id="hdrXp">0</span></div>
+                <div class="stat-pill" style="color: #ce82ff;"><i class="fa-solid fa-shield-halved"></i> Lv.<span id="hdrLevel">1</span></div>
+                <div class="stat-pill" style="color: #ff9600;"><i class="fa-solid fa-medal"></i> <span id="hdrBadge">0</span></div>
+                                <div class="flex flex-wrap items-center gap-4 ml-auto justify-end w-full" id="taskbarContainer">
+                    <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" class="bg-sky-600 text-white border-none outline-none px-4 py-2 rounded-full cursor-pointer min-w-max whitespace-nowrap flex-shrink-0">
+                        <option value="5" class="text-black">Lớp 5</option>
+                        <option value="9" class="text-black">Lớp 9</option>
+                        <option value="12" class="text-black">Lớp 12</option>
+                    </select>
+
+                    <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-3 py-2 leading-normal" onclick="toggleTheme()" title="S�ng/T?i" style="background: var(--card-bg, rgba(255,255,255,0.1));  border-radius: 20px; color: var(--text-primary, white); font-size: 0.9rem; border: 1px solid var(--border-color, transparent);">
+                        <i id="themeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-3 py-2 leading-normal" onclick="redoSurvey()" title="C�i d?t (L�m l?i kh?o s�t)" style="background: var(--card-bg, rgba(255,255,255,0.1));  border-radius: 20px; color: var(--text-primary, white); font-size: 0.9rem; border: 1px solid var(--border-color, transparent);">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+
+                    <a href="exam-arena.html" class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" style="background: #ef4444; color: white; border-radius: 20px; font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap"></i> Đấu trường</a>
+                      <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" onclick="openParentModal()" title="D�nh cho Phụ Huynh" style="background: #ce82ff;  border-radius: 20px; color: white; font-size: 0.9rem;">
+                        <i class="fa-solid fa-users"></i> Phụ Huynh
+                    </button>
+
+                    <select id="globalRoleSwitcher" onchange="switchRoleClientOnly(this.value)" class="hidden bg-sky-600 text-white outline-none px-4 py-2 rounded-full cursor-pointer min-w-max whitespace-nowrap flex-shrink-0">
+                <option value="" disabled selected>Đổi quyền...</option>
+                <option value="admin">Quản trị viên (Admin)</option>
+                <option value="cs">Chăm sóc KH (CS)</option>
+                <option value="teacher">Giáo viên (Teacher)</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="student">Học sinh</option>
+            </select>
+
+                    <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-3 py-2 leading-normal" id="btnLogoutMap" title="�ang Xu?t" style="background: #ff4b4b;  border-radius: 20px; color: white; font-size: 0.9rem;">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PARENT PIN MODAL -->
+            <div id="parentPinModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+                <div style="background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; border: 1px solid rgba(255,255,255,0.1);">
+                    <i class="fa-solid fa-lock" style="font-size: 3rem; color: #ce82ff; margin-bottom: 20px;"></i>
+                    <h3 style="color: white; margin-bottom: 10px; font-size: 1.5rem;">Cổng Phụ Huynh</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">Vui lòng nhập mã PIN (Mặc định: 1234) để truy cập.</p>
+                    <input type="password" id="parentPinInput" placeholder="****" style="width: 100%; padding: 15px; border-radius: 10px; border: none; text-align: center; font-size: 1.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.1); color: white; letter-spacing: 10px;" maxlength="4">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="bento-btn" onclick="document.getElementById('parentPinModal').style.display='none'" style="flex: 1; background: rgba(255,255,255,0.1); color: white;">Hủy</button>
+                        <button class="bento-btn" onclick="verifyParentPin()" style="flex: 1; background: #ce82ff; color: white;">Xác Nhận</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: MAP (LEARN) -->
+            <div id="tabMap" class="tab-pane active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 2rem;" id="mapTitle">Khám Phá Việt Nam</h2>
+                    <button id="btnMapBack" class="bento-btn" style="display: none; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
+                </div>
+                
+                <div id="mapViewContainer" class="island-container">
+                    <!-- JS Renders Regions/Provinces/Lessons Here -->
+                </div>
+            </div>
+
+            <!-- TAB: LEADERBOARD -->
+            <section class="tab-pane" id="tabLeaderboard">
+                <h2 style="font-size: 2rem; margin-bottom: 10px;"><i class="fa-solid fa-trophy" style="color: #ffc800;"></i> Bảng Xếp Hạng Tuần</h2>
+                <p style="color: var(--text-dim); margin-bottom: 40px;">So tài kỹ năng Địa lý với các nhà thám hiểm khác.</p>
+                <div class="lb-list" id="lbList">
+                    <!-- Rendered via JS -->
+                </div>
+            </section>
+
