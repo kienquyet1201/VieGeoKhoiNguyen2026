@@ -981,33 +981,121 @@ window.openGradeSwitch = function() {
     checkOnboarding();
 };
 
-function loadGradeData(grade) {
-    const hdrGrade = document.getElementById('hdrGrade');
-    if(hdrGrade) hdrGrade.textContent = grade;
-    
-    const scriptId = 'dynamicGradeScript';
-    const oldScript = document.getElementById(scriptId);
-    if (oldScript) oldScript.remove();
 
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.src = 'data_grade' + grade + '.js';
-    script.onload = () => {
-        window.LEARNING_REGIONS = window['LEARNING_REGIONS_' + grade];
-        if (typeof renderMap === 'function') {
-            document.getElementById('mapViewContainer').innerHTML = ''; // reset view
-            renderMap();
+// ── PREMIUM LOGIC ──
+window.openPremiumModal = function() {
+    try {
+        const rawEmail = (sessionUser.email || '').replace('@gmail.com', '');
+        const safeName = (sessionUser.name || 'USER').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
+        const rawTransferMsg = `${safeName} ${rawEmail}`.toUpperCase();
+        const qrTransferMsg = rawTransferMsg.replace(/\s+/g, '');
+        
+        const contentEl = document.getElementById('premiumTransferContent');
+        if (contentEl) contentEl.textContent = rawTransferMsg;
+        
+        const qrImg = document.getElementById('qrCodeImage');
+        if (qrImg) {
+            qrImg.src = `https://img.vietqr.io/image/970422-0967086871-compact2.png?amount=149000&addInfo=${encodeURIComponent(qrTransferMsg)}&accountName=Dang%20Kien%20Quyet`;
         }
-    };
-    script.onerror = () => {
-        console.error("Failed to load grade data.");
-        alert("Lỗi tải dữ liệu lớp học!");
-    };
-    document.body.appendChild(script);
+        
+        document.getElementById('premiumModal').style.display = 'flex';
+    } catch(e) {
+        showToast("Lỗi mở bảng Premium: " + e.message, true);
+    }
+};
+
+window.confirmPremiumTransfer = async function() {
+    const btnConfirmPremium = document.getElementById('btnConfirmPremium');
+    if (!btnConfirmPremium) return;
+    
+    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+    btnConfirmPremium.disabled = true;
+
+    try {
+        const rawEmail = (sessionUser.email || '').replace('@gmail.com', '');
+        const safeName = (sessionUser.name || 'USER').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
+        const rawTransferMsg = `${safeName} ${rawEmail}`.toUpperCase();
+        const approveLink = window.location.href.split('?')[0] + '?action=approve_premium&target=' + encodeURIComponent(sessionUser.email);
+
+        // Upload to Firebase first
+        await db.collection('premium_requests').add({
+            email: sessionUser.email,
+            name: sessionUser.name,
+            transferContent: rawTransferMsg,
+            status: 'pending',
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Try to send email silently
+        if (typeof emailjs !== 'undefined') {
+            try {
+                emailjs.init('Is8N-wrtdAZpySOJW');
+                await emailjs.send('service_iksinb9', 'template_z7kjarh', {
+                    to_email: 'kienquyet1201@gmail.com',
+                    user_name: sessionUser.name || 'USER',
+                    user_email: sessionUser.email,
+                    transfer_msg: rawTransferMsg,
+                    approve_link: approveLink
+                });
+            } catch(emailErr) {
+                console.error("EmailJS sending failed:", emailErr);
+            }
+        }
+
+        showToast("Đã gửi xác nhận đến Quản trị viên! Vui lòng chờ phản hồi.");
+        document.getElementById('premiumModal').style.display = 'none';
+    } catch(e) {
+        showToast("Lỗi gửi yêu cầu: " + e.message, true);
+    }
+
+    btnConfirmPremium.innerHTML = '<i class="fa-solid fa-check"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN';
+    btnConfirmPremium.disabled = false;
+};
+
+// Init
+updateHeaderStats();
+renderLeaderboard();
+renderArena();
+renderQuests();
+renderShop();
+renderProfile();
+checkAndUnlockAchievements(gameState);
+
+
+function checkAndUnlockAchievements(state) {
+    if (!state.unlockedAchievements) state.unlockedAchievements = [];
+    let newlyUnlocked = false;
+
+    ACHIEVEMENTS_LIST.forEach(ach => {
+        if (!state.unlockedAchievements.includes(ach.id)) {
+            let progress = 0;
+            if (ach.type === 'pvpWins') progress = state.pvpWins || 0;
+            if (ach.type === 'perfectLessons') progress = state.perfectLessons || 0;
+            if (ach.type === 'streak') progress = state.streak || 0;
+            if (ach.type === 'gems') progress = state.gems || 0;
+            if (ach.type === 'chestsOpened') progress = state.chestsOpened || 0;
+
+            if (progress >= ach.target) {
+                state.unlockedAchievements.push(ach.id);
+                state.achievementPoints = (state.achievementPoints || 0) + 1;
+                newlyUnlocked = true;
+                showToast('Đã mở khóa danh hiệu: ' + ach.title + ' (+1 Thành tựu)');
+            }
+        }
+    });
+
+    if (newlyUnlocked) {
+        saveGameState(state);
+        // Nếu đang ở màn hình map, update lại UI Profile
+        if (typeof renderAchievements === 'function' && document.getElementById('achievementsGrid')) {
+            renderAchievements();
+            document.getElementById('profAchPoints').textContent = state.achievementPoints || 0;
+        }
+    }
 }
 
-// Gọi onboarding
-setTimeout(checkOnboarding, 300);
+
+
 
 // ==========================================
 // STREAK FIRE ANIMATION
@@ -1021,7 +1109,17 @@ function playFireStreakAnimation() {
         <h1 style="font-size: 3rem; color: white; margin-top: 20px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">STREAK +1</h1>
         <style>
             @keyframes burn { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.1); filter: brightness(1.3); } }
-
+        </style>
+    `;
+    
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+    
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 500);
+    }, 2500);
+}
 
 // ==========================================
 // CHAT BUBBLE WIDGET (REAL-TIME FIREBASE)
@@ -1044,14 +1142,14 @@ async function initChatBubble() {
     panel.style.cssText = 'position: fixed; bottom: 100px; right: 30px; width: 350px; height: 450px; background: var(--bg-dark); border: 1px solid var(--gray-border); border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); z-index: 9998; display: none; flex-direction: column; overflow: hidden;';
     panel.innerHTML = `
         <div style="background: var(--blue); padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-weight: bold;"><i class="fa-solid fa-headset"></i> CSKH Hỗ trợ</div>
+            <div style="font-weight: bold;"><i class="fa-solid fa-headset"></i> CSKH Ho tro</div>
             <button id="closeChatPanel" style="background:none; border:none; color:white; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="chatMessages" style="flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-            <div style="align-self: flex-start; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px 15px 15px 5px; max-width: 80%; font-size: 0.9rem;">Chào bạn, mình là trợ lý VieGeo. Bạn cần hỗ trợ gì?</div>
+            <div style="align-self: flex-start; background: rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 15px 15px 15px 5px; max-width: 80%; font-size: 0.9rem;">Xin chao! Minh la tro ly VieGeo. Ban can ho tro gi?</div>
         </div>
         <div id="chatRatingArea" style="display: none; padding: 15px; background: rgba(255,200,0,0.1); border-top: 1px solid var(--gray-border); text-align: center;">
-            <p style="margin: 0 0 10px 0; color: var(--gold); font-weight: bold;">Đánh giá phiên hỗ trợ</p>
+            <p style="margin: 0 0 10px 0; color: var(--gold); font-weight: bold;">Danh gia phien ho tro</p>
             <div style="display: flex; justify-content: center; gap: 10px; font-size: 1.5rem; color: var(--text-dim); cursor: pointer;" id="starRating">
                 <i class="fa-solid fa-star" data-val="1"></i>
                 <i class="fa-solid fa-star" data-val="2"></i>
