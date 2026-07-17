@@ -1411,3 +1411,38 @@ window.redoSurvey = function() {
     }
 };
 
+
+// ==========================================
+// ROLE SWITCHER LOGIC
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const roleSwitcher = document.getElementById('globalRoleSwitcher');
+    if (roleSwitcher && sessionUser && sessionUser.roles) {
+        // Ch? hi?n th? n?u role th?t là admin ho?c cs
+        if (sessionUser.roles.includes('admin') || sessionUser.roles.includes('cs')) {
+            roleSwitcher.classList.remove('hidden');
+            
+            // Set giá tr? hi?n t?i
+            if (sessionUser.activeRole) {
+                roleSwitcher.value = sessionUser.activeRole;
+            }
+            
+            // X? lý s? ki?n khi ch?n vai trò m?i
+            roleSwitcher.addEventListener('change', (e) => {
+                const newRole = e.target.value;
+                if (newRole === 'restore') {
+                    // Khôi ph?c quy?n cao nh?t
+                    sessionUser.activeRole = sessionUser.roles.includes('admin') ? 'admin' : 'cs';
+                } else {
+                    sessionUser.activeRole = newRole;
+                }
+                
+                // Luu state vào LocalStorage, TUY?T Ð?I KHÔNG LUU LÊN FIRESTORE
+                localStorage.setItem('lm_session', JSON.stringify(sessionUser));
+                
+                // T?i l?i trang d? áp d?ng quy?n
+                window.location.reload();
+            });
+        }
+    }
+});

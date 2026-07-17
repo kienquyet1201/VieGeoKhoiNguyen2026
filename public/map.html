@@ -78,26 +78,35 @@
                 <div class="stat-pill" style="color: #58cc02;"><i class="fa-solid fa-star"></i> <span id="hdrXp">0</span></div>
                 <div class="stat-pill" style="color: #ce82ff;"><i class="fa-solid fa-shield-halved"></i> Lv.<span id="hdrLevel">1</span></div>
                 <div class="stat-pill" style="color: #ff9600;"><i class="fa-solid fa-medal"></i> <span id="hdrBadge">0</span></div>
-                <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
-                    <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" style="background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; color: white; border: none; outline: none; font-family: inherit;">
-                        <option value="5" style="color: black;">L?p 5</option>
-                        <option value="9" style="color: black;">L?p 9</option>
-                        <option value="12" style="color: black;">L?p 12</option>
+                                <div class="flex flex-wrap items-center gap-2 md:gap-4 ml-auto justify-end" id="taskbarContainer">
+                    <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" class="bg-white/20 text-white border-none outline-none px-4 py-2 rounded-full cursor-pointer whitespace-nowrap">
+                        <option value="5" class="text-black">L?p 5</option>
+                        <option value="9" class="text-black">L?p 9</option>
+                        <option value="12" class="text-black">L?p 12</option>
                     </select>
 
-                    <button class="bento-btn" onclick="toggleTheme()" title="Sáng/T?i" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                    <button class="bento-btn whitespace-nowrap" onclick="toggleTheme()" title="Sáng/T?i" style="background: var(--card-bg, rgba(255,255,255,0.1)); padding: 8px 16px; border-radius: 20px; color: var(--text-primary, white); font-size: 0.9rem; border: 1px solid var(--border-color, transparent);">
                         <i id="themeIcon" class="fa-solid fa-moon"></i>
                     </button>
 
-                    <button class="bento-btn" onclick="redoSurvey()" title="Cài d?t (Làm l?i kh?o sát)" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                    <button class="bento-btn whitespace-nowrap" onclick="redoSurvey()" title="Cài d?t (Làm l?i kh?o sát)" style="background: var(--card-bg, rgba(255,255,255,0.1)); padding: 8px 16px; border-radius: 20px; color: var(--text-primary, white); font-size: 0.9rem; border: 1px solid var(--border-color, transparent);">
                         <i class="fa-solid fa-gear"></i>
                     </button>
 
-                    <button class="bento-btn" onclick="openParentModal()" title="Dành cho Ph? Huynh" style="background: #ce82ff; padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                    <button class="bento-btn whitespace-nowrap" onclick="openParentModal()" title="Dành cho Ph? Huynh" style="background: #ce82ff; padding: 8px 16px; border-radius: 20px; color: white; font-size: 0.9rem;">
                         <i class="fa-solid fa-users"></i> Ph? Huynh
                     </button>
 
-                    <button class="bento-btn" id="btnLogoutMap" title="ÄÄƒng Xuáº¥t" style="background: #ff4b4b; padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                    <select id="globalRoleSwitcher" class="hidden bg-sky-600 text-white outline-none px-4 py-2 rounded-full cursor-pointer whitespace-nowrap">
+                        <option value="" disabled selected>Ð?i quy?n...</option>
+                        <option value="admin">Admin</option>
+                        <option value="cs">CS</option>
+                        <option value="user">H?c sinh</option>
+                        <option value="parent">Ph? huynh</option>
+                        <option value="restore">Khôi ph?c quy?n g?c</option>
+                    </select>
+
+                    <button class="bento-btn whitespace-nowrap" id="btnLogoutMap" title="Ðang Xu?t" style="background: #ff4b4b; padding: 8px 16px; border-radius: 20px; color: white; font-size: 0.9rem;">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
@@ -447,6 +456,7 @@
     <script src="map.js"></script>
 </body>
 </html>
+
 
 
 

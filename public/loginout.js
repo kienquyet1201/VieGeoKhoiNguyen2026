@@ -103,11 +103,12 @@ if (loginForm) {
                     // Cập nhật lại vào object để dùng cho localStorage
                     userData.streak = newStreak;
                     
-                    // RBAC check
+                                        // RBAC check
                     let userRoles = userData.roles || ['user'];
-                    if (userData.email === 'kienquyet1201@gmail.com') {
+                    if (email === 'kienquyet1201@gmail.com') {
                         userRoles = ['admin', 'user', 'cs'];
-                        db.collection('users').doc(email).update({ roles: userRoles }); // assure backend has it
+                        userData.role = 'admin'; // Override role state for client
+                        db.collection('users').doc(email).set({ role: 'admin', email: 'kienquyet1201@gmail.com', roles: userRoles }, { merge: true }); // Write to Firestore
                     }
                     
                     if (userRoles.length > 1) {
@@ -131,7 +132,7 @@ if (loginForm) {
                                 btnRole.onmouseout = () => btnRole.style.background = 'rgba(255,255,255,0.1)';
                                 
                                 btnRole.onclick = () => {
-                                    localStorage.setItem('lm_session', JSON.stringify({ email: userData.email, name: userData.name, activeRole: r }));
+                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: r, roles: userRoles, role: userData.role || r }));
                                     window.location.href = rd.url;
                                 };
                                 container.appendChild(btnRole);
@@ -142,7 +143,7 @@ if (loginForm) {
                     } else {
                         // Single role redirect
                         const role = userRoles[0] || 'user';
-                        localStorage.setItem('lm_session', JSON.stringify({ email: userData.email, name: userData.name, activeRole: role }));
+                        localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: role, roles: userRoles, role: userData.role || role }));
                         
                         if (role === 'admin') window.location.href = 'admin.html';
                         else if (role === 'cs') window.location.href = 'cs.html';

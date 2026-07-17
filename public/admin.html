@@ -384,7 +384,7 @@
             const sessionUser = JSON.parse(sessionData);
             
             // RBAC Check for Admin
-            if (!sessionUser.roles || !sessionUser.roles.includes('admin')) {
+            if (sessionUser.activeRole ? sessionUser.activeRole !== 'admin' : ((!sessionUser.roles || !sessionUser.roles.includes('admin')) && sessionUser.role !== 'admin')) {
                 alert("Bạn không có quyền truy cập trang quản trị Admin!");
                 if (sessionUser.roles && sessionUser.roles.includes('cs')) {
                     window.location.href = 'cs.html';
@@ -403,3 +403,5 @@
     </script>
 </body>
 </html>
+
+

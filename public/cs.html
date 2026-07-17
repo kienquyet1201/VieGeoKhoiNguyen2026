@@ -231,7 +231,7 @@
             }
             currentSessionUser = JSON.parse(sessionData);
 
-            if (!currentSessionUser.roles || (!currentSessionUser.roles.includes('cs') && !currentSessionUser.roles.includes('admin'))) {
+            if (currentSessionUser.activeRole ? (currentSessionUser.activeRole !== 'admin' && currentSessionUser.activeRole !== 'cs') : ((!currentSessionUser.roles || (!currentSessionUser.roles.includes('cs') && !currentSessionUser.roles.includes('admin'))) && currentSessionUser.role !== 'admin')) {
                 alert("Bạn không có quyền truy cập trang Chăm sóc khách hàng!");
                 window.location.href = 'map.html';
                 return;
@@ -362,3 +362,5 @@
     </script>
 </body>
 </html>
+
+

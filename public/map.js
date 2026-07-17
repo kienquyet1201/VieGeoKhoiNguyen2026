@@ -85,10 +85,17 @@ function renderProvinces() {
         });
         const percent = Math.round((completed / prov.lessons.length) * 100) || 0;
         
-        const card = document.createElement('div');
+                const card = document.createElement('div');
         card.className = 'bento-card';
         card.style.cursor = 'pointer';
-        card.style.borderTop = `4px solid ${prov.color}`;
+        
+        if (prov.isBoss) {
+            card.style.border = '2px solid #ff4b4b';
+            card.style.background = 'rgba(255, 75, 75, 0.1)';
+            card.style.boxShadow = '0 0 15px rgba(255, 75, 75, 0.4)';
+        } else {
+            card.style.borderTop = `4px solid ${prov.color}`;
+        }
         card.innerHTML = `
             <h3 style="font-size: 1.3rem;">${prov.name}</h3>
             <div style="margin-top: 10px; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px;">
@@ -275,3 +282,4 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
         };
     }
 }
+
