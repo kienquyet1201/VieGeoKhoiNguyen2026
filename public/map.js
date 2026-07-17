@@ -211,7 +211,7 @@ function renderLessons() {
                 document.getElementById('btnMiniStart').onclick = () => {
                     localStorage.setItem('VieGeo_current_lesson', lesson.id);
                     localStorage.setItem('VieGeo_mode', 'normal');
-                    window.location.href = 'lesson.html';
+                    window.location.href = '/lesson';
                 };
             } else {
                 if (typeof showToast === 'function') {

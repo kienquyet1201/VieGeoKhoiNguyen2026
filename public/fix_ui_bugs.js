@@ -7,7 +7,7 @@ function fixEncodingAndLayout() {
     console.log("Starting UTF-8 and Layout fixes...");
 
     // 1. Fix map.html UTF-8
-    const mapHtmlPath = path.join(rootDir, 'public', 'map.html');
+    const mapHtmlPath = path.join(rootDir, 'public', '/map');
     if (fs.existsSync(mapHtmlPath)) {
         let html = fs.readFileSync(mapHtmlPath, 'utf8');
         

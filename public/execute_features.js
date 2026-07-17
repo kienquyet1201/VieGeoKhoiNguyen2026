@@ -70,7 +70,7 @@ function updateLearningProfile(userId, quizResult) {
     }
 
     // 2. Exam Arena Module
-    const examArenaPath = path.join(rootDir, 'public', 'exam-arena.html');
+    const examArenaPath = path.join(rootDir, 'public', '/exam-arena');
     const examArenaHTML = `<!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -120,7 +120,7 @@ function updateLearningProfile(userId, quizResult) {
     console.log("Created exam-arena.html");
 
     // 3. Teacher Portal
-    const teacherPortalPath = path.join(rootDir, 'public', 'teacher-dashboard.html');
+    const teacherPortalPath = path.join(rootDir, 'public', '/teacher-dashboard');
     const teacherPortalHTML = `<!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -169,14 +169,14 @@ function updateLearningProfile(userId, quizResult) {
     console.log("Created teacher-dashboard.html");
 
     // Edit map.html for Taskbar updates
-    const mapHtmlPath = path.join(rootDir, 'public', 'map.html');
+    const mapHtmlPath = path.join(rootDir, 'public', '/map');
     if (fs.existsSync(mapHtmlPath)) {
         let mapHtml = fs.readFileSync(mapHtmlPath, 'utf8');
         
         // Add Exam Arena button to Taskbar
-        if (!mapHtml.includes('exam-arena.html')) {
+        if (!mapHtml.includes('/exam-arena')) {
             mapHtml = mapHtml.replace(/<button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" onclick="openParentModal\(\)"/g, 
-                `<a href="exam-arena.html" class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" style="background: #ef4444; color: white; border-radius: 20px; font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap"></i> Đấu trường</a>\n                      <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" onclick="openParentModal()"`);
+                `<a href="/exam-arena" class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" style="background: #ef4444; color: white; border-radius: 20px; font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap"></i> Đấu trường</a>\n                      <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" onclick="openParentModal()"`);
         }
 
         // Add Teacher Role to Role Switcher

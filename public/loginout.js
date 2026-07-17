@@ -12,7 +12,7 @@ const regForm = document.getElementById('registerForm'); // Đã khớp ID HTML
 const loginMsg = document.getElementById('loginMessage'); // Đã khớp ID HTML
 const regMsg = document.getElementById('registerMessage'); // Đã khớp ID HTML
 
-const QUIZ_PAGE = 'index.html';
+const QUIZ_PAGE = '/index';
 const MAP_PAGE = '/';
 
 // 1. ĐĂNG NHẬP
@@ -118,8 +118,8 @@ if (loginForm) {
                             container.innerHTML = '';
                             const roleMap = {
                                 'user': { name: 'Người dùng (Học viên)', icon: 'fa-graduation-cap', color: '#1cb0f6', url: MAP_PAGE },
-                                'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: 'admin.html' },
-                                'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: 'cs.html' }
+                                'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin' },
+                                'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs' }
                             };
                             
                             userRoles.forEach(r => {
@@ -145,8 +145,8 @@ if (loginForm) {
                         const role = userRoles[0] || 'user';
                         localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: role, roles: userRoles, role: userData.role || role }));
                         
-                        if (role === 'admin') window.location.href = 'admin.html';
-                        else if (role === 'cs') window.location.href = 'cs.html';
+                        if (role === 'admin') window.location.href = '/admin';
+                        else if (role === 'cs') window.location.href = '/cs';
                         else {
                             const pendingAction = localStorage.getItem('pending_action');
                             if (pendingAction) {

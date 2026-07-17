@@ -23,7 +23,7 @@ if (!sessionData) {
     if (window.location.search) {
         localStorage.setItem('pending_action', window.location.search);
     }
-    window.location.href = 'loginout.html';
+    window.location.href = '/loginout';
 }
 const sessionUser = JSON.parse(sessionData);
 
@@ -73,7 +73,7 @@ function setupRealtimeAuth() {
                 await db.collection('users').doc(sessionUser.email).update({ forceLogout: false });
                 localStorage.clear();
                 alert("Tài khoản của bạn đã bị Quản trị viên đăng xuất khỏi hệ thống!");
-                window.location.href = 'loginout.html';
+                window.location.href = '/loginout';
                 return;
             }
 
@@ -437,7 +437,7 @@ window.startArena = async function(arenaId, fee) {
                 localStorage.setItem('VieGeo_arena_id', arenaId);
                 localStorage.setItem('VieGeo_pvp_room', roomDoc.id);
                 localStorage.setItem('VieGeo_pvp_role', 'player2');
-                setTimeout(() => window.location.href = 'lesson.html', 1500);
+                setTimeout(() => window.location.href = '/lesson', 1500);
             } else {
                 // Create new room and wait
                 const newRoom = await roomsRef.add({
@@ -463,7 +463,7 @@ window.startArena = async function(arenaId, fee) {
                         localStorage.setItem('VieGeo_arena_id', arenaId);
                         localStorage.setItem('VieGeo_pvp_room', newRoom.id);
                         localStorage.setItem('VieGeo_pvp_role', 'player1');
-                        setTimeout(() => window.location.href = 'lesson.html', 1500);
+                        setTimeout(() => window.location.href = '/lesson', 1500);
                     }
                 });
 
@@ -818,7 +818,7 @@ const btnLogoutElem = document.getElementById('btnLogout');
 if (btnLogoutElem) {
     btnLogoutElem.addEventListener('click', () => {
         localStorage.clear();
-        window.location.href = 'loginout.html';
+        window.location.href = '/loginout';
     });
 }
 
@@ -1370,7 +1370,7 @@ window.openParentModal = function() {
 window.verifyParentPin = function() {
     const pin = document.getElementById('parentPinInput').value;
     if (pin === '1234') {
-        window.location.href = '/parent.html';
+        window.location.href = '/parent';
     } else {
         showToast('Mã PIN không đúng!', true);
     }
@@ -1382,12 +1382,12 @@ if (btnLogoutMap) {
         localStorage.clear();
         if (typeof firebase !== 'undefined' && firebase.auth) {
             firebase.auth().signOut().then(() => {
-                window.location.href = '/loginout.html';
+                window.location.href = '/loginout';
             }).catch(() => {
-                window.location.href = '/loginout.html';
+                window.location.href = '/loginout';
             });
         } else {
-            window.location.href = '/loginout.html';
+            window.location.href = '/loginout';
         }
     });
 }

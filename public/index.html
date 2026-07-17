@@ -18,7 +18,7 @@
         (function(){
             var sess = localStorage.getItem('lm_session');
             if (sess) {
-                window.location.replace('map.html');
+                window.location.replace('/map');
             } else {
                 window.location.replace('loginout.html?tab=register');
             }
@@ -39,7 +39,7 @@
     </button>
 
     <!-- Logout Button -->
-    <button id="logout-btn" class="logout-btn" title="Đăng xuất" onclick="(function(){localStorage.removeItem('lm_session');window.location.href='loginout.html';})()">
+    <button id="logout-btn" class="logout-btn" title="Đăng xuất" onclick="(function(){localStorage.removeItem('lm_session');window.location.href="/loginout";})()">
         <i class="fa-solid fa-right-from-bracket"></i>
     </button>
 
@@ -155,7 +155,7 @@
                 <button id="restart-btn" class="btn btn-secondary">
                     <i class="fa-solid fa-rotate-left"></i> Làm lại
                 </button>
-                <a href="map.html" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                <a href="/map" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
                     Vào Trang Chủ <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i>
                 </a>
             </div>

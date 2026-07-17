@@ -31,7 +31,7 @@ const cleanStatsHeader = `
                         <i class="fa-solid fa-gear"></i>
                     </button>
 
-                    <a href="exam-arena.html" class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" style="background: #ef4444; color: white; border-radius: 20px; font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap"></i> Đấu trường</a>
+                    <a href="/exam-arena" class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" style="background: #ef4444; color: white; border-radius: 20px; font-size: 0.9rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap"></i> Đấu trường</a>
                     
                     <button class="bento-btn min-w-max whitespace-nowrap flex-shrink-0 px-4 py-2" onclick="openParentModal()" title="Dành cho Phụ Huynh" style="background: #ce82ff; border-radius: 20px; color: white; font-size: 0.9rem;">
                         <i class="fa-solid fa-users"></i> Phụ Huynh

@@ -58,7 +58,7 @@
     <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--bg-card); padding-bottom: 10px;">
         <button id="tabUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quản Lý Người Dùng & Premium</button>
         <button id="tabUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload Câu Hỏi</button>
-        <button class="bento-btn" onclick="window.location.href='loginout.html'" style="margin-left: auto; background: rgba(255, 75, 75, 0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+        <button class="bento-btn" onclick="window.location.href="/loginout"" style="margin-left: auto; background: rgba(255, 75, 75, 0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
     </div>
 
     <!-- TAB: QUẢN LÝ NGƯỜI DÙNG -->
@@ -378,7 +378,7 @@
             const sessionData = localStorage.getItem('lm_session');
             if (!sessionData) {
                 alert("Vui lòng đăng nhập trước!");
-                window.location.href = 'loginout.html';
+                window.location.href = '/loginout';
                 return;
             }
             const sessionUser = JSON.parse(sessionData);
@@ -387,9 +387,9 @@
             if (sessionUser.activeRole ? sessionUser.activeRole !== 'admin' : ((!sessionUser.roles || !sessionUser.roles.includes('admin')) && sessionUser.role !== 'admin')) {
                 alert("Bạn không có quyền truy cập trang quản trị Admin!");
                 if (sessionUser.roles && sessionUser.roles.includes('cs')) {
-                    window.location.href = 'cs.html';
+                    window.location.href = '/cs';
                 } else {
-                    window.location.href = 'map.html';
+                    window.location.href = '/map';
                 }
                 return;
             }

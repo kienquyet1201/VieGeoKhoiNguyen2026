@@ -22,7 +22,7 @@ const newPass = document.getElementById('newPass');
 // 1. Kiểm tra session
 const sessionData = localStorage.getItem('lm_session');
 if (!sessionData) {
-    window.location.href = 'loginout.html';
+    window.location.href = '/loginout';
 }
 
 const sessionUser = JSON.parse(sessionData);
@@ -41,7 +41,7 @@ async function loadFirebaseProfile() {
         const userDoc = await db.collection('users').doc(sessionUser.email).get();
         if (!userDoc.exists) {
             localStorage.removeItem('lm_session');
-            window.location.href = 'loginout.html';
+            window.location.href = '/loginout';
             return;
         }
         const currentUser = userDoc.data();
@@ -158,6 +158,6 @@ if (btnLogout) {
     btnLogout.addEventListener('click', () => {
         // Xóa TOÀN BỘ dữ liệu local để tránh rò rỉ PvP sang acc khác
         localStorage.clear(); 
-        window.location.href = 'loginout.html';
+        window.location.href = '/loginout';
     });
 }

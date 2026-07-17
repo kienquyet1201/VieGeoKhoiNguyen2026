@@ -155,7 +155,7 @@ function renderLessons() {
             if (isCompleted || prevCompleted) {
                 localStorage.setItem('LearnMatch_current_lesson', lesson.id);
                 localStorage.setItem('LearnMatch_mode', 'normal');
-                window.location.href = 'lesson.html';
+                window.location.href = '/lesson';
             } else {
                 if (typeof showToast === 'function') {
                     showToast("Bạn cần hoàn thành bài trước đó!", true);

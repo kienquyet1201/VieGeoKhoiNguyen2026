@@ -78,7 +78,7 @@ function initNormal() {
 
     if (!foundNode) {
         alert("Lá»—i táº£i bÃ i há»c!");
-        window.location.href = 'map.html';
+        window.location.href = '/map';
         return;
     }
 
@@ -123,7 +123,7 @@ function initArena() {
     document.getElementById('arenaBuffs').style.display = 'flex';
 
     const matchData = ARENA_MATCHES.find(m => m.id === arenaId);
-    if (!matchData) { window.location.href = 'map.html'; return; }
+    if (!matchData) { window.location.href = '/map'; return; }
     matchReward = matchData.reward;
 
     // Load questions based on gradeFilter
@@ -347,7 +347,7 @@ function loadQuestion() {
                     saveGameState(state);
                     if (state.hearts <= 0) {
                         btnCheck.textContent = 'Káº¿t thÃºc';
-                        btnCheck.addEventListener('click', () => window.location.href = 'map.html', {once: true});
+                        btnCheck.addEventListener('click', () => window.location.href = '/map', {once: true});
                     }
                 }
             }
@@ -458,7 +458,7 @@ function checkAnswer() {
                 if (state.hearts <= 0) {
                     btnCheck.textContent = 'Káº¿t thÃºc';
                     btnCheck.addEventListener('click', () => {
-                        window.location.href = 'map.html';
+                        window.location.href = '/map';
                     }, {once: true});
                     return;
                 }
@@ -514,7 +514,7 @@ function finishLesson() {
         
         btnCheck.textContent = 'Trá»Ÿ vá» Báº£n Ä‘á»“';
         btnCheck.classList.add('active');
-        btnCheck.onclick = () => window.location.href = 'map.html';
+        btnCheck.onclick = () => window.location.href = '/map';
 
     } else {
         // Normal mode
@@ -605,7 +605,7 @@ function finishLesson() {
     btnCheck.textContent = 'HoÃ n táº¥t';
 
     btnCheck.addEventListener('click', () => {
-        window.location.href = 'map.html';
+        window.location.href = '/map';
     }, {once: true});
 }
 
@@ -659,13 +659,13 @@ let boosterInventory = {
 
 window.useBooster = function(type) {
     if (boosterInventory[type] <= 0) {
-        if(typeof showToast === 'function') showToast('B?n dã h?t quy?n tr? giúp này!');
+        if(typeof showToast === 'function') showToast('B?n dï¿½ h?t quy?n tr? giï¿½p nï¿½y!');
         return;
     }
     
     const q = currentLessonData.questions[currentQuestionIndex];
     if (q.type !== 'quiz') {
-        if(typeof showToast === 'function') showToast('Tr? giúp này ch? dùng cho câu tr?c nghi?m!');
+        if(typeof showToast === 'function') showToast('Tr? giï¿½p nï¿½y ch? dï¿½ng cho cï¿½u tr?c nghi?m!');
         return;
     }
     
@@ -683,7 +683,7 @@ window.useBooster = function(type) {
             timerEl.style.background = 'rgba(28,176,246,0.2)';
             timerEl.innerHTML = '<i class="fa-solid fa-snowflake"></i> <span id="normalTimerText">' + normalTimerLeft + 's</span>';
         }
-        if(typeof showToast === 'function') showToast('Th?i gian dã du?c dóng bang!');
+        if(typeof showToast === 'function') showToast('Th?i gian dï¿½ du?c dï¿½ng bang!');
     } 
     else if (type === '5050') {
         const options = document.querySelectorAll('.option-card:not(.disabled)');
@@ -694,7 +694,7 @@ window.useBooster = function(type) {
             }
         });
         
-        // ?n 2 dáp án sai
+        // ?n 2 dï¿½p ï¿½n sai
         let hiddenCount = 0;
         wrongOptions.sort(() => Math.random() - 0.5);
         for (let i = 0; i < wrongOptions.length; i++) {
@@ -704,7 +704,7 @@ window.useBooster = function(type) {
             wrongOptions[i].classList.add('disabled');
             hiddenCount++;
         }
-        if(typeof showToast === 'function') showToast('Ðã lo?i b? 2 phuong án sai!');
+        if(typeof showToast === 'function') showToast('ï¿½ï¿½ lo?i b? 2 phuong ï¿½n sai!');
     }
     else if (type === 'remove1') {
         const options = document.querySelectorAll('.option-card:not(.disabled)');
@@ -720,7 +720,7 @@ window.useBooster = function(type) {
             target.style.opacity = '0.3';
             target.style.pointerEvents = 'none';
             target.classList.add('disabled');
-            if(typeof showToast === 'function') showToast('Ðã lo?i b? 1 phuong án sai!');
+            if(typeof showToast === 'function') showToast('ï¿½ï¿½ lo?i b? 1 phuong ï¿½n sai!');
         }
     }
 };

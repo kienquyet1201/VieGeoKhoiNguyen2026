@@ -64,7 +64,7 @@ function fixVietnameseAndUI() {
     }
 
     // 3. Replace alert() with Toast in map.html
-    const mapHtmlPath = path.join(rootDir, 'public', 'map.html');
+    const mapHtmlPath = path.join(rootDir, 'public', '/map');
     if (fs.existsSync(mapHtmlPath)) {
         let html = fs.readFileSync(mapHtmlPath, 'utf8');
         

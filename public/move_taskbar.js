@@ -30,7 +30,7 @@ if (match) {
                     <option value="12">Lớp 12</option>
                 </select>
 
-                <a href="exam-arena.html" class="bento-btn w-full justify-start px-4 py-2 shadow-sm transition transform hover:scale-105" style="background: #ef4444; color: white; border-radius: 12px; font-size: 0.95rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap mr-2"></i> Đấu trường</a>
+                <a href="/exam-arena" class="bento-btn w-full justify-start px-4 py-2 shadow-sm transition transform hover:scale-105" style="background: #ef4444; color: white; border-radius: 12px; font-size: 0.95rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap mr-2"></i> Đấu trường</a>
                 
                 <button class="bento-btn w-full justify-start px-4 py-2 shadow-sm transition transform hover:scale-105" onclick="openParentModal()" title="Dành cho Phụ Huynh" style="background: #ce82ff; border-radius: 12px; color: white; font-size: 0.95rem;">
                     <i class="fa-solid fa-users mr-2"></i> Phụ Huynh
@@ -82,7 +82,7 @@ if (match) {
                     <option value="12">Lớp 12</option>
                 </select>
 
-                <a href="exam-arena.html" class="bento-btn w-full justify-start px-4 py-2 shadow-sm transition transform hover:scale-105" style="background: #ef4444; color: white; border-radius: 12px; font-size: 0.95rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap mr-2"></i> Đấu trường</a>
+                <a href="/exam-arena" class="bento-btn w-full justify-start px-4 py-2 shadow-sm transition transform hover:scale-105" style="background: #ef4444; color: white; border-radius: 12px; font-size: 0.95rem; text-decoration: none;"><i class="fa-solid fa-graduation-cap mr-2"></i> Đấu trường</a>
                 
                 <button class="bento-btn w-full justify-start px-4 py-2 shadow-sm transition transform hover:scale-105" onclick="openParentModal()" title="Dành cho Phụ Huynh" style="background: #ce82ff; border-radius: 12px; color: white; font-size: 0.95rem;">
                     <i class="fa-solid fa-users mr-2"></i> Phụ Huynh
