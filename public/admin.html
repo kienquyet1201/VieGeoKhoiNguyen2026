@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -52,71 +52,79 @@
 </head>
 <body>
 
-    <h1><i class="fa-solid fa-screwdriver-wrench"></i> Quản Trị Hệ Thống VieGeo</h1>
+    <h1><i class="fa-solid fa-screwdriver-wrench"></i> Quáº£n Trá»‹ Há»‡ Thá»‘ng VieGeo</h1>
     
     <!-- TABS -->
     <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--bg-card); padding-bottom: 10px;">
-        <button id="tabUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quản Lý Người Dùng & Premium</button>
-        <button id="tabUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload Câu Hỏi</button>
-        <button class="bento-btn" onclick="window.location.href="/loginout"" style="margin-left: auto; background: rgba(255, 75, 75, 0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+        <button id="tabUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quáº£n LÃ½ NgÆ°á»i DÃ¹ng & Premium</button>
+        <button id="tabUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload CÃ¢u Há»i</button>
+        <button class="bento-btn" onclick="window.location.href="/loginout"" style="margin-left: auto; background: rgba(255, 75, 75, 0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> ÄÄƒng xuáº¥t</button>
     </div>
 
-    <!-- TAB: QUẢN LÝ NGƯỜI DÙNG -->
+    <!-- TAB: QUáº¢N LÃ NGÆ¯á»œI DÃ™NG -->
     <div id="tabUsersContent">
-        <p>Danh sách các yêu cầu Nâng cấp Premium đang chờ duyệt:</p>
+        <p>Danh sÃ¡ch cÃ¡c yÃªu cáº§u NÃ¢ng cáº¥p Premium Ä‘ang chá» duyá»‡t:</p>
 
-        <div id="requestsList">Đang tải dữ liệu...</div>
+        <div id="requestsList">Äang táº£i dá»¯ liá»‡u...</div>
 
-        <h2 style="color: var(--gold); margin-top: 40px;"><i class="fa-solid fa-users"></i> Quản Lý Người Dùng</h2>
-        <p>Danh sách người dùng hệ thống. Bạn có thể kick (buộc đăng xuất) họ ngay lập tức:</p>
+        <h2 style="color: var(--gold); margin-top: 40px;"><i class="fa-solid fa-users"></i> Quáº£n LÃ½ NgÆ°á»i DÃ¹ng</h2>
+        <p>Danh sÃ¡ch ngÆ°á»i dÃ¹ng há»‡ thá»‘ng. Báº¡n cÃ³ thá»ƒ kick (buá»™c Ä‘Äƒng xuáº¥t) há» ngay láº­p tá»©c:</p>
     
     <div style="margin-bottom: 20px;">
-        <input type="text" id="searchUser" placeholder="Tìm kiếm theo email..." style="padding: 10px; width: 100%; max-width: 400px; border-radius: 8px; border: 1px solid var(--gray-border); background: var(--bg-card); color: white; outline: none;">
-        <button onclick="loadUsers()" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-left: 10px;">Tìm</button>
+        <input type="text" id="searchUser" placeholder="TÃ¬m kiáº¿m theo email..." style="padding: 10px; width: 100%; max-width: 400px; border-radius: 8px; border: 1px solid var(--gray-border); background: var(--bg-card); color: white; outline: none;">
+        <button onclick="loadUsers()" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-left: 10px;">TÃ¬m</button>
     </div>
 
-    <div id="usersList">Đang tải người dùng...</div>
-    </div> <!-- END TAB QUẢN LÝ -->
+    <div id="usersList">Äang táº£i ngÆ°á»i dÃ¹ng...</div>
+    </div> <!-- END TAB QUáº¢N LÃ -->
 
     <!-- TAB: UPLOAD WORD -->
     <div id="tabUploadContent" style="display: none;">
-        <h2 style="color: var(--gold);"><i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên Bộ Câu Hỏi (.docx / .txt)</h2>
-        <p style="color: var(--text-dim); margin-bottom: 20px;">Hệ thống sẽ bóc tách văn bản thành dạng câu hỏi trắc nghiệm và cập nhật vào Firebase.</p>
+        <h2 style="color: var(--gold);"><i class="fa-solid fa-cloud-arrow-up"></i> Táº£i LÃªn Bá»™ CÃ¢u Há»i (.docx / .txt)</h2>
+        <p style="color: var(--text-dim); margin-bottom: 20px;">Há»‡ thá»‘ng sáº½ bÃ³c tÃ¡ch vÄƒn báº£n thÃ nh dáº¡ng cÃ¢u há»i tráº¯c nghiá»‡m vÃ  cáº­p nháº­t vÃ o Firebase.</p>
         
         <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 2px dashed var(--blue); text-align: center; margin-bottom: 20px;">
             <i class="fa-solid fa-file-word" style="font-size: 3rem; color: var(--blue); margin-bottom: 15px;"></i><br>
             <input type="file" id="fileUpload" accept=".docx,.txt" style="display: none;">
             <button onclick="document.getElementById('fileUpload').click()" style="padding: 12px 25px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                Chọn File
+                Chá»n File
             </button>
             <p id="fileNameDisplay" style="margin-top: 15px; color: var(--green); font-weight: bold;"></p>
         </div>
 
-        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <div style="flex: 1;">
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Gắn vào Khối Lớp:</label>
-                <select id="importGrade" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
-                    <option value="5">Lớp 5</option>
-                    <option value="9">Lớp 9</option>
-                    <option value="12">Lớp 12</option>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Thành phố (Tỉnh):</label>
+                <input type="text" id="importProvince" placeholder="VD: Hà Nội" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Đảo nhỏ (Bài học):</label>
+                <input type="text" id="importIsland" placeholder="VD: Khám phá Hồ Gươm" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mức độ:</label>
+                <select id="importDifficulty" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+                    <option value="easy">Cơ bản (Easy)</option>
+                    <option value="medium">Trung bình (Medium)</option>
+                    <option value="hard">Nâng cao (Hard)</option>
                 </select>
             </div>
-            <div style="flex: 1;">
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mã Bài Học (Lesson ID):</label>
-                <input type="text" id="importLessonId" placeholder="VD: node_5_0_1" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
+            <div>
+                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mã Bài Học (ID - Tùy chọn):</label>
+                <input type="text" id="importLessonId" placeholder="Hệ thống tự tạo nếu bỏ trống" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
             </div>
         </div>
 
         <button onclick="processUpload()" id="btnProcessUpload" style="padding: 15px; width: 100%; background: var(--green); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px;">
-            <i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật
+            <i class="fa-solid fa-cogs"></i> BÃ³c TÃ¡ch & Cáº­p Nháº­t
         </button>
 
         <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">
-            Kết quả preview sẽ hiển thị ở đây...
+            Káº¿t quáº£ preview sáº½ hiá»ƒn thá»‹ á»Ÿ Ä‘Ã¢y...
         </div>
     </div> <!-- END TAB UPLOAD -->
 
-    <div id="toast">Thông báo</div>
+    <div id="toast">ThÃ´ng bÃ¡o</div>
 
     <script>
         function switchTab(tabId) {
@@ -155,10 +163,11 @@
         // ==========================================
         document.getElementById('fileUpload').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
-                document.getElementById('fileNameDisplay').textContent = "Đã chọn: " + e.target.files[0].name;
+                document.getElementById('fileNameDisplay').textContent = "ÄÃ£ chá»n: " + e.target.files[0].name;
             }
         });
 
+        
         async function processUpload() {
             const fileInput = document.getElementById('fileUpload');
             const file = fileInput.files[0];
@@ -167,11 +176,19 @@
                 return;
             }
 
-            const grade = document.getElementById('importGrade').value;
-            const lessonId = document.getElementById('importLessonId').value.trim();
-            if (!lessonId) {
-                showToast("Vui lòng nhập Mã Bài Học (Lesson ID)!");
+            const province = document.getElementById('importProvince').value.trim();
+            const island = document.getElementById('importIsland').value.trim();
+            const difficulty = document.getElementById('importDifficulty').value;
+            let lessonId = document.getElementById('importLessonId').value.trim();
+            
+            if (!province || !island) {
+                showToast("Vui lòng điền Thành phố và Đảo nhỏ!");
                 return;
+            }
+
+            if (!lessonId) {
+                // Auto generate lesson ID based on province and island names
+                lessonId = "node_" + province.toLowerCase().replace(/\s+/g, '') + "_" + new Date().getTime();
             }
 
             const btn = document.getElementById('btnProcessUpload');
@@ -193,73 +210,77 @@
                     throw new Error("Định dạng file không hỗ trợ!");
                 }
 
-                // Parse logic (Simple rule: Question lines start with "Câu", answers with A/B/C/D)
                 const questions = parseTextToQuestions(textContent);
-                
                 document.getElementById('uploadPreview').textContent = JSON.stringify(questions, null, 2);
 
                 if (questions.length === 0) {
-                    throw new Error("Không trích xuất được câu hỏi nào từ file!");
+                    throw new Error("Không trích xuất được câu hỏi nào từ file! Hãy kiểm tra định dạng.");
                 }
 
-                // Simulate saving to Firebase (in reality, it modifies the central pool)
+                // Simulate saving to Firebase
                 await db.collection('imported_questions').doc(lessonId).set({
-                    grade: grade,
+                    province: province,
+                    island: island,
+                    difficulty: difficulty,
                     lessonId: lessonId,
                     questions: questions,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: JSON.parse(localStorage.getItem('lm_session')).email
+                    updatedBy: JSON.parse(localStorage.getItem('lm_session'))?.email || 'admin'
                 });
 
-                showToast(`Đã import thành công ${questions.length} câu hỏi!`);
-            } catch (err) {
-                console.error(err);
-                showToast("Lỗi: " + err.message);
+                showToast("Bóc tách và lưu thành công " + questions.length + " câu hỏi!");
+                
+                // Clear inputs
+                document.getElementById('fileUpload').value = '';
+                document.getElementById('fileNameDisplay').textContent = '';
+                
+            } catch (error) {
+                console.error(error);
+                showToast("Lỗi xử lý: " + error.message, true);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật';
+                btn.disabled = false;
             }
-
-            btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật';
-            btn.disabled = false;
         }
 
-        function parseTextToQuestions(text) {
+function parseTextToQuestions(text) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             const questions = [];
             let currentQ = null;
 
-            lines.forEach(line => {
-                if (line.toLowerCase().startsWith('câu')) {
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+                
+                // Matches "Câu 1:", "Câu 1.", "Câu hỏi 1:"
+                if (/^c[aâ]u\s*\d+[:\.]?/i.test(line)) {
                     if (currentQ) questions.push(currentQ);
-                    currentQ = { question: line, options: [], correctAnswer: 0, explanation: "Không có giải thích." };
-                } else if (currentQ && /^[A-D][\.\:]/.test(line)) {
-                    currentQ.options.push(line);
-                } else if (currentQ && line.toLowerCase().startsWith('đáp án:')) {
-                    const ans = line.split(':')[1].trim().toUpperCase();
+                    currentQ = {
+                        text: line.replace(/^c[aâ]u\s*\d+[:\.]?\s*/i, ''),
+                        options: [],
+                        correctAnswer: 0
+                    };
+                } else if (/^[A-D][\.\:]/i.test(line) && currentQ) {
+                    currentQ.options.push(line.replace(/^[A-D][\.\:]\s*/i, ''));
+                } else if (/^[ĐD][aá]p\s*[aá]n[:\.]?/i.test(line) && currentQ) {
+                    let ans = line.replace(/^[ĐD][aá]p\s*[aá]n[:\.]?\s*/i, '').toUpperCase().trim();
                     if (ans === 'A') currentQ.correctAnswer = 0;
-                    if (ans === 'B') currentQ.correctAnswer = 1;
-                    if (ans === 'C') currentQ.correctAnswer = 2;
-                    if (ans === 'D') currentQ.correctAnswer = 3;
-                } else if (currentQ && line.toLowerCase().startsWith('giải thích:')) {
-                    currentQ.explanation = line.substring(11).trim();
+                    else if (ans === 'B') currentQ.correctAnswer = 1;
+                    else if (ans === 'C') currentQ.correctAnswer = 2;
+                    else if (ans === 'D') currentQ.correctAnswer = 3;
+                } else if (currentQ && currentQ.options.length === 0) {
+                    currentQ.text += "\n" + line; // multiline question text
                 }
-            });
+            }
             if (currentQ) questions.push(currentQ);
-            
-            // Clean up options if needed
             return questions;
         }
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
-        }
 
-        async function loadRequests() {
+async function loadRequests() {
             const list = document.getElementById('requestsList');
             try {
                 const snapshot = await db.collection('premium_requests').where('status', '==', 'pending').get();
                 if (snapshot.empty) {
-                    list.innerHTML = '<p style="color: var(--green);">Không có yêu cầu nào đang chờ!</p>';
+                    list.innerHTML = '<p style="color: var(--green);">KhÃ´ng cÃ³ yÃªu cáº§u nÃ o Ä‘ang chá»!</p>';
                     return;
                 }
 
@@ -273,47 +294,47 @@
                     div.innerHTML = `
                         <div class="req-info">
                             <h3><i class="fa-solid fa-user"></i> ${data.name}</h3>
-                            <p><i class="fa-solid fa-envelope"></i> ${data.email} | Yêu cầu lúc: ${date}</p>
+                            <p><i class="fa-solid fa-envelope"></i> ${data.email} | YÃªu cáº§u lÃºc: ${date}</p>
                         </div>
                         <div style="display: flex; gap: 10px;">
                             <button class="btn-approve" onclick="approveRequest('${doc.id}', '${data.email}')">
-                                <i class="fa-solid fa-check"></i> Duyệt
+                                <i class="fa-solid fa-check"></i> Duyá»‡t
                             </button>
                             <button class="btn-reject" onclick="rejectRequest('${doc.id}', '${data.email}')">
-                                <i class="fa-solid fa-xmark"></i> Từ chối
+                                <i class="fa-solid fa-xmark"></i> Tá»« chá»‘i
                             </button>
                         </div>
                     `;
                     list.appendChild(div);
                 });
             } catch(e) {
-                list.innerHTML = `<p style="color: red;">Lỗi tải dữ liệu: ${e.message}</p>`;
+                list.innerHTML = `<p style="color: red;">Lá»—i táº£i dá»¯ liá»‡u: ${e.message}</p>`;
             }
         }
 
         window.approveRequest = async function(reqId, email) {
-            if(!confirm(`Xác nhận cấp Premium cho ${email}?`)) return;
+            if(!confirm(`XÃ¡c nháº­n cáº¥p Premium cho ${email}?`)) return;
             try {
                 // Update User
                 await db.collection('users').doc(email).update({ accountStatus: 'premium' });
                 // Update Request status
                 await db.collection('premium_requests').doc(reqId).update({ status: 'approved' });
-                showToast(`Đã duyệt Premium cho ${email}!`);
+                showToast(`ÄÃ£ duyá»‡t Premium cho ${email}!`);
                 loadRequests();
             } catch(e) {
-                showToast("Lỗi: " + e.message);
+                showToast("Lá»—i: " + e.message);
             }
         };
 
         window.rejectRequest = async function(reqId, email) {
-            if(!confirm(`Xác nhận TỪ CHỐI yêu cầu Premium của ${email}?`)) return;
+            if(!confirm(`XÃ¡c nháº­n Tá»ª CHá»I yÃªu cáº§u Premium cá»§a ${email}?`)) return;
             try {
                 // Update Request status
                 await db.collection('premium_requests').doc(reqId).update({ status: 'rejected' });
-                showToast(`Đã từ chối Premium của ${email}!`);
+                showToast(`ÄÃ£ tá»« chá»‘i Premium cá»§a ${email}!`);
                 loadRequests();
             } catch(e) {
-                showToast("Lỗi: " + e.message);
+                showToast("Lá»—i: " + e.message);
             }
         };
 
@@ -335,7 +356,7 @@
                     const lastActive = data.lastActive || 0;
                     const isOnline = (Date.now() - lastActive) <= 60000;
                     const statusHtml = isOnline ? 
-                        '<span style="color:var(--green); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Đang Online</span>' : 
+                        '<span style="color:var(--green); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Äang Online</span>' : 
                         '<span style="color:var(--text-dim); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Offline</span>';
 
                     count++;
@@ -343,11 +364,11 @@
                     div.className = 'req-card';
                     div.innerHTML = `
                         <div class="req-info">
-                            <h3><i class="fa-solid fa-user"></i> ${data.name || 'Người dùng'} ${statusHtml}</h3>
-                            <p><i class="fa-solid fa-envelope"></i> ${doc.id} | Quyền: <span style="color:${data.accountStatus === 'premium' ? 'var(--gold)' : 'var(--green)'};">${(data.accountStatus || 'free').toUpperCase()}</span></p>
+                            <h3><i class="fa-solid fa-user"></i> ${data.name || 'NgÆ°á»i dÃ¹ng'} ${statusHtml}</h3>
+                            <p><i class="fa-solid fa-envelope"></i> ${doc.id} | Quyá»n: <span style="color:${data.accountStatus === 'premium' ? 'var(--gold)' : 'var(--green)'};">${(data.accountStatus || 'free').toUpperCase()}</span></p>
                         </div>
                         <div style="display: flex; gap: 10px;">
-                            <button class="btn-reject" onclick="kickUser('${doc.id}')" title="Buộc đăng xuất ra sảnh">
+                            <button class="btn-reject" onclick="kickUser('${doc.id}')" title="Buá»™c Ä‘Äƒng xuáº¥t ra sáº£nh">
                                 <i class="fa-solid fa-ban"></i> Kick
                             </button>
                         </div>
@@ -356,20 +377,20 @@
                 });
 
                 if (count === 0) {
-                    list.innerHTML = '<p style="color: var(--text-dim);">Không tìm thấy người dùng nào.</p>';
+                    list.innerHTML = '<p style="color: var(--text-dim);">KhÃ´ng tÃ¬m tháº¥y ngÆ°á»i dÃ¹ng nÃ o.</p>';
                 }
             } catch(e) {
-                list.innerHTML = `<p style="color: red;">Lỗi tải người dùng: ${e.message}</p>`;
+                list.innerHTML = `<p style="color: red;">Lá»—i táº£i ngÆ°á»i dÃ¹ng: ${e.message}</p>`;
             }
         }
 
         window.kickUser = async function(email) {
-            if(!confirm(`Xác nhận KICK người dùng ${email} khỏi hệ thống ngay lập tức?`)) return;
+            if(!confirm(`XÃ¡c nháº­n KICK ngÆ°á»i dÃ¹ng ${email} khá»i há»‡ thá»‘ng ngay láº­p tá»©c?`)) return;
             try {
                 await db.collection('users').doc(email).update({ forceLogout: true });
-                showToast(`Đã ra lệnh KICK đối với ${email}!`);
+                showToast(`ÄÃ£ ra lá»‡nh KICK Ä‘á»‘i vá»›i ${email}!`);
             } catch(e) {
-                showToast("Lỗi: " + e.message);
+                showToast("Lá»—i: " + e.message);
             }
         };
 
@@ -377,7 +398,7 @@
         setTimeout(() => {
             const sessionData = localStorage.getItem('lm_session');
             if (!sessionData) {
-                alert("Vui lòng đăng nhập trước!");
+                alert("Vui lÃ²ng Ä‘Äƒng nháº­p trÆ°á»›c!");
                 window.location.href = '/loginout';
                 return;
             }
@@ -385,7 +406,7 @@
             
             // RBAC Check for Admin
             /* if (sessionUser.activeRole ? sessionUser.activeRole !== 'admin' : ((!sessionUser.roles || !sessionUser.roles.includes('admin')) && sessionUser.role !== 'admin')) {
-                // alert("Bạn không có quyền truy cập trang quản trị Admin!");
+                // alert("Báº¡n khÃ´ng cÃ³ quyá»n truy cáº­p trang quáº£n trá»‹ Admin!");
                 if (sessionUser.roles && sessionUser.roles.includes('cs')) {
                     window.location.href = '/cs';
                 } else {
@@ -398,10 +419,26 @@
                 loadRequests();
                 loadUsers();
             }
-            else document.getElementById('requestsList').innerText = "Firebase chưa khởi tạo!";
+            else document.getElementById('requestsList').innerText = "Firebase chÆ°a khá»Ÿi táº¡o!";
         }, 1000);
     </script>
+
+<script>
+window.switchRoleClientOnly = function(role) {
+    if(!role) return;
+    const session = JSON.parse(localStorage.getItem('lm_session')) || {};
+    session.role = role;
+    localStorage.setItem('lm_session', JSON.stringify(session));
+    if(role === 'admin') window.location.href = '/admin';
+    else if(role === 'cs') window.location.href = '/cs';
+    else if(role === 'parent') window.location.href = '/parent';
+    else if(role === 'teacher') window.location.href = '/teacher-dashboard';
+    else window.location.href = '/map';
+};
+</script>
 </body>
 </html>
+
+
 
 

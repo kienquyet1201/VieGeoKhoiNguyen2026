@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // VieGeo - map.js (Rendering Learning Path Multi-Tier)
 // ============================================================================
 
@@ -24,7 +24,7 @@ function renderMap() {
     mapContainer.innerHTML = '';
     
     if (currentView === 'regions') {
-        mapTitle.textContent = "Khám Phá Việt Nam";
+        mapTitle.textContent = "KhÃ¡m PhÃ¡ Viá»‡t Nam";
         btnMapBack.style.display = 'none';
         renderRegions();
     } else if (currentView === 'provinces') {
@@ -60,14 +60,14 @@ function renderRegions() {
             <div class="bento-card region-card bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg transition transform hover:-translate-y-1 rounded-2xl p-8 cursor-pointer flex flex-col items-center justify-center w-full" data-index="${i}" style="border-top-width: 4px; border-top-color: ${region.color};">
                 <div style="font-size: 4rem; color: ${region.color};"><i class="fa-solid fa-map-location-dot"></i></div>
                 <h3 style="font-size: 1.8rem; margin-top: 15px; font-weight: bold;">${region.name}</h3>
-                <p style="margin-top: 10px; font-size: 1.1rem; opacity: 0.8;">${region.provinces.length} Tỉnh/Thành phố</p>
+                <p style="margin-top: 10px; font-size: 1.1rem; opacity: 0.8;">${region.provinces.length} Tá»‰nh/ThÃ nh phá»‘</p>
             </div>
         `;
     });
     mapContainer.innerHTML = `<div id="interactive-map-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
-        <!-- BẮT ĐẦU: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+        <!-- Báº®T Äáº¦U: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
         ${htmlContent}
-        <!-- KẾT THÚC: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+        <!-- Káº¾T THÃšC: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
     </div>`;
 
     // Add event listeners after innerHTML
@@ -92,16 +92,16 @@ function renderProvinces() {
         let bg = prov.isBoss ? 'rgba(255, 75, 75, 0.1)' : '#ffffff';
         let borderColor = prov.isBoss ? '#ff4b4b' : prov.color;
         htmlContent += `
-            <div class="bento-card province-card rounded-2xl dark:bg-slate-800" data-index="${i}" style="cursor: pointer; border: 2px solid ${borderColor}; background: ${bg}; color: #0c4a6e; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 220px; text-align: center;">
+            <div class="bento-card province-card rounded-2xl text-slate-900 dark:text-white ${bossClass}" data-index="${i}" style="cursor: pointer; border: 2px solid ${borderColor}; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 220px; text-align: center;">
                 <h3 style="font-size: 1.4rem; font-weight: bold;">${prov.name}</h3>
-                <p style="margin-top: 5px;">${prov.lessons ? prov.lessons.length : 0} Bài học</p>
+                <p style="margin-top: 5px;">${prov.lessons ? prov.lessons.length : 0} BÃ i há»c</p>
             </div>
         `;
     });
     mapContainer.innerHTML = `<div id="interactive-map-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;">
-        <!-- BẮT ĐẦU: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+        <!-- Báº®T Äáº¦U: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
         ${htmlContent}
-        <!-- KẾT THÚC: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+        <!-- Káº¾T THÃšC: Khu vá»±c chuáº©n bá»‹ Ä‘á»ƒ nhÃºng SVG Báº£n Ä‘á»“ Viá»‡t Nam tÆ°Æ¡ng tÃ¡c sau nÃ y -->
     </div>`;
 
     document.querySelectorAll('.province-card').forEach(card => {
@@ -181,21 +181,21 @@ function renderLessons() {
                         <button id="closeMiniModal" style="position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
                         <i class="fa-solid ${icon}" style="font-size: 3rem; color: ${nodeColor}; margin-bottom: 15px;"></i>
                         <h2 style="font-size: 1.5rem; margin-bottom: 10px; color: white;">${lesson.title}</h2>
-                        <p style="color: var(--text-dim); margin-bottom: 20px;">Độ khó: <span style="color: ${nodeColor}; text-transform: capitalize; font-weight: bold;">${lesson.diff || 'Bình thường'}</span></p>
+                        <p style="color: var(--text-dim); margin-bottom: 20px;">Äá»™ khÃ³: <span style="color: ${nodeColor}; text-transform: capitalize; font-weight: bold;">${lesson.diff || 'BÃ¬nh thÆ°á»ng'}</span></p>
                 `;
                 
                 if (isCompleted) {
                     const result = state.nodeResults && state.nodeResults[lesson.id];
                     const pts = result ? result.score : 0;
-                    modalHtml += `<div style="margin-bottom: 25px; font-size: 1.2rem; color: #ffc800;"><i class="fa-solid fa-star"></i> Điểm cao nhất: <b>${pts}</b></div>`;
+                    modalHtml += `<div style="margin-bottom: 25px; font-size: 1.2rem; color: #ffc800;"><i class="fa-solid fa-star"></i> Äiá»ƒm cao nháº¥t: <b>${pts}</b></div>`;
                 } else {
-                    modalHtml += `<div style="margin-bottom: 25px; font-size: 1.1rem; color: #1cb0f6;">Bạn đã sẵn sàng chinh phục đảo này chưa?</div>`;
+                    modalHtml += `<div style="margin-bottom: 25px; font-size: 1.1rem; color: #1cb0f6;">Báº¡n Ä‘Ã£ sáºµn sÃ ng chinh phá»¥c Ä‘áº£o nÃ y chÆ°a?</div>`;
                 }
 
                 modalHtml += `
                         <div style="display: flex; gap: 10px;">
-                            <button id="btnMiniHelp" class="bento-btn" style="flex: 1; background: rgba(255,255,255,0.1); color: white;"><i class="fa-solid fa-circle-question"></i> Trợ giúp</button>
-                            <button id="btnMiniStart" class="bento-btn" style="flex: 1.5; background: ${nodeColor}; color: white; font-weight: bold;"><i class="fa-solid fa-play"></i> Bắt đầu</button>
+                            <button id="btnMiniHelp" class="bento-btn" style="flex: 1; background: rgba(255,255,255,0.1); color: white;"><i class="fa-solid fa-circle-question"></i> Trá»£ giÃºp</button>
+                            <button id="btnMiniStart" class="bento-btn" style="flex: 1.5; background: ${nodeColor}; color: white; font-weight: bold;"><i class="fa-solid fa-play"></i> Báº¯t Ä‘áº§u</button>
                         </div>
                     </div>
                 `;
@@ -206,7 +206,7 @@ function renderLessons() {
                 document.getElementById('closeMiniModal').onclick = () => modal.remove();
                 document.getElementById('btnMiniHelp').onclick = () => {
                     modal.remove();
-                    if(typeof showToast === 'function') showToast("Vui lòng hỏi CSKH ở bong bóng góc phải!");
+                    if(typeof showToast === 'function') showToast("Vui lÃ²ng há»i CSKH á»Ÿ bong bÃ³ng gÃ³c pháº£i!");
                 };
                 document.getElementById('btnMiniStart').onclick = () => {
                     localStorage.setItem('VieGeo_current_lesson', lesson.id);
@@ -215,9 +215,9 @@ function renderLessons() {
                 };
             } else {
                 if (typeof showToast === 'function') {
-                    showToast("Bạn cần hoàn thành bài trước đó!", true);
+                    showToast("Báº¡n cáº§n hoÃ n thÃ nh bÃ i trÆ°á»›c Ä‘Ã³!", true);
                 } else {
-                    alert("Bạn cần hoàn thành bài trước đó!");
+                    alert("Báº¡n cáº§n hoÃ n thÃ nh bÃ i trÆ°á»›c Ä‘Ã³!");
                 }
             }
         };
@@ -287,9 +287,9 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
 
             surveyModal.style.display = 'none';
             if (typeof showToast === 'function') {
-                showToast('Đã tạo Learning Profile thành công!');
+                showToast('ÄÃ£ táº¡o Learning Profile thÃ nh cÃ´ng!');
             } else {
-                alert('Đã tạo Learning Profile thành công!');
+                alert('ÄÃ£ táº¡o Learning Profile thÃ nh cÃ´ng!');
             }
         };
     }
@@ -306,7 +306,7 @@ window.switchRoleClientOnly = function(newRole) {
     if(!newRole) return;
     state.currentRole = newRole; // Update local state only
     saveGameState(state);
-    alert('Đã đổi quyền thành công sang: ' + newRole + ' (Chỉ có tác dụng trên giao diện hiện tại, không lưu vào database gốc).');
+    alert('ÄÃ£ Ä‘á»•i quyá»n thÃ nh cÃ´ng sang: ' + newRole + ' (Chá»‰ cÃ³ tÃ¡c dá»¥ng trÃªn giao diá»‡n hiá»‡n táº¡i, khÃ´ng lÆ°u vÃ o database gá»‘c).');
     // Refresh UI if necessary
     if(typeof updateStatsUI === 'function') updateStatsUI();
 };
@@ -340,3 +340,4 @@ function checkAndResetStreak() {
 if(typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', checkAndResetStreak);
 }
+
