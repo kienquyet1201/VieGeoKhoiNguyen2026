@@ -1,0 +1,35 @@
+=== SIDEBAR ===
+<aside class="bento-sidebar">
+            <div class="app-logo">
+                <i class="fa-solid fa-earth-asia"></i> VieGeo
+            </div>
+            
+            <nav class="nav-menu" id="navMenu">
+                <button class="nav-btn active" data-target="tabMap"><i class="fa-solid fa-map-location-dot"></i> Lộ Trình Học</button>
+                <button class="nav-btn" data-target="tabLeaderboard"><i class="fa-solid fa-trophy"></i> Xếp hạng</button>
+                <button class="nav-btn" data-target="tabQuests"><i class="fa-solid fa-box-open"></i> Nhiệm vụ</button>
+                <button class="nav-btn" data-target="tabShop">
+                    <i class="fa-solid fa-store"></i>
+                    <span>Cửa Hàng</span>
+                </button>
+                <button class="nav-btn" data-target="tabArena">
+                    <i class="fa-solid fa-khanda"></i>
+                    <span>Đấu Trường</span>
+                </button>
+                <button class="nav-btn" data-target="tabProfile">
+                    <i class="fa-solid fa-user"></i>
+                    <span>Hồ Sơ</span>
+                </button>
+            </nav>
+        </aside>
+
+=== HEADER ===
+<div class="stats-header z-50 relative flex flex-wrap items-center justify-between w-full p-4 bg-white/10 backdrop-blur-md border-b border-white/20">
+                <div class="flex gap-4">
+                    <div class="stat-pill" style="color: #ff4b4b;"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
+                    <div class="stat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
+                    <div class="stat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
+                    <div class="stat-pill" style="color: #58cc02;"><i class="fa-solid fa-star"></i> <span id="hdrXp">0</span></div>
+                    <div class="stat-pill" style="color: #ce82ff;"><i class="fa-solid fa-shield-halved"></i> Lv.<span id="hdrLevel">1</span></div>
+                    <div class="stat-pill" style="color: #ff9600;"><i class="fa-solid fa-medal"></i> <span id="hdrBadge">0</span></div>
+                </div>
