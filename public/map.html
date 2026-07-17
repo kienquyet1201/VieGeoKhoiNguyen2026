@@ -134,11 +134,14 @@
 
             <!-- TAB: MAP (LEARN) -->
             <div id="tabMap" class="tab-pane active">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="font-size: 2rem;" id="mapTitle">Khám Phá Việt Nam</h2>
-                    <button id="btnMapBack" class="bento-btn" style="display: none; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
-                </div>
                 
+                
+                
+<div class="flex justify-between items-center w-full max-w-5xl mx-auto px-4">
+    <h2 id="mapTitle" class="text-3xl font-bold text-slate-900 dark:text-white mt-12 mb-8 ml-4 block">Khám Phá Việt Nam</h2>
+    <button id="btnMapBack" class="bento-btn mt-12 mb-8 px-4 py-2 hidden bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg shadow"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
+</div>
+
                 <div id="mapViewContainer" class="island-container">
                     <!-- JS Renders Regions/Provinces/Lessons Here -->
                 </div>
