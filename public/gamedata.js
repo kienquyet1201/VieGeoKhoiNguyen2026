@@ -220,31 +220,31 @@ const ARENA_MATCHES = [
 
 // ── GEOGRAPHY CONTENT (Theo SGK) ──
 const N_PROVINCES = [
-    "H� N?i", "H?i Ph�ng", "Qu?ng Ninh", "H� Giang", "L�o Cai", "Lai Ch�u", "�i?n Bi�n", "Son La", "Y�n B�i", "H�a B�nh", 
-    "Ph� Th?", "Tuy�n Quang", "Cao B?ng", "B?c K?n", "Th�i Nguy�n", "L?ng Son", "B?c Giang", "B?c Ninh", "H?i Duong", 
-    "Hung Y�n", "Vinh Ph�c", "H� Nam", "Nam �?nh", "Ninh B�nh", "Th�i B�nh"
+    "Hà Nội", "Hải Phòng", "Quảng Ninh", "Hà Giang", "Lào Cai", "Lai Châu", "Điện Biên", "Sơn La", "Yên Bái", "Hòa Bình", 
+    "Phú Thọ", "Tuyên Quang", "Cao Bằng", "Bắc Kạn", "Thái Nguyên", "Lạng Sơn", "Bắc Giang", "Bắc Ninh", "Hải Dương", 
+    "Hưng Yên", "Vĩnh Phúc", "Hà Nam", "Nam Định", "Ninh Bình", "Thái Bình"
 ];
 
 const C_PROVINCES = [
-    "Thanh H�a", "Ngh? An", "H� Tinh", "Qu?ng B�nh", "Qu?ng Tr?", "Th?a Thi�n Hu?", "�� N?ng", "Qu?ng Nam", "Qu?ng Ng�i", 
-    "B�nh �?nh", "Ph� Y�n", "Kh�nh H�a", "Ninh Thu?n", "B�nh Thu?n", "Kon Tum", "Gia Lai", "�?k L?k", "�?k N�ng", "L�m �?ng"
+    "Thanh Hóa", "Nghệ An", "Hà Tĩnh", "Quảng Bình", "Quảng Trị", "Thừa Thiên Huế", "Đà Nẵng", "Quảng Nam", "Quảng Ngãi", 
+    "Bình Định", "Phú Yên", "Khánh Hòa", "Ninh Thuận", "Bình Thuận", "Kon Tum", "Gia Lai", "Đắk Lắk", "Đắk Nông", "Lâm Đồng"
 ];
 
 const S_PROVINCES = [
-    "H? Ch� Minh", "C?n Tho", "B�nh Phu?c", "T�y Ninh", "B�nh Duong", "�?ng Nai", "B� R?a - Vung T�u", "Long An", 
-    "Ti?n Giang", "B?n Tre", "Tr� Vinh", "Vinh Long", "�?ng Th�p", "An Giang", "Ki�n Giang", "H?u Giang", "S�c Trang", 
-    "B?c Li�u", "C� Mau"
+    "Hồ Chí Minh", "Cần Thơ", "Bình Phước", "Tây Ninh", "Bình Dương", "Đồng Nai", "Bà Rịa - Vũng Tàu", "Long An", 
+    "Tiền Giang", "Bến Tre", "Trà Vinh", "Vĩnh Long", "Đồng Tháp", "An Giang", "Kiên Giang", "Hậu Giang", "Sóc Trăng", 
+    "Bạc Liêu", "Cà Mau"
 ];
 
 function generateProvinceLessons(provName, provId) {
     try {
         const topics = [
-            { id: "vt", name: "V? tr� d?a l�" },
-            { id: "tn", name: "�i?u ki?n t? nhi�n" },
+            { id: "vt", name: "Vị trí� d?a l�" },
+            { id: "tn", name: "�Điều kiện tự nhiên�n" },
             { id: "dc", name: "D�n cu" },
             { id: "vh", name: "Van h�a" },
-            { id: "kt", name: "Kinh t?" },
-            { id: "dl", name: "Du l?ch" }
+            { id: "kt", name: "Kinh tế" },
+            { id: "dl", name: "Du lịch" }
         ];
 
         let lessons = [];
