@@ -1,31 +1,96 @@
-"use client"; // BẮT BUỘC: Đánh dấu đây là Client Component
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import { db } from '../lib/firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default function LevelSelection() {
-  // BẮT BUỘC: Quản lý trạng thái hiển thị bằng React State, KHÔNG dùng DOM manipulation
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [session, setSession] = useState<{email: string, name: string} | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsMounted(true);
+    
+    // Đọc session từ localStorage theo cơ chế cũ của app
+    const sessionStr = localStorage.getItem('lm_session');
+    
+    if (sessionStr) {
+      try {
+        const parsedSession = JSON.parse(sessionStr);
+        setSession(parsedSession);
+        
+        // Lấy thông tin user từ Firestore
+        const fetchUserData = async () => {
+          try {
+            const userDocRef = doc(db, 'users', parsedSession.email);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              // Nếu chưa có grade, mở form chọn lớp
+              if (!userData.grade) {
+                setIsOpen(true);
+              } else {
+                // Đã có grade -> redirect vào map
+                window.location.href = '/map.html';
+              }
+            } else {
+               setIsOpen(true);
+            }
+          } catch (error) {
+            console.error("Lỗi khi fetch user data:", error);
+            setIsOpen(true);
+          } finally {
+            setLoading(false);
+          }
+        };
+        fetchUserData();
+      } catch (e) {
+        setLoading(false);
+        window.location.href = '/loginout.html';
+      }
+    } else {
+      // Chưa đăng nhập
+      window.location.href = '/loginout.html';
+    }
   }, []);
 
-  // Hàm xử lý đóng Modal chọn cấp học
-  const closeLevelSelection = () => {
-    setIsOpen(false);
+  const handleSelectGrade = async (grade: number) => {
+    if (!session || !session.email) return;
+    
+    setLoading(true);
+    try {
+      const userDocRef = doc(db, 'users', session.email);
+      await updateDoc(userDocRef, { grade: grade });
+      
+      Swal.fire({
+        title: 'Thành công!',
+        text: `Đã cập nhật khối lớp ${grade}! Bắt đầu hành trình thôi!`,
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      }).then(() => {
+        window.location.href = '/map.html';
+      });
+    } catch (error) {
+      console.error("Lỗi khi lưu khối lớp:", error);
+      Swal.fire('Lỗi', 'Không thể lưu khối lớp. Vui lòng thử lại!', 'error');
+      setLoading(false);
+    }
   };
 
-  // Hàm xử lý chọn lớp
-  const handleSelectGrade = (grade: number) => {
-    console.log(`Đã chọn lớp ${grade}`);
-    // Logic lưu cấp học vào context/localStorage ở đây
-    closeLevelSelection();
-  };
+  if (!isMounted || loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-sm">
+        <div className="text-white text-2xl animate-pulse">Đang kiểm tra thông tin...</div>
+      </div>
+    );
+  }
 
-  // Nếu isOpen = false, component sẽ không render phần UI này
-  if (!isMounted || !isOpen) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-sm">

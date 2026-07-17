@@ -41,13 +41,16 @@
             </div>
         </div>
 
-        <!-- ── ARENA BUFFS ── -->
-        <div id="arenaBuffs" style="display: none; gap: 10px;">
-            <button id="btnUseDouble" class="bento-btn" style="padding: 5px 10px; font-size: 0.9rem; background: rgba(255,200,0,0.2); color: #ffc800; border: 1px solid #ffc800;">
-                <i class="fa-solid fa-bolt"></i> x2 (<span id="countDouble">0</span>)
+        <!-- ── QUIZ BOOSTERS ── -->
+        <div id="quizBoosters" style="display: flex; gap: 10px;">
+            <button id="btnUseFreeze" class="bento-btn" onclick="useBooster('freeze')" style="padding: 5px 10px; font-size: 0.9rem; background: rgba(28,176,246,0.2); color: #1cb0f6; border: 1px solid #1cb0f6;" title="Đóng băng thời gian">
+                <i class="fa-solid fa-snowflake"></i> (<span id="countFreeze">1</span>)
             </button>
-            <button id="btnUse5050" class="bento-btn" style="padding: 5px 10px; font-size: 0.9rem; background: rgba(206,130,255,0.2); color: #ce82ff; border: 1px solid #ce82ff;">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> 50/50 (<span id="count5050">0</span>)
+            <button id="btnUse5050" class="bento-btn" onclick="useBooster('5050')" style="padding: 5px 10px; font-size: 0.9rem; background: rgba(206,130,255,0.2); color: #ce82ff; border: 1px solid #ce82ff;" title="Ẩn 2 đáp án sai">
+                <i class="fa-solid fa-scale-balanced"></i> (<span id="count5050">1</span>)
+            </button>
+            <button id="btnUseRemove1" class="bento-btn" onclick="useBooster('remove1')" style="padding: 5px 10px; font-size: 0.9rem; background: rgba(255,75,75,0.2); color: #ff4b4b; border: 1px solid #ff4b4b;" title="Bỏ đi 1 phương án sai">
+                <i class="fa-solid fa-trash-can"></i> (<span id="countRemove1">1</span>)
             </button>
         </div>
     </header>

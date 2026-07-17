@@ -1159,6 +1159,8 @@ async function initChatBubble() {
             </div>
         </div>
         <div id="chatInputArea" style="padding: 10px; border-top: 1px solid var(--gray-border); display: flex; gap: 10px;">
+            <input type="file" id="chatImageInput" style="display:none;" accept="image/*">
+            <button id="btnChatImage" onclick="document.getElementById('chatImageInput').click()" style="background: rgba(255,255,255,0.1); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer;"><i class="fa-solid fa-image"></i></button>
             <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." style="flex: 1; padding: 10px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none;">
             <button id="btnSendChat" style="background: var(--blue); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
@@ -1194,7 +1196,13 @@ async function initChatBubble() {
         snapshot.forEach(doc => {
             const data = doc.data();
             const isUser = data.senderRole === 'user';
-            msgContainer.innerHTML += `<div style="align-self: ${isUser ? 'flex-end' : 'flex-start'}; background: ${isUser ? 'var(--blue)' : 'rgba(255,255,255,0.1)'}; padding: 10px 15px; border-radius: ${isUser ? '15px 15px 5px 15px' : '15px 15px 15px 5px'}; max-width: 80%; font-size: 0.9rem;">${data.text}</div>`;
+            
+            let contentHtml = data.text;
+            if (data.imageUrl) {
+                contentHtml += `<br><img src="${data.imageUrl}" style="max-width: 100%; border-radius: 10px; margin-top: 5px; cursor: pointer;" onclick="window.open('${data.imageUrl}', '_blank')">`;
+            }
+            
+            msgContainer.innerHTML += `<div style="align-self: ${isUser ? 'flex-end' : 'flex-start'}; background: ${isUser ? 'var(--blue)' : 'rgba(255,255,255,0.1)'}; padding: 10px 15px; border-radius: ${isUser ? '15px 15px 5px 15px' : '15px 15px 15px 5px'}; max-width: 80%; font-size: 0.9rem;">${contentHtml}</div>`;
         });
         msgContainer.scrollTop = msgContainer.scrollHeight;
     });
@@ -1260,11 +1268,125 @@ async function initChatBubble() {
                 userName: sessionUser.name || 'Người dùng',
                 userEmail: sessionUser.email
             });
+            
+            // AI Fallback logic (22:00 -> 07:00)
+            const hour = new Date().getHours();
+            if (hour >= 22 || hour <= 7) {
+                setTimeout(async () => {
+                    const aiReply = "Chào bạn, hiện tại CSKH đang nghỉ ngơi (22:00 - 07:00). Tôi là trợ lý AI. Yêu cầu của bạn đã được ghi nhận và CSKH sẽ hỗ trợ sớm nhất vào sáng hôm sau. Xin cảm ơn!";
+                    await db.collection('support_chats').doc(currentChatDocId).collection('messages').add({
+                        text: aiReply,
+                        senderRole: 'cs',
+                        senderEmail: 'bot@viegeo.online',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    await db.collection('support_chats').doc(currentChatDocId).update({
+                        lastMessage: "AI: " + aiReply,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }, 1500);
+            }
         } catch(e) { console.error(e); }
     };
+    
+    // Image Upload Logic
+    const imageInput = document.getElementById('chatImageInput');
+    if (imageInput) {
+        imageInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // UI feedback
+            const inp = document.getElementById('chatInput');
+            inp.placeholder = "Đang tải ảnh lên...";
+            inp.disabled = true;
+            
+            try {
+                const storageRef = firebase.storage().ref();
+                const fileRef = storageRef.child(`chat_images/${currentChatDocId}/${Date.now()}_${file.name}`);
+                const snapshot = await fileRef.put(file);
+                const downloadURL = await snapshot.ref.getDownloadURL();
+                
+                await db.collection('support_chats').doc(currentChatDocId).collection('messages').add({
+                    text: "Đã gửi một ảnh",
+                    imageUrl: downloadURL,
+                    senderRole: 'user',
+                    senderEmail: sessionUser.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                await db.collection('support_chats').doc(currentChatDocId).update({
+                    status: 'open',
+                    lastMessage: "User: Đã gửi một ảnh",
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+            } catch (error) {
+                console.error("Lỗi upload ảnh:", error);
+                alert("Lỗi tải ảnh. Vui lòng thử lại.");
+            } finally {
+                inp.placeholder = "Nhập tin nhắn...";
+                inp.disabled = false;
+                imageInput.value = "";
+            }
+        });
+    }
     
     document.getElementById('btnSendChat').onclick = sendMsg;
     document.getElementById('chatInput').onkeypress = (e) => { if(e.key==='Enter') sendMsg(); };
 }
 
 setTimeout(initChatBubble, 1000);
+
+// ==========================================
+// TASKBAR LOGIC (NEW)
+// ==========================================
+
+window.toggleTheme = function() {
+    document.body.classList.toggle('light-mode');
+    const icon = document.getElementById('themeIcon');
+    if (document.body.classList.contains('light-mode')) {
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+    } else {
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
+    }
+};
+
+window.openParentModal = function() {
+    document.getElementById('parentPinModal').style.display = 'flex';
+};
+
+window.verifyParentPin = function() {
+    const pin = document.getElementById('parentPinInput').value;
+    if (pin === '1234') {
+        window.location.href = '/parent.html';
+    } else {
+        showToast('Mã PIN không đúng!', true);
+    }
+};
+
+const btnLogoutMap = document.getElementById('btnLogoutMap');
+if (btnLogoutMap) {
+    btnLogoutMap.addEventListener('click', () => {
+        localStorage.clear();
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            firebase.auth().signOut().then(() => {
+                window.location.href = '/loginout.html';
+            }).catch(() => {
+                window.location.href = '/loginout.html';
+            });
+        } else {
+            window.location.href = '/loginout.html';
+        }
+    });
+}
+
+// Sync dropdown to current grade
+setTimeout(() => {
+    const gradeSelectDropdown = document.getElementById('gradeSelectDropdown');
+    if (gradeSelectDropdown && gameState.grade) {
+        gradeSelectDropdown.value = gameState.grade;
+    }
+}, 500);

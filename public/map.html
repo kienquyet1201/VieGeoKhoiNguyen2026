@@ -54,9 +54,39 @@
                 <div class="stat-pill" style="color: #58cc02;"><i class="fa-solid fa-star"></i> <span id="hdrXp">0</span></div>
                 <div class="stat-pill" style="color: #ce82ff;"><i class="fa-solid fa-shield-halved"></i> Lv.<span id="hdrLevel">1</span></div>
                 <div class="stat-pill" style="color: #ff9600;"><i class="fa-solid fa-medal"></i> <span id="hdrBadge">0</span></div>
-                <button class="bento-btn" onclick="openGradeSwitch()" title="Đổi Khối Lớp" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; color: white; margin-left: auto; font-size: 0.9rem;">
-                    <i class="fa-solid fa-graduation-cap" style="color: #1cb0f6;"></i> Lớp <span id="hdrGrade">?</span>
-                </button>
+                <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+                    <select id="gradeSelectDropdown" onchange="window.selectGrade(parseInt(this.value))" style="background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 20px; color: white; border: none; outline: none; font-family: inherit;">
+                        <option value="5" style="color: black;">Lớp 5</option>
+                        <option value="9" style="color: black;">Lớp 9</option>
+                        <option value="12" style="color: black;">Lớp 12</option>
+                    </select>
+
+                    <button class="bento-btn" onclick="toggleTheme()" title="Sáng/Tối" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                        <i id="themeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <button class="bento-btn" onclick="openParentModal()" title="Dành cho Phụ Huynh" style="background: #ce82ff; padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                        <i class="fa-solid fa-users"></i> Phụ Huynh
+                    </button>
+
+                    <button class="bento-btn" id="btnLogoutMap" title="Đăng Xuất" style="background: #ff4b4b; padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem;">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PARENT PIN MODAL -->
+            <div id="parentPinModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+                <div style="background: #1e293b; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%; border: 1px solid rgba(255,255,255,0.1);">
+                    <i class="fa-solid fa-lock" style="font-size: 3rem; color: #ce82ff; margin-bottom: 20px;"></i>
+                    <h3 style="color: white; margin-bottom: 10px; font-size: 1.5rem;">Cổng Phụ Huynh</h3>
+                    <p style="color: #aaa; margin-bottom: 20px;">Vui lòng nhập mã PIN (Mặc định: 1234) để truy cập.</p>
+                    <input type="password" id="parentPinInput" placeholder="****" style="width: 100%; padding: 15px; border-radius: 10px; border: none; text-align: center; font-size: 1.5rem; margin-bottom: 20px; background: rgba(255,255,255,0.1); color: white; letter-spacing: 10px;" maxlength="4">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="bento-btn" onclick="document.getElementById('parentPinModal').style.display='none'" style="flex: 1; background: rgba(255,255,255,0.1); color: white;">Hủy</button>
+                        <button class="bento-btn" onclick="verifyParentPin()" style="flex: 1; background: #ce82ff; color: white;">Xác Nhận</button>
+                    </div>
+                </div>
             </div>
 
             <!-- TAB: MAP (LEARN) -->
@@ -378,6 +408,7 @@
     <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
     <script src="firebase-init.js"></script>
 
     <!-- EmailJS SDK -->

@@ -4,7 +4,7 @@
 
 const currentSession = localStorage.getItem('lm_session');
 if (currentSession) {
-    window.location.href = 'map.html';
+    window.location.href = '/';
 }
 
 const loginForm = document.getElementById('loginForm');
@@ -13,7 +13,7 @@ const loginMsg = document.getElementById('loginMessage'); // Đã khớp ID HTML
 const regMsg = document.getElementById('registerMessage'); // Đã khớp ID HTML
 
 const QUIZ_PAGE = 'index.html';
-const MAP_PAGE = 'map.html';
+const MAP_PAGE = '/';
 
 // 1. ĐĂNG NHẬP
 function showToast(msg, isSuccess = true) {
@@ -78,6 +78,31 @@ if (loginForm) {
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 if (userData.password === pass) {
+                    // STREAK LOGIC
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    let newStreak = userData.streak || 1;
+                    let lastLogin = userData.lastLoginDate ? new Date(userData.lastLoginDate) : new Date(0);
+                    lastLogin.setHours(0, 0, 0, 0);
+                    
+                    const diffTime = Math.abs(today - lastLogin);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    
+                    if (diffDays === 1) {
+                        newStreak += 1;
+                    } else if (diffDays > 1) {
+                        newStreak = 1;
+                    }
+                    
+                    await db.collection('users').doc(email).update({
+                        streak: newStreak,
+                        lastLoginDate: new Date().toISOString()
+                    });
+                    
+                    // Cập nhật lại vào object để dùng cho localStorage
+                    userData.streak = newStreak;
+                    
                     // RBAC check
                     let userRoles = userData.roles || ['user'];
                     if (userData.email === 'kienquyet1201@gmail.com') {
@@ -270,6 +295,7 @@ if (btnConfirmOtp) {
                     email: tempRegData.email,
                     password: tempRegData.pass,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLoginDate: new Date().toISOString(),
                     xp: 0,
                     hearts: 2,
                     accountStatus: 'free',
