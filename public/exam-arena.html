@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đấu trường Luyện thi THPT - VieGeo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="bento.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div class="container mx-auto p-4">
+        <header class="flex justify-between items-center bg-white p-4 rounded-xl shadow mb-6">
+            <h1 class="text-2xl font-bold text-sky-700">Đấu trường Luyện thi THPT</h1>
+            <div class="text-xl font-mono text-red-600 font-bold" id="examTimer">50:00</div>
+        </header>
+        
+        <div class="flex gap-6">
+            <!-- Question List -->
+            <div class="w-3/4 bg-white p-6 rounded-xl shadow">
+                <h2 class="text-xl font-bold mb-4">Câu 1: Căn cứ vào Atlat Địa lí Việt Nam...</h2>
+                <div class="space-y-3">
+                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> A. Đáp án A</label>
+                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> B. Đáp án B</label>
+                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> C. Đáp án C</label>
+                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> D. Đáp án D</label>
+                </div>
+            </div>
+            
+            <!-- Checkboard -->
+            <div class="w-1/4 bg-white p-6 rounded-xl shadow">
+                <h3 class="font-bold mb-3">Danh sách câu hỏi (40 câu)</h3>
+                <div class="grid grid-cols-4 gap-2">
+                    <!-- Generate 40 boxes -->
+                    <script>
+                        for(let i=1; i<=40; i++) {
+                            document.write(`<button class="p-2 border rounded text-center hover:bg-sky-100">${i}</button>`);
+                        }
+                    </script>
+                </div>
+                <button class="w-full mt-6 bg-sky-600 text-white font-bold py-3 rounded-xl hover:bg-sky-700">NỘP BÀI</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,17 +1,17 @@
 function generateAIInsight(state) {
     if (!state.nodeResults || Object.keys(state.nodeResults).length === 0) {
-        return "H? th?ng AI dang thu th?p thêm d? li?u t? các bài ki?m tra c?a b?n d? dua ra nh?n xét chi ti?t nh?t. Hãy ti?p t?c h?c t?p nhé!";
+        return "H? th?ng AI dang thu th?p thï¿½m d? li?u t? cï¿½c bï¿½i ki?m tra c?a b?n d? dua ra nh?n xï¿½t chi ti?t nh?t. Hï¿½y ti?p t?c h?c t?p nhï¿½!";
     }
 
     let results = Object.values(state.nodeResults);
     let avgAccuracy = results.reduce((sum, r) => sum + r.accuracy, 0) / results.length;
     
     if (avgAccuracy >= 80) {
-        return "AI phân tích: B?n c?c k? am hi?u v? Ð?a lý Mi?n B?c (di?m trung bình " + Math.round(avgAccuracy) + "%), ki?n th?c r?t v?ng vàng! Ti?p t?c phát huy th? m?nh này nhé.";
+        return "AI phï¿½n tï¿½ch: B?n c?c k? am hi?u v? ï¿½?a lï¿½ Mi?n B?c (di?m trung bï¿½nh " + Math.round(avgAccuracy) + "%), ki?n th?c r?t v?ng vï¿½ng! Ti?p t?c phï¿½t huy th? m?nh nï¿½y nhï¿½.";
     } else if (avgAccuracy >= 50) {
-        return "AI phân tích: B?n n?m du?c ki?n th?c co b?n v? Ð?a lý (di?m trung bình " + Math.round(avgAccuracy) + "%), nhung c?n ôn t?p thêm m?t s? chuyên d? d? d?t k?t qu? xu?t s?c hon.";
+        return "AI phï¿½n tï¿½ch: B?n n?m du?c ki?n th?c co b?n v? ï¿½?a lï¿½ (di?m trung bï¿½nh " + Math.round(avgAccuracy) + "%), nhung c?n ï¿½n t?p thï¿½m m?t s? chuyï¿½n d? d? d?t k?t qu? xu?t s?c hon.";
     } else {
-        return "AI phân tích: B?n dang g?p m?t chút khó khan v?i Ð?a lý (di?m trung bình " + Math.round(avgAccuracy) + "%). Ð?ng lo l?ng, hãy xem l?i các bài h?c lý thuy?t nhé!";
+        return "AI phï¿½n tï¿½ch: B?n dang g?p m?t chï¿½t khï¿½ khan v?i ï¿½?a lï¿½ (di?m trung bï¿½nh " + Math.round(avgAccuracy) + "%). ï¿½?ng lo l?ng, hï¿½y xem l?i cï¿½c bï¿½i h?c lï¿½ thuy?t nhï¿½!";
     }
 }
 // ============================================================================
@@ -946,15 +946,15 @@ function checkAndUnlockAchievements(state) {
             // Upgrade target user
             db.collection('users').doc(targetEmail).update({ accountStatus: 'premium' })
                 .then(() => {
-                    showToast('Ðã phê duy?t Premium thành công cho: ' + targetEmail);
+                    showToast('ï¿½ï¿½ phï¿½ duy?t Premium thï¿½nh cï¿½ng cho: ' + targetEmail);
                     // Remove url params
                     window.history.replaceState({}, document.title, window.location.pathname);
                 })
                 .catch((err) => {
-                    showToast('L?i phê duy?t: ' + err.message, true);
+                    showToast('L?i phï¿½ duy?t: ' + err.message, true);
                 });
         } else {
-            showToast('B?n không có quy?n duy?t Premium!', true);
+            showToast('B?n khï¿½ng cï¿½ quy?n duy?t Premium!', true);
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
@@ -1434,32 +1434,56 @@ window.redoSurvey = function() {
 document.addEventListener('DOMContentLoaded', () => {
     const roleSwitcher = document.getElementById('globalRoleSwitcher');
     if (roleSwitcher && sessionUser && sessionUser.roles) {
-        // Ch? hi?n th? n?u role th?t là admin ho?c cs
+        // Ch? hi?n th? n?u role th?t lï¿½ admin ho?c cs
         if (sessionUser.roles.includes('admin') || sessionUser.roles.includes('cs')) {
             roleSwitcher.classList.remove('hidden');
             
-            // Set giá tr? hi?n t?i
+            // Set giï¿½ tr? hi?n t?i
             if (sessionUser.activeRole) {
                 roleSwitcher.value = sessionUser.activeRole;
             }
             
-            // X? lý s? ki?n khi ch?n vai trò m?i
+            // X? lï¿½ s? ki?n khi ch?n vai trï¿½ m?i
             roleSwitcher.addEventListener('change', (e) => {
                 const newRole = e.target.value;
                 if (newRole === 'restore') {
-                    // Khôi ph?c quy?n cao nh?t
+                    // Khï¿½i ph?c quy?n cao nh?t
                     sessionUser.activeRole = sessionUser.roles.includes('admin') ? 'admin' : 'cs';
                 } else {
                     sessionUser.activeRole = newRole;
                 }
                 
-                // Luu state vào LocalStorage, TUY?T Ð?I KHÔNG LUU LÊN FIRESTORE
+                // Luu state vï¿½o LocalStorage, TUY?T ï¿½?I KHï¿½NG LUU Lï¿½N FIRESTORE
                 localStorage.setItem('lm_session', JSON.stringify(sessionUser));
                 
-                // T?i l?i trang d? áp d?ng quy?n
+                // T?i l?i trang d? ï¿½p d?ng quy?n
                 window.location.reload();
             });
         }
     }
 });
 
+
+
+// TELEMETRY & LEARNING PROFILE UPDATE
+function updateLearningProfile(userId, quizResult) {
+    try {
+        console.log(`Updating telemetry for ${userId}...`);
+        // Mock logic: Update weakness tags based on wrong answers
+        let weaknessTags = [];
+        if (quizResult.score < 50) {
+            weaknessTags.push('Cáº§n Ã´n táº­p cÆ¡ báº£n');
+        }
+        
+        // Mock state update
+        if (typeof state !== 'undefined') {
+            if (!state.telemetry) {
+                state.telemetry = { timeSpentPerQuestion: [], weaknessTags: [], studyHabits: [] };
+            }
+            state.telemetry.weaknessTags = [...new Set([...state.telemetry.weaknessTags, ...weaknessTags])];
+            if (typeof saveGameState === 'function') saveGameState(state);
+        }
+    } catch (e) {
+        console.error('Error updating learning profile:', e);
+    }
+}

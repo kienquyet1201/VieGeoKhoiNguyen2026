@@ -57,14 +57,18 @@ function renderRegions() {
     let htmlContent = '';
     LEARNING_REGIONS.forEach((region, i) => {
         htmlContent += `
-            <div class="bento-card region-card" data-index="${i}" style="cursor: pointer; border: 2px solid ${region.color}; background: #ffffff; color: #0c4a6e; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 280px; text-align: center;">
+            <div class="bento-card region-card bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg transition transform hover:-translate-y-1 rounded-2xl p-8 cursor-pointer flex flex-col items-center justify-center w-full" data-index="${i}" style="border-top-width: 4px; border-top-color: ${region.color};">
                 <div style="font-size: 4rem; color: ${region.color};"><i class="fa-solid fa-map-location-dot"></i></div>
                 <h3 style="font-size: 1.8rem; margin-top: 15px; font-weight: bold;">${region.name}</h3>
-                <p style="margin-top: 10px; font-size: 1.1rem;">${region.provinces.length} Tỉnh/Thành phố</p>
+                <p style="margin-top: 10px; font-size: 1.1rem; opacity: 0.8;">${region.provinces.length} Tỉnh/Thành phố</p>
             </div>
         `;
     });
-    mapContainer.innerHTML = htmlContent;
+    mapContainer.innerHTML = `<div id="interactive-map-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl mx-auto">
+        <!-- BẮT ĐẦU: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+        ${htmlContent}
+        <!-- KẾT THÚC: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+    </div>`;
 
     // Add event listeners after innerHTML
     document.querySelectorAll('.region-card').forEach(card => {
@@ -94,7 +98,11 @@ function renderProvinces() {
             </div>
         `;
     });
-    mapContainer.innerHTML = htmlContent;
+    mapContainer.innerHTML = `<div id="interactive-map-container" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;">
+        <!-- BẮT ĐẦU: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+        ${htmlContent}
+        <!-- KẾT THÚC: Khu vực chuẩn bị để nhúng SVG Bản đồ Việt Nam tương tác sau này -->
+    </div>`;
 
     document.querySelectorAll('.province-card').forEach(card => {
         card.addEventListener('click', function() {
@@ -302,3 +310,33 @@ window.switchRoleClientOnly = function(newRole) {
     // Refresh UI if necessary
     if(typeof updateStatsUI === 'function') updateStatsUI();
 };
+
+
+// GAMIFICATION: STREAK TRACKER
+function checkAndResetStreak() {
+    try {
+        let today = new Date().toISOString().split('T')[0];
+        if (state.lastLogin) {
+            let last = new Date(state.lastLogin);
+            let current = new Date(today);
+            let diffTime = Math.abs(current - last);
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 1 && diffDays !== 0) {
+                // Missed a day
+                state.streak = 0;
+            } else if (diffDays === 1) {
+                // Logged in consecutive day
+                // Streak is usually incremented elsewhere (e.g. completing a lesson), but we track login
+            }
+        }
+        state.lastLogin = today;
+        saveGameState(state);
+    } catch(e) {
+        console.error('Error tracking streak:', e);
+    }
+}
+// Execute streak check on load
+if(typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', checkAndResetStreak);
+}

@@ -27,3 +27,16 @@ export interface Region {
     color: string;
     provinces: Province[];
 }
+
+
+export interface TelemetryData {
+    timeSpentPerQuestion: number[]; // seconds per question
+    weaknessTags: string[]; // e.g., 'Atlat', 'Biểu đồ', 'Kinh tế vùng'
+    studyHabits: string[]; // e.g., 'Morning', 'Evening'
+}
+
+export interface UserProfileExtension {
+    telemetry: TelemetryData;
+    streak: number;
+    lastLogin: string; // ISO Date String
+}

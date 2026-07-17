@@ -220,29 +220,29 @@ const ARENA_MATCHES = [
 
 // ‚îÄ‚îÄ GEOGRAPHY CONTENT (Theo SGK) ‚îÄ‚îÄ
 const N_PROVINCES = [
-    "H‡ N?i", "H?i PhÚng", "Qu?ng Ninh", "H‡ Giang", "L‡o Cai", "Lai Ch‚u", "–i?n BiÍn", "Son La", "YÍn B·i", "HÚa BÏnh", 
-    "Ph˙ Th?", "TuyÍn Quang", "Cao B?ng", "B?c K?n", "Th·i NguyÍn", "L?ng Son", "B?c Giang", "B?c Ninh", "H?i Duong", 
-    "Hung YÍn", "Vinh Ph˙c", "H‡ Nam", "Nam –?nh", "Ninh BÏnh", "Th·i BÏnh"
+    "HÔøΩ N?i", "H?i PhÔøΩng", "Qu?ng Ninh", "HÔøΩ Giang", "LÔøΩo Cai", "Lai ChÔøΩu", "ÔøΩi?n BiÔøΩn", "Son La", "YÔøΩn BÔøΩi", "HÔøΩa BÔøΩnh", 
+    "PhÔøΩ Th?", "TuyÔøΩn Quang", "Cao B?ng", "B?c K?n", "ThÔøΩi NguyÔøΩn", "L?ng Son", "B?c Giang", "B?c Ninh", "H?i Duong", 
+    "Hung YÔøΩn", "Vinh PhÔøΩc", "HÔøΩ Nam", "Nam ÔøΩ?nh", "Ninh BÔøΩnh", "ThÔøΩi BÔøΩnh"
 ];
 
 const C_PROVINCES = [
-    "Thanh HÛa", "Ngh? An", "H‡ Tinh", "Qu?ng BÏnh", "Qu?ng Tr?", "Th?a ThiÍn Hu?", "–‡ N?ng", "Qu?ng Nam", "Qu?ng Ng„i", 
-    "BÏnh –?nh", "Ph˙ YÍn", "Kh·nh HÚa", "Ninh Thu?n", "BÏnh Thu?n", "Kon Tum", "Gia Lai", "–?k L?k", "–?k NÙng", "L‚m –?ng"
+    "Thanh HÔøΩa", "Ngh? An", "HÔøΩ Tinh", "Qu?ng BÔøΩnh", "Qu?ng Tr?", "Th?a ThiÔøΩn Hu?", "ÔøΩÔøΩ N?ng", "Qu?ng Nam", "Qu?ng NgÔøΩi", 
+    "BÔøΩnh ÔøΩ?nh", "PhÔøΩ YÔøΩn", "KhÔøΩnh HÔøΩa", "Ninh Thu?n", "BÔøΩnh Thu?n", "Kon Tum", "Gia Lai", "ÔøΩ?k L?k", "ÔøΩ?k NÔøΩng", "LÔøΩm ÔøΩ?ng"
 ];
 
 const S_PROVINCES = [
-    "H? ChÌ Minh", "C?n Tho", "BÏnh Phu?c", "T‚y Ninh", "BÏnh Duong", "–?ng Nai", "B‡ R?a - Vung T‡u", "Long An", 
-    "Ti?n Giang", "B?n Tre", "Tr‡ Vinh", "Vinh Long", "–?ng Th·p", "An Giang", "KiÍn Giang", "H?u Giang", "SÛc Trang", 
-    "B?c LiÍu", "C‡ Mau"
+    "H? ChÔøΩ Minh", "C?n Tho", "BÔøΩnh Phu?c", "TÔøΩy Ninh", "BÔøΩnh Duong", "ÔøΩ?ng Nai", "BÔøΩ R?a - Vung TÔøΩu", "Long An", 
+    "Ti?n Giang", "B?n Tre", "TrÔøΩ Vinh", "Vinh Long", "ÔøΩ?ng ThÔøΩp", "An Giang", "KiÔøΩn Giang", "H?u Giang", "SÔøΩc Trang", 
+    "B?c LiÔøΩu", "CÔøΩ Mau"
 ];
 
 function generateProvinceLessons(provName, provId) {
     try {
         const topics = [
-            { id: "vt", name: "V? trÌ d?a l˝" },
-            { id: "tn", name: "–i?u ki?n t? nhiÍn" },
-            { id: "dc", name: "D‚n cu" },
-            { id: "vh", name: "Van hÛa" },
+            { id: "vt", name: "V? trÔøΩ d?a lÔøΩ" },
+            { id: "tn", name: "ÔøΩi?u ki?n t? nhiÔøΩn" },
+            { id: "dc", name: "DÔøΩn cu" },
+            { id: "vh", name: "Van hÔøΩa" },
             { id: "kt", name: "Kinh t?" },
             { id: "dl", name: "Du l?ch" }
         ];
@@ -250,12 +250,12 @@ function generateProvinceLessons(provName, provId) {
         let lessons = [];
         
         topics.forEach((topic, index) => {
-            // L˝ thuy?t
+            // LÔøΩ thuy?t
             lessons.push({
                 id: provId + "_th_" + topic.id,
                 type: "theory",
-                title: "L˝ thuy?t: " + topic.name,
-                content: "–o?n d?c ng?n v? " + topic.name + " c?a " + provName + "...",
+                title: "LÔøΩ thuy?t: " + topic.name,
+                content: "ÔøΩo?n d?c ng?n v? " + topic.name + " c?a " + provName + "...",
                 image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ho_Hoan_Kiem.jpg/800px-Ho_Hoan_Kiem.jpg"
             });
             // Tr?c nghi?m
@@ -264,27 +264,27 @@ function generateProvinceLessons(provName, provId) {
                 type: "quiz",
                 title: "Luy?n t?p: " + topic.name,
                 questions: [
-                    { q: "–?c di?m " + topic.name.toLowerCase() + " c?a " + provName + " l‡ gÏ?", options: ["A", "B", "C", "D"], correctAnswer: 0, explanation: "–·p ·n d˙ng." }
+                    { q: "ÔøΩ?c di?m " + topic.name.toLowerCase() + " c?a " + provName + " lÔøΩ gÔøΩ?", options: ["A", "B", "C", "D"], correctAnswer: 0, explanation: "ÔøΩÔøΩp ÔøΩn dÔøΩng." }
                 ]
             });
 
-            // Midterm 1 sau 3 b‡i d?u
+            // Midterm 1 sau 3 bÔøΩi d?u
             if (index === 2) {
                 lessons.push({
                     id: provId + "_midterm_1",
                     type: "quiz_midterm",
-                    title: "Ki?m tra Gi?a khÛa 1 (" + provName + ")",
+                    title: "Ki?m tra Gi?a khÔøΩa 1 (" + provName + ")",
                     questions: [
                         { q: "T?ng h?p ki?n th?c ph?n 1 v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 1, explanation: "T?t." }
                     ]
                 });
             }
-            // Midterm 2 sau 3 b‡i cu?i
+            // Midterm 2 sau 3 bÔøΩi cu?i
             if (index === 5) {
                 lessons.push({
                     id: provId + "_midterm_2",
                     type: "quiz_midterm",
-                    title: "Ki?m tra Gi?a khÛa 2 (" + provName + ")",
+                    title: "Ki?m tra Gi?a khÔøΩa 2 (" + provName + ")",
                     questions: [
                         { q: "T?ng h?p ki?n th?c ph?n 2 v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 2, explanation: "Gi?i." }
                     ]
@@ -298,14 +298,14 @@ function generateProvinceLessons(provName, provId) {
             type: "quiz_final",
             title: "Ki?m tra T?ng h?p " + provName,
             questions: [
-                { q: "Ki?n th?c t?ng qu·t v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 3, explanation: "Xu?t s?c." }
+                { q: "Ki?n th?c t?ng quÔøΩt v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 3, explanation: "Xu?t s?c." }
             ]
         });
 
         return lessons;
     } catch (e) {
-        console.error("L?i khi t?o d? li?u b‡i h?c cho " + provName, e);
-        return []; // Fallback an to‡n
+        console.error("L·ªói khi t·∫°o d? li?u bÔøΩi h?c cho " + provName, e);
+        return []; // Fallback an toÔøΩn
     }
 }
 
@@ -335,25 +335,25 @@ function generateRegions() {
         return [
             {
                 id: "region_north",
-                name: "Mi?n B?c",
+                name: "Mi·ªÅn B·∫Øc",
                 color: "#ff4b4b",
                 provinces: northProvinces
             },
             {
                 id: "region_central",
-                name: "Mi?n Trung",
+                name: "Mi·ªÅn Trung",
                 color: "#ffc800",
                 provinces: centralProvinces
             },
             {
                 id: "region_south",
-                name: "Mi?n Nam",
+                name: "Mi·ªÅn Nam",
                 color: "#58cc02",
                 provinces: southProvinces
             }
         ];
     } catch (e) {
-        console.error("L?i khi t?o danh s·ch c·c Mi?n", e);
+        console.error("L·ªói khi t·∫°o danh sÔøΩch cÔøΩc Mi·ªÅn", e);
         return [];
     }
 }
