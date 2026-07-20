@@ -241,7 +241,7 @@ if (regForm) {
                 });
             } catch (error) {
                 console.warn("EmailJS failed, using fallback mode for testing.", error);
-                alert("Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode);
+                VieGeoUI.warning("Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode);
             }
 
             // Dù gửi thật hay fallback, vẫn mở bảng OTP cho phép nhập
@@ -370,7 +370,7 @@ if (forgotForm) {
                 });
             } catch (error) {
                 console.warn("EmailJS failed, using fallback mode for testing.");
-                alert("Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode);
+                VieGeoUI.warning("Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode);
             }
             
             otpEmailTarget.textContent = email;

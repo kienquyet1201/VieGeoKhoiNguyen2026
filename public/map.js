@@ -170,7 +170,7 @@ function renderLessons() {
                 if (typeof showToast === 'function') {
                     showToast("Bạn cần hoàn thành bài trước đó!", true);
                 } else {
-                    alert("Bạn cần hoàn thành bài trước đó!");
+                    VieGeoUI.warning("Bạn cần hoàn thành bài trước đó!");
                 }
             }
         };
@@ -223,7 +223,7 @@ if (state.learningProfile && !state.learningProfile.surveyDone) {
             if (typeof showToast === 'function') {
                 showToast('Đã tạo Learning Profile thành công!');
             } else {
-                alert('Đã tạo Learning Profile thành công!');
+                VieGeoUI.success('Đã tạo Learning Profile thành công!');
             }
         };
     }

@@ -7,7 +7,7 @@
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
@@ -213,7 +213,7 @@ body::after {
     border: 1.5px solid rgba(255,255,255,0.10);
     border-radius: 14px;
     color: #fff;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 1rem;
     font-weight: 500;
     outline: none;
@@ -261,7 +261,7 @@ body::after {
     padding: 16px;
     border: none;
     border-radius: 14px;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
@@ -320,7 +320,7 @@ body::after {
     gap: 8px;
     padding: 12px 24px;
     border-radius: 14px;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;

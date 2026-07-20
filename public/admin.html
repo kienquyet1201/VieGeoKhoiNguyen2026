@@ -24,7 +24,7 @@
             --gold: #f59e0b;
         }
         body {
-            margin: 0; padding: 20px; font-family: 'Inter', sans-serif;
+            margin: 0; padding: 20px; font-family: 'Be Vietnam Pro', sans-serif;
             background: var(--bg-dark); color: var(--text-primary);
         }
         h1 { color: var(--gold); border-bottom: 2px solid var(--bg-card); padding-bottom: 10px; }
@@ -55,6 +55,9 @@
         .role-switcher-menu a:last-child { border-bottom: none; }
         .role-switcher-menu a:hover { background: #334155; }
     </style>
+    <link rel="stylesheet" href="ui-foundation.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="ui-foundation.js"></script>
 </head>
 <body>
 
@@ -129,7 +132,7 @@
             </div>
         </div>
         <button onclick="processUpload()" id="btnProcessUpload" style="padding: 15px; width: 100%; background: var(--green); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px;"><i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật</button>
-        <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">Kết quả preview sẽ hiển thị ở đây...</div>
+        <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-size: 0.9rem;">Kết quả preview sẽ hiển thị ở đây...</div>
     </div> <!-- END TAB UPLOAD -->
 
     <div id="toast">Thông báo</div>
@@ -369,10 +372,10 @@
         };
 
         // Load initially — flexible RBAC (role-based, not email-only)
-        setTimeout(() => {
+        setTimeout(async () => {
             const sessionData = localStorage.getItem('lm_session');
             if (!sessionData) {
-                alert("Vui lòng đăng nhập trước!");
+                await VieGeoUI.warning("Vui lòng đăng nhập trước!");
                 window.location.href = 'loginout.html';
                 return;
             }
@@ -380,7 +383,7 @@
             // Allow access if role is admin OR email matches admin
             const isAdmin = sessionUser.role === 'admin' || sessionUser.email === 'kienquyet1201@gmail.com' || (sessionUser.roles && sessionUser.roles.includes('admin'));
             if (!isAdmin) {
-                alert("Bạn không có quyền truy cập trang quản trị!");
+                await VieGeoUI.error("Bạn không có quyền truy cập trang quản trị!");
                 window.location.href = 'map.html';
                 return;
             }

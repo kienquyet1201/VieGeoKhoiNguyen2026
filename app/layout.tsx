@@ -1,3 +1,5 @@
+import './globals.css'
+
 export const metadata = {
   title: 'VieGeo - Nền tảng học Địa lí',
   description: 'Gamification learning platform',

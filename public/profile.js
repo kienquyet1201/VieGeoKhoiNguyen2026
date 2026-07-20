@@ -91,15 +91,15 @@ if (profileForm) {
         // Logic đổi mật khẩu
         if (inputOldPass || inputNewPass) {
             if (!inputOldPass || !inputNewPass) {
-                alert("Vui lòng nhập cả mật khẩu cũ và mật khẩu mới để đổi mật khẩu!");
+                VieGeoUI.warning("Vui lòng nhập cả mật khẩu cũ và mật khẩu mới để đổi mật khẩu!");
                 return;
             }
             if (inputOldPass !== window.currentUserData.password) {
-                alert("Mật khẩu cũ không chính xác!");
+                VieGeoUI.error("Mật khẩu cũ không chính xác!");
                 return;
             }
             if (inputNewPass.length < 6) {
-                alert("Mật khẩu mới phải từ 6 ký tự trở lên.");
+                VieGeoUI.warning("Mật khẩu mới phải từ 6 ký tự trở lên.");
                 return;
             }
             updateData.password = inputNewPass;
@@ -115,7 +115,7 @@ if (profileForm) {
             // Cập nhật session nếu đổi tên
             localStorage.setItem('lm_session', JSON.stringify({ email: sessionUser.email, name: newName }));
             
-            alert("Đã lưu thông tin thành công!");
+            VieGeoUI.success("Đã lưu thông tin thành công!");
             
             oldPass.value = '';
             newPass.value = '';
@@ -124,7 +124,7 @@ if (profileForm) {
             btn.textContent = "Lưu Thay Đổi";
         } catch (error) {
             console.error("Lỗi cập nhật:", error);
-            alert("Lỗi khi lưu thông tin. Thử lại sau.");
+            VieGeoUI.error("Lỗi khi lưu thông tin. Thử lại sau.");
         }
     });
 }
@@ -142,11 +142,11 @@ if (btnPremium) {
                 status: 'pending',
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert("Đã gửi yêu cầu Mua Premium đến quản trị viên. Vui lòng chờ hệ thống xác nhận!");
+            VieGeoUI.success("Đã gửi yêu cầu Mua Premium đến quản trị viên. Vui lòng chờ hệ thống xác nhận!");
             btnPremium.innerHTML = '<i class="fa-solid fa-check"></i> Đã gửi yêu cầu';
         } catch (error) {
             console.error("Lỗi premium:", error);
-            alert("Lỗi khi gửi yêu cầu.");
+            VieGeoUI.error("Lỗi khi gửi yêu cầu.");
             btnPremium.disabled = false;
             btnPremium.innerHTML = '<i class="fa-solid fa-crown"></i> Yêu cầu Mua Premium';
         }

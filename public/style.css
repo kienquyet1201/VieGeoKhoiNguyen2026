@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
 /* ==========================================================================
    DESIGN SYSTEM & VARIABLES
    ========================================================================== */
@@ -27,7 +27,7 @@
     --color-analytical: #8B5CF6;  /* Purple */
     
     /* Font Stack */
-    --font-heading: 'Plus Jakarta Sans', sans-serif;
+    --font-heading: 'Be Vietnam Pro', sans-serif;
     --font-body: 'Be Vietnam Pro', sans-serif;
     
     /* Shadows & Blur */
@@ -46,7 +46,7 @@
 }
 
 body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     background-color: var(--bg-dark);
     color: var(--text-primary);
     margin: 0;
@@ -1232,7 +1232,7 @@ body.theme-female.light-mode .highlight-box {
 
 @media (max-width: 600px) {
     body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     background-color: var(--bg-dark);
     color: var(--text-primary);
     margin: 0;

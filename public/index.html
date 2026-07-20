@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trắc nghiệm Phong cách Học tập | Khám phá Bản thân</title>
-    <!-- Google Fonts: Plus Jakarta Sans & Be Vietnam Pro (Highly optimized for Vietnamese) -->
+    <!-- Google Fonts: Be Vietnam Pro (optimized for Vietnamese) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome for modern icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom stylesheet -->
@@ -24,6 +24,9 @@
             }
         })();
     </script>
+    <link rel="stylesheet" href="ui-foundation.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="ui-foundation.js"></script>
 </head>
 <body>
     <!-- Background Glow Elements -->
@@ -39,7 +42,7 @@
     </button>
 
     <!-- Logout Button -->
-    <button id="logout-btn" class="logout-btn" title="Đăng xuất" onclick="(function(){localStorage.removeItem('lm_session');window.location.href="/loginout";})()">
+    <button id="logout-btn" class="logout-btn" title="Đăng xuất" onclick="(function(){localStorage.removeItem('lm_session');window.location.href='/loginout';})()">
         <i class="fa-solid fa-right-from-bracket"></i>
     </button>
 

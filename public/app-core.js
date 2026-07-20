@@ -9,13 +9,20 @@ if (!sessionData) {
     }
     window.location.href = 'loginout.html';
 }
-const sessionUser = JSON.parse(sessionData);
+let sessionUser = {};
+try {
+    sessionUser = sessionData ? JSON.parse(sessionData) : {};
+} catch (error) {
+    console.error('Dữ liệu phiên đăng nhập không hợp lệ:', error);
+    localStorage.removeItem('lm_session');
+    window.location.replace('loginout.html');
+}
 
 let gameState = getGameState();
 
 // ĐỒNG BỘ DATA TỪ FIREBASE KHI LOAD TRANG (REALTIME)
 function setupRealtimeAuth() {
-    if (typeof db === 'undefined') return;
+    if (typeof db === 'undefined' || !sessionUser || !sessionUser.email) return;
     db.collection('users').doc(sessionUser.email).onSnapshot(async (doc) => {
         if (doc.exists) {
             const data = doc.data();
@@ -25,7 +32,7 @@ function setupRealtimeAuth() {
                 // Reset flag in DB so they can login again later
                 await db.collection('users').doc(sessionUser.email).update({ forceLogout: false });
                 localStorage.clear();
-                alert("Tài khoản của bạn đã bị Quản trị viên đăng xuất khỏi hệ thống!");
+                await VieGeoUI.warning("Tài khoản của bạn đã bị Quản trị viên đăng xuất khỏi hệ thống!");
                 window.location.href = 'loginout.html';
                 return;
             }
