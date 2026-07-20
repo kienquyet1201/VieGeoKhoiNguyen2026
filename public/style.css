@@ -3,10 +3,11 @@
 /* ========================================================================== 
    CONSOLIDATED UI FOUNDATION
    ========================================================================== */
-*, *::before, *::after {
+* {
     box-sizing: border-box;
     font-family: 'Be Vietnam Pro', sans-serif !important;
 }
+*::before, *::after { box-sizing: border-box; }
 
 html { width: 100%; min-height: 100%; text-size-adjust: 100%; }
 body, button, input, select, textarea { font-family: 'Be Vietnam Pro', sans-serif !important; }
@@ -21,6 +22,12 @@ i.fa-solid, i.fa-regular, i.fa-light, i.fa-thin, i.fa-duotone,
     font-style: normal !important;
 }
 i.fab, i.fa-brands { font-family: 'Font Awesome 6 Brands' !important; font-style: normal !important; }
+.fa::before, .fas::before, .far::before, .fal::before, .fat::before, .fad::before,
+.fa-solid::before, .fa-regular::before, .fa-light::before, .fa-thin::before,
+.fa-duotone::before, .fa-classic::before, .fa-sharp::before {
+    font-family: 'Font Awesome 6 Free' !important;
+}
+.fab::before, .fa-brands::before { font-family: 'Font Awesome 6 Brands' !important; }
 .island-btn.completed::after { font-family: 'Font Awesome 6 Free' !important; font-weight: 900 !important; }
 
 :focus-visible { outline: 3px solid #1cb0f6; outline-offset: 3px; }

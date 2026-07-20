@@ -71,10 +71,10 @@
             <div class="role-switcher">
                 <button style="padding: 10px 20px; background: var(--bg-card); color: white; border: 1px solid #334155; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-users-gear"></i> Chuyển đổi quyền</button>
                 <div class="role-switcher-menu">
-                    <a href="#" onclick="switchRoleClientOnly('map')"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
-                    <a href="#" onclick="switchRoleClientOnly('parent')"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                    <a href="#" onclick="switchRoleClientOnly('cs')"><i class="fa-solid fa-headset"></i> CSKH</a>
-                    <a href="#" onclick="switchRoleClientOnly('admin')" style="color: var(--gold);"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+                    <a href="map.html" onclick="return switchRoleClientOnly('user')"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
+                    <a href="parent.html" onclick="return switchRoleClientOnly('parent')"><i class="fa-solid fa-children"></i> Phụ huynh</a>
+                    <a href="cs.html" onclick="return switchRoleClientOnly('cs')"><i class="fa-solid fa-headset"></i> CSKH</a>
+                    <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="color: var(--gold);"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
                 </div>
             </div>
             <button onclick="window.location.href='loginout.html'" style="background: rgba(255,75,75,0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
@@ -363,11 +363,13 @@
             try {
                 const session = JSON.parse(localStorage.getItem('lm_session')) || {};
                 const normalizedRole = role === 'map' ? 'user' : role;
+                const roleLinks = { user: 'map.html', parent: 'parent.html', cs: 'cs.html', admin: 'admin.html', teacher: 'teacher-dashboard.html' };
                 session.role = normalizedRole;
                 session.activeRole = normalizedRole;
                 localStorage.setItem('lm_session', JSON.stringify(session));
-                window.location.href = '/' + normalizedRole + '-dashboard';
+                window.location.href = roleLinks[normalizedRole] || roleLinks.user;
             } catch(e) { console.error('switchRole error:', e); }
+            return false;
         };
 
         // Load initially — flexible RBAC (role-based, not email-only)

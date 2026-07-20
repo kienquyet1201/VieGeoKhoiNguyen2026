@@ -26,10 +26,10 @@
             <div style="position: relative; display: inline-block; margin-left: 10px;" onmouseover="document.getElementById('parentRoleDrop').style.display='block'" onmouseout="document.getElementById('parentRoleDrop').style.display='none'">
                 <button class="bento-btn" style="background: rgba(255,255,255,0.1);"><i class="fa-solid fa-users-gear"></i> Đổi Quyền</button>
                 <div id="parentRoleDrop" style="display: none; position: absolute; top: 100%; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
-                    <a href="#" onclick="switchRoleClientOnly('map')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
-                    <a href="#" onclick="switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                    <a href="#" onclick="switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
-                    <a href="#" onclick="switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+                    <a href="map.html" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
+                    <a href="parent.html" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
+                    <a href="cs.html" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
+                    <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
                 </div>
             </div>
         </div>
@@ -109,11 +109,13 @@
         try {
             var session = JSON.parse(localStorage.getItem('lm_session')) || {};
             const normalizedRole = role === 'map' ? 'user' : role;
+            const roleLinks = { user: 'map.html', parent: 'parent.html', cs: 'cs.html', admin: 'admin.html', teacher: 'teacher-dashboard.html' };
             session.role = normalizedRole;
             session.activeRole = normalizedRole;
             localStorage.setItem('lm_session', JSON.stringify(session));
-            window.location.href = '/' + normalizedRole + '-dashboard';
+            window.location.href = roleLinks[normalizedRole] || roleLinks.user;
         } catch(e) { console.error('switchRole error:', e); }
+        return false;
     };
     </script>
 </body>

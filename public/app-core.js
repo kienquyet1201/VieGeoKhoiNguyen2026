@@ -25,17 +25,25 @@ window.VieGeoUI = window.VieGeoUI || {
 // Canonical role switcher for every dashboard route.
 window.switchRoleClientOnly = function switchRoleClientOnly(role) {
     try {
-        if (!role) return;
+        if (!role) return false;
         const normalizedRole = role === 'map' ? 'user' : role;
+        const roleLinks = {
+            user: 'map.html',
+            parent: 'parent.html',
+            cs: 'cs.html',
+            admin: 'admin.html',
+            teacher: 'teacher-dashboard.html'
+        };
         const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
         session.role = normalizedRole;
         session.activeRole = normalizedRole;
         localStorage.setItem('lm_session', JSON.stringify(session));
-        window.location.href = '/' + normalizedRole + '-dashboard';
+        window.location.href = roleLinks[normalizedRole] || roleLinks.user;
     } catch (error) {
         console.error('Role switch error:', error);
         window.VieGeoUI.error('Không thể chuyển quyền. Vui lòng thử lại.');
     }
+    return false;
 };
 
 const sessionData = localStorage.getItem('lm_session');
@@ -190,7 +198,7 @@ function updateHeaderStats() {
 }
 
 // ── TAB SWITCHING ──
-const navBtns = document.querySelectorAll('.nav-btn');
+const navBtns = document.querySelectorAll('.nav-btn[data-target]');
 const tabPanes = document.querySelectorAll('.tab-pane');
 
 navBtns.forEach(btn => {
@@ -198,9 +206,11 @@ navBtns.forEach(btn => {
         navBtns.forEach(b => b.classList.remove('active'));
         tabPanes.forEach(p => p.classList.remove('active'));
         
-        btn.classList.add('active');
         const targetId = btn.getAttribute('data-target');
-        document.getElementById(targetId).classList.add('active');
+        const targetPane = targetId ? document.getElementById(targetId) : null;
+        if (!targetPane) return;
+        btn.classList.add('active');
+        targetPane.classList.add('active');
     });
 });
 

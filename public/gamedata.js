@@ -250,10 +250,10 @@ const S_PROVINCES = [
 function generateProvinceLessons(provName, provId) {
     try {
         const topics = [
-            { id: "vt", name: "Vị trí� d?a l�" },
-            { id: "tn", name: "�Điều kiện tự nhiên�n" },
-            { id: "dc", name: "D�n cu" },
-            { id: "vh", name: "Van h�a" },
+            { id: "vt", name: "Vị trí địa lý" },
+            { id: "tn", name: "Điều kiện tự nhiên" },
+            { id: "dc", name: "Dân cư" },
+            { id: "vh", name: "Văn hóa" },
             { id: "kt", name: "Kinh tế" },
             { id: "dl", name: "Du lịch" }
         ];
@@ -261,43 +261,43 @@ function generateProvinceLessons(provName, provId) {
         let lessons = [];
         
         topics.forEach((topic, index) => {
-            // L� thuy?t
+            // Lý thuyết
             lessons.push({
                 id: provId + "_th_" + topic.id,
                 type: "theory",
-                title: "L� thuy?t: " + topic.name,
-                content: "�o?n d?c ng?n v? " + topic.name + " c?a " + provName + "...",
+                title: "Lý thuyết: " + topic.name,
+                content: "Đoạn đọc ngắn về " + topic.name + " của " + provName + "...",
                 image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Ho_Hoan_Kiem.jpg/800px-Ho_Hoan_Kiem.jpg"
             });
-            // Tr?c nghi?m
+            // Trắc nghiệm
             lessons.push({
                 id: provId + "_qz_" + topic.id,
                 type: "quiz",
-                title: "Luy?n t?p: " + topic.name,
+                title: "Luyện tập: " + topic.name,
                 questions: [
-                    { q: "�?c di?m " + topic.name.toLowerCase() + " c?a " + provName + " l� g�?", options: ["A", "B", "C", "D"], correctAnswer: 0, explanation: "��p �n d�ng." }
+                    { q: "Đặc điểm " + topic.name.toLowerCase() + " của " + provName + " là gì?", options: ["A", "B", "C", "D"], correctAnswer: 0, explanation: "Đáp án đúng." }
                 ]
             });
 
-            // Midterm 1 sau 3 b�i d?u
+            // Giữa kỳ 1 sau 3 bài đầu
             if (index === 2) {
                 lessons.push({
                     id: provId + "_midterm_1",
                     type: "quiz_midterm",
-                    title: "Ki?m tra Gi?a kh�a 1 (" + provName + ")",
+                    title: "Kiểm tra Giữa khóa 1 (" + provName + ")",
                     questions: [
-                        { q: "T?ng h?p ki?n th?c ph?n 1 v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 1, explanation: "T?t." }
+                        { q: "Tổng hợp kiến thức phần 1 về " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 1, explanation: "Tốt." }
                     ]
                 });
             }
-            // Midterm 2 sau 3 b�i cu?i
+            // Giữa kỳ 2 sau 3 bài cuối
             if (index === 5) {
                 lessons.push({
                     id: provId + "_midterm_2",
                     type: "quiz_midterm",
-                    title: "Ki?m tra Gi?a kh�a 2 (" + provName + ")",
+                    title: "Kiểm tra Giữa khóa 2 (" + provName + ")",
                     questions: [
-                        { q: "T?ng h?p ki?n th?c ph?n 2 v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 2, explanation: "Gi?i." }
+                        { q: "Tổng hợp kiến thức phần 2 về " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 2, explanation: "Giỏi." }
                     ]
                 });
             }
@@ -307,16 +307,16 @@ function generateProvinceLessons(provName, provId) {
         lessons.push({
             id: provId + "_final",
             type: "quiz_final",
-            title: "Ki?m tra T?ng h?p " + provName,
+            title: "Kiểm tra Tổng hợp " + provName,
             questions: [
-                { q: "Ki?n th?c t?ng qu�t v? " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 3, explanation: "Xu?t s?c." }
+                { q: "Kiến thức tổng quát về " + provName + "?", options: ["A", "B", "C", "D"], correctAnswer: 3, explanation: "Xuất sắc." }
             ]
         });
 
         return lessons;
     } catch (e) {
-        console.error("Lỗi khi tạo d? li?u b�i h?c cho " + provName, e);
-        return []; // Fallback an to�n
+        console.error("Lỗi khi tạo dữ liệu bài học cho " + provName, e);
+        return []; // Fallback an toàn
     }
 }
 
@@ -364,7 +364,7 @@ function generateRegions() {
             }
         ];
     } catch (e) {
-        console.error("Lỗi khi tạo danh s�ch c�c Miền", e);
+        console.error("Lỗi khi tạo danh sách các Miền", e);
         return [];
     }
 }
