@@ -4,7 +4,7 @@
 <script>window.onerror = function(msg, url, lineNo, columnNo, error) { alert('JS Error: ' + msg + ' \nLine: ' + lineNo + ' \nCol: ' + columnNo); return false; };</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo - Khám phá Địa lí Việt Nam</title>
+    <title>VieGeo - Trang chủ CSKH</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,34 +40,22 @@
                     <i class="fa-solid fa-user"></i>
                     <span>Hồ Sơ</span>
                 </button>
-            
-<!-- ROLE SWITCHER -->
-<div class="relative group ml-4">
-    <button class="flex items-center gap-2 bg-slate-700 text-white px-4 py-2 rounded-xl border border-slate-600 hover:bg-slate-600 transition-colors">
-        <i class="fa-solid fa-users-gear"></i> Chuyển đổi quyền <i class="fa-solid fa-chevron-down text-xs"></i>
-    </button>
-    <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-xl shadow-xl border border-slate-700 hidden group-hover:block overflow-hidden z-50">
-        <a href="#" onclick="switchRoleClientOnly('map')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white border-b border-slate-700/50"><i class="fa-solid fa-graduation-cap w-6"></i> Học sinh</a>
-        <a href="#" onclick="switchRoleClientOnly('parent')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white border-b border-slate-700/50"><i class="fa-solid fa-children w-6"></i> Phụ huynh</a>
-        <a href="#" onclick="switchRoleClientOnly('cs')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white border-b border-slate-700/50"><i class="fa-solid fa-headset w-6"></i> CSKH</a>
-        <a href="#" onclick="switchRoleClientOnly('admin')" class="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white"><i class="fa-solid fa-screwdriver-wrench w-6"></i> Admin</a>
-    </div>
-</div>
-<script>
-window.switchRoleClientOnly = function(role) {
-    if(!role) return;
-    const session = JSON.parse(localStorage.getItem('lm_session')) || {};
-    session.role = role;
-    localStorage.setItem('lm_session', JSON.stringify(session));
-    if(role === 'admin') window.location.href = 'admin.html';
-    else if(role === 'cs') window.location.href = 'cs.html';
-    else if(role === 'parent') window.location.href = 'parent.html';
-    else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
-    else window.location.href = 'map.html';
-};
-</script>
-
-</nav>
+            </nav>
+            <!-- Role Switcher -->
+            <div style="margin-top: auto; padding: 15px;">
+                <div style="position: relative;" id="roleSwitcherWrap">
+                    <button class="nav-btn" onclick="document.getElementById('roleSwitcherDrop').style.display = document.getElementById('roleSwitcherDrop').style.display === 'block' ? 'none' : 'block'" style="width: 100%; text-align: left;">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span>Đổi Quyền</span>
+                    </button>
+                    <div id="roleSwitcherDrop" style="display: none; position: absolute; bottom: 100%; left: 0; background: var(--bg-card, #1e293b); border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
+                        <a href="#" onclick="switchRoleClientOnly('map')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
+                        <a href="#" onclick="switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
+                        <a href="#" onclick="switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
+                        <a href="#" onclick="switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <!-- BENTO MAIN -->
@@ -83,7 +71,7 @@ window.switchRoleClientOnly = function(role) {
             <!-- TAB: MAP (LEARN) -->
             <div id="tabMap" class="tab-pane active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="font-size: 2rem;" id="mapTitle">Trang chủ CS</h2>
+                    <h2 style="font-size: 2rem;" id="mapTitle">Khám Phá Việt Nam</h2>
                     <button id="btnMapBack" class="bento-btn" style="display: none; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
                 </div>
                 
@@ -404,9 +392,28 @@ window.switchRoleClientOnly = function(role) {
     <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
     <script src="gamedata.js"></script>
     <script src="app-core.js"></script>
     <script src="map.js"></script>
+
+    <script>
+    // Role Switcher
+    window.switchRoleClientOnly = function(role) {
+        if(!role) return;
+        try {
+            var session = JSON.parse(localStorage.getItem('lm_session')) || {};
+            session.role = role;
+            localStorage.setItem('lm_session', JSON.stringify(session));
+            if(role === 'admin') window.location.href = 'admin.html';
+            else if(role === 'cs') window.location.href = 'cs.html';
+            else if(role === 'parent') window.location.href = 'parent.html';
+            else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
+            else window.location.href = 'map.html';
+        } catch(e) { console.error('switchRole error:', e); }
+    };
+    </script>
 </body>
 </html>
 

@@ -48,11 +48,38 @@
             position: fixed; bottom: 20px; right: 20px; background: var(--blue);
             color: white; padding: 15px; border-radius: 8px; display: none;
         }
+        .role-switcher { position: relative; display: inline-block; }
+        .role-switcher-menu { display: none; position: absolute; top: 100%; right: 0; background: var(--bg-card); border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden; }
+        .role-switcher:hover .role-switcher-menu { display: block; }
+        .role-switcher-menu a { display: block; padding: 10px 15px; color: var(--text-primary); text-decoration: none; border-bottom: 1px solid #334155; }
+        .role-switcher-menu a:last-child { border-bottom: none; }
+        .role-switcher-menu a:hover { background: #334155; }
     </style>
 </head>
 <body>
 
     <h1><i class="fa-solid fa-screwdriver-wrench"></i> Quản Trị Hệ Thống VieGeo</h1>
+
+    <!-- TABS + ROLE SWITCHER -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--bg-card); padding-bottom: 10px; flex-wrap: wrap; align-items: center;">
+        <button id="tabUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quản Lý Người Dùng & Premium</button>
+        <button id="tabUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload Câu Hỏi</button>
+        <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+            <div class="role-switcher">
+                <button style="padding: 10px 20px; background: var(--bg-card); color: white; border: 1px solid #334155; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-users-gear"></i> Chuyển đổi quyền</button>
+                <div class="role-switcher-menu">
+                    <a href="#" onclick="switchRoleClientOnly('map')"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
+                    <a href="#" onclick="switchRoleClientOnly('parent')"><i class="fa-solid fa-children"></i> Phụ huynh</a>
+                    <a href="#" onclick="switchRoleClientOnly('cs')"><i class="fa-solid fa-headset"></i> CSKH</a>
+                    <a href="#" onclick="switchRoleClientOnly('admin')" style="color: var(--gold);"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+                </div>
+            </div>
+            <button onclick="window.location.href='loginout.html'" style="background: rgba(255,75,75,0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
+        </div>
+    </div>
+
+    <!-- TAB: QUẢN LÝ NGƯỜI DÙNG -->
+    <div id="tabUsersContent">
     <p>Danh sách các yêu cầu Nâng cấp Premium đang chờ duyệt:</p>
 
     <div id="requestsList">Đang tải dữ liệu...</div>
@@ -67,25 +94,18 @@
 
     <div id="usersList">Đang tải người dùng...</div>
 
-    <div id="toast">Thông báo</div>
-
-    
     </div> <!-- END TAB QUẢN LÝ -->
 
-    <!-- TAB: UPLOAD WORD -->
+    <!-- TAB: UPLOAD CÂU HỎI -->
     <div id="tabUploadContent" style="display: none;">
         <h2 style="color: var(--gold);"><i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên Bộ Câu Hỏi (.docx / .txt)</h2>
         <p style="color: var(--text-dim); margin-bottom: 20px;">Hệ thống sẽ bóc tách văn bản thành dạng câu hỏi trắc nghiệm và cập nhật vào Firebase.</p>
-        
         <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 2px dashed var(--blue); text-align: center; margin-bottom: 20px;">
             <i class="fa-solid fa-file-word" style="font-size: 3rem; color: var(--blue); margin-bottom: 15px;"></i><br>
             <input type="file" id="fileUpload" accept=".docx,.txt" style="display: none;">
-            <button onclick="document.getElementById('fileUpload').click()" style="padding: 12px 25px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                Chọn File
-            </button>
+            <button onclick="document.getElementById('fileUpload').click()" style="padding: 12px 25px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Chọn File</button>
             <p id="fileNameDisplay" style="margin-top: 15px; color: var(--green); font-weight: bold;"></p>
         </div>
-
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
             <div>
                 <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Thành phố (Tỉnh):</label>
@@ -108,161 +128,13 @@
                 <input type="text" id="importLessonId" placeholder="Hệ thống tự tạo nếu bỏ trống" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
             </div>
         </div>
-
-        <button onclick="processUpload()" id="btnProcessUpload" style="padding: 15px; width: 100%; background: var(--green); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px;">
-            <i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật
-        </button>
-
-        <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">
-            Kết quả preview sẽ hiển thị ở đây...
-        </div>
+        <button onclick="processUpload()" id="btnProcessUpload" style="padding: 15px; width: 100%; background: var(--green); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px;"><i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật</button>
+        <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.9rem;">Kết quả preview sẽ hiển thị ở đây...</div>
     </div> <!-- END TAB UPLOAD -->
 
+    <div id="toast">Thông báo</div>
+
     <script>
-        function switchTab(tabId) {
-            const btnUsers = document.getElementById('tabUsersBtn');
-            const btnUpload = document.getElementById('tabUploadBtn');
-            const contentUsers = document.getElementById('tabUsersContent');
-            const contentUpload = document.getElementById('tabUploadContent');
-
-            if (tabId === 'users') {
-                btnUsers.style.background = 'var(--blue)';
-                btnUsers.style.color = 'white';
-                btnUsers.style.border = 'none';
-                
-                btnUpload.style.background = 'transparent';
-                btnUpload.style.color = 'var(--text-dim)';
-                btnUpload.style.border = '1px solid var(--text-dim)';
-
-                contentUsers.style.display = 'block';
-                contentUpload.style.display = 'none';
-            } else {
-                btnUpload.style.background = 'var(--blue)';
-                btnUpload.style.color = 'white';
-                btnUpload.style.border = 'none';
-                
-                btnUsers.style.background = 'transparent';
-                btnUsers.style.color = 'var(--text-dim)';
-                btnUsers.style.border = '1px solid var(--text-dim)';
-
-                contentUsers.style.display = 'none';
-                contentUpload.style.display = 'block';
-            }
-        }
-
-        // ==========================================
-        // UPLOAD & PARSE LOGIC
-        // ==========================================
-        document.getElementById('fileUpload').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                document.getElementById('fileNameDisplay').textContent = "Đã chọn: " + e.target.files[0].name;
-            }
-        });
-        
-        async function processUpload() {
-            const fileInput = document.getElementById('fileUpload');
-            const file = fileInput.files[0];
-            if (!file) {
-                showToast("Vui lòng chọn file!");
-                return;
-            }
-
-            const province = document.getElementById('importProvince').value.trim();
-            const island = document.getElementById('importIsland').value.trim();
-            const difficulty = document.getElementById('importDifficulty').value;
-            let lessonId = document.getElementById('importLessonId').value.trim();
-            
-            if (!province || !island) {
-                showToast("Vui lòng điền Thành phố và Đảo nhỏ!");
-                return;
-            }
-
-            if (!lessonId) {
-                lessonId = "node_" + province.toLowerCase().replace(/\s+/g, '') + "_" + new Date().getTime();
-            }
-
-            const btn = document.getElementById('btnProcessUpload');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
-            btn.disabled = true;
-
-            try {
-                let textContent = "";
-                if (file.name.endsWith('.txt')) {
-                    textContent = await file.text();
-                } else if (file.name.endsWith('.docx')) {
-                    if (typeof mammoth === 'undefined') throw new Error("Mammoth.js chưa tải!");
-                    const arrayBuffer = await file.arrayBuffer();
-                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-                    textContent = result.value;
-                } else {
-                    throw new Error("Định dạng file không hỗ trợ!");
-                }
-
-                const questions = parseTextToQuestions(textContent);
-                document.getElementById('uploadPreview').textContent = JSON.stringify(questions, null, 2);
-
-                if (questions.length === 0) throw new Error("Không trích xuất được câu hỏi!");
-
-                await db.collection('imported_questions').doc(lessonId).set({
-                    province: province,
-                    island: island,
-                    difficulty: difficulty,
-                    lessonId: lessonId,
-                    questions: questions,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: JSON.parse(localStorage.getItem('lm_session'))?.email || 'admin'
-                });
-
-                showToast("Bóc tách và lưu thành công " + questions.length + " câu hỏi!");
-                document.getElementById('fileUpload').value = '';
-                document.getElementById('fileNameDisplay').textContent = '';
-            } catch (error) {
-                showToast("Lỗi xử lý: " + error.message, true);
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật';
-                btn.disabled = false;
-            }
-        }
-
-        function parseTextToQuestions(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            const questions = [];
-            let currentQ = null;
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i];
-                if (/^c[aâ]u\s*\d+[:\.]?/i.test(line)) {
-                    if (currentQ) questions.push(currentQ);
-                    currentQ = { text: line.replace(/^c[aâ]u\s*\d+[:\.]?\s*/i, ''), options: [], correctAnswer: 0 };
-                } else if (/^[A-D][\.\:]/i.test(line) && currentQ) {
-                    currentQ.options.push(line.replace(/^[A-D][\.\:]\s*/i, ''));
-                } else if (/^[ĐD][aá]p\s*[aá]n[:\.]?/i.test(line) && currentQ) {
-                    let ans = line.replace(/^[ĐD][aá]p\s*[aá]n[:\.]?\s*/i, '').toUpperCase().trim();
-                    if (ans === 'A') currentQ.correctAnswer = 0;
-                    else if (ans === 'B') currentQ.correctAnswer = 1;
-                    else if (ans === 'C') currentQ.correctAnswer = 2;
-                    else if (ans === 'D') currentQ.correctAnswer = 3;
-                } else if (currentQ && currentQ.options.length === 0) {
-                    currentQ.text += "\n" + line;
-                }
-            }
-            if (currentQ) questions.push(currentQ);
-            return questions;
-        }
-
-window.switchRoleClientOnly = function(role) {
-    if(!role) return;
-    const session = JSON.parse(localStorage.getItem('lm_session')) || {};
-    session.role = role;
-    localStorage.setItem('lm_session', JSON.stringify(session));
-    if(role === 'admin') window.location.href = 'admin.html';
-    else if(role === 'cs') window.location.href = 'cs.html';
-    else if(role === 'parent') window.location.href = 'parent.html';
-    else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
-    else window.location.href = 'map.html';
-};
-
-<script>
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.textContent = msg;
@@ -389,7 +261,114 @@ window.switchRoleClientOnly = function(role) {
             }
         };
 
-        // Load initially
+        // Tab switching
+        function switchTab(tabId) {
+            try {
+                const btnUsers = document.getElementById('tabUsersBtn');
+                const btnUpload = document.getElementById('tabUploadBtn');
+                const contentUsers = document.getElementById('tabUsersContent');
+                const contentUpload = document.getElementById('tabUploadContent');
+                if (tabId === 'users') {
+                    btnUsers.style.background = 'var(--blue)'; btnUsers.style.color = 'white'; btnUsers.style.border = 'none';
+                    btnUpload.style.background = 'transparent'; btnUpload.style.color = 'var(--text-dim)'; btnUpload.style.border = '1px solid var(--text-dim)';
+                    contentUsers.style.display = 'block'; contentUpload.style.display = 'none';
+                } else {
+                    btnUpload.style.background = 'var(--blue)'; btnUpload.style.color = 'white'; btnUpload.style.border = 'none';
+                    btnUsers.style.background = 'transparent'; btnUsers.style.color = 'var(--text-dim)'; btnUsers.style.border = '1px solid var(--text-dim)';
+                    contentUsers.style.display = 'none'; contentUpload.style.display = 'block';
+                }
+            } catch(e) { console.error('switchTab error:', e); }
+        }
+
+        // Upload file listener
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                document.getElementById('fileNameDisplay').textContent = "Đã chọn: " + e.target.files[0].name;
+            }
+        });
+
+        // Upload & Parse
+        async function processUpload() {
+            try {
+                const fileInput = document.getElementById('fileUpload');
+                const file = fileInput.files[0];
+                if (!file) { showToast("Vui lòng chọn file!"); return; }
+                const province = document.getElementById('importProvince').value.trim();
+                const island = document.getElementById('importIsland').value.trim();
+                const difficulty = document.getElementById('importDifficulty').value;
+                let lessonId = document.getElementById('importLessonId').value.trim();
+                if (!province || !island) { showToast("Vui lòng điền Thành phố và Đảo nhỏ!"); return; }
+                if (!lessonId) { lessonId = "node_" + province.toLowerCase().replace(/\s+/g, '') + "_" + new Date().getTime(); }
+                const btn = document.getElementById('btnProcessUpload');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...'; btn.disabled = true;
+                let textContent = "";
+                if (file.name.endsWith('.txt')) { textContent = await file.text(); }
+                else if (file.name.endsWith('.docx')) {
+                    if (typeof mammoth === 'undefined') throw new Error("Mammoth.js chưa tải!");
+                    const arrayBuffer = await file.arrayBuffer();
+                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    textContent = result.value;
+                } else { throw new Error("Định dạng file không hỗ trợ!"); }
+                const questions = parseTextToQuestions(textContent);
+                document.getElementById('uploadPreview').textContent = JSON.stringify(questions, null, 2);
+                if (questions.length === 0) throw new Error("Không trích xuất được câu hỏi nào từ file!");
+                await db.collection('imported_questions').doc(lessonId).set({
+                    province: province, island: island, difficulty: difficulty, lessonId: lessonId,
+                    questions: questions,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: JSON.parse(localStorage.getItem('lm_session'))?.email || 'admin'
+                });
+                showToast("Bóc tách và lưu thành công " + questions.length + " câu hỏi!");
+                document.getElementById('fileUpload').value = ''; document.getElementById('fileNameDisplay').textContent = '';
+            } catch (error) { console.error(error); showToast("Lỗi xử lý: " + error.message); }
+            finally {
+                const btn = document.getElementById('btnProcessUpload');
+                btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật'; btn.disabled = false;
+            }
+        }
+
+        function parseTextToQuestions(text) {
+            try {
+                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                const questions = []; let currentQ = null;
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i];
+                    if (/^c[aâ]u\s*\d+[:\.]/i.test(line)) {
+                        if (currentQ) questions.push(currentQ);
+                        currentQ = { text: line.replace(/^c[aâ]u\s*\d+[:\.]\s*/i, ''), options: [], correctAnswer: 0 };
+                    } else if (/^[A-D][\.\:]/i.test(line) && currentQ) {
+                        currentQ.options.push(line.replace(/^[A-D][\.\:]\s*/i, ''));
+                    } else if (/^[ĐD][aá]p\s*[aá]n[:\.]/i.test(line) && currentQ) {
+                        let ans = line.replace(/^[ĐD][aá]p\s*[aá]n[:\.]\s*/i, '').toUpperCase().trim();
+                        if (ans === 'A') currentQ.correctAnswer = 0;
+                        else if (ans === 'B') currentQ.correctAnswer = 1;
+                        else if (ans === 'C') currentQ.correctAnswer = 2;
+                        else if (ans === 'D') currentQ.correctAnswer = 3;
+                    } else if (currentQ && currentQ.options.length === 0) {
+                        currentQ.text += "\n" + line;
+                    }
+                }
+                if (currentQ) questions.push(currentQ);
+                return questions;
+            } catch(e) { console.error('parseTextToQuestions error:', e); return []; }
+        }
+
+        // Role Switcher
+        window.switchRoleClientOnly = function(role) {
+            if(!role) return;
+            try {
+                const session = JSON.parse(localStorage.getItem('lm_session')) || {};
+                session.role = role;
+                localStorage.setItem('lm_session', JSON.stringify(session));
+                if(role === 'admin') window.location.href = 'admin.html';
+                else if(role === 'cs') window.location.href = 'cs.html';
+                else if(role === 'parent') window.location.href = 'parent.html';
+                else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
+                else window.location.href = 'map.html';
+            } catch(e) { console.error('switchRole error:', e); }
+        };
+
+        // Load initially — flexible RBAC (role-based, not email-only)
         setTimeout(() => {
             const sessionData = localStorage.getItem('lm_session');
             if (!sessionData) {
@@ -398,7 +377,9 @@ window.switchRoleClientOnly = function(role) {
                 return;
             }
             const sessionUser = JSON.parse(sessionData);
-            if (sessionUser.email !== 'kienquyet1201@gmail.com') {
+            // Allow access if role is admin OR email matches admin
+            const isAdmin = sessionUser.role === 'admin' || sessionUser.email === 'kienquyet1201@gmail.com' || (sessionUser.roles && sessionUser.roles.includes('admin'));
+            if (!isAdmin) {
                 alert("Bạn không có quyền truy cập trang quản trị!");
                 window.location.href = 'map.html';
                 return;

@@ -11,9 +11,6 @@ let currentQuestions = [];
 let currentIndex = 0;
 let isAnswerChecked = false;
 let selectedOptionIndex = null;
-let lessonStartTime = 0;
-let correctCount = 0;
-let wrongCount = 0;
 
 // DOM Elements
 const questionText = document.getElementById('questionText');
@@ -43,12 +40,6 @@ let arenaScoreOpp = 0;
 let towInterval = null;
 let madeMistake = false;
 
-// ── NORMAL MODE TIMER & SCORING ──
-let normalTimerInterval = null;
-let normalTimeMax = 45;
-let normalTimerLeft = 45;
-let totalSessionScore = 0;
-
 function initLesson() {
     if (mode === 'arena') {
         initArena();
@@ -65,8 +56,8 @@ function initNormal() {
     let foundNode = null;
     let foundProvince = null;
     if (typeof LEARNING_REGIONS !== 'undefined') {
-        (LEARNING_REGIONS || []).forEach(region => {
-            (region?.provinces || []).forEach(prov => {
+        LEARNING_REGIONS.forEach(region => {
+            region.provinces.forEach(prov => {
                 const n = prov.lessons.find(x => x.id === nodeId);
                 if (n) {
                     foundNode = n;
@@ -78,7 +69,7 @@ function initNormal() {
 
     if (!foundNode) {
         alert("Lỗi tải bài học!");
-        window.location.href = '/map';
+        window.location.href = 'map.html';
         return;
     }
 
@@ -98,18 +89,6 @@ function initNormal() {
         document.getElementById('quizContainer').style.display = 'block';
         document.getElementById('theoryContainer').style.display = 'none';
         currentQuestions = foundNode.questions || [];
-        lessonStartTime = Date.now();
-        correctCount = 0;
-        wrongCount = 0;
-        totalSessionScore = 0;
-        
-        // Timer constraints
-        if (state.grade == 12) normalTimeMax = 30;
-        else if (state.grade == 9) normalTimeMax = 35;
-        else normalTimeMax = 45;
-        
-        document.getElementById('normalTimer').style.display = 'flex';
-        
         updateHeartsUI();
         loadQuestion();
     }
@@ -123,7 +102,7 @@ function initArena() {
     document.getElementById('arenaBuffs').style.display = 'flex';
 
     const matchData = ARENA_MATCHES.find(m => m.id === arenaId);
-    if (!matchData) { window.location.href = '/map'; return; }
+    if (!matchData) { window.location.href = 'map.html'; return; }
     matchReward = matchData.reward;
 
     // Load questions based on gradeFilter
@@ -131,7 +110,7 @@ function initArena() {
     if (typeof PVP_POOL !== 'undefined') {
         const matchingPool = PVP_POOL.find(p => p.grade === matchData.gradeFilter);
         if (matchingPool && matchingPool.nodes) {
-            matchingPool.(nodes || []).forEach(node => {
+            matchingPool.nodes.forEach(node => {
                 if (node.questions) {
                     allQs = allQs.concat(node.questions);
                 }
@@ -139,7 +118,7 @@ function initArena() {
         }
     } else if (typeof GAME_UNITS !== 'undefined') {
         // Fallback for old cache
-        (GAME_UNITS || []).forEach(u => {
+        GAME_UNITS.forEach(u => {
             if (u.grade === matchData.gradeFilter) {
                 u.nodes.filter(n => n.type === 'lesson').forEach(n => allQs = allQs.concat(n.questions));
             }
@@ -175,7 +154,7 @@ function initArena() {
             const q = currentQuestions[currentIndex];
             let hiddenCount = 0;
             const btns = optionsGrid.querySelectorAll('.option-btn');
-            (btns || []).forEach((btn, idx) => {
+            btns.forEach((btn, idx) => {
                 if (idx !== q.correctAnswer && hiddenCount < 2) {
                     btn.style.visibility = 'hidden';
                     hiddenCount++;
@@ -235,7 +214,7 @@ function renderArenaLeaderboard() {
     
     // Sort
     const sorted = [...arenaBots].sort((a,b) => b.score - a.score);
-    (sorted || []).forEach((b, idx) => {
+    sorted.forEach((b, idx) => {
         const div = document.createElement('div');
         div.style.display = 'flex';
         div.style.justifyContent = 'space-between';
@@ -292,15 +271,15 @@ function loadQuestion() {
     const q = currentQuestions[currentIndex];
     questionText.textContent = q.question;
     
-    optionsGrid.innerHTML = (q?.options || []).map((opt, idx) => `
+    optionsGrid.innerHTML = q.options.map((opt, idx) => `
         <button class="option-btn" data-index="${idx}">${opt}</button>
     `).join('');
 
     const btns = optionsGrid.querySelectorAll('.option-btn');
-    (btns || []).forEach(btn => {
+    btns.forEach(btn => {
         btn.addEventListener('click', () => {
             if (isAnswerChecked) return;
-            (btns || []).forEach(b => b.classList.remove('selected'));
+            btns.forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
             selectedOptionIndex = parseInt(btn.dataset.index);
             btnCheck.classList.add('active');
@@ -310,49 +289,6 @@ function loadQuestion() {
             }
         });
     });
-
-    if (mode === 'normal') {
-        normalTimerLeft = normalTimeMax;
-        document.getElementById('normalTimerText').textContent = normalTimerLeft + 's';
-        if (normalTimerInterval) clearInterval(normalTimerInterval);
-        normalTimerInterval = setInterval(() => {
-            if (isAnswerChecked) {
-                clearInterval(normalTimerInterval);
-                return;
-            }
-            if (window.isFrozen) {
-                return; // Đóng băng thời gian
-            }
-            normalTimerLeft--;
-            document.getElementById('normalTimerText').textContent = normalTimerLeft + 's';
-            if (normalTimerLeft <= 0) {
-                clearInterval(normalTimerInterval);
-                // Auto fail
-                madeMistake = true;
-                wrongCount++;
-                sfxWrong.play();
-                isAnswerChecked = true;
-                
-                bottomBar.classList.add('state-wrong');
-                feedbackIcon.innerHTML = `<i class="fa-solid fa-clock"></i>`;
-                feedbackText.textContent = "Hết giờ! Đáp án đúng là: " + q.options[q.correctAnswer];
-                feedbackMsg.classList.add('show');
-                btnCheck.classList.add('active');
-                btnCheck.textContent = 'Tiếp tục';
-                
-                const hasInfiniteHearts = state.inventory && state.inventory.infiniteHeartsExpiry && Date.now() < state.inventory.infiniteHeartsExpiry;
-                if (!hasInfiniteHearts) {
-                    state.hearts--;
-                    updateHeartsUI();
-                    saveGameState(state);
-                    if (state.hearts <= 0) {
-                        btnCheck.textContent = 'Kết thúc';
-                        btnCheck.addEventListener('click', () => window.location.href = '/map', {once: true});
-                    }
-                }
-            }
-        }, 1000);
-    }
 }
 
 // 3. Handle Check Button
@@ -381,14 +317,6 @@ function checkAnswer() {
 
     if (selectedOptionIndex === q.correctAnswer) {
         // Đúng
-        if (!isAnswerChecked || !madeMistake) { // only count if it's the first try
-            correctCount++;
-            if (mode === 'normal') {
-                // Tối đa 15 điểm, giảm dần theo thời gian, tối thiểu 5 điểm
-                const points = 5 + Math.floor((normalTimerLeft / normalTimeMax) * 10);
-                totalSessionScore += points;
-            }
-        }
         sfxCorrect.play();
         selectedBtn.classList.add('correct');
         
@@ -426,7 +354,6 @@ function checkAnswer() {
     } else {
         // Sai
         madeMistake = true;
-        wrongCount++;
         sfxWrong.play();
         selectedBtn.classList.add('wrong');
         btns[q.correctAnswer].classList.add('correct');
@@ -458,7 +385,7 @@ function checkAnswer() {
                 if (state.hearts <= 0) {
                     btnCheck.textContent = 'Kết thúc';
                     btnCheck.addEventListener('click', () => {
-                        window.location.href = '/map';
+                        window.location.href = 'map.html';
                     }, {once: true});
                     return;
                 }
@@ -514,51 +441,25 @@ function finishLesson() {
         
         btnCheck.textContent = 'Trở về Bản đồ';
         btnCheck.classList.add('active');
-        btnCheck.onclick = () => window.location.href = '/map';
+        btnCheck.onclick = () => window.location.href = 'map.html';
 
     } else {
         // Normal mode
-        const totalQ = currentQuestions.length;
-        const accuracy = totalQ > 0 ? (correctCount / totalQ) * 100 : 100;
-        
-        let color = '';
-        let icon = '';
-        let msg = '';
-        
-        if (accuracy >= 80) {
-            color = 'var(--green)'; icon = 'fa-medal'; msg = 'Thành thạo!';
-        } else if (accuracy >= 50) {
-            color = '#ffc800'; icon = 'fa-star'; msg = 'Đạt yêu cầu!';
-        } else {
-            color = '#ff4b4b'; icon = 'fa-triangle-exclamation'; msg = 'Cần cải thiện!';
-        }
-
-        questionText.textContent = msg;
+        questionText.textContent = "Hoàn thành xuất sắc!";
         optionsGrid.innerHTML = `
             <div style="text-align: center; width:100%; grid-column: span 2;">
-                <i class="fa-solid ${icon}" style="font-size: 4rem; color: ${color}; margin-bottom: 20px;"></i>
-                <h3 style="font-size: 1.5rem;">Đúng: ${correctCount}/${totalQ} (${Math.round(accuracy)}%)</h3>
-                <h4 style="color: var(--text-dim); margin-top: 10px;">+${totalSessionScore} XP</h4>
+                <i class="fa-solid fa-gem" style="font-size: 4rem; color: var(--blue); margin-bottom: 20px;"></i>
+                <h3 style="font-size: 1.5rem;">+15 XP</h3>
             </div>
         `;
         
-        state.xp += totalSessionScore;
-        state.gems += Math.floor(totalSessionScore / 1.5);
+        state.xp += 15;
+        state.gems += 10;
         
         if (state.questsProgress) {
             state.questsProgress.q1 += 1; 
             state.questsProgress.q2 += 1; 
         }
-
-                if (!state.nodeResults) state.nodeResults = {};
-        
-        // Traffic light logic based on accuracy
-        
-        let lightColor = 'green';
-        if (accuracy < 50) lightColor = 'red';
-        else if (accuracy < 80) lightColor = 'yellow';
-        
-        state.nodeResults[nodeId] = { accuracy: Math.round(accuracy), color: lightColor };
 
         if (!state.completedNodes.includes(nodeId)) {
             state.completedNodes.push(nodeId);
@@ -567,32 +468,6 @@ function finishLesson() {
         if (!madeMistake) {
             state.perfectLessons = (state.perfectLessons || 0) + 1;
         }
-        
-        // Update Learning Profile & AI Data
-        let timeTaken = Math.floor((Date.now() - lessonStartTime) / 1000);
-        state.learningTimeToday = (state.learningTimeToday || 0) + timeTaken;
-        state.totalQuestions = (state.totalQuestions || 0) + totalQ;
-        state.correctAnswers = (state.correctAnswers || 0) + correctCount;
-        
-        if (!state.learningProfile) state.learningProfile = {};
-        if (!state.learningProfile.recentProvinces) state.learningProfile.recentProvinces = [];
-        
-        // Find Province from NodeId to track
-        if (typeof LEARNING_REGIONS !== 'undefined') {
-            (LEARNING_REGIONS || []).forEach(region => {
-                (region?.provinces || []).forEach(prov => {
-                    const n = prov.lessons.find(x => x.id === nodeId);
-                    if (n && !state.learningProfile.recentProvinces.includes(prov.name)) {
-                        state.learningProfile.recentProvinces.push(prov.name);
-                        if (state.learningProfile.recentProvinces.length > 3) {
-                            state.learningProfile.recentProvinces.shift();
-                        }
-                    }
-                });
-            });
-        }
-        
-        state.learningProfile.totalQuestionsAnswered = state.totalQuestions;
 
         if (typeof checkAndUnlockAchievements === 'function') {
             checkAndUnlockAchievements(state);
@@ -605,7 +480,7 @@ function finishLesson() {
     btnCheck.textContent = 'Hoàn tất';
 
     btnCheck.addEventListener('click', () => {
-        window.location.href = '/map';
+        window.location.href = 'map.html';
     }, {once: true});
 }
 
@@ -645,86 +520,4 @@ function createConfetti() {
 
 // Khởi chạy
 initLesson();
-
-
-// ==========================================
-// QUIZ BOOSTERS LOGIC
-// ==========================================
-window.isFrozen = false;
-let boosterInventory = {
-    freeze: 1,
-    '5050': 1,
-    remove1: 1
-};
-
-window.useBooster = function(type) {
-    if (boosterInventory[type] <= 0) {
-        if(typeof showToast === 'function') showToast('B?n d� h?t quy?n tr? gi�p n�y!');
-        return;
-    }
-    
-    const q = currentLessonData.questions[currentQuestionIndex];
-    if (q.type !== 'quiz') {
-        if(typeof showToast === 'function') showToast('Tr? gi�p n�y ch? d�ng cho c�u tr?c nghi?m!');
-        return;
-    }
-    
-    // Tr? s? lu?ng
-    boosterInventory[type]--;
-    const countEl = document.getElementById('count' + (type === '5050' ? '5050' : type.charAt(0).toUpperCase() + type.slice(1)));
-    if (countEl) countEl.textContent = boosterInventory[type];
-    
-    if (type === 'freeze') {
-        window.isFrozen = true;
-        const timerEl = document.getElementById('normalTimer');
-        if (timerEl) {
-            timerEl.style.borderColor = '#1cb0f6';
-            timerEl.style.color = '#1cb0f6';
-            timerEl.style.background = 'rgba(28,176,246,0.2)';
-            timerEl.innerHTML = '<i class="fa-solid fa-snowflake"></i> <span id="normalTimerText">' + normalTimerLeft + 's</span>';
-        }
-        if(typeof showToast === 'function') showToast('Th?i gian d� du?c d�ng bang!');
-    } 
-    else if (type === '5050') {
-        const options = document.querySelectorAll('.option-card:not(.disabled)');
-        let wrongOptions = [];
-        (options || []).forEach(opt => {
-            if (opt.textContent.trim() !== q.answer) {
-                wrongOptions.push(opt);
-            }
-        });
-        
-        // ?n 2 d�p �n sai
-        let hiddenCount = 0;
-        wrongOptions.sort(() => Math.random() - 0.5);
-        for (let i = 0; i < wrongOptions.length; i++) {
-            if (hiddenCount >= 2) break;
-            wrongOptions[i].style.opacity = '0.3';
-            wrongOptions[i].style.pointerEvents = 'none';
-            wrongOptions[i].classList.add('disabled');
-            hiddenCount++;
-        }
-        if(typeof showToast === 'function') showToast('�� lo?i b? 2 phuong �n sai!');
-    }
-    else if (type === 'remove1') {
-        const options = document.querySelectorAll('.option-card:not(.disabled)');
-        let wrongOptions = [];
-        (options || []).forEach(opt => {
-            if (opt.textContent.trim() !== q.answer) {
-                wrongOptions.push(opt);
-            }
-        });
-        
-        if (wrongOptions.length > 0) {
-            let target = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
-            target.style.opacity = '0.3';
-            target.style.pointerEvents = 'none';
-            target.classList.add('disabled');
-            if(typeof showToast === 'function') showToast('�� lo?i b? 1 phuong �n sai!');
-        }
-    }
-};
-
-
-
 
