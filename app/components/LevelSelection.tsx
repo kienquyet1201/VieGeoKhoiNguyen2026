@@ -1,125 +1,129 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+
+type Grade = 5 | 9 | 12;
+type Session = { email: string; name?: string };
+
+const gradeOptions: Array<{ value: Grade; label: string; description: string; accent: string }> = [
+  { value: 5, label: 'Khối 5', description: 'Khởi đầu bằng kiến thức địa lí nền tảng.', accent: '#22c55e' },
+  { value: 9, label: 'Khối 9', description: 'Củng cố tư duy vùng miền và biểu đồ.', accent: '#eab308' },
+  { value: 12, label: 'Khối 12', description: 'Luyện thi THPT với nội dung chuyên sâu.', accent: '#ef4444' },
+];
 
 export default function LevelSelection() {
+  const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [session, setSession] = useState<{email: string, name: string} | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [savingGrade, setSavingGrade] = useState<Grade | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-    
-    // Đọc session từ localStorage theo cơ chế cũ của app
-    const sessionStr = localStorage.getItem('lm_session');
-    
-    if (sessionStr) {
-      try {
-        const parsedSession = JSON.parse(sessionStr);
-        setSession(parsedSession);
-        
-        // Lấy thông tin user từ Firestore
-        const fetchUserData = async () => {
-          try {
-            const userDocRef = doc(db, 'users', parsedSession.email);
-            const userDoc = await getDoc(userDocRef);
-            
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              // Nếu chưa có grade, mở form chọn lớp
-              if (!userData.grade) {
-                setIsOpen(true);
-              } else {
-                // Đã có grade -> redirect vào map
-                window.location.href = '/map.html';
-              }
-            } else {
-               setIsOpen(true);
-            }
-          } catch (error) {
-            console.error("Lỗi khi fetch user data:", error);
-            setIsOpen(true);
-          } finally {
-            setLoading(false);
-          }
-        };
-        fetchUserData();
-      } catch (e) {
-        setLoading(false);
-        window.location.href = '/loginout.html';
+    let cancelled = false;
+
+    async function initialiseProfile() {
+      const rawSession = window.localStorage.getItem('lm_session');
+      if (!rawSession) {
+        router.replace('/loginout');
+        return;
       }
-    } else {
-      // Chưa đăng nhập
-      window.location.href = '/loginout.html';
-    }
-  }, []);
 
-  const loadGradeData = async (grade: number) => {
-    if (!session || !session.email) return;
-    
-    setLoading(true);
+      try {
+        const parsed = JSON.parse(rawSession) as Session;
+        if (!parsed.email) throw new Error('Phiên đăng nhập không có email.');
+        if (!cancelled) setSession(parsed);
+
+        const userSnapshot = await getDoc(doc(db, 'users', parsed.email));
+        const savedGrade = userSnapshot.exists() ? userSnapshot.data().grade : null;
+        if (savedGrade && !cancelled) {
+          router.replace('/map');
+          return;
+        }
+        if (!cancelled) setIsOpen(true);
+      } catch (error) {
+        console.error('Không thể đọc hồ sơ khối lớp:', error);
+        if (!cancelled) setIsOpen(true);
+      } finally {
+        if (!cancelled) setIsReady(true);
+      }
+    }
+
+    initialiseProfile();
+    return () => { cancelled = true; };
+  }, [router]);
+
+  const saveGrade = useCallback(async (grade: Grade) => {
+    if (!session?.email || savingGrade) return;
+
+    setSavingGrade(grade);
     try {
-      const userDocRef = doc(db, 'users', session.email);
-      await updateDoc(userDocRef, { grade: grade });
-      
-      Swal.fire({
-        title: 'Thành công!',
-        text: `Đã cập nhật khối lớp ${grade}! Bắt đầu hành trình thôi!`,
+      await setDoc(doc(db, 'users', session.email), {
+        email: session.email,
+        name: session.name || '',
+        grade,
+        selectedGrade: String(grade),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      try {
+        const rawState = window.localStorage.getItem('VieGeo_state');
+        const currentState = rawState ? JSON.parse(rawState) : {};
+        window.localStorage.setItem('VieGeo_state', JSON.stringify({ ...currentState, selectedGrade: String(grade) }));
+      } catch (error) {
+        console.warn('Không thể đồng bộ khối lớp vào bộ nhớ thiết bị:', error);
+      }
+
+      await Swal.fire({
+        title: 'Đã chọn lộ trình',
+        text: `VieGeo đã sẵn sàng lộ trình cho khối ${grade}.`,
         icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-      }).then(() => {
-        window.location.href = '/map.html';
+        timer: 1300,
+        showConfirmButton: false,
       });
+      router.replace('/map');
     } catch (error) {
-      console.error("Lỗi khi lưu khối lớp:", error);
-      Swal.fire('Lỗi', 'Không thể lưu khối lớp. Vui lòng thử lại!', 'error');
-      setLoading(false);
+      console.error('Không thể lưu khối lớp:', error);
+      await Swal.fire({
+        title: 'Chưa thể lưu khối lớp',
+        text: 'Vui lòng kiểm tra kết nối rồi thử lại.',
+        icon: 'error',
+        confirmButtonText: 'Đã hiểu',
+      });
+    } finally {
+      setSavingGrade(null);
     }
-  };
+  }, [router, savingGrade, session]);
 
-  if (!isMounted || loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-sm">
-        <div className="text-white text-2xl animate-pulse">Đang kiểm tra thông tin...</div>
-      </div>
-    );
-  }
-
+  if (!isReady) return <div className="level-loading">Đang chuẩn bị hồ sơ học tập…</div>;
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-sm">
-      <div className="bg-white/5 p-10 rounded-3xl border border-white/10 shadow-2xl text-center max-w-lg w-[90%]">
-        <div className="text-5xl text-blue-500 mb-5">🎓</div>
-        <h2 className="text-3xl font-bold mb-3 text-white">Chào mừng đến với VieGeo!</h2>
-        <p className="text-white/70 mb-6">Hãy cho chúng tôi biết bạn đang học lớp mấy để xây dựng lộ trình phù hợp nhất nhé.</p>
-        
-        <div className="flex flex-col gap-4">
-          <button 
-            onClick={() => loadGradeData(5)}
-            className="px-6 py-3 text-xl font-bold text-white bg-green-500 rounded-xl hover:bg-green-600 transition"
-          >
-            Khối Lớp 5
-          </button>
-          <button 
-            onClick={() => loadGradeData(9)}
-            className="px-6 py-3 text-xl font-bold text-white bg-yellow-500 rounded-xl hover:bg-yellow-600 transition"
-          >
-            Khối Lớp 9
-          </button>
-          <button 
-            onClick={() => loadGradeData(12)}
-            className="px-6 py-3 text-xl font-bold text-white bg-red-500 rounded-xl hover:bg-red-600 transition"
-          >
-            Khối Lớp 12
-          </button>
+    <div className="level-overlay" role="dialog" aria-modal="true" aria-labelledby="grade-title">
+      <section className="level-dialog">
+        <span className="level-icon" aria-hidden="true">🎓</span>
+        <p className="level-eyebrow">Cá nhân hoá lộ trình</p>
+        <h2 id="grade-title">Bạn đang học khối nào?</h2>
+        <p>Khối lớp giúp VieGeo chọn đúng độ khó câu hỏi, đảo tổng ôn và phần thưởng phù hợp.</p>
+        <div className="grade-option-list">
+          {gradeOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className="grade-option"
+              onClick={() => saveGrade(option.value)}
+              disabled={savingGrade !== null}
+              style={{ '--grade-accent': option.accent } as CSSProperties}
+            >
+              <strong>{savingGrade === option.value ? 'Đang lưu…' : option.label}</strong>
+              <span>{option.description}</span>
+            </button>
+          ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

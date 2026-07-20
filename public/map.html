@@ -28,6 +28,7 @@
             
             <nav class="nav-menu" id="navMenu">
                 <button class="nav-btn active" data-target="tabMap"><i class="fa-solid fa-map-location-dot"></i> Lộ Trình Học</button>
+                <button class="nav-btn" type="button" onclick="window.location.href='exam-arena.html'"><i class="fa-solid fa-file-pen"></i> Đấu trường Luyện thi</button>
                 <button class="nav-btn" data-target="tabLeaderboard"><i class="fa-solid fa-trophy"></i> Xếp hạng</button>
                 <button class="nav-btn" data-target="tabQuests"><i class="fa-solid fa-box-open"></i> Nhiệm vụ</button>
                 <button class="nav-btn" data-target="tabShop">
@@ -53,6 +54,7 @@
                     <div id="roleSwitcherDrop" style="display: none; position: absolute; bottom: 100%; left: 0; background: var(--bg-card, #1e293b); border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
                         <a href="map.html" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
                         <a href="parent.html" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
+                        <a href="teacher-dashboard.html" onclick="return switchRoleClientOnly('teacher')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-chalkboard-user"></i> Giáo viên</a>
                         <a href="cs.html" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
                         <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
                     </div>
@@ -71,6 +73,19 @@
                     <div class="stat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
                     <div class="stat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
                 </div>
+                <div class="taskbar-actions" aria-label="Tiện ích học tập">
+                    <label class="taskbar-grade" for="quickGradeSelect"><i class="fa-solid fa-graduation-cap"></i><span class="sr-only">Chọn khối lớp</span>
+                        <select id="quickGradeSelect" title="Đổi khối lớp">
+                            <option value="all">Tất cả khối</option>
+                            <option value="5">Khối 5</option>
+                            <option value="9">Khối 9</option>
+                            <option value="12">Khối 12</option>
+                        </select>
+                    </label>
+                    <button id="btnThemeToggle" class="taskbar-icon-btn" type="button" title="Chế độ sáng/tối" aria-label="Chế độ sáng/tối"><i class="fa-solid fa-moon"></i></button>
+                    <button id="btnParentAccess" class="taskbar-icon-btn" type="button" title="Khu vực phụ huynh" aria-label="Khu vực phụ huynh"><i class="fa-solid fa-children"></i></button>
+                    <button id="btnTaskbarLogout" class="taskbar-icon-btn taskbar-logout" type="button" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                </div>
             </div>
 
             <!-- TAB: MAP (LEARN) -->
@@ -80,8 +95,11 @@
                     <button id="btnMapBack" class="bento-btn" style="display: none; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
                 </div>
                 
-                <div id="mapViewContainer" class="island-container">
-                    <!-- JS Renders Regions/Provinces/Lessons Here -->
+                <!-- Khu vực chuẩn bị nhúng SVG Bản đồ Việt Nam tương tác trong giai đoạn tiếp theo. -->
+                <div id="interactive-map-container">
+                    <div id="mapViewContainer" class="island-container">
+                        <!-- JS Renders Regions/Provinces/Lessons Here -->
+                    </div>
                 </div>
             </div>
 
@@ -247,6 +265,14 @@
                             </div>
                         </div>
 
+                        <section class="pvp-challenge-card" aria-label="Thách đấu 1 đấu 1">
+                            <div>
+                                <h3><i class="fa-solid fa-khanda"></i> Thách đấu 1vs1</h3>
+                                <p>So tài kiến thức địa lí trong các trận đấu tốc độ và tích lũy chiến thắng.</p>
+                            </div>
+                            <button class="bento-btn" type="button" onclick="document.querySelector('.nav-btn[data-target=&quot;tabArena&quot;]').click()">Vào đấu trường</button>
+                        </section>
+
                         <!-- ── ACHIEVEMENTS COLLECTION ── -->
                         <div style="margin-top: 40px;">
                             <h3 style="font-size: 1.5rem; margin-bottom: 20px; color: var(--blue);"><i class="fa-solid fa-trophy"></i> Bộ Sưu Tập Danh Hiệu</h3>
@@ -281,6 +307,33 @@
     <!-- Toast Notification -->
     <div id="toast" style="position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--holo-3); color: white; padding: 12px 24px; border-radius: 20px; font-weight: bold; transition: all 0.3s ease; opacity: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
         Thông báo
+    </div>
+
+    <section id="supportChat" class="support-chat" aria-label="Hỗ trợ VieGeo">
+        <button id="supportChatToggle" class="support-chat-toggle" type="button" aria-expanded="false" aria-controls="supportChatPanel"><i class="fa-solid fa-comments"></i><span>Hỗ trợ</span></button>
+        <div id="supportChatPanel" class="support-chat-panel" hidden>
+            <header><div><strong>Trợ lý VieGeo</strong><p id="supportAvailability">Đang kiểm tra CSKH…</p></div><button id="supportChatClose" type="button" aria-label="Đóng hỗ trợ"><i class="fa-solid fa-xmark"></i></button></header>
+            <div id="supportMessages" class="support-messages" aria-live="polite"></div>
+            <form id="supportChatForm" class="support-composer">
+                <input id="supportImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+                <button id="supportImageButton" type="button" title="Gửi ảnh" aria-label="Gửi ảnh"><i class="fa-solid fa-image"></i></button>
+                <input id="supportMessageInput" maxlength="1000" placeholder="Nhập câu hỏi của bạn…" aria-label="Tin nhắn hỗ trợ">
+                <button type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+            <p id="supportAttachmentLabel" class="support-attachment" aria-live="polite"></p>
+        </div>
+    </section>
+
+    <div id="parentPinModal" class="parent-pin-modal" role="dialog" aria-modal="true" aria-labelledby="parentPinTitle" aria-hidden="true">
+        <form id="parentPinForm" class="parent-pin-card">
+            <button id="btnParentPinCancel" class="parent-pin-close" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+            <i class="fa-solid fa-shield-heart parent-pin-icon"></i>
+            <p class="parent-pin-eyebrow">Khu vực phụ huynh</p>
+            <h2 id="parentPinTitle">Xác nhận bằng mã PIN</h2>
+            <p id="parentPinHint">Nhập mã PIN để tiếp tục vào khu vực theo dõi học tập.</p>
+            <input id="parentPinInput" inputmode="numeric" autocomplete="one-time-code" maxlength="8" type="password" placeholder="••••" aria-label="Mã PIN phụ huynh">
+            <button id="btnParentPinConfirm" class="bento-btn" type="submit">Xác nhận</button>
+        </form>
     </div>
 
     <!-- ── OTP MODAL ── -->
@@ -392,6 +445,7 @@
     <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="firebase-init.js"></script>
 
     <!-- EmailJS SDK -->
@@ -401,7 +455,10 @@
 
     <script src="gamedata.js"></script>
     <script src="app-core.js"></script>
+    <script src="learning-path.js"></script>
     <script src="map.js"></script>
+    <script src="taskbar-controls.js"></script>
+    <script src="support-chat.js"></script>
 
 </body>
 </html>

@@ -12,6 +12,7 @@ const defaultGameState = {
     currentNode: 1,
     completedNodes: [],
     lastLogin: new Date().toISOString().split('T')[0],
+    lastStudyDate: null,
     
     // Avatar
     avatar: "fa-user-astronaut",
@@ -25,7 +26,9 @@ const defaultGameState = {
         infiniteHeartsExpiry: null,
         streakFreeze: 0,
         powerupDoubleXp: 0,
-        powerup5050: 0
+        powerup5050: 1,
+        quizFreeze: 1,
+        quizRemoveOne: 1
     },
     
     // Daily Quests Progress
@@ -44,7 +47,13 @@ const defaultGameState = {
     perfectLessons: 0,
     chestsOpened: 0,
     achievementPoints: 0,
-    unlockedAchievements: []
+    unlockedAchievements: [],
+    telemetry: {
+        timeSpentPerQuestion: [],
+        weaknessTags: [],
+        studyHabits: [],
+        lastUpdatedAt: null
+    }
 };
 
 // ── ACHIEVEMENTS LIST ──
@@ -89,7 +98,9 @@ function getGameState() {
     }
     if (!parsed.inventory) parsed.inventory = defaultGameState.inventory;
     if (parsed.inventory.powerupDoubleXp === undefined) parsed.inventory.powerupDoubleXp = 0;
-    if (parsed.inventory.powerup5050 === undefined) parsed.inventory.powerup5050 = 0;
+    if (parsed.inventory.powerup5050 === undefined) parsed.inventory.powerup5050 = 1;
+    if (parsed.inventory.quizFreeze === undefined) parsed.inventory.quizFreeze = 1;
+    if (parsed.inventory.quizRemoveOne === undefined) parsed.inventory.quizRemoveOne = 1;
     if (!parsed.questsProgress) parsed.questsProgress = defaultGameState.questsProgress;
     if (!parsed.avatar) parsed.avatar = defaultGameState.avatar;
     if (parsed.selectedGrade === undefined) parsed.selectedGrade = defaultGameState.selectedGrade;
@@ -103,6 +114,11 @@ function getGameState() {
     if (parsed.chestsOpened === undefined) parsed.chestsOpened = 0;
     if (parsed.achievementPoints === undefined) parsed.achievementPoints = 0;
     if (!parsed.unlockedAchievements) parsed.unlockedAchievements = [];
+    if (!parsed.telemetry || typeof parsed.telemetry !== 'object') parsed.telemetry = {};
+    if (!Array.isArray(parsed.telemetry.timeSpentPerQuestion)) parsed.telemetry.timeSpentPerQuestion = [];
+    if (!Array.isArray(parsed.telemetry.weaknessTags)) parsed.telemetry.weaknessTags = [];
+    if (!Array.isArray(parsed.telemetry.studyHabits)) parsed.telemetry.studyHabits = [];
+    if (!parsed.lastStudyDate) parsed.lastStudyDate = null;
 
     // NEW: Learning Profile & Progress Tracking
     if (!parsed.learningProfile) {
@@ -124,6 +140,8 @@ function getGameState() {
     if (!Array.isArray(parsed.learningProfile.weakTopics)) parsed.learningProfile.weakTopics = [];
     if (!Number.isFinite(parsed.learningProfile.totalQuestionsAnswered)) parsed.learningProfile.totalQuestionsAnswered = 0;
     if (!parsed.lessonResults) parsed.lessonResults = {};
+
+    refreshStreakForToday(parsed);
 
     // PATCH: Fix old storage auto counting PvP wins
     if (!parsed._pvpResetPatch2) {
@@ -181,8 +199,55 @@ function saveGameState(state) {
             avatar: state.avatar,
             avatarIsBase64: state.avatarIsBase64,
             accountStatus: state.accountStatus,
-            lastHeartRegenTime: state.lastHeartRegenTime
+            lastHeartRegenTime: state.lastHeartRegenTime,
+            lastLogin: state.lastLogin,
+            lastStudyDate: state.lastStudyDate,
+            grade: state.selectedGrade === 'all' ? null : Number(state.selectedGrade),
+            selectedGrade: state.selectedGrade,
+            learningProfile: state.learningProfile || {},
+            telemetry: state.telemetry || {}
         }).catch(err => console.log("Lỗi đồng bộ Firebase:", err));
+    }
+}
+
+function refreshStreakForToday(state) {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const lastActive = state.lastLogin || state.lastStudyDate;
+        if (!lastActive) return state;
+
+        const previous = new Date(lastActive);
+        previous.setHours(0, 0, 0, 0);
+        const daysSinceActivity = Math.floor((today - previous) / 86400000);
+        if (daysSinceActivity > 1) state.streak = 0;
+        return state;
+    } catch (error) {
+        console.error('Không thể cập nhật chuỗi ngày học:', error);
+        return state;
+    }
+}
+
+function recordStudyActivity(state) {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayKey = today.toISOString().split('T')[0];
+        const previousKey = state.lastStudyDate || state.lastLogin;
+        const previous = previousKey ? new Date(previousKey) : null;
+        if (!previousKey) state.streak = 1;
+        else {
+            previous.setHours(0, 0, 0, 0);
+            const diff = Math.floor((today - previous) / 86400000);
+            if (diff === 1) state.streak = (state.streak || 0) + 1;
+            else if (diff > 1) state.streak = 0;
+        }
+        state.lastStudyDate = todayKey;
+        state.lastLogin = todayKey;
+        return state;
+    } catch (error) {
+        console.error('Không thể ghi nhận hoạt động học:', error);
+        return state;
     }
 }
 

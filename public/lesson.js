@@ -11,6 +11,12 @@ let currentQuestions = [];
 let currentIndex = 0;
 let isAnswerChecked = false;
 let selectedOptionIndex = null;
+let questionStartedAt = 0;
+let lessonTelemetry = [];
+let activeLessonId = nodeId || '';
+let activeLessonTitle = '';
+let activeLessonReward = { xp: 15, gems: 10, booster: null };
+let usedBoostersForQuestion = new Set();
 
 // DOM Elements
 const questionText = document.getElementById('questionText');
@@ -48,9 +54,10 @@ function initLesson() {
     }
 }
 
-function initNormal() {
+async function initNormal() {
     // Hide Arena UI
-    document.getElementById('arenaUI').style.display = 'none';
+    const arenaUi = document.getElementById('arenaUI');
+    if (arenaUi) arenaUi.style.display = 'none';
 
     // Tìm bài học
     let foundNode = null;
@@ -67,6 +74,10 @@ function initNormal() {
         });
     }
 
+    if (!foundNode && window.VieGeoLearningPath && typeof window.VieGeoLearningPath.findLesson === 'function') {
+        foundNode = window.VieGeoLearningPath.findLesson(nodeId);
+    }
+
     if (!foundNode) {
         Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Lỗi tải bài học!' });
         window.location.href = 'map.html';
@@ -74,6 +85,7 @@ function initNormal() {
     }
 
     if (foundNode.type === 'theory') {
+        activeLessonTitle = foundNode.title || '';
         document.getElementById('quizContainer').style.display = 'none';
         const tc = document.getElementById('theoryContainer');
         tc.style.display = 'block';
@@ -82,14 +94,25 @@ function initNormal() {
         document.getElementById('theoryContent').textContent = foundNode.content;
         
         document.getElementById('btnFinishTheory').onclick = () => {
+            const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+            if (typeof updateLearningProfile === 'function') {
+                updateLearningProfile(session.email || '', { lessonId: foundNode.id, lessonTitle: foundNode.title, questionMetrics: [] });
+            }
             finishLesson(foundNode);
         };
         return;
     } else {
+        activeLessonId = foundNode.id || activeLessonId;
+        activeLessonTitle = foundNode.title || '';
+        activeLessonReward = foundNode.reward || activeLessonReward;
         document.getElementById('quizContainer').style.display = 'block';
         document.getElementById('theoryContainer').style.display = 'none';
         currentQuestions = foundNode.questions || [];
+        if (foundNode.dynamicPath && window.VieGeoLearningPath && typeof window.VieGeoLearningPath.loadQuestions === 'function') {
+            currentQuestions = await window.VieGeoLearningPath.loadQuestions(foundNode);
+        }
         updateHeartsUI();
+        updateQuizBoosters();
         loadQuestion();
     }
 }
@@ -99,7 +122,8 @@ function initArena() {
     document.getElementById('arenaTugOfWar').style.display = 'flex';
     document.getElementById('normalProgress').style.display = 'none';
     document.getElementById('hearts-count').style.display = 'none';
-    document.getElementById('arenaBuffs').style.display = 'flex';
+    const arenaBuffs = document.getElementById('arenaBuffs');
+    if (arenaBuffs) arenaBuffs.style.display = 'flex';
 
     const matchData = ARENA_MATCHES.find(m => m.id === arenaId);
     if (!matchData) { window.location.href = 'map.html'; return; }
@@ -132,25 +156,29 @@ function initArena() {
     arenaTimerLeft = 60;
     updateTugOfWarUI();
 
-    document.getElementById('countDouble').textContent = state.inventory.powerupDoubleXp || 0;
-    document.getElementById('count5050').textContent = state.inventory.powerup5050 || 0;
+    const countDouble = document.getElementById('countDouble');
+    const count5050 = document.getElementById('count5050');
+    if (countDouble) countDouble.textContent = state.inventory.powerupDoubleXp || 0;
+    if (count5050) count5050.textContent = state.inventory.powerup5050 || 0;
 
-    document.getElementById('btnUseDouble').onclick = () => {
+    const btnUseDouble = document.getElementById('btnUseDouble');
+    if (btnUseDouble) btnUseDouble.onclick = () => {
         if (state.inventory.powerupDoubleXp > 0 && !isDoubleXpActive) {
             state.inventory.powerupDoubleXp--;
             saveGameState(state);
             isDoubleXpActive = true;
-            document.getElementById('countDouble').textContent = state.inventory.powerupDoubleXp;
-            document.getElementById('btnUseDouble').style.opacity = '0.5';
+            if (countDouble) countDouble.textContent = state.inventory.powerupDoubleXp;
+            btnUseDouble.style.opacity = '0.5';
             showToast("Đã kích hoạt x2 Điểm cho câu hỏi này!");
         }
     };
 
-    document.getElementById('btnUse5050').onclick = () => {
+    const btnUse5050 = document.getElementById('btnUse5050');
+    if (btnUse5050) btnUse5050.onclick = () => {
         if (state.inventory.powerup5050 > 0 && !isAnswerChecked) {
             state.inventory.powerup5050--;
             saveGameState(state);
-            document.getElementById('count5050').textContent = state.inventory.powerup5050;
+            if (count5050) count5050.textContent = state.inventory.powerup5050;
             const q = currentQuestions[currentIndex];
             let hiddenCount = 0;
             const btns = optionsGrid.querySelectorAll('.option-btn');
@@ -160,7 +188,7 @@ function initArena() {
                     hiddenCount++;
                 }
             });
-            document.getElementById('btnUse5050').style.opacity = '0.5';
+            btnUse5050.style.opacity = '0.5';
         }
     };
 
@@ -251,11 +279,15 @@ function loadQuestion() {
     feedbackExplanation.style.display = 'none';
     btnCheck.textContent = 'Kiểm tra';
     btnCheck.className = 'btn-check'; 
+    usedBoostersForQuestion = new Set();
+    updateQuizBoosters();
 
     // Reset Buffs visually
     if (mode === 'arena') {
-        document.getElementById('btnUseDouble').style.opacity = '1';
-        document.getElementById('btnUse5050').style.opacity = '1';
+        const doubleButton = document.getElementById('btnUseDouble');
+        const fiftyButton = document.getElementById('btnUse5050');
+        if (doubleButton) doubleButton.style.opacity = '1';
+        if (fiftyButton) fiftyButton.style.opacity = '1';
         isDoubleXpActive = false;
     }
 
@@ -269,7 +301,8 @@ function loadQuestion() {
     }
 
     const q = currentQuestions[currentIndex];
-    questionText.textContent = q.question;
+    questionText.textContent = q.question || q.q || '';
+    questionStartedAt = Date.now();
     
     optionsGrid.innerHTML = q.options.map((opt, idx) => `
         <button class="option-btn" data-index="${idx}">${opt}</button>
@@ -290,6 +323,48 @@ function loadQuestion() {
         });
     });
 }
+
+function updateQuizBoosters() {
+    if (!state.inventory) state.inventory = {};
+    if (state.inventory.quizFreeze === undefined) state.inventory.quizFreeze = 1;
+    if (state.inventory.quizRemoveOne === undefined) state.inventory.quizRemoveOne = 1;
+    if (state.inventory.powerup5050 === undefined) state.inventory.powerup5050 = 1;
+    const values = { freeze: state.inventory.quizFreeze, '5050': state.inventory.powerup5050, remove1: state.inventory.quizRemoveOne };
+    const ids = { freeze: 'countFreeze', '5050': 'count5050', remove1: 'countRemove1' };
+    Object.keys(ids).forEach(key => {
+        const counter = document.getElementById(ids[key]);
+        const button = document.getElementById(key === '5050' ? 'btnUse5050' : key === 'freeze' ? 'btnUseFreeze' : 'btnUseRemove1');
+        if (counter) counter.textContent = values[key];
+        if (button) button.disabled = values[key] <= 0 || usedBoostersForQuestion.has(key) || isAnswerChecked;
+    });
+}
+
+window.useBooster = function useBooster(type) {
+    if (mode !== 'normal' || isAnswerChecked || usedBoostersForQuestion.has(type)) return;
+    if (!state.inventory) state.inventory = {};
+    const inventoryKey = type === 'freeze' ? 'quizFreeze' : type === '5050' ? 'powerup5050' : 'quizRemoveOne';
+    const amount = Number(state.inventory[inventoryKey] || 0);
+    if (amount <= 0) { showToast('Bạn đã dùng hết quyền trợ giúp này.'); return; }
+
+    const q = currentQuestions[currentIndex];
+    const options = Array.from(optionsGrid.querySelectorAll('.option-btn'));
+    const wrongOptions = options.filter((button, index) => index !== q.correctAnswer && button.style.visibility !== 'hidden');
+    if ((type === '5050' && wrongOptions.length < 2) || (type === 'remove1' && wrongOptions.length < 1)) return;
+
+    state.inventory[inventoryKey] = amount - 1;
+    usedBoostersForQuestion.add(type);
+    if (type === 'freeze') {
+        const timer = document.getElementById('normalTimer');
+        const timerText = document.getElementById('normalTimerText');
+        if (timer && timerText) { timer.style.display = 'block'; timerText.textContent = 'Đã đóng băng'; }
+        showToast('Đã đóng băng thời gian cho câu hỏi này.');
+    } else {
+        wrongOptions.slice(0, type === '5050' ? 2 : 1).forEach(button => { button.style.visibility = 'hidden'; });
+        showToast(type === '5050' ? 'Đã ẩn 2 phương án sai.' : 'Đã bỏ đi 1 phương án sai.');
+    }
+    saveGameState(state);
+    updateQuizBoosters();
+};
 
 // 3. Handle Check Button
 btnCheck.addEventListener('click', () => {
@@ -315,7 +390,18 @@ function checkAnswer() {
         feedbackExplanation.innerHTML = `<i class="fa-solid fa-book-open"></i> <strong>Giải thích:</strong> ${q.explanation}`;
     }
 
-    if (selectedOptionIndex === q.correctAnswer) {
+    const isCorrect = selectedOptionIndex === q.correctAnswer;
+    if (mode === 'normal') {
+        lessonTelemetry.push({
+            questionId: `${activeLessonId}-${currentIndex + 1}`,
+            questionText: q.question || q.q || '',
+            topic: activeLessonTitle,
+            isCorrect,
+            timeSpentSeconds: Math.max(1, Math.round((Date.now() - questionStartedAt) / 1000))
+        });
+    }
+
+    if (isCorrect) {
         // Đúng
         sfxCorrect.play();
         selectedBtn.classList.add('correct');
@@ -449,12 +535,16 @@ function finishLesson() {
         optionsGrid.innerHTML = `
             <div style="text-align: center; width:100%; grid-column: span 2;">
                 <i class="fa-solid fa-gem" style="font-size: 4rem; color: var(--blue); margin-bottom: 20px;"></i>
-                <h3 style="font-size: 1.5rem;">+15 XP</h3>
+                <h3 style="font-size: 1.5rem;">+${activeLessonReward.xp || 15} XP</h3>
             </div>
         `;
         
-        state.xp += 15;
-        state.gems += 10;
+        state.xp += activeLessonReward.xp || 15;
+        state.gems += activeLessonReward.gems || 10;
+        if (activeLessonReward.booster === 'random') {
+            const boostKey = ['quizFreeze', 'powerup5050', 'quizRemoveOne'][Math.floor(Math.random() * 3)];
+            state.inventory[boostKey] = (state.inventory[boostKey] || 0) + 1;
+        }
         
         if (state.questsProgress) {
             state.questsProgress.q1 += 1; 
@@ -471,6 +561,16 @@ function finishLesson() {
 
         if (typeof checkAndUnlockAchievements === 'function') {
             checkAndUnlockAchievements(state);
+        }
+        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+        if (typeof updateLearningProfile === 'function') {
+            updateLearningProfile(session.email || '', {
+                lessonId: activeLessonId,
+                lessonTitle: activeLessonTitle,
+                questionMetrics: lessonTelemetry
+            });
+        } else if (typeof recordStudyActivity === 'function') {
+            recordStudyActivity(state);
         }
         saveGameState(state);
     }

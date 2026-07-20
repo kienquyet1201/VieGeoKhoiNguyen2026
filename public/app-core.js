@@ -83,8 +83,9 @@ function setupRealtimeAuth() {
 
             gameState.xp = data.xp || 0;
             gameState.hearts = data.hearts || 5;
-            gameState.streak = data.streak || 1;
+            gameState.streak = Number(data.currentStreak ?? data.streak ?? 0);
             gameState.gems = data.gems || 0;
+            if (data.selectedGrade !== undefined) gameState.selectedGrade = data.selectedGrade || 'all';
             gameState.avatar = data.avatar || "fa-user-astronaut";
             gameState.avatarIsBase64 = data.avatarIsBase64 || false;
             // Cập nhật lại accountStatus từ server phòng khi Admin duyệt Premium

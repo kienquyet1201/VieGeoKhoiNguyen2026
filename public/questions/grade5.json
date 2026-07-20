@@ -1,0 +1,17 @@
+{
+  "grade": 5,
+  "tiers": {
+    "easy": [
+      { "question": "Việt Nam thuộc châu lục nào?", "options": ["Châu Á", "Châu Âu", "Châu Phi", "Châu Mĩ"], "correctAnswer": 0, "explanation": "Việt Nam nằm ở khu vực Đông Nam Á, thuộc châu Á." },
+      { "question": "Biển nằm ở phía đông nước ta là biển nào?", "options": ["Biển Đông", "Biển Đỏ", "Biển Đen", "Biển Trắng"], "correctAnswer": 0, "explanation": "Việt Nam có bờ biển dài giáp Biển Đông." }
+    ],
+    "medium": [
+      { "question": "Đồng bằng lớn nhất Việt Nam là đồng bằng nào?", "options": ["Đồng bằng sông Cửu Long", "Đồng bằng duyên hải miền Trung", "Đồng bằng nhỏ ven sông", "Cao nguyên đá"], "correctAnswer": 0, "explanation": "Đồng bằng sông Cửu Long là đồng bằng lớn nhất cả nước." },
+      { "question": "Hoạt động nào giúp bảo vệ môi trường địa phương?", "options": ["Trồng cây", "Xả rác xuống sông", "Đốt rừng", "Săn bắt động vật quý"], "correctAnswer": 0, "explanation": "Trồng cây góp phần bảo vệ đất, nước và không khí." }
+    ],
+    "hard": [
+      { "question": "Vì sao cần sử dụng tiết kiệm tài nguyên nước?", "options": ["Nước cần cho đời sống và sản xuất", "Nước không bao giờ cạn", "Nước chỉ dùng để vui chơi", "Không cần bảo vệ nguồn nước"], "correctAnswer": 0, "explanation": "Nước là tài nguyên thiết yếu, cần được sử dụng bền vững." },
+      { "question": "Lũ lụt thường gây tác động nào?", "options": ["Ảnh hưởng đời sống và sản xuất", "Làm đất luôn màu mỡ", "Không thay đổi môi trường", "Tăng diện tích núi"], "correctAnswer": 0, "explanation": "Lũ lụt có thể gây thiệt hại cho con người và tài sản." }
+    ]
+  }
+}

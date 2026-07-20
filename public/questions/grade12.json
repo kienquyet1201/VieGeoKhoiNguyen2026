@@ -1,0 +1,17 @@
+{
+  "grade": 12,
+  "tiers": {
+    "easy": [
+      { "question": "Atlat Địa lí Việt Nam thường được dùng để làm gì?", "options": ["Khai thác thông tin không gian", "Thay máy tính", "Đo nhịp tim", "Viết văn bản"], "correctAnswer": 0, "explanation": "Atlat cung cấp bản đồ, biểu đồ và số liệu địa lí." },
+      { "question": "Dấu hiệu nào cho thấy quá trình đô thị hoá?", "options": ["Tỉ lệ dân thành thị tăng", "Dân số luôn giảm", "Không có dịch vụ", "Giao thông bị xoá bỏ"], "correctAnswer": 0, "explanation": "Tỉ lệ dân thành thị tăng là một biểu hiện quan trọng của đô thị hoá." }
+    ],
+    "medium": [
+      { "question": "Dạng biểu đồ phù hợp để thể hiện tốc độ tăng trưởng qua nhiều năm là gì?", "options": ["Biểu đồ đường", "Biểu đồ tròn", "Sơ đồ tư duy", "Bản đồ hành chính"], "correctAnswer": 0, "explanation": "Biểu đồ đường thể hiện tốt xu hướng biến động theo thời gian." },
+      { "question": "Lợi thế nổi bật của vùng ven biển cho phát triển kinh tế là gì?", "options": ["Kinh tế biển đa dạng", "Không có giao thông", "Thiếu nguồn lợi", "Không có thị trường"], "correctAnswer": 0, "explanation": "Vùng ven biển thuận lợi cho thủy sản, cảng biển, du lịch và dịch vụ biển." }
+    ],
+    "hard": [
+      { "question": "Giải pháp hiệu quả để phát triển bền vững vùng kinh tế trọng điểm là gì?", "options": ["Liên kết ngành và liên kết vùng", "Phát triển tách biệt", "Bỏ qua môi trường", "Chỉ khai thác tài nguyên thô"], "correctAnswer": 0, "explanation": "Liên kết giúp tối ưu nguồn lực, hạ tầng và chuỗi giá trị." },
+      { "question": "Khi nhận xét biểu đồ cơ cấu, cần ưu tiên xác định nội dung nào?", "options": ["Xu hướng chuyển dịch tỉ trọng", "Màu nền biểu đồ", "Kích thước trang giấy", "Tên người vẽ"], "correctAnswer": 0, "explanation": "Cơ cấu cần được phân tích theo tỉ trọng và sự thay đổi giữa các thành phần." }
+    ]
+  }
+}

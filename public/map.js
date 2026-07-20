@@ -78,12 +78,15 @@ function renderProvinces() {
     mapContainer.style.gap = '20px';
     
     selectedRegion.provinces.forEach(prov => {
+        const provinceLessons = (window.VieGeoLearningPath && typeof window.VieGeoLearningPath.getLessonsForProvince === 'function')
+            ? window.VieGeoLearningPath.getLessonsForProvince(prov, state.selectedGrade)
+            : prov.lessons;
         // Calculate completion
         let completed = 0;
-        prov.lessons.forEach(l => {
+        provinceLessons.forEach(l => {
             if (state.completedNodes && state.completedNodes.includes(l.id)) completed++;
         });
-        const percent = Math.round((completed / prov.lessons.length) * 100) || 0;
+        const percent = Math.round((completed / provinceLessons.length) * 100) || 0;
         
         const card = document.createElement('div');
         card.className = 'bento-card';
@@ -110,13 +113,16 @@ function renderLessons() {
     mapContainer.style.flexDirection = 'column';
     mapContainer.style.alignItems = 'center';
     mapContainer.style.gap = '25px'; // Increased gap for better zigzag look
+    const lessons = (window.VieGeoLearningPath && typeof window.VieGeoLearningPath.getLessonsForProvince === 'function')
+        ? window.VieGeoLearningPath.getLessonsForProvince(selectedProvince, state.selectedGrade)
+        : selectedProvince.lessons;
     
     // Zigzag offsets array
     const offsets = [0, -50, -80, -50, 0, 50, 80, 50];
     
-    selectedProvince.lessons.forEach((lesson, index) => {
+    lessons.forEach((lesson, index) => {
         const isCompleted = state.completedNodes && state.completedNodes.includes(lesson.id);
-        const prevCompleted = index === 0 || (state.completedNodes && state.completedNodes.includes(selectedProvince.lessons[index-1].id));
+        const prevCompleted = index === 0 || (state.completedNodes && state.completedNodes.includes(lessons[index-1].id));
         
         // Colors for grades
         let nodeColor = 'rgba(255,255,255,0.1)';
@@ -179,7 +185,7 @@ function renderLessons() {
         wrapper.appendChild(label);
         
         // Connector line inside wrapper pointing to the next node
-        if (index < selectedProvince.lessons.length - 1) {
+        if (index < lessons.length - 1) {
             const nextOffset = offsets[(index + 1) % offsets.length];
             const dx = nextOffset - currentOffset;
             const dy = 95; // Approx: button height + label + gap (70 + 25)

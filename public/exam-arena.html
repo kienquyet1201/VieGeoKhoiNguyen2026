@@ -2,45 +2,72 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Đấu trường Luyện thi THPT - VieGeo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấu trường Luyện thi THPT | VieGeo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="bento.css">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="bg-slate-50 text-slate-900">
-    <div class="container mx-auto p-4">
-        <header class="flex justify-between items-center bg-white p-4 rounded-xl shadow mb-6">
-            <h1 class="text-2xl font-bold text-sky-700">Đấu trường Luyện thi THPT</h1>
-            <div class="text-xl font-mono text-red-600 font-bold" id="examTimer">50:00</div>
+<body class="exam-arena-page">
+    <main class="exam-arena-shell" aria-label="Đấu trường Luyện thi THPT">
+        <header class="exam-topbar">
+            <div>
+                <p class="exam-eyebrow"><i class="fa-solid fa-graduation-cap"></i> VieGeo Exam Prep</p>
+                <h1>Đấu trường Luyện thi THPT</h1>
+                <p>Đề luyện 40 câu · Bám sát nhịp làm bài trong 50 phút</p>
+            </div>
+            <div class="exam-topbar-actions">
+                <a class="exam-back-link" href="map.html"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
+                <div class="exam-timer" aria-live="polite">
+                    <i class="fa-solid fa-stopwatch"></i>
+                    <span id="examTimer">50:00</span>
+                </div>
+            </div>
         </header>
-        
-        <div class="flex gap-6">
-            <!-- Question List -->
-            <div class="w-3/4 bg-white p-6 rounded-xl shadow">
-                <h2 class="text-xl font-bold mb-4">Câu 1: Căn cứ vào Atlat Địa lí Việt Nam...</h2>
-                <div class="space-y-3">
-                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> A. Đáp án A</label>
-                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> B. Đáp án B</label>
-                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> C. Đáp án C</label>
-                    <label class="block p-3 border rounded-lg hover:bg-sky-50 cursor-pointer"><input type="radio" name="q1"> D. Đáp án D</label>
+
+        <div class="exam-workspace">
+            <section class="exam-question-card" aria-live="polite">
+                <div class="exam-question-meta">
+                    <span id="examQuestionCounter">Câu 1 / 40</span>
+                    <span id="examQuestionTag">Atlat & kỹ năng địa lí</span>
                 </div>
-            </div>
-            
-            <!-- Checkboard -->
-            <div class="w-1/4 bg-white p-6 rounded-xl shadow">
-                <h3 class="font-bold mb-3">Danh sách câu hỏi (40 câu)</h3>
-                <div class="grid grid-cols-4 gap-2">
-                    <!-- Generate 40 boxes -->
-                    <script>
-                        for(let i=1; i<=40; i++) {
-                            document.write(`<button class="p-2 border rounded text-center hover:bg-sky-100">${i}</button>`);
-                        }
-                    </script>
+                <h2 id="examQuestionText"></h2>
+                <div id="examOptions" class="exam-options" role="radiogroup" aria-label="Các phương án trả lời"></div>
+                <div class="exam-controls">
+                    <button id="examPrevious" class="exam-secondary-btn" type="button"><i class="fa-solid fa-arrow-left"></i> Câu trước</button>
+                    <button id="examMark" class="exam-mark-btn" type="button"><i class="fa-regular fa-bookmark"></i> Đánh dấu</button>
+                    <button id="examNext" class="exam-primary-btn" type="button">Câu tiếp <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
-                <button class="w-full mt-6 bg-sky-600 text-white font-bold py-3 rounded-xl hover:bg-sky-700">NỘP BÀI</button>
-            </div>
+            </section>
+
+            <aside class="exam-navigator-card">
+                <div class="exam-nav-heading">
+                    <div>
+                        <h2>Danh sách câu hỏi</h2>
+                        <p><strong id="examAnsweredCount">0</strong>/40 câu đã trả lời</p>
+                    </div>
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div id="examQuestionNav" class="exam-question-nav" aria-label="Đi tới câu hỏi"></div>
+                <div class="exam-legend">
+                    <span><i class="legend-current"></i>Đang làm</span>
+                    <span><i class="legend-answered"></i>Đã trả lời</span>
+                    <span><i class="legend-marked"></i>Đánh dấu</span>
+                </div>
+                <button id="examSubmit" class="exam-submit-btn" type="button"><i class="fa-solid fa-paper-plane"></i> Nộp bài</button>
+            </aside>
         </div>
-    </div>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="gamedata.js"></script>
+    <script src="telemetry.js"></script>
+    <script src="exam-arena.js"></script>
 </body>
 </html>

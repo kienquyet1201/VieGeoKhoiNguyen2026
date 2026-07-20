@@ -8,6 +8,7 @@ const nextConfig = {
       { source: '/admin',    destination: '/admin.html',    permanent: false },
       { source: '/cs',       destination: '/cs.html',       permanent: false },
       { source: '/lesson',   destination: '/lesson.html',   permanent: false },
+      { source: '/exam-arena', destination: '/exam-arena.html', permanent: false },
       { source: '/profile',  destination: '/profile.html',  permanent: false },
       { source: '/parent',   destination: '/parent.html',   permanent: false },
       { source: '/user-dashboard',    destination: '/map.html',               permanent: false },

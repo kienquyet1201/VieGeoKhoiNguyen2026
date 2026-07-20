@@ -1,0 +1,17 @@
+{
+  "grade": 9,
+  "tiers": {
+    "easy": [
+      { "question": "Dân cư Việt Nam phân bố tập trung hơn ở đâu?", "options": ["Đồng bằng và đô thị", "Vùng núi cao", "Hoang mạc", "Ngoài biển"], "correctAnswer": 0, "explanation": "Điều kiện sản xuất và giao thông thuận lợi khiến đồng bằng, đô thị đông dân." },
+      { "question": "Ngành kinh tế nào khai thác trực tiếp tài nguyên thiên nhiên?", "options": ["Nông nghiệp", "Dịch vụ tư vấn", "Bảo hiểm", "Ngân hàng"], "correctAnswer": 0, "explanation": "Nông nghiệp sử dụng trực tiếp đất, nước, khí hậu và sinh vật." }
+    ],
+    "medium": [
+      { "question": "Biểu đồ tròn phù hợp nhất để thể hiện nội dung nào?", "options": ["Cơ cấu tại một thời điểm", "Nhiệt độ trong ngày", "Đường đi", "Vị trí địa danh"], "correctAnswer": 0, "explanation": "Biểu đồ tròn thường thể hiện cơ cấu thành phần của một tổng thể." },
+      { "question": "Yếu tố nào thúc đẩy chuyển dịch cơ cấu kinh tế?", "options": ["Khoa học - công nghệ", "Tách rời thị trường", "Giảm đào tạo", "Lãng phí tài nguyên"], "correctAnswer": 0, "explanation": "Khoa học - công nghệ nâng năng suất và tạo ngành nghề mới." }
+    ],
+    "hard": [
+      { "question": "Giải pháp quan trọng để giảm chênh lệch phát triển giữa các vùng là gì?", "options": ["Tăng liên kết vùng", "Cô lập giao thông", "Giảm đầu tư giáo dục", "Chỉ phát triển một địa phương"], "correctAnswer": 0, "explanation": "Liên kết vùng giúp chia sẻ hạ tầng, thị trường và nguồn lực." },
+      { "question": "Biến đổi khí hậu đòi hỏi sản xuất nông nghiệp thay đổi theo hướng nào?", "options": ["Thích ứng và bền vững", "Khai thác cực đại", "Không thay đổi", "Chỉ tăng diện tích"], "correctAnswer": 0, "explanation": "Sản xuất cần thích ứng rủi ro khí hậu và bảo vệ tài nguyên." }
+    ]
+  }
+}

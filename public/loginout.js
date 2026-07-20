@@ -89,26 +89,30 @@ if (loginForm) {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     
-                    let newStreak = userData.streak || 1;
-                    let lastLogin = userData.lastLoginDate ? new Date(userData.lastLoginDate) : new Date(0);
+                    let newStreak = Number(userData.currentStreak ?? userData.streak ?? 0);
+                    let lastLogin = (userData.lastLoginDate || userData.lastLogin)
+                        ? new Date(userData.lastLoginDate || userData.lastLogin)
+                        : new Date(0);
                     lastLogin.setHours(0, 0, 0, 0);
                     
-                    const diffTime = Math.abs(today - lastLogin);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    const diffDays = Math.floor((today - lastLogin) / (1000 * 60 * 60 * 24));
                     
                     if (diffDays === 1) {
                         newStreak += 1;
                     } else if (diffDays > 1) {
-                        newStreak = 1;
+                        newStreak = 0;
                     }
                     
                     await db.collection('users').doc(email).update({
                         streak: newStreak,
+                        currentStreak: newStreak,
+                        lastLogin: new Date().toISOString(),
                         lastLoginDate: new Date().toISOString()
                     });
                     
                     // Cập nhật lại vào object để dùng cho localStorage
                     userData.streak = newStreak;
+                    userData.currentStreak = newStreak;
                     
                                         // RBAC check
                     let userRoles = userData.roles || ['user'];
@@ -125,6 +129,8 @@ if (loginForm) {
                             container.innerHTML = '';
                             const roleMap = {
                                 'user': { name: 'Người dùng (Học viên)', icon: 'fa-graduation-cap', color: '#1cb0f6', url: MAP_PAGE },
+                                'parent': { name: 'Phụ huynh', icon: 'fa-children', color: '#a78bfa', url: '/parent-dashboard' },
+                                'teacher': { name: 'Giáo viên', icon: 'fa-chalkboard-user', color: '#22c55e', url: '/teacher-dashboard' },
                                 'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin-dashboard' },
                                 'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs-dashboard' }
                             };
@@ -154,6 +160,8 @@ if (loginForm) {
                         
                         if (role === 'admin') window.location.href = '/admin-dashboard';
                         else if (role === 'cs') window.location.href = '/cs-dashboard';
+                        else if (role === 'teacher') window.location.href = '/teacher-dashboard';
+                        else if (role === 'parent') window.location.href = '/parent-dashboard';
                         else {
                             const pendingAction = localStorage.getItem('pending_action');
                             if (pendingAction) {
@@ -309,6 +317,7 @@ if (btnConfirmOtp) {
                     accountStatus: 'free',
                     lastHeartRegenTime: Date.now(),
                     streak: 1,
+                    currentStreak: 1,
                     gems: 500,
                     avatar: "fa-user-astronaut",
                     avatarIsBase64: false,
