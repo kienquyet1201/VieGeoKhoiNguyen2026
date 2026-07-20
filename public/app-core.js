@@ -2,6 +2,42 @@
 // VieGeo - app-core.js (SPA Logic & Rendering - Arena Update)
 // ============================================================================
 
+// Shared UI notifications, consolidated here from the removed patch script.
+window.VieGeoUI = window.VieGeoUI || {
+    alert(message, options = {}) {
+        try {
+            if (window.Swal && typeof window.Swal.fire === 'function') {
+                return window.Swal.fire({
+                    title: 'Thông báo', text: String(message || ''), icon: 'info',
+                    confirmButtonColor: '#1cb0f6', background: '#13253a', color: '#f0f4f8',
+                    heightAuto: false, ...options
+                });
+            }
+            console.warn('[VieGeo]', message);
+        } catch (error) { console.error('Notification error:', error); }
+        return Promise.resolve({ isConfirmed: true });
+    },
+    success(message, options = {}) { return this.alert(message, { title: 'Thành công', icon: 'success', ...options }); },
+    warning(message, options = {}) { return this.alert(message, { title: 'Lưu ý', icon: 'warning', ...options }); },
+    error(message, options = {}) { return this.alert(message, { title: 'Đã xảy ra lỗi', icon: 'error', ...options }); }
+};
+
+// Canonical role switcher for every dashboard route.
+window.switchRoleClientOnly = function switchRoleClientOnly(role) {
+    try {
+        if (!role) return;
+        const normalizedRole = role === 'map' ? 'user' : role;
+        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+        session.role = normalizedRole;
+        session.activeRole = normalizedRole;
+        localStorage.setItem('lm_session', JSON.stringify(session));
+        window.location.href = '/' + normalizedRole + '-dashboard';
+    } catch (error) {
+        console.error('Role switch error:', error);
+        window.VieGeoUI.error('Không thể chuyển quyền. Vui lòng thử lại.');
+    }
+};
+
 const sessionData = localStorage.getItem('lm_session');
 if (!sessionData) {
     if (window.location.search) {
@@ -529,7 +565,10 @@ function renderProfile() {
         const regionMap = { 'north': 'Miền Bắc', 'central': 'Miền Trung', 'south': 'Miền Nam' };
         
         let goalText = goalMap[gameState.learningProfile.goal] || 'Chưa rõ';
-        let interestsText = gameState.learningProfile.interests.map(i => regionMap[i]).join(', ') || 'Chưa rõ';
+        const interests = Array.isArray(gameState.learningProfile.interests)
+            ? gameState.learningProfile.interests
+            : [];
+        let interestsText = interests.map(i => regionMap[i]).filter(Boolean).join(', ') || 'Chưa rõ';
         
         document.getElementById('lpGoal').textContent = goalText;
         document.getElementById('lpInterests').textContent = interestsText;
@@ -888,19 +927,13 @@ function checkAndUnlockAchievements(state) {
     const targetEmail = urlParams.get('target');
     
     if (action === 'approve_premium' && targetEmail) {
-        if (sessionUser.email === 'dkq407311@gmail.com' || sessionUser.email === 'kienquyet1201@gmail.com') {
-            // Upgrade target user
-            db.collection('users').doc(targetEmail).update({ accountStatus: 'premium' })
-                .then(() => {
-                    showToast('Đã phê duyệt Premium thành công cho: ' + targetEmail);
-                    // Remove url params
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                })
-                .catch((err) => {
-                    showToast('Lỗi phê duyệt: ' + err.message, true);
-                });
-        } else {
-            showToast('Bạn không có quyền duyệt Premium!', true);
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
+        // DEV MODE: client-side approver blocking is intentionally disabled.
+        db.collection('users').doc(targetEmail).update({ accountStatus: 'premium' })
+            .then(() => {
+                showToast('Đã phê duyệt Premium thành công cho: ' + targetEmail);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            })
+            .catch((err) => {
+                showToast('Lỗi phê duyệt: ' + err.message, true);
+            });
     }

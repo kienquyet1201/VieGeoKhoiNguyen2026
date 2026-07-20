@@ -12,9 +12,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="bento.css">
-    <link rel="stylesheet" href="ui-foundation.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="ui-foundation.js"></script>
 </head>
 <body style="padding: 40px; justify-content: flex-start; height: auto; min-height: 100vh;">
 
@@ -109,13 +108,11 @@
         if(!role) return;
         try {
             var session = JSON.parse(localStorage.getItem('lm_session')) || {};
-            session.role = role;
+            const normalizedRole = role === 'map' ? 'user' : role;
+            session.role = normalizedRole;
+            session.activeRole = normalizedRole;
             localStorage.setItem('lm_session', JSON.stringify(session));
-            if(role === 'admin') window.location.href = 'admin.html';
-            else if(role === 'cs') window.location.href = 'cs.html';
-            else if(role === 'parent') window.location.href = 'parent.html';
-            else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
-            else window.location.href = 'map.html';
+            window.location.href = '/' + normalizedRole + '-dashboard';
         } catch(e) { console.error('switchRole error:', e); }
     };
     </script>

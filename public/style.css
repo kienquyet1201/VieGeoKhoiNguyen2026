@@ -1,4 +1,112 @@
 @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap');
+
+/* ========================================================================== 
+   CONSOLIDATED UI FOUNDATION
+   ========================================================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    font-family: 'Be Vietnam Pro', sans-serif !important;
+}
+
+html { width: 100%; min-height: 100%; text-size-adjust: 100%; }
+body, button, input, select, textarea { font-family: 'Be Vietnam Pro', sans-serif !important; }
+body { width: 100%; min-width: 0; min-height: 100vh; min-height: 100dvh; margin: 0; line-height: 1.5; }
+button, input, select, textarea { font: inherit !important; }
+img, video, canvas, svg { max-width: 100%; }
+
+i.fa, i.fas, i.far, i.fal, i.fat, i.fad,
+i.fa-solid, i.fa-regular, i.fa-light, i.fa-thin, i.fa-duotone,
+.fa-classic, .fa-sharp {
+    font-family: 'Font Awesome 6 Free' !important;
+    font-style: normal !important;
+}
+i.fab, i.fa-brands { font-family: 'Font Awesome 6 Brands' !important; font-style: normal !important; }
+.island-btn.completed::after { font-family: 'Font Awesome 6 Free' !important; font-weight: 900 !important; }
+
+:focus-visible { outline: 3px solid #1cb0f6; outline-offset: 3px; }
+
+#otpModal, #arenaRulesModal, #premiumModal, #surveyModal,
+#otpModalOverlay, #gatewayModalOverlay, .modal-overlay, .popup-overlay,
+.quiz-overlay, [data-ui-overlay='true'] {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 999999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: clamp(16px, 4vw, 40px) !important;
+    overflow: auto !important;
+}
+
+.swal2-container { position: fixed !important; inset: 0 !important; z-index: 9999999 !important; }
+.swal2-popup, .swal2-popup * { font-family: 'Be Vietnam Pro', sans-serif !important; }
+
+/* Topbar is a normal-flow row, never an overlay. */
+.bento-main {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-width: 0;
+}
+.stats-header, .dashboard-topbar {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    min-width: 0;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 16px;
+    padding: 20px 36px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    z-index: 2;
+}
+.topbar-title { margin: 0; color: #f8fafc; font-size: clamp(1.15rem, 2vw, 1.55rem); }
+.topbar-stats { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.bento-main > .tab-pane {
+    position: relative !important;
+    inset: auto !important;
+    grid-row: 2;
+    grid-column: 1;
+    min-width: 0;
+    min-height: 0;
+    display: none;
+}
+.bento-main > .tab-pane.active { display: block; }
+
+/* Shared Admin / CS / Teacher dashboard frame. */
+body.dashboard-page {
+    display: block !important;
+    height: auto !important;
+    min-height: 100dvh;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: clamp(12px, 2vw, 24px) !important;
+    background: #0a1628 !important;
+    color: #f0f4f8 !important;
+}
+.dashboard-shell { width: min(100%, 1440px); margin: 0 auto; }
+.dashboard-topbar {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 24px;
+    margin-bottom: 20px;
+}
+.dashboard-content, .dashboard-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 24px;
+    padding: clamp(18px, 3vw, 32px);
+}
+
+@media (max-width: 720px) {
+    .app-container { flex-direction: column; height: auto !important; min-height: 100dvh; padding: 12px !important; gap: 12px !important; }
+    .bento-sidebar { width: 100% !important; height: auto !important; }
+    .stats-header, .dashboard-topbar { padding: 16px !important; align-items: flex-start !important; flex-direction: column; }
+    .topbar-stats { width: 100%; justify-content: flex-start; }
+    .bento-main > .tab-pane { padding: 20px !important; }
+}
 /* ==========================================================================
    DESIGN SYSTEM & VARIABLES
    ========================================================================== */

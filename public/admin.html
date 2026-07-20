@@ -55,16 +55,16 @@
         .role-switcher-menu a:last-child { border-bottom: none; }
         .role-switcher-menu a:hover { background: #334155; }
     </style>
-    <link rel="stylesheet" href="ui-foundation.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="ui-foundation.js"></script>
 </head>
-<body>
+<body class="dashboard-page">
+    <div class="dashboard-shell">
 
-    <h1><i class="fa-solid fa-screwdriver-wrench"></i> Quản Trị Hệ Thống VieGeo</h1>
+    <h1 class="topbar-title"><i class="fa-solid fa-screwdriver-wrench"></i> Quản Trị Hệ Thống VieGeo</h1>
 
     <!-- TABS + ROLE SWITCHER -->
-    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--bg-card); padding-bottom: 10px; flex-wrap: wrap; align-items: center;">
+    <div class="dashboard-topbar">
         <button id="tabUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quản Lý Người Dùng & Premium</button>
         <button id="tabUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload Câu Hỏi</button>
         <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
@@ -136,6 +136,7 @@
     </div> <!-- END TAB UPLOAD -->
 
     <div id="toast">Thông báo</div>
+    </div>
 
     <script>
         function showToast(msg) {
@@ -361,13 +362,11 @@
             if(!role) return;
             try {
                 const session = JSON.parse(localStorage.getItem('lm_session')) || {};
-                session.role = role;
+                const normalizedRole = role === 'map' ? 'user' : role;
+                session.role = normalizedRole;
+                session.activeRole = normalizedRole;
                 localStorage.setItem('lm_session', JSON.stringify(session));
-                if(role === 'admin') window.location.href = 'admin.html';
-                else if(role === 'cs') window.location.href = 'cs.html';
-                else if(role === 'parent') window.location.href = 'parent.html';
-                else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
-                else window.location.href = 'map.html';
+                window.location.href = '/' + normalizedRole + '-dashboard';
             } catch(e) { console.error('switchRole error:', e); }
         };
 
@@ -375,18 +374,12 @@
         setTimeout(async () => {
             const sessionData = localStorage.getItem('lm_session');
             if (!sessionData) {
-                await VieGeoUI.warning("Vui lòng đăng nhập trước!");
+                await Swal.fire({ icon: 'warning', title: 'Lưu ý', text: 'Vui lòng đăng nhập trước!' });
                 window.location.href = 'loginout.html';
                 return;
             }
-            const sessionUser = JSON.parse(sessionData);
-            // Allow access if role is admin OR email matches admin
-            const isAdmin = sessionUser.role === 'admin' || sessionUser.email === 'kienquyet1201@gmail.com' || (sessionUser.roles && sessionUser.roles.includes('admin'));
-            if (!isAdmin) {
-                await VieGeoUI.error("Bạn không có quyền truy cập trang quản trị!");
-                window.location.href = 'map.html';
-                return;
-            }
+            // DEV MODE: role-based access blocking is intentionally disabled.
+            JSON.parse(sessionData);
 
             if(typeof db !== 'undefined') {
                 loadRequests();

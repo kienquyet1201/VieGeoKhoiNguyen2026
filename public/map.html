@@ -13,9 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSS -->
     <link rel="stylesheet" href="bento.css">
-    <link rel="stylesheet" href="ui-foundation.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="ui-foundation.js"></script>
 </head>
 <body>
 
@@ -66,9 +65,12 @@
 
             <!-- Global Stats Header -->
             <div class="stats-header">
-                <div class="stat-pill" style="color: #ff4b4b;"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
-                <div class="stat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
-                <div class="stat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
+                <h1 class="topbar-title">Không gian học tập</h1>
+                <div class="topbar-stats">
+                    <div class="stat-pill" style="color: #ff4b4b;"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
+                    <div class="stat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
+                    <div class="stat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
+                </div>
             </div>
 
             <!-- TAB: MAP (LEARN) -->
@@ -401,22 +403,6 @@
     <script src="app-core.js"></script>
     <script src="map.js"></script>
 
-    <script>
-    // Role Switcher
-    window.switchRoleClientOnly = function(role) {
-        if(!role) return;
-        try {
-            var session = JSON.parse(localStorage.getItem('lm_session')) || {};
-            session.role = role;
-            localStorage.setItem('lm_session', JSON.stringify(session));
-            if(role === 'admin') window.location.href = 'admin.html';
-            else if(role === 'cs') window.location.href = 'cs.html';
-            else if(role === 'parent') window.location.href = 'parent.html';
-            else if(role === 'teacher') window.location.href = 'teacher-dashboard.html';
-            else window.location.href = 'map.html';
-        } catch(e) { console.error('switchRole error:', e); }
-    };
-    </script>
 </body>
 </html>
 

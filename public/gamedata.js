@@ -80,7 +80,13 @@ function getGameState() {
         localStorage.setItem('VieGeo_state', JSON.stringify(state));
         return state;
     }
-    let parsed = JSON.parse(state);
+    let parsed;
+    try {
+        parsed = JSON.parse(state);
+    } catch (error) {
+        console.error('Dữ liệu trò chơi bị lỗi, đang khôi phục cấu trúc mặc định:', error);
+        parsed = JSON.parse(JSON.stringify(defaultGameState));
+    }
     if (!parsed.inventory) parsed.inventory = defaultGameState.inventory;
     if (parsed.inventory.powerupDoubleXp === undefined) parsed.inventory.powerupDoubleXp = 0;
     if (parsed.inventory.powerup5050 === undefined) parsed.inventory.powerup5050 = 0;
@@ -112,6 +118,11 @@ function getGameState() {
             report: ""
         };
     }
+    // Migration for accounts created before the complete learning-profile schema.
+    if (!Array.isArray(parsed.learningProfile.interests)) parsed.learningProfile.interests = [];
+    if (!Array.isArray(parsed.learningProfile.strongTopics)) parsed.learningProfile.strongTopics = [];
+    if (!Array.isArray(parsed.learningProfile.weakTopics)) parsed.learningProfile.weakTopics = [];
+    if (!Number.isFinite(parsed.learningProfile.totalQuestionsAnswered)) parsed.learningProfile.totalQuestionsAnswered = 0;
     if (!parsed.lessonResults) parsed.lessonResults = {};
 
     // PATCH: Fix old storage auto counting PvP wins

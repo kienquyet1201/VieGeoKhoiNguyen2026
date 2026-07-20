@@ -68,7 +68,7 @@ function initNormal() {
     }
 
     if (!foundNode) {
-        VieGeoUI.error("Lỗi tải bài học!");
+        Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Lỗi tải bài học!' });
         window.location.href = 'map.html';
         return;
     }
@@ -486,7 +486,7 @@ function finishLesson() {
 
 function showToast(msg) {
     // Simple alert for lesson page since we don't have the toast container here
-    VieGeoUI.alert(msg); 
+    Swal.fire({ icon: 'info', title: 'Thông báo', text: String(msg) }); 
 }
 
 function createConfetti() {

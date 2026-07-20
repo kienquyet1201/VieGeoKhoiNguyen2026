@@ -4,7 +4,14 @@
 
 const currentSession = localStorage.getItem('lm_session');
 if (currentSession) {
-    window.location.href = '/';
+    try {
+        const savedSession = JSON.parse(currentSession);
+        const savedRole = savedSession.activeRole || savedSession.role || 'user';
+        window.location.replace('/' + savedRole + '-dashboard');
+    } catch (error) {
+        console.error('Invalid saved session:', error);
+        localStorage.removeItem('lm_session');
+    }
 }
 
 const loginForm = document.getElementById('loginForm');
@@ -13,7 +20,7 @@ const loginMsg = document.getElementById('loginMessage'); // Đã khớp ID HTML
 const regMsg = document.getElementById('registerMessage'); // Đã khớp ID HTML
 
 const QUIZ_PAGE = '/index';
-const MAP_PAGE = '/';
+const MAP_PAGE = '/user-dashboard';
 
 // 1. ĐĂNG NHẬP
 function showToast(msg, isSuccess = true) {
@@ -118,8 +125,8 @@ if (loginForm) {
                             container.innerHTML = '';
                             const roleMap = {
                                 'user': { name: 'Người dùng (Học viên)', icon: 'fa-graduation-cap', color: '#1cb0f6', url: MAP_PAGE },
-                                'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin' },
-                                'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs' }
+                                'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin-dashboard' },
+                                'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs-dashboard' }
                             };
                             
                             userRoles.forEach(r => {
@@ -145,8 +152,8 @@ if (loginForm) {
                         const role = userRoles[0] || 'user';
                         localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: role, roles: userRoles, role: userData.role || role }));
                         
-                        if (role === 'admin') window.location.href = '/admin';
-                        else if (role === 'cs') window.location.href = '/cs';
+                        if (role === 'admin') window.location.href = '/admin-dashboard';
+                        else if (role === 'cs') window.location.href = '/cs-dashboard';
                         else {
                             const pendingAction = localStorage.getItem('pending_action');
                             if (pendingAction) {
@@ -241,7 +248,7 @@ if (regForm) {
                 });
             } catch (error) {
                 console.warn("EmailJS failed, using fallback mode for testing.", error);
-                VieGeoUI.warning("Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode);
+                Swal.fire({ icon: 'warning', title: 'Lưu ý', text: "Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode });
             }
 
             // Dù gửi thật hay fallback, vẫn mở bảng OTP cho phép nhập
@@ -370,7 +377,7 @@ if (forgotForm) {
                 });
             } catch (error) {
                 console.warn("EmailJS failed, using fallback mode for testing.");
-                VieGeoUI.warning("Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode);
+                Swal.fire({ icon: 'warning', title: 'Lưu ý', text: "Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode });
             }
             
             otpEmailTarget.textContent = email;
