@@ -5,19 +5,11 @@
 const mapContainer = document.getElementById('mapViewContainer');
 const mapTitle = document.getElementById('mapTitle');
 const btnMapBack = document.getElementById('btnMapBack');
-const mapSearchInput = document.getElementById('mapSearchInput');
 let state = getGameState();
 
 let currentView = 'regions'; // regions | provinces | lessons
 let selectedRegion = null;
 let selectedProvince = null;
-let mapSearchTerm = '';
-
-mapSearchInput?.addEventListener('input', event => {
-    mapSearchTerm = event.target.value.toLowerCase().trim();
-    renderMap();
-});
-
 // Update Stats UI
 function updateStatsUI() {
     if (document.getElementById('statHearts')) document.getElementById('statHearts').textContent = state.hearts;
@@ -63,7 +55,6 @@ function renderRegions() {
     LEARNING_REGIONS.forEach(region => {
         const card = document.createElement('div');
         card.className = 'bento-card';
-        card.classList.toggle('hidden', Boolean(mapSearchTerm && !region.name.toLowerCase().includes(mapSearchTerm)));
         card.style.cursor = 'pointer';
         card.style.borderTop = `4px solid ${region.color}`;
         card.innerHTML = `
@@ -98,7 +89,6 @@ function renderProvinces() {
         
         const card = document.createElement('div');
         card.className = 'bento-card';
-        card.classList.toggle('hidden', Boolean(mapSearchTerm && !prov.name.toLowerCase().includes(mapSearchTerm)));
         card.style.cursor = 'pointer';
         card.style.borderTop = `4px solid ${prov.color}`;
         card.innerHTML = `
@@ -154,7 +144,6 @@ function renderLessons() {
         if (lesson.type === 'quiz_midterm' || lesson.type === 'quiz_final') icon = 'fa-crown';
         
         const wrapper = document.createElement('div');
-        wrapper.classList.toggle('hidden', Boolean(mapSearchTerm && !lesson.title.toLowerCase().includes(mapSearchTerm)));
         wrapper.style.display = 'flex';
         wrapper.style.flexDirection = 'column';
         wrapper.style.alignItems = 'center';

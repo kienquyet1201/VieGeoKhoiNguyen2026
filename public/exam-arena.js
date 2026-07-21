@@ -50,7 +50,7 @@
             'examTimer', 'examQuestionCounter', 'examQuestionTag', 'examQuestionText',
             'examOptions', 'examPrevious', 'examMark', 'examNext', 'examAnsweredCount',
             'examQuestionNav', 'examSubmit', 'examArenaTitle', 'examArenaSubtitle',
-            'examSetupModal', 'examSetupForm', 'examSetupTitle', 'examSetupGrade',
+            'examSetupForm', 'examSetupGrade',
             'examSetupDifficulty', 'examSetupTopic', 'examSetupStart'
         ].forEach((id) => { elements[id] = getElement(id); });
     }
@@ -62,8 +62,11 @@
     }
 
     function updateSetupTitle() {
-        const title = titleForGrade(elements.examSetupGrade?.value);
-        if (elements.examSetupTitle) elements.examSetupTitle.textContent = title;
+        const config = readExamConfig();
+        if (elements.examArenaTitle) elements.examArenaTitle.textContent = config.title;
+        if (elements.examArenaSubtitle) {
+            elements.examArenaSubtitle.textContent = `Sẵn sàng luyện 40 câu · Lớp ${config.grade} · ${config.topic}`;
+        }
     }
 
     function readExamConfig() {
@@ -74,6 +77,22 @@
             topic: elements.examSetupTopic?.value || 'Atlat',
             title: titleForGrade(grade)
         };
+    }
+
+    function setExamInteractionEnabled(isEnabled) {
+        ['examPrevious', 'examMark', 'examNext', 'examSubmit'].forEach((key) => {
+            if (elements[key]) elements[key].disabled = !isEnabled;
+        });
+    }
+
+    function renderWaitingState() {
+        if (elements.examQuestionCounter) elements.examQuestionCounter.textContent = 'Chưa bắt đầu';
+        if (elements.examQuestionTag) elements.examQuestionTag.textContent = 'Thiết lập đề luyện';
+        if (elements.examQuestionText) elements.examQuestionText.textContent = 'Chọn cấu hình ở bảng điều khiển phía trên để bắt đầu luyện đề.';
+        if (elements.examOptions) {
+            elements.examOptions.innerHTML = '<p class="exam-waiting-state"><i class="fa-solid fa-circle-info"></i> Đề thi sẽ xuất hiện tại đây sau khi bạn nhấn “Bắt đầu làm đề”.</p>';
+        }
+        if (elements.examQuestionNav) elements.examQuestionNav.innerHTML = '<p class="exam-waiting-nav">Danh sách 40 câu hỏi sẽ sẵn sàng sau khi khởi tạo đề.</p>';
     }
 
     function shuffle(items) {
@@ -150,6 +169,7 @@
 
         try {
             questions = await fetchExamQuestions(selectedExamConfig);
+            window.clearInterval(timerId);
             currentIndex = 0;
             timeLeft = EXAM_DURATION_SECONDS;
             submitted = false;
@@ -159,7 +179,7 @@
             questionStartedAt = Date.now();
             if (elements.examArenaTitle) elements.examArenaTitle.textContent = selectedExamConfig.title;
             if (elements.examArenaSubtitle) elements.examArenaSubtitle.textContent = `Đề 40 câu · Lớp ${selectedExamConfig.grade} · ${selectedExamConfig.topic} · ${selectedExamConfig.difficulty}`;
-            if (elements.examSetupModal) elements.examSetupModal.style.display = 'none';
+            setExamInteractionEnabled(true);
             renderQuestion();
             renderNavigator();
             startTimer();
@@ -191,6 +211,10 @@
 
     function renderQuestion() {
         const question = questions[currentIndex];
+        if (!question) {
+            renderWaitingState();
+            return;
+        }
         elements.examQuestionCounter.textContent = `Câu ${question.number || currentIndex + 1} / ${questions.length}`;
         elements.examQuestionTag.textContent = question.tag;
         elements.examQuestionText.textContent = question.text;
@@ -245,6 +269,7 @@
     }
 
     function startTimer() {
+        window.clearInterval(timerId);
         elements.examTimer.textContent = formatTime(timeLeft);
         timerId = window.setInterval(() => {
             timeLeft -= 1;
@@ -326,7 +351,9 @@
         elements.examPrevious.addEventListener('click', () => goToQuestion(currentIndex - 1));
         elements.examNext.addEventListener('click', () => goToQuestion(currentIndex + 1));
         elements.examMark.addEventListener('click', () => {
-            const id = questions[currentIndex].id;
+            const question = questions[currentIndex];
+            if (!question) return;
+            const id = question.id;
             if (marked.has(id)) marked.delete(id); else marked.add(id);
             renderQuestion();
             renderNavigator();
@@ -338,7 +365,11 @@
         cacheElements();
         if (!elements.examQuestionText) return;
         bindEvents();
+        setExamInteractionEnabled(false);
+        renderWaitingState();
         elements.examSetupGrade?.addEventListener('change', updateSetupTitle);
+        elements.examSetupDifficulty?.addEventListener('change', updateSetupTitle);
+        elements.examSetupTopic?.addEventListener('change', updateSetupTitle);
         elements.examSetupForm?.addEventListener('submit', startExamFromSetup);
         updateSetupTitle();
     });
