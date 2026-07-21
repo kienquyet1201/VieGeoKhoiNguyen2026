@@ -22,18 +22,23 @@
         updateThemeIcon();
     }
 
-    function persistGrade(grade) {
+    function persistDifficulty(difficulty) {
         const activeGameState = window.gameState;
         if (!activeGameState) return;
+        const normalizedDifficulty = typeof normalizeDifficulty === 'function'
+            ? normalizeDifficulty(difficulty)
+            : (['easy', 'medium', 'hard'].includes(String(difficulty)) ? String(difficulty) : 'easy');
 
-        activeGameState.selectedGrade = grade;
+        activeGameState.selectedDifficulty = normalizedDifficulty;
+        delete activeGameState.selectedGrade;
         if (typeof saveGameState === 'function') saveGameState(activeGameState);
         if (session.email && typeof db !== 'undefined') {
             db.collection('users').doc(session.email).set({
-                grade: grade === 'all' ? null : Number(grade),
-                selectedGrade: grade,
+                grade: null,
+                selectedGrade: null,
+                selectedDifficulty: normalizedDifficulty,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true }).catch(error => console.warn('Không thể đồng bộ khối lớp:', error));
+            }, { merge: true }).catch(error => console.warn('Không thể đồng bộ mức độ:', error));
         }
         if (typeof renderMap === 'function') renderMap();
     }
@@ -112,10 +117,12 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         applySavedTheme();
-        const grade = byId('quickGradeSelect');
-        if (grade && window.gameState) {
-            grade.value = window.gameState.selectedGrade || 'all';
-            grade.addEventListener('change', () => persistGrade(grade.value));
+        const difficulty = byId('quickDifficultySelect');
+        if (difficulty && window.gameState) {
+            difficulty.value = typeof normalizeDifficulty === 'function'
+                ? normalizeDifficulty(window.gameState.selectedDifficulty)
+                : (['easy', 'medium', 'hard'].includes(String(window.gameState.selectedDifficulty)) ? String(window.gameState.selectedDifficulty) : 'easy');
+            difficulty.addEventListener('change', () => persistDifficulty(difficulty.value));
         }
         byId('btnThemeToggle')?.addEventListener('click', () => {
             const nextLight = !document.body.classList.contains('light-mode');

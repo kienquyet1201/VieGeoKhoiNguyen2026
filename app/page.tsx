@@ -12,7 +12,7 @@ export default function HomePage() {
         <div className="landing-stats" aria-label="Quy mô nền tảng">
           <div><strong>63</strong><span>Tỉnh thành</span></div>
           <div><strong>6.300</strong><span>Đảo tri thức</span></div>
-          <div><strong>3</strong><span>Lộ trình khối</span></div>
+          <div><strong>3</strong><span>Mức độ học</span></div>
         </div>
         <a className="landing-cta" href="/loginout">Bắt đầu hành trình <span aria-hidden="true">→</span></a>
       </section>
@@ -29,7 +29,7 @@ export default function HomePage() {
         :global(.level-loading) { color: #eaf7ff; font-size: 1.1rem; }
         :global(.level-dialog) { width: min(560px, 100%); padding: 34px; border: 1px solid rgba(255,255,255,.14); border-radius: 26px; background: #12233a; color: #fff; box-shadow: 0 28px 70px rgba(0,0,0,.42); text-align: center; }
         :global(.level-icon) { display: block; font-size: 2.6rem; margin-bottom: 8px; } :global(.level-eyebrow) { margin: 0; color: #6ce0ff; font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; } :global(.level-dialog h2) { margin: 10px 0; font-size: 1.75rem; } :global(.level-dialog > p:not(.level-eyebrow)) { color: #aec0d5; line-height: 1.55; }
-        :global(.grade-option-list) { display: grid; gap: 12px; margin-top: 24px; } :global(.grade-option) { display: grid; gap: 4px; width: 100%; padding: 16px 18px; border: 1px solid color-mix(in srgb, var(--grade-accent), transparent 52%); border-radius: 16px; background: color-mix(in srgb, var(--grade-accent), transparent 89%); color: #fff; cursor: pointer; text-align: left; } :global(.grade-option:hover:not(:disabled)) { transform: translateY(-2px); border-color: var(--grade-accent); } :global(.grade-option:disabled) { cursor: wait; opacity: .7; } :global(.grade-option strong) { color: var(--grade-accent); font-size: 1.05rem; } :global(.grade-option span) { color: #bbcadc; font-size: .88rem; }
+        :global(.difficulty-option-list) { display: grid; gap: 12px; margin-top: 24px; } :global(.difficulty-option) { display: grid; gap: 4px; width: 100%; padding: 16px 18px; border: 1px solid color-mix(in srgb, var(--difficulty-accent), transparent 52%); border-radius: 16px; background: color-mix(in srgb, var(--difficulty-accent), transparent 89%); color: #fff; cursor: pointer; text-align: left; } :global(.difficulty-option:hover:not(:disabled)) { transform: translateY(-2px); border-color: var(--difficulty-accent); } :global(.difficulty-option:disabled) { cursor: wait; opacity: .7; } :global(.difficulty-option strong) { color: var(--difficulty-accent); font-size: 1.05rem; } :global(.difficulty-option span) { color: #bbcadc; font-size: .88rem; }
         @media (max-width: 480px) { .landing-stats { gap: 18px; } :global(.level-dialog) { padding: 26px 20px; } }
       `}</style>
     </main>

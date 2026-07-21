@@ -81,7 +81,7 @@ i.fab, i.fa-brands { font-family: 'Font Awesome 6 Brands' !important; font-style
 }
 .bento-main > .tab-pane.active { display: block; }
 
-/* Shared Admin / CS / Teacher dashboard frame. */
+/* Shared Admin / CS dashboard frame. */
 body.dashboard-page {
     display: block !important;
     height: auto !important;
@@ -1647,10 +1647,10 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 /* ── Taskbar controls and parent confirmation ─────────────────────────── */
 .stats-header { flex-wrap: wrap; }
 .taskbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.taskbar-grade, .taskbar-icon-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border: 1px solid rgba(148, 163, 184, .22); border-radius: 12px; background: rgba(15, 23, 42, .45); color: var(--text-main); }
-.taskbar-grade { gap: 8px; padding: 0 10px; color: #7dd3fc; }
-.taskbar-grade select { min-width: 90px; border: 0; outline: 0; background: transparent; color: inherit; cursor: pointer; }
-.taskbar-grade option { background: #13253a; color: #fff; }
+.taskbar-difficulty, .taskbar-icon-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; border: 1px solid rgba(148, 163, 184, .22); border-radius: 12px; background: rgba(15, 23, 42, .45); color: var(--text-main); }
+.taskbar-difficulty { gap: 8px; padding: 0 10px; color: #7dd3fc; }
+.taskbar-difficulty select { min-width: 90px; border: 0; outline: 0; background: transparent; color: inherit; cursor: pointer; }
+.taskbar-difficulty option { background: #13253a; color: #fff; }
 .taskbar-icon-btn { width: 38px; cursor: pointer; transition: transform .2s, background .2s; }
 .taskbar-icon-btn:hover { transform: translateY(-2px); background: rgba(28, 176, 246, .18); }
 .taskbar-logout { color: #fb7185; }
@@ -1664,7 +1664,7 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .parent-pin-card input { display: block; width: 100%; margin: 20px 0 14px; padding: 14px; border: 1px solid rgba(167, 139, 250, .42); border-radius: 14px; outline: 0; background: rgba(15, 23, 42, .72); color: #fff; font-size: 1.35rem; letter-spacing: .3em; text-align: center; }
 .parent-pin-card .bento-btn { width: 100%; border: 0; background: #8b5cf6; color: #fff; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
-@media (max-width: 760px) { .stats-header { align-items: flex-start; } .taskbar-actions { width: 100%; margin-left: 0; justify-content: flex-end; } .taskbar-grade { margin-right: auto; } }
+@media (max-width: 760px) { .stats-header { align-items: flex-start; } .taskbar-actions { width: 100%; margin-left: 0; justify-content: flex-end; } .taskbar-difficulty { margin-right: auto; } }
 
 /* ── Support chat ─────────────────────────────────────────────────────── */
 .support-chat { position: fixed; right: 24px; bottom: 24px; z-index: 5000; font-family: 'Be Vietnam Pro', sans-serif; }
@@ -1775,7 +1775,7 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .user-role-switcher select:disabled { cursor: not-allowed; opacity: .55; }
 .user-role-switcher option { background: #0f1d31; color: #e7eef9; }
 .user-top-navbar .taskbar-actions { flex: 0 0 auto; gap: 5px; margin: 0; }
-.user-top-navbar .taskbar-grade { margin: 0; text-align: center; }.user-top-navbar .taskbar-grade select { text-align: center; }
+.user-top-navbar .taskbar-difficulty { margin: 0; text-align: center; }.user-top-navbar .taskbar-difficulty select { text-align: center; }
 .student-app .bento-main { display: block !important; width: 100% !important; min-height: 100dvh; margin: 0 !important; padding: 100px 24px 8rem !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; }
 /* bento.css was written for an absolute-positioned sidebar layout.  The student
    canvas uses a fixed header, so make the active pane explicitly visible in flow. */
@@ -1806,7 +1806,7 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 @media (max-width: 720px) { .profile-settings-heading,.settings-card { align-items: flex-start; flex-direction: column; }.profile-settings-heading { padding-inline: 16px; }.profile-settings-panel { padding: 16px; }.profile-settings-tabs { width: 100%; }.profile-settings-tab { flex: 1 1 auto; }.settings-action { width: 100%; } }
 @media (max-width: 1180px) { .user-top-navbar { padding-inline: 14px; } .user-top-navbar .topbar-stats .stat-pill:nth-last-child(-n+2) { display: none; } .user-topbar-navigation { gap: 4px; } }
 @media (max-width: 1050px) { .user-top-navbar .user-navigation-animated .nav-button[aria-current="page"] { flex-basis: 42px; width: 42px; padding-right: 0; border-radius: 50%; } .user-top-navbar .user-navigation-animated .nav-label { max-width: 0; opacity: 0; } }
-@media (max-width: 820px) { .user-top-navbar { min-height: 72px; gap: 8px; padding: 12px; } .user-top-navbar .app-logo { font-size: 1.1rem; } .user-top-navbar .topbar-stats .stat-pill:nth-child(n+3) { display: none; } .user-top-navbar .taskbar-grade { display: none; } .user-top-navbar .nav-menu { max-width: 48vw; } .student-app .bento-main { padding: 92px 14px 24px !important; } }
+@media (max-width: 820px) { .user-top-navbar { min-height: 72px; gap: 8px; padding: 12px; } .user-top-navbar .app-logo { font-size: 1.1rem; } .user-top-navbar .topbar-stats .stat-pill:nth-child(n+3) { display: none; } .user-top-navbar .taskbar-difficulty { display: none; } .user-top-navbar .nav-menu { max-width: 48vw; } .student-app .bento-main { padding: 92px 14px 24px !important; } }
 @media (max-width: 520px) { .student-app .app-container > .user-role-switcher { left: 14px; bottom: 14px; } }
 
 /* ── Operations dashboards: shared dark platform styles ── */

@@ -82,7 +82,7 @@ function renderProvinces() {
     
     selectedRegion.provinces.forEach(prov => {
         const provinceLessons = (window.VieGeoLearningPath && typeof window.VieGeoLearningPath.getLessonsForProvince === 'function')
-            ? window.VieGeoLearningPath.getLessonsForProvince(prov, state.selectedGrade)
+            ? window.VieGeoLearningPath.getLessonsForProvince(prov, state.selectedDifficulty)
             : prov.lessons;
         // Calculate completion
         let completed = 0;
@@ -130,7 +130,7 @@ function renderLessons() {
     mapContainer.style.position = 'relative';
     mapContainer.classList.add('map-learning-route');
     const lessons = (window.VieGeoLearningPath && typeof window.VieGeoLearningPath.getLessonsForProvince === 'function')
-        ? window.VieGeoLearningPath.getLessonsForProvince(selectedProvince, state.selectedGrade)
+        ? window.VieGeoLearningPath.getLessonsForProvince(selectedProvince, state.selectedDifficulty)
         : selectedProvince.lessons;
     
     // A broad, symmetrical path keeps each island readable and leaves room for

@@ -50,7 +50,7 @@
             'examTimer', 'examQuestionCounter', 'examQuestionTag', 'examQuestionText',
             'examOptions', 'examPrevious', 'examMark', 'examNext', 'examAnsweredCount',
             'examQuestionNav', 'examSubmit', 'examArenaTitle', 'examArenaSubtitle',
-            'examSetupForm', 'examSetupGrade',
+            'examSetupForm',
             'examSetupDifficulty', 'examSetupTopic', 'examSetupStart',
             'examWorkspace', 'examExit', 'arenaGlobalTopbar'
         ].forEach((id) => { elements[id] = getElement(id); });
@@ -96,27 +96,27 @@
         updateSetupTitle();
     }
 
-    function titleForGrade(grade) {
-        if (Number(grade) === 5) return 'Đấu trường luyện thi THCS';
-        if (Number(grade) === 9) return 'Luyện thi THPT';
-        return 'Luyện thi THPTQG';
+    function difficultyLabel(difficulty) {
+        return ({ easy: 'Dễ', medium: 'Trung bình', hard: 'Khó' })[difficulty] || 'Dễ';
+    }
+
+    function titleForDifficulty(difficulty) {
+        return `Đấu trường luyện tập · ${difficultyLabel(difficulty)}`;
     }
 
     function updateSetupTitle() {
         const config = readExamConfig();
         if (elements.examArenaTitle) elements.examArenaTitle.textContent = config.title;
         if (elements.examArenaSubtitle) {
-            elements.examArenaSubtitle.textContent = `Sẵn sàng luyện 40 câu · Lớp ${config.grade} · ${config.topic}`;
+            elements.examArenaSubtitle.textContent = `Sẵn sàng luyện 40 câu · ${difficultyLabel(config.difficulty)} · ${config.topic}`;
         }
     }
 
     function readExamConfig() {
-        const grade = Number(elements.examSetupGrade?.value || 5);
         return {
-            grade,
             difficulty: elements.examSetupDifficulty?.value || 'easy',
             topic: elements.examSetupTopic?.value || 'Atlat',
-            title: titleForGrade(grade)
+            title: titleForDifficulty(elements.examSetupDifficulty?.value || 'easy')
         };
     }
 
@@ -174,15 +174,14 @@
         let remoteQuestions = [];
         if (typeof db !== 'undefined') {
             try {
-                // Admin reminder: every questions document must contain grade (5/9/12), topic and difficulty.
-                const selectedGrade = config.grade;
-                const snapshot = await db.collection('questions').where("grade", "==", selectedGrade).get();
+                // Each questions document is classified by difficulty and topic.
+                const snapshot = await db.collection('questions').where("difficulty", "==", config.difficulty).get();
                 remoteQuestions = snapshot.docs
                     .map((document, index) => normalizeQuestion(document.id, document.data() || {}, index + 1))
                     .filter(Boolean)
                     .filter((question) => {
                         const source = snapshot.docs.find((document) => String(document.id) === question.id)?.data() || {};
-                        return (!source.topic || source.topic === config.topic) && (!source.difficulty || source.difficulty === config.difficulty);
+                        return !source.topic || source.topic === config.topic;
                     });
             } catch (error) {
                 console.warn('Không thể tải đề Firebase, dùng đề minh họa an toàn.', error);
@@ -191,10 +190,10 @@
 
         const source = remoteQuestions.length >= 40 ? shuffle(remoteQuestions).slice(0, 40) : fallbackQuestions.map((question, index) => ({
             ...question,
-            id: `demo-${config.grade}-${config.topic}-${index + 1}`,
+            id: `demo-${config.difficulty}-${config.topic}-${index + 1}`,
             number: index + 1,
             tag: config.topic,
-            text: `${question.text} — Lớp ${config.grade}, mức ${config.difficulty}`
+            text: `${question.text} — Mức ${difficultyLabel(config.difficulty)}`
         }));
         return source.map((question, index) => ({ ...question, number: index + 1 }));
     }
@@ -220,7 +219,7 @@
             questionStartedAt = Date.now();
             enterExamFullscreen();
             if (elements.examArenaTitle) elements.examArenaTitle.textContent = selectedExamConfig.title;
-            if (elements.examArenaSubtitle) elements.examArenaSubtitle.textContent = `Đề 40 câu · Lớp ${selectedExamConfig.grade} · ${selectedExamConfig.topic} · ${selectedExamConfig.difficulty}`;
+            if (elements.examArenaSubtitle) elements.examArenaSubtitle.textContent = `Đề 40 câu · ${difficultyLabel(selectedExamConfig.difficulty)} · ${selectedExamConfig.topic}`;
             setExamInteractionEnabled(true);
             renderQuestion();
             renderNavigator();
@@ -365,7 +364,6 @@
         const result = {
             source: 'exam-arena',
             title: selectedExamConfig?.title || 'Đấu trường Luyện thi',
-            grade: selectedExamConfig?.grade || null,
             topic: selectedExamConfig?.topic || null,
             difficulty: selectedExamConfig?.difficulty || null,
             score: correct,
@@ -410,7 +408,6 @@
         bindEvents();
         setExamInteractionEnabled(false);
         renderWaitingState();
-        elements.examSetupGrade?.addEventListener('change', updateSetupTitle);
         elements.examSetupDifficulty?.addEventListener('change', updateSetupTitle);
         elements.examSetupTopic?.addEventListener('change', updateSetupTitle);
         elements.examSetupForm?.addEventListener('submit', startExamFromSetup);

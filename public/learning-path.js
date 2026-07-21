@@ -2,18 +2,23 @@
 (function () {
     'use strict';
 
-    const GRADE_SOURCES = { '5': 'questions/grade5.json', '9': 'questions/grade9.json', '12': 'questions/grade12.json' };
+    // Existing question banks remain internal sources; learners select only a
+    // difficulty tier, never a school grade.
+    const QUESTION_SOURCES = ['questions/grade5.json', 'questions/grade9.json', 'questions/grade12.json'];
     const cache = new Map();
 
-    function selectedGrade() {
-        try { return typeof gameState !== 'undefined' ? String(gameState.selectedGrade || 'all') : 'all'; }
-        catch { return 'all'; }
+    function normalizeLearningDifficulty(value) {
+        const normalized = String(value || '').toLowerCase();
+        return ['easy', 'medium', 'hard'].includes(normalized) ? normalized : 'easy';
     }
 
-    function difficultyFor(index) {
-        if (index <= 11) return 'easy';
-        if (index <= 22) return 'medium';
-        return 'hard';
+    function selectedDifficulty() {
+        try { return normalizeLearningDifficulty(gameState?.selectedDifficulty); }
+        catch { return 'easy'; }
+    }
+
+    function difficultyLabel(difficulty) {
+        return ({ easy: 'Dễ', medium: 'Trung bình', hard: 'Khó' })[difficulty] || 'Dễ';
     }
 
     function provinceKey(province) {
@@ -21,29 +26,28 @@
             .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
     }
 
-    function buildProvincePath(province, grade) {
-        const key = `${provinceKey(province)}:${grade}`;
+    function buildProvincePath(province, selectedTier) {
+        const difficulty = normalizeLearningDifficulty(selectedTier);
+        const key = `${provinceKey(province)}:${difficulty}`;
         if (cache.has(key)) return cache.get(key);
 
         const islands = Array.from({ length: 34 }, (_, offset) => {
             const islandIndex = offset + 1;
             const nodeKind = islandIndex === 34 ? 'boss' : ([11, 22, 33].includes(islandIndex) ? 'checkpoint' : 'small');
             const isBoss = nodeKind !== 'small';
-            const difficulty = difficultyFor(islandIndex);
             const title = nodeKind === 'boss'
                 ? 'BOSS CUỐI · Chinh phục tỉnh thành'
                 : nodeKind === 'checkpoint'
-                    ? `Trạm kiểm tra ${difficulty === 'easy' ? 'Dễ' : difficulty === 'medium' ? 'Trung bình' : 'Khó'}`
+                    ? `Trạm kiểm tra ${difficultyLabel(difficulty)}`
                     : `Đảo tri thức ${islandIndex}`;
             return {
-                id: `path-${provinceKey(province)}-g${grade}-i${islandIndex}`,
+                id: `path-${provinceKey(province)}-d${difficulty}-i${islandIndex}`,
                 title,
                 islandIndex,
                 isBoss,
                 nodeKind,
                 province: province.name,
                 difficulty,
-                grade: String(grade),
                 dynamicPath: true,
                 type: isBoss ? 'quiz_final' : 'quiz',
                 reward: { xp: nodeKind === 'boss' ? 180 : isBoss ? 80 : 12, gems: nodeKind === 'boss' ? 90 : isBoss ? 35 : 5, booster: isBoss ? 'random' : null },
@@ -53,9 +57,8 @@
         return islands;
     }
 
-    function getLessonsForProvince(province, grade = selectedGrade()) {
-        const normalizedGrade = GRADE_SOURCES[String(grade)] ? String(grade) : '9';
-        return buildProvincePath(province, normalizedGrade);
+    function getLessonsForProvince(province, difficulty = selectedDifficulty()) {
+        return buildProvincePath(province, normalizeLearningDifficulty(difficulty));
     }
 
     function findProvinceByKey(key) {
@@ -67,17 +70,23 @@
         return null;
     }
 
+    function difficultyFromLegacyGrade(grade) {
+        return ({ '5': 'easy', '9': 'medium', '12': 'hard' })[String(grade || '')] || 'easy';
+    }
+
     function findLesson(id) {
-        const matched = /^path-(.+)-g(5|9|12)-i(\d{1,3})$/.exec(String(id || ''));
+        const matched = /^path-(.+)-(?:d(easy|medium|hard)|g(5|9|12))-i(\d{1,3})$/.exec(String(id || ''));
         if (!matched) return null;
         const province = findProvinceByKey(matched[1]);
         if (!province) return null;
-        return buildProvincePath(province, matched[2]).find(item => item.id === id) || null;
+        const difficulty = matched[2] || difficultyFromLegacyGrade(matched[3]);
+        const islandIndex = Number(matched[4]);
+        return buildProvincePath(province, difficulty).find(item => item.islandIndex === islandIndex) || null;
     }
 
     function provinceForLesson(lesson) {
         if (lesson?.province) return lesson.province;
-        const matched = /^path-(.+)-g(5|9|12)-i\d{1,3}$/.exec(String(lesson?.id || ''));
+        const matched = /^path-(.+)-(?:d(?:easy|medium|hard)|g(?:5|9|12))-i\d{1,3}$/.exec(String(lesson?.id || ''));
         const province = matched ? findProvinceByKey(matched[1]) : null;
         return province?.name || '';
     }
@@ -113,10 +122,10 @@
                     .where('difficulty', '==', lesson.difficulty || 'easy')
                     .limit(50)
                     .get();
-                const matchingGrade = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(item => item.grade === undefined || String(item.grade) === String(lesson.grade));
-                const questions = randomFive(matchingGrade, fallback);
+                const questions = randomFive(
+                    snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                    fallback
+                );
                 if (questions.length === 5) return questions;
             } catch (error) {
                 console.warn(`Không thể tải câu hỏi từ ${collectionName}:`, error);
@@ -135,13 +144,15 @@
         const remoteQuestions = await fetchQuestionsFromFirebase(lesson, fallback);
         if (remoteQuestions.length === 5) return remoteQuestions;
 
-        const source = GRADE_SOURCES[String(lesson.grade)];
-        if (!source) return Array.from({ length: 5 }, () => ({ ...fallback }));
         try {
-            const response = await fetch(source, { cache: 'force-cache' });
-            if (!response.ok) throw new Error('Không tải được ngân hàng câu hỏi.');
-            const bank = await response.json();
-            const tier = bank?.tiers?.[lesson.difficulty] || bank?.tiers?.easy || [];
+            const banks = await Promise.all(QUESTION_SOURCES.map(async (source) => {
+                const response = await fetch(source, { cache: 'force-cache' });
+                if (!response.ok) throw new Error('Không tải được ngân hàng câu hỏi.');
+                return response.json();
+            }));
+            const tier = banks.flatMap((bank) => Array.isArray(bank?.tiers?.[lesson.difficulty])
+                ? bank.tiers[lesson.difficulty]
+                : []);
             const localQuestions = randomFive(tier, fallback);
             return localQuestions.length === 5 ? localQuestions : Array.from({ length: 5 }, () => ({ ...fallback }));
         } catch (error) {
@@ -150,5 +161,5 @@
         }
     }
 
-    window.VieGeoLearningPath = { getLessonsForProvince, findLesson, loadQuestions, difficultyFor };
+    window.VieGeoLearningPath = { getLessonsForProvince, findLesson, loadQuestions };
 }());

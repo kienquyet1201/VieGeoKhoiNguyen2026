@@ -125,23 +125,23 @@ function initArena() {
     if (!matchData) { window.location.href = '/map'; return; }
     matchReward = matchData.reward;
 
-    // Load questions based on gradeFilter
+    // Arena matches use the selected difficulty tier, not a school grade.
     let allQs = [];
     if (typeof PVP_POOL !== 'undefined') {
-        const matchingPool = PVP_POOL.find(p => p.grade === matchData.gradeFilter);
-        if (matchingPool && matchingPool.nodes) {
-            matchingPool.nodes.forEach(node => {
-                if (node.questions) {
-                    allQs = allQs.concat(node.questions);
-                }
-            });
-        }
+        const pools = Array.isArray(PVP_POOL) ? PVP_POOL : [];
+        const nodes = pools.flatMap(pool => Array.isArray(pool.nodes) ? pool.nodes : []);
+        const matchesDifficulty = (node) => String(node?.difficulty || node?.level || '').toLowerCase() === matchData.difficulty;
+        const sourceNodes = nodes.filter(matchesDifficulty);
+        (sourceNodes.length ? sourceNodes : nodes).forEach((node) => {
+            if (Array.isArray(node.questions)) allQs = allQs.concat(node.questions);
+        });
     } else if (typeof GAME_UNITS !== 'undefined') {
-        // Fallback for old cache
-        GAME_UNITS.forEach(u => {
-            if (u.grade === matchData.gradeFilter) {
-                u.nodes.filter(n => n.type === 'lesson').forEach(n => allQs = allQs.concat(n.questions));
-            }
+        const nodes = GAME_UNITS.flatMap(unit => Array.isArray(unit.nodes) ? unit.nodes : [])
+            .filter(node => node.type === 'lesson');
+        const matchesDifficulty = (node) => String(node?.difficulty || node?.level || '').toLowerCase() === matchData.difficulty;
+        const sourceNodes = nodes.filter(matchesDifficulty);
+        (sourceNodes.length ? sourceNodes : nodes).forEach((node) => {
+            if (Array.isArray(node.questions)) allQs = allQs.concat(node.questions);
         });
     }
     currentQuestions = allQs.sort(() => 0.5 - Math.random());

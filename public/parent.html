@@ -110,7 +110,7 @@
             var session = JSON.parse(localStorage.getItem('lm_session')) || {};
             const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
             const normalizedRole = aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase();
-            const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin', teacher: '/teacher-dashboard' };
+            const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
             const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
             const allowedRoles = [...new Set(source.map(item => aliases[String(item || '').toLowerCase()] || String(item || '').toLowerCase()).filter(item => Boolean(roleLinks[item])))];
             if (!allowedRoles.includes(normalizedRole)) { if (window.Swal) Swal.fire({icon:'warning',title:'Không có quyền truy cập',text:'Vai trò này chưa được cấp cho tài khoản của bạn.'}); return false; }

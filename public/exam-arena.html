@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đấu trường Luyện thi THPT | VieGeo</title>
+    <title>Đấu trường Luyện tập | VieGeo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
         </nav>
         <a class="arena-topbar-back" href="/map" title="Quay lại không gian học tập"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
     </header>
-    <main class="exam-arena-shell" aria-label="Đấu trường Luyện thi THPT">
+    <main class="exam-arena-shell" aria-label="Đấu trường Luyện tập">
         <header class="exam-topbar">
             <div>
                 <p class="exam-eyebrow"><i class="fa-solid fa-graduation-cap"></i> VieGeo Exam Prep</p>
@@ -45,16 +45,9 @@
             <div class="exam-control-intro">
                 <p class="exam-eyebrow"><i class="fa-solid fa-sliders"></i> Thiết lập đề luyện</p>
                 <h2 id="examControlTitle">Chọn cấu hình đề</h2>
-                <p>Chọn lớp, mức độ và chủ đề để VieGeo chuẩn bị đúng đề 40 câu hỏi cho bạn.</p>
+                <p>Chọn mức độ và chủ đề để VieGeo chuẩn bị đúng đề 40 câu hỏi cho bạn.</p>
             </div>
             <form id="examSetupForm" class="exam-setup-form">
-                <label for="examSetupGrade">Lớp học
-                    <select id="examSetupGrade" required>
-                        <option value="5">Lớp 5</option>
-                        <option value="9">Lớp 9</option>
-                        <option value="12">Lớp 12</option>
-                    </select>
-                </label>
                 <label for="examSetupDifficulty">Mức độ
                     <select id="examSetupDifficulty" required>
                         <option value="easy">Dễ</option>
@@ -73,7 +66,7 @@
                 </label>
                 <button id="examSetupStart" class="exam-primary-btn" type="submit"><i class="fa-solid fa-play"></i> Bắt đầu làm đề</button>
             </form>
-            <p class="exam-setup-note"><i class="fa-solid fa-database"></i> Quản trị viên cần khai báo <code>grade</code>, <code>topic</code> và <code>difficulty</code> cho mọi tài liệu trong collection <code>questions</code>.</p>
+            <p class="exam-setup-note"><i class="fa-solid fa-database"></i> Quản trị viên cần khai báo <code>difficulty</code> và <code>topic</code> cho mọi tài liệu trong collection <code>questions</code>.</p>
         </section>
 
         <div id="examWorkspace" class="exam-workspace" hidden>

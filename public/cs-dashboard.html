@@ -86,8 +86,8 @@
             }
         }
 
-        const roleLabels = { user: 'Học sinh', teacher: 'Giáo viên', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Admin' };
-        const roleUrls = { user: '/map', parent: '/parent', teacher: '/teacher-dashboard', cs: '/cs-dashboard', admin: '/admin' };
+        const roleLabels = { user: 'Học sinh', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Admin' };
+        const roleUrls = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
         function allowedRoles() { const data = session(); const source = Array.isArray(data.roles) ? data.roles : [data.role || data.activeRole]; const roles = [...new Set(source.map(role => String(role || '').toLowerCase()).filter(role => Boolean(roleUrls[role])))]; return roles.length ? roles : ['user']; }
         function navigateRole(role) { const data = session(); const roles = allowedRoles(); if (!roles.includes(role)) { show('Bạn không có quyền chuyển sang vai trò này.', 'warning'); return; } data.roles = roles; data.role = role; data.activeRole = role; localStorage.setItem('lm_session',JSON.stringify(data)); window.location.href = roleUrls[role]; }
 

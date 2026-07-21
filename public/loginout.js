@@ -5,7 +5,6 @@
 const ROLE_DESTINATIONS = Object.freeze({
     user: '/map',
     parent: '/parent',
-    teacher: '/teacher-dashboard',
     cs: '/cs-dashboard',
     admin: '/admin'
 });
@@ -156,7 +155,6 @@ if (loginForm) {
                             const roleMap = {
                                 'user': { name: 'Người dùng (Học viên)', icon: 'fa-graduation-cap', color: '#1cb0f6', url: MAP_PAGE },
                                 'parent': { name: 'Phụ huynh', icon: 'fa-children', color: '#a78bfa', url: '/parent' },
-                                'teacher': { name: 'Giáo viên', icon: 'fa-chalkboard-user', color: '#22c55e', url: '/teacher-dashboard' },
                                 'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin' },
                                 'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs-dashboard' }
                             };

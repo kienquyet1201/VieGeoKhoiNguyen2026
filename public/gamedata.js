@@ -21,8 +21,8 @@ const defaultGameState = {
     avatar: "fa-user-astronaut",
     avatarIsBase64: false, // Flag để xác định xem Avatar là icon hay ảnh upload
 
-    // Lớp học
-    selectedGrade: "all",
+    // Mức độ học tập duy nhất hiển thị cho người dùng.
+    selectedDifficulty: "easy",
     gender: null,
 
     // Inventory (Shop items active)
@@ -80,6 +80,24 @@ const ACHIEVEMENTS_LIST = [
     { id: "ach_chest_1", title: "Chạm Vào May Mắn", desc: "Mở 1 rương báu", target: 1, type: "chestsOpened", icon: "fa-box-open", color: "#964B00" },
     { id: "ach_chest_5", title: "Thợ Săn Kho Báu", desc: "Mở 5 rương báu", target: 5, type: "chestsOpened", icon: "fa-gem", color: "#ce82ff" }
 ];
+
+const SUPPORTED_DIFFICULTIES = Object.freeze(['easy', 'medium', 'hard']);
+
+function normalizeDifficulty(value, fallback = 'easy') {
+    const normalized = String(value ?? '').trim().toLowerCase();
+    return SUPPORTED_DIFFICULTIES.includes(normalized) ? normalized : fallback;
+}
+
+function difficultyFromLegacyGrade(grade) {
+    return ({ '5': 'easy', '9': 'medium', '12': 'hard' })[String(grade ?? '').trim()] || 'easy';
+}
+
+function migrateLegacyLearningNodeId(nodeId) {
+    return String(nodeId).replace(
+        /-g(5|9|12)-i(\d+)/,
+        (_match, legacyGrade, island) => `-d${difficultyFromLegacyGrade(legacyGrade)}-i${island}`
+    );
+}
 
 function getAchievementProgress(state, type) {
     const progressFields = {
@@ -142,7 +160,15 @@ function getGameState() {
     if (parsed.inventory.quizRemoveOne === undefined) parsed.inventory.quizRemoveOne = 1;
     if (!parsed.questsProgress) parsed.questsProgress = defaultGameState.questsProgress;
     if (!parsed.avatar) parsed.avatar = defaultGameState.avatar;
-    if (parsed.selectedGrade === undefined) parsed.selectedGrade = defaultGameState.selectedGrade;
+    // Migrate legacy grade-based accounts to the three difficulty tiers once,
+    // while preserving completed island identifiers and all earned progress.
+    parsed.selectedDifficulty = normalizeDifficulty(
+        parsed.selectedDifficulty || difficultyFromLegacyGrade(parsed.selectedGrade)
+    );
+    if (Array.isArray(parsed.completedNodes)) {
+        parsed.completedNodes = [...new Set(parsed.completedNodes.map(migrateLegacyLearningNodeId))];
+    }
+    delete parsed.selectedGrade;
     // Khởi tạo các trường Premium nếu chưa có
     if (!parsed.accountStatus) parsed.accountStatus = 'free';
     if (!parsed.lastHeartUpdate) parsed.lastHeartUpdate = Number(parsed.lastHeartRegenTime) || Date.now();
@@ -181,6 +207,10 @@ function getGameState() {
     if (!Array.isArray(parsed.learningProfile.weakTopics)) parsed.learningProfile.weakTopics = [];
     if (!Number.isFinite(parsed.learningProfile.totalQuestionsAnswered)) parsed.learningProfile.totalQuestionsAnswered = 0;
     if (!parsed.lessonResults) parsed.lessonResults = {};
+    if (parsed.lessonResults && typeof parsed.lessonResults === 'object' && !Array.isArray(parsed.lessonResults)) {
+        parsed.lessonResults = Object.fromEntries(Object.entries(parsed.lessonResults)
+            .map(([lessonId, result]) => [migrateLegacyLearningNodeId(lessonId), result]));
+    }
 
     refreshStreakForToday(parsed);
 
@@ -231,6 +261,10 @@ function getGameState() {
 
 function buildPersistedGameState(state) {
     synchronizeAchievementsWithState(state);
+    const selectedDifficulty = normalizeDifficulty(
+        state.selectedDifficulty || difficultyFromLegacyGrade(state.selectedGrade)
+    );
+    delete state.selectedGrade;
     const copyObject = (value, fallback = {}) => value && typeof value === 'object' && !Array.isArray(value)
         ? JSON.parse(JSON.stringify(value))
         : fallback;
@@ -246,8 +280,9 @@ function buildPersistedGameState(state) {
         streak: Number(state.streak) || 0,
         currentUnit: Number(state.currentUnit) || 1,
         currentNode: Number(state.currentNode) || 1,
-        completedNodes: [...new Set(copyArray(state.completedNodes).map(String))],
-        lessonResults: copyObject(state.lessonResults),
+        completedNodes: [...new Set(copyArray(state.completedNodes).map(migrateLegacyLearningNodeId))],
+        lessonResults: Object.fromEntries(Object.entries(copyObject(state.lessonResults))
+            .map(([lessonId, result]) => [migrateLegacyLearningNodeId(lessonId), result])),
         inventory: copyObject(state.inventory),
         questsProgress: copyObject(state.questsProgress),
         claimedMissionRewards: copyArray(state.claimedMissionRewards).map(String),
@@ -262,7 +297,7 @@ function buildPersistedGameState(state) {
         lastLoginDate: state.lastLoginDate || state.lastLogin || null,
         lastStudyDate: state.lastStudyDate || null,
         lastStreakAwardDate: state.lastStreakAwardDate || state.lastStudyDate || null,
-        selectedGrade: state.selectedGrade || 'all',
+        selectedDifficulty,
         gender: state.gender || null,
         avatar: state.avatar || null,
         avatarIsBase64: state.avatarIsBase64 === true,
@@ -303,8 +338,9 @@ function saveGameState(state) {
             lastLoginDate: state.lastLoginDate || state.lastLogin,
             lastStudyDate: state.lastStudyDate,
             lastStreakAwardDate: state.lastStreakAwardDate || state.lastStudyDate || null,
-            grade: state.selectedGrade === 'all' ? null : Number(state.selectedGrade),
-            selectedGrade: state.selectedGrade,
+            grade: null,
+            selectedGrade: null,
+            selectedDifficulty: persistedState.selectedDifficulty,
             gender: state.gender || null,
             learningProfile: state.learningProfile || {},
             telemetry: state.telemetry || {},
@@ -389,9 +425,9 @@ const SHOP_ITEMS = [
 
 // ── ARENA MATCHES (1vs1) ──
 const ARENA_MATCHES = [
-    { id: "arena_easy", title: "Khởi động (Dễ)", desc: "Trận chiến 1vs1. Nhịp độ chậm, câu hỏi lớp 5.", entryFee: 10, reward: 100, gradeFilter: "5", speed: "slow" },
-    { id: "arena_medium", title: "Hiểu biết (Vừa)", desc: "Trận chiến 1vs1. Nhịp độ bình thường, câu hỏi lớp 8.", entryFee: 30, reward: 300, gradeFilter: "8", speed: "normal" },
-    { id: "arena_hard", title: "Cao thủ (Khó)", desc: "Trận chiến 1vs1. Tốc độ cực gắt, câu hỏi lớp 12.", entryFee: 100, reward: 1000, gradeFilter: "12", speed: "fast" }
+    { id: "arena_easy", title: "Khởi động (Dễ)", desc: "Trận chiến 1vs1 với câu hỏi mức dễ, nhịp độ chậm.", entryFee: 10, reward: 100, difficulty: "easy", speed: "slow" },
+    { id: "arena_medium", title: "Hiểu biết (Trung bình)", desc: "Trận chiến 1vs1 với câu hỏi mức trung bình.", entryFee: 30, reward: 300, difficulty: "medium", speed: "normal" },
+    { id: "arena_hard", title: "Cao thủ (Khó)", desc: "Trận chiến 1vs1 với câu hỏi mức khó, tốc độ cao.", entryFee: 100, reward: 1000, difficulty: "hard", speed: "fast" }
 ];
 
 // ── GEOGRAPHY CONTENT (Theo SGK) ──

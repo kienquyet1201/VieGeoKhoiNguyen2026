@@ -33,7 +33,6 @@ window.VieGeoUI = window.VieGeoUI || {
 const ROLE_META = Object.freeze({
     user: { label: 'Học sinh', route: '/map' },
     parent: { label: 'Phụ huynh', route: '/parent' },
-    teacher: { label: 'Giáo viên', route: '/teacher-dashboard' },
     cs: { label: 'Chăm sóc KH', route: '/cs-dashboard' },
     admin: { label: 'Quản trị viên', route: '/admin' }
 });
@@ -153,21 +152,35 @@ function hydratePersistedGameState(remoteState, legacyData = {}) {
     const scalarFields = [
         'updatedAt', 'xp', 'hearts', 'maxHearts', 'gems', 'streak', 'currentUnit', 'currentNode',
         'pvpWins', 'perfectLessons', 'chestsOpened', 'achievementPoints', 'lastHeartUpdate',
-            'lastHeartRegenTime', 'lastLogin', 'lastLoginDate', 'lastStudyDate', 'lastStreakAwardDate', 'selectedGrade', 'gender',
+            'lastHeartRegenTime', 'lastLogin', 'lastLoginDate', 'lastStudyDate', 'lastStreakAwardDate', 'selectedDifficulty', 'gender',
         'avatar', 'avatarIsBase64', 'accountStatus'
     ];
     scalarFields.forEach((field) => {
         if (source[field] !== undefined && source[field] !== null) gameState[field] = source[field];
     });
+    if (source.selectedDifficulty !== undefined || source.selectedGrade !== undefined || source.grade !== undefined) {
+        gameState.selectedDifficulty = normalizeDifficulty(
+            source.selectedDifficulty || difficultyFromLegacyGrade(source.selectedGrade ?? source.grade)
+        );
+        delete gameState.selectedGrade;
+    }
 
     ['completedNodes', 'claimedMissionRewards', 'unlockedAchievements'].forEach((field) => {
-        if (Array.isArray(source[field])) gameState[field] = [...new Set(source[field].map(String))];
+        if (!Array.isArray(source[field])) return;
+        const values = field === 'completedNodes' && typeof migrateLegacyLearningNodeId === 'function'
+            ? source[field].map(migrateLegacyLearningNodeId)
+            : source[field].map(String);
+        gameState[field] = [...new Set(values)];
     });
     ['lessonResults', 'inventory', 'questsProgress', 'learningProfile', 'telemetry'].forEach((field) => {
         if (source[field] && typeof source[field] === 'object' && !Array.isArray(source[field])) {
             gameState[field] = { ...(gameState[field] || {}), ...source[field] };
         }
     });
+    if (gameState.lessonResults && typeof migrateLegacyLearningNodeId === 'function') {
+        gameState.lessonResults = Object.fromEntries(Object.entries(gameState.lessonResults)
+            .map(([lessonId, result]) => [migrateLegacyLearningNodeId(lessonId), result]));
+    }
     return true;
 }
 
@@ -183,6 +196,9 @@ function setupRealtimeAuth() {
                 lessonResults: data.lessonResults,
                 inventory: data.inventory,
                 questsProgress: data.questsProgress,
+                selectedDifficulty: data.selectedDifficulty,
+                selectedGrade: data.selectedGrade,
+                grade: data.grade,
                 gender: data.gender,
                 pvpWins: data.pvpWins,
                 perfectLessons: data.perfectLessons,
@@ -219,7 +235,11 @@ function setupRealtimeAuth() {
             if (Array.isArray(data.claimedMissionRewards)) gameState.claimedMissionRewards = data.claimedMissionRewards;
             if (data.lastLogin) gameState.lastLogin = data.lastLogin;
             if (data.lastLoginDate) gameState.lastLoginDate = data.lastLoginDate;
-            if (data.selectedGrade !== undefined) gameState.selectedGrade = data.selectedGrade || 'all';
+            if (data.selectedDifficulty !== undefined || data.selectedGrade !== undefined || data.grade !== undefined) {
+                const remoteDifficulty = data.selectedDifficulty || difficultyFromLegacyGrade(data.selectedGrade ?? data.grade);
+                gameState.selectedDifficulty = normalizeDifficulty(remoteDifficulty);
+                delete gameState.selectedGrade;
+            }
             if (data.gender !== undefined) {
                 gameState.gender = data.gender || null;
                 sessionUser.gender = data.gender || '';
@@ -594,20 +614,21 @@ animatedNavButtons.forEach((button) => {
 activateInitialTabFromUrl();
 
 // ── RENDER PATH (ISLANDS & FILTER) ──
-const gradeChips = document.querySelectorAll('.grade-chip');
-if (gradeChips.length > 0) {
+const difficultyChips = document.querySelectorAll('.difficulty-chip');
+if (difficultyChips.length > 0) {
     // Set initial active chip
-    gradeChips.forEach(chip => {
-        if (chip.getAttribute('data-val') === (gameState.selectedGrade || "all")) {
+    difficultyChips.forEach(chip => {
+        if (chip.getAttribute('data-val') === normalizeDifficulty(gameState.selectedDifficulty)) {
             chip.classList.add('active');
         } else {
             chip.classList.remove('active');
         }
         
         chip.addEventListener('click', (e) => {
-            gradeChips.forEach(c => c.classList.remove('active'));
+            difficultyChips.forEach(c => c.classList.remove('active'));
             e.target.classList.add('active');
-            gameState.selectedGrade = e.target.getAttribute('data-val');
+            gameState.selectedDifficulty = normalizeDifficulty(e.target.getAttribute('data-val'));
+            delete gameState.selectedGrade;
             saveGameState(gameState);
                     });
     });
