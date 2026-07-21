@@ -24,7 +24,10 @@
         panel.style.display = open ? 'grid' : 'none';
         toggle.style.display = open ? 'none' : 'inline-flex';
         toggle.setAttribute('aria-expanded', String(open));
-        if (open) byId('supportMessageInput')?.focus();
+        if (open) {
+            byId('supportMessageInput')?.focus();
+            window.dispatchEvent(new CustomEvent('viegeo:chat-open'));
+        }
     }
 
     async function hasOnlineStaff() {

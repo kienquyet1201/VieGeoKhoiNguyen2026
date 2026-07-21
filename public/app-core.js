@@ -1335,6 +1335,7 @@ window.openPremiumModal = function() {
         }
         
         document.getElementById('premiumModal').style.display = 'flex';
+        window.dispatchEvent(new CustomEvent('viegeo:premium-open'));
     } catch(e) {
         showToast("Lỗi mở bảng Premium: " + e.message, true);
     }
