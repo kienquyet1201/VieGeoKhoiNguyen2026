@@ -71,7 +71,8 @@ const loginMsg = document.getElementById('loginMessage'); // Đã khớp ID HTML
 const regMsg = document.getElementById('registerMessage'); // Đã khớp ID HTML
 
 const QUIZ_PAGE = '/index';
-const MAP_PAGE = '/user-dashboard';
+// Clean URL served by Vercel for the physical public/map.html page.
+const MAP_PAGE = '/map';
 
 // 1. ĐĂNG NHẬP
 function showToast(msg, isSuccess = true) {
