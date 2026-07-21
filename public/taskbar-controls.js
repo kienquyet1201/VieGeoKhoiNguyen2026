@@ -12,9 +12,7 @@
         const button = byId('btnThemeToggle');
         if (!button) return;
         const isLight = document.body.classList.contains('light-mode');
-        const fallbackIcon = button.querySelector('.rive-fallback-icon');
-        if (fallbackIcon) fallbackIcon.className = `fa-solid fa-${isLight ? 'sun' : 'moon'} rive-fallback-icon`;
-        else button.innerHTML = `<i class="fa-solid fa-${isLight ? 'sun' : 'moon'}"></i>`;
+        button.innerHTML = `<i class="fa-solid fa-${isLight ? 'sun' : 'moon'}"></i>`;
         button.setAttribute('aria-label', isLight ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng');
     }
 

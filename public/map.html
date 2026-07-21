@@ -28,7 +28,7 @@
             </div>
             <div class="topbar-stats" aria-label="Chỉ số học tập">
                 <div class="stat-pill" style="color: #ff4b4b;" title="Trái tim · hồi 1 tim mỗi 15 phút"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">3</span><span id="hdrHeartTimer" aria-live="polite" hidden style="margin-left: 4px; color: #ff9a9a; font-size: .7rem; font-variant-numeric: tabular-nums;">14:59</span></div>
-                <div class="stat-pill rive-streak-pill" style="color: #ffc800;" title="Chuỗi ngày học"><canvas class="rive-canvas rive-streak-canvas" data-rive-src="/assets/rive/fire-streak.riv" data-rive-state-machine="State Machine 1" aria-hidden="true"></canvas><i class="fa-solid fa-fire rive-fallback-icon" aria-hidden="true"></i><span id="hdrStreak">1</span></div>
+                <div class="stat-pill" style="color: #ffc800;" title="Chuỗi ngày học"><i class="fa-solid fa-fire" aria-hidden="true"></i> <span id="hdrStreak">1</span></div>
                 <div class="stat-pill" style="color: #1cb0f6;" title="Kim cương"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
                 <div class="stat-pill" style="color: #a78bfa;" title="Kinh nghiệm"><i class="fa-solid fa-bolt"></i> <span id="hdrXp">0</span> XP</div>
                 <div class="stat-pill" title="Cúp"><i class="fa-solid fa-trophy"></i> <span id="hdrTrophies">0</span></div>
@@ -51,7 +51,7 @@
                 <label class="taskbar-difficulty" for="quickDifficultySelect" title="Đổi mức độ"><i class="fa-solid fa-gauge-high"></i><span class="sr-only">Chọn mức độ</span>
                     <select id="quickDifficultySelect" title="Đổi mức độ"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select>
                 </label>
-                <button id="btnThemeToggle" class="taskbar-icon-btn rive-control rive-theme-control" type="button" title="Chế độ sáng/tối" aria-label="Chế độ sáng/tối"><canvas class="rive-canvas rive-theme-canvas" data-rive-src="/assets/rive/day-night-toggle.riv" data-rive-state-machine="State Machine 1" aria-hidden="true"></canvas><i class="fa-solid fa-moon rive-fallback-icon" aria-hidden="true"></i></button>
+                <button id="btnThemeToggle" class="taskbar-icon-btn" type="button" title="Chế độ sáng/tối" aria-label="Chế độ sáng/tối"><i class="fa-solid fa-moon" aria-hidden="true"></i></button>
                 <button id="btnParentAccess" class="taskbar-icon-btn" type="button" title="Khu vực phụ huynh" aria-label="Khu vực phụ huynh"><i class="fa-solid fa-children"></i></button>
                 <button id="btnTaskbarLogout" class="taskbar-icon-btn taskbar-logout" type="button" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
             </div>
@@ -130,8 +130,8 @@
                         
                         <div style="margin-bottom: 20px;">
                             <span id="profStatus" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--gray-border); color: var(--text-dim);">Tài khoản: Free</span>
-                            <button onclick="window.openPremiumModal()" class="premium-upgrade-trigger rive-control" style="display: block; width: 100%; margin-top: 10px; background: linear-gradient(90deg, #ffc800, #ff6b6b); color: white; border: none; padding: 8px; border-radius: 12px; font-weight: bold; cursor: pointer; font-family: var(--font-heading);">
-                                <canvas class="rive-canvas rive-button-canvas" data-rive-src="/assets/rive/hover-button.riv" data-rive-state-machine="State Machine 1" aria-hidden="true"></canvas><i class="fa-solid fa-crown rive-fallback-icon" aria-hidden="true"></i><span>Nâng cấp Premium</span>
+                            <button onclick="window.openPremiumModal()" style="display: block; width: 100%; margin-top: 10px; background: linear-gradient(90deg, #ffc800, #ff6b6b); color: white; border: none; padding: 8px; border-radius: 12px; font-weight: bold; cursor: pointer; font-family: var(--font-heading);">
+                                <i class="fa-solid fa-crown" aria-hidden="true"></i> Nâng cấp Premium
                             </button>
                         </div>
                         
@@ -340,7 +340,7 @@
     </div>
 
     <section id="supportChat" class="support-chat" aria-label="Hỗ trợ VieGeo">
-        <button id="supportChatToggle" class="support-chat-toggle rive-control" type="button" aria-expanded="false" aria-controls="supportChatPanel"><canvas class="rive-canvas rive-support-canvas" data-rive-src="/assets/rive/cat-support.riv" data-rive-state-machine="State Machine 1" aria-hidden="true"></canvas><i class="fa-solid fa-comments rive-fallback-icon" aria-hidden="true"></i><span>Hỗ trợ</span></button>
+        <button id="supportChatToggle" class="support-chat-toggle" type="button" aria-expanded="false" aria-controls="supportChatPanel"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Hỗ trợ</span></button>
         <div id="supportChatPanel" class="support-chat-panel" hidden>
             <header><div><strong>Trợ lý VieGeo</strong><p id="supportAvailability">Đang kiểm tra CSKH…</p></div><button id="supportChatClose" type="button" aria-label="Đóng hỗ trợ"><i class="fa-solid fa-xmark"></i></button></header>
             <div id="supportMessages" class="support-messages" aria-live="polite"></div>
@@ -348,7 +348,7 @@
                 <input id="supportImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                 <button id="supportImageButton" type="button" title="Gửi ảnh" aria-label="Gửi ảnh"><i class="fa-solid fa-image"></i></button>
                 <input id="supportMessageInput" maxlength="1000" placeholder="Nhập câu hỏi của bạn…" aria-label="Tin nhắn hỗ trợ">
-                <button class="rive-control rive-publish-control" type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn"><canvas class="rive-canvas rive-publish-canvas" data-rive-src="/assets/rive/publish-button.riv" data-rive-state-machine="State Machine 1" aria-hidden="true"></canvas><i class="fa-solid fa-paper-plane rive-fallback-icon" aria-hidden="true"></i></button>
+                <button type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
             </form>
             <p id="supportAttachmentLabel" class="support-attachment" aria-live="polite"></p>
         </div>
@@ -413,7 +413,6 @@
         <div style="background: var(--bg-dark); border: 2px solid #ffc800; border-radius: 30px; padding: 40px; text-align: center; max-width: 500px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(255, 200, 0, 0.2);">
             <button onclick="document.getElementById('premiumModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
             
-            <div class="premium-rive-stage" aria-hidden="true"><canvas class="rive-canvas rive-pricing-canvas" data-rive-src="/assets/rive/pricing-page.riv" data-rive-state-machine="State Machine 1"></canvas><i class="fa-solid fa-crown rive-fallback-icon"></i></div>
             <h2 style="font-size: 2.2rem; font-family: var(--font-heading); margin-bottom: 10px; background: linear-gradient(90deg, #ffc800, #ff4b4b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nâng Cấp Premium</h2>
             <p style="color: var(--text-dim); margin-bottom: 20px;">Mở khóa toàn bộ tính năng và bài học nâng cao!</p>
             
@@ -484,14 +483,12 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
-    <script src="https://unpkg.com/@rive-app/canvas"></script>
     <script src="gamedata.js"></script>
     <script src="app-core.js"></script>
     <script src="learning-path.js"></script>
     <script src="map.js"></script>
     <script src="taskbar-controls.js"></script>
     <script src="support-chat.js"></script>
-    <script src="rive-effects.js"></script>
 
 </body>
 </html>

@@ -26,7 +26,6 @@
         toggle.setAttribute('aria-expanded', String(open));
         if (open) {
             byId('supportMessageInput')?.focus();
-            window.dispatchEvent(new CustomEvent('viegeo:chat-open'));
         }
     }
 
