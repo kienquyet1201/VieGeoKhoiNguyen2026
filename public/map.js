@@ -107,6 +107,17 @@ function renderProvinces() {
     });
 }
 
+function islandKindFor(lesson) {
+    if (lesson.nodeKind) return lesson.nodeKind;
+    return lesson.isBoss ? 'checkpoint' : 'small';
+}
+
+function islandSizeFor(kind) {
+    if (kind === 'boss') return 116;
+    if (kind === 'checkpoint') return 90;
+    return 70;
+}
+
 function renderLessons() {
     mapContainer.style.display = 'flex';
     mapContainer.style.flexDirection = 'column';
@@ -139,15 +150,20 @@ function renderLessons() {
             nodeColor = '#1cb0f6'; iconColor = '#fff'; // Active
         }
         
+        const nodeKind = islandKindFor(lesson);
+        const nodeSize = islandSizeFor(nodeKind);
         let icon = 'fa-star';
         if (lesson.type === 'theory') icon = 'fa-book-open';
-        if (lesson.type === 'quiz_midterm' || lesson.type === 'quiz_final') icon = 'fa-crown';
+        if (nodeKind === 'checkpoint') icon = 'fa-flag-checkered';
+        if (nodeKind === 'boss' || lesson.type === 'quiz_final') icon = 'fa-crown';
         
         const wrapper = document.createElement('div');
         wrapper.style.display = 'flex';
         wrapper.style.flexDirection = 'column';
         wrapper.style.alignItems = 'center';
         wrapper.style.position = 'relative'; // For absolute line positioning
+        wrapper.className = `map-island-node map-island-${nodeKind}`;
+        wrapper.style.marginBottom = nodeKind === 'boss' ? '52px' : nodeKind === 'checkpoint' ? '42px' : '32px';
         
         // Apply zigzag offset
         const currentOffset = offsets[index % offsets.length];
@@ -155,9 +171,11 @@ function renderLessons() {
         wrapper.style.zIndex = '1';
         
         const btn = document.createElement('button');
-        btn.className = 'node-btn ' + (isCompleted ? 'completed' : (prevCompleted ? 'current' : 'locked'));
+        btn.className = `node-btn island-${nodeKind} ${isCompleted ? 'completed' : (prevCompleted ? 'current' : 'locked')}`;
         btn.style.background = nodeColor;
-        btn.innerHTML = `<i class="fa-solid ${icon}" style="color: ${iconColor}; font-size: 1.5rem;"></i>`;
+        btn.style.width = `${nodeSize}px`;
+        btn.style.height = `${nodeSize}px`;
+        btn.innerHTML = `<i class="fa-solid ${icon}" style="color: ${iconColor}; font-size: ${nodeKind === 'boss' ? '2.35rem' : nodeKind === 'checkpoint' ? '1.9rem' : '1.5rem'};"></i>`;
         
         const label = document.createElement('div');
         label.style.marginTop = '8px';
@@ -187,7 +205,8 @@ function renderLessons() {
         if (index < lessons.length - 1) {
             const nextOffset = offsets[(index + 1) % offsets.length];
             const dx = nextOffset - currentOffset;
-            const dy = 95; // Approx: button height + label + gap (70 + 25)
+            const nextNodeSize = islandSizeFor(islandKindFor(lessons[index + 1]));
+            const dy = (nodeSize / 2) + (nextNodeSize / 2) + 25;
             const length = Math.sqrt(dx*dx + dy*dy);
             const angle = Math.atan2(dx, dy) * -180 / Math.PI;
 
@@ -196,7 +215,7 @@ function renderLessons() {
             line.style.height = `${length}px`;
             line.style.background = isCompleted ? '#58cc02' : 'rgba(255,255,255,0.1)';
             line.style.position = 'absolute';
-            line.style.top = '35px'; // Start from center of the button (70/2 = 35)
+            line.style.top = `${nodeSize / 2}px`;
             line.style.left = '50%';
             line.style.transformOrigin = '50% 0';
             line.style.transform = `translateX(-50%) rotate(${angle}deg)`;

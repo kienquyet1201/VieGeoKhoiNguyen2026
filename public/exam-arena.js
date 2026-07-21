@@ -51,8 +51,49 @@
             'examOptions', 'examPrevious', 'examMark', 'examNext', 'examAnsweredCount',
             'examQuestionNav', 'examSubmit', 'examArenaTitle', 'examArenaSubtitle',
             'examSetupForm', 'examSetupGrade',
-            'examSetupDifficulty', 'examSetupTopic', 'examSetupStart'
+            'examSetupDifficulty', 'examSetupTopic', 'examSetupStart',
+            'examWorkspace', 'examExit', 'arenaGlobalTopbar'
         ].forEach((id) => { elements[id] = getElement(id); });
+    }
+
+    const fullscreenWorkspaceClasses = [
+        'fixed', 'inset-0', 'z-50', 'bg-slate-950', 'w-screen', 'h-screen',
+        'overflow-y-auto', 'p-6', 'arena-fullscreen-workspace'
+    ];
+
+    function enterExamFullscreen() {
+        const workspace = elements.examWorkspace;
+        if (!workspace) return;
+        workspace.hidden = false;
+        workspace.classList.add(...fullscreenWorkspaceClasses);
+        document.body.classList.add('arena-exam-active');
+        if (elements.arenaGlobalTopbar) elements.arenaGlobalTopbar.hidden = true;
+        document.querySelector('.exam-topbar')?.setAttribute('hidden', '');
+        document.querySelector('.exam-control-panel')?.setAttribute('hidden', '');
+        workspace.scrollTop = 0;
+    }
+
+    function exitExamToSetup() {
+        window.clearInterval(timerId);
+        timerId = null;
+        questions = [];
+        selectedExamConfig = null;
+        currentIndex = 0;
+        timeLeft = EXAM_DURATION_SECONDS;
+        submitted = false;
+        answers.clear();
+        marked.clear();
+        questionMetrics.clear();
+        setExamInteractionEnabled(false);
+        elements.examWorkspace?.classList.remove(...fullscreenWorkspaceClasses);
+        if (elements.examWorkspace) elements.examWorkspace.hidden = true;
+        document.body.classList.remove('arena-exam-active');
+        if (elements.arenaGlobalTopbar) elements.arenaGlobalTopbar.hidden = false;
+        document.querySelector('.exam-topbar')?.removeAttribute('hidden');
+        document.querySelector('.exam-control-panel')?.removeAttribute('hidden');
+        if (elements.examTimer) elements.examTimer.textContent = formatTime(timeLeft);
+        renderWaitingState();
+        updateSetupTitle();
     }
 
     function titleForGrade(grade) {
@@ -177,6 +218,7 @@
             marked.clear();
             questionMetrics.clear();
             questionStartedAt = Date.now();
+            enterExamFullscreen();
             if (elements.examArenaTitle) elements.examArenaTitle.textContent = selectedExamConfig.title;
             if (elements.examArenaSubtitle) elements.examArenaSubtitle.textContent = `Đề 40 câu · Lớp ${selectedExamConfig.grade} · ${selectedExamConfig.topic} · ${selectedExamConfig.difficulty}`;
             setExamInteractionEnabled(true);
@@ -359,6 +401,7 @@
             renderNavigator();
         });
         elements.examSubmit.addEventListener('click', () => submitExam(false));
+        elements.examExit?.addEventListener('click', exitExamToSetup);
     }
 
     document.addEventListener('DOMContentLoaded', () => {

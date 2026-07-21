@@ -12,7 +12,19 @@
     <link rel="stylesheet" href="bento.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="exam-arena-page">
+<body class="exam-arena-page min-h-screen w-full overflow-y-auto pb-32">
+    <header id="arenaGlobalTopbar" class="arena-global-topbar" aria-label="Điều hướng VieGeo">
+        <a class="arena-global-brand" href="/map" title="Trang học VieGeo"><i class="fa-solid fa-earth-asia"></i><span>VieGeo</span></a>
+        <nav class="arena-global-navigation" aria-label="Điều hướng học tập">
+            <a href="/map?tab=map" title="Lộ trình học"><i class="fa-solid fa-map-location-dot"></i><span>Lộ trình</span></a>
+            <a href="/exam-arena" title="Đấu trường luyện thi" aria-current="page"><i class="fa-solid fa-graduation-cap"></i><span>Đấu trường</span></a>
+            <a href="/map?tab=leaderboard" title="Xếp hạng"><i class="fa-solid fa-trophy"></i><span>Xếp hạng</span></a>
+            <a href="/map?tab=quests" title="Nhiệm vụ"><i class="fa-solid fa-box-open"></i><span>Nhiệm vụ</span></a>
+            <a href="/map?tab=shop" title="Cửa hàng"><i class="fa-solid fa-store"></i><span>Cửa hàng</span></a>
+            <a href="/map?tab=profile" title="Hồ sơ"><i class="fa-solid fa-user"></i><span>Hồ sơ</span></a>
+        </nav>
+        <a class="arena-topbar-back" href="/map" title="Quay lại không gian học tập"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
+    </header>
     <main class="exam-arena-shell" aria-label="Đấu trường Luyện thi THPT">
         <header class="exam-topbar">
             <div>
@@ -24,7 +36,7 @@
                 <a class="exam-back-link" href="/map"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
                 <div class="exam-timer" aria-live="polite">
                     <i class="fa-solid fa-stopwatch"></i>
-                    <span id="examTimer">50:00</span>
+                    <span id="examTimerPreview">50:00</span>
                 </div>
             </div>
         </header>
@@ -64,7 +76,9 @@
             <p class="exam-setup-note"><i class="fa-solid fa-database"></i> Quản trị viên cần khai báo <code>grade</code>, <code>topic</code> và <code>difficulty</code> cho mọi tài liệu trong collection <code>questions</code>.</p>
         </section>
 
-        <div class="exam-workspace">
+        <div id="examWorkspace" class="exam-workspace" hidden>
+            <div class="exam-session-bar"><span><i class="fa-solid fa-graduation-cap"></i> Đang làm đề luyện thi</span><div class="exam-timer" aria-live="polite"><i class="fa-solid fa-stopwatch"></i><span id="examTimer">50:00</span></div></div>
+            <button id="examExit" class="exam-exit-btn" type="button" title="Thoát và hủy bài làm"><i class="fa-solid fa-xmark"></i> Thoát / Hủy làm bài</button>
             <section class="exam-question-card" aria-live="polite">
                 <div class="exam-question-meta">
                     <span id="examQuestionCounter">Câu 1 / 40</span>

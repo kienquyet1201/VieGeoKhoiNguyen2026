@@ -170,9 +170,19 @@ body {
     color: var(--text-primary);
     margin: 0;
     padding: 0;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;}
+    display: block;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Shared layout utilities keep student pages in document flow. */
+.min-h-screen { min-height: 100dvh !important; }
+.w-full { width: 100% !important; }
+.overflow-y-auto { overflow-y: auto !important; }
+.pb-32 { padding-bottom: 8rem !important; }
 
 /* Background Glow Effects */
 .glow-bg {
@@ -1356,9 +1366,13 @@ body.theme-female.light-mode .highlight-box {
     color: var(--text-primary);
     margin: 0;
     padding: 0;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;}
+    display: block;
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
 
     .card {
         padding: 24px 16px;
@@ -1535,13 +1549,22 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 }
 
 /* ── Exam prep, interactive map and social challenge ───────────────────── */
+.arena-global-topbar { position: fixed; inset: 0 0 auto 0; z-index: 5100; min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px clamp(16px,3vw,36px); border-bottom: 1px solid rgba(148,163,184,.2); background: rgba(15,23,42,.94); color: #e2e8f0; box-shadow: 0 8px 28px rgba(2,6,23,.25); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.arena-global-topbar[hidden] { display: none !important; }
+.arena-global-brand,.arena-topbar-back,.arena-global-navigation a { display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; color: #dbeafe; font-weight: 800; text-decoration: none; white-space: nowrap; }
+.arena-global-brand { font-size: 1.25rem; color: #f8fafc; }.arena-global-brand i { color: #38bdf8; }
+.arena-global-navigation { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; }.arena-global-navigation a { padding: 10px 12px; color: #94a3b8; font-size: .82rem; transition: .18s ease; }.arena-global-navigation a:hover,.arena-global-navigation a[aria-current="page"] { background: rgba(14,165,233,.15); color: #e0f2fe; }.arena-global-navigation a[aria-current="page"] { border: 1px solid rgba(56,189,248,.28); }
+.arena-topbar-back { padding: 10px 13px; background: rgba(148,163,184,.12); font-size: .82rem; }.arena-topbar-back:hover { background: rgba(148,163,184,.2); }
 .exam-arena-page {
     min-height: 100dvh;
-    padding: clamp(16px, 3vw, 42px);
+    width: 100%;
+    height: auto;
+    overflow-y: auto !important;
+    padding: calc(76px + clamp(16px, 3vw, 42px)) clamp(16px, 3vw, 42px) clamp(16px, 3vw, 42px);
     background: radial-gradient(circle at 15% 0%, rgba(28, 176, 246, .15), transparent 32rem), #0a1628;
     color: #f8fafc;
 }
-.exam-arena-shell { width: min(100%, 1440px); margin: 0 auto; }
+.exam-arena-shell { width: min(100%, 1440px); min-height: 100dvh; height: auto; overflow-y: auto; margin: 0 auto; padding-bottom: 8rem; }
 .exam-topbar, .exam-question-card, .exam-navigator-card {
     background: rgba(20, 34, 56, .92);
     border: 1px solid rgba(148, 163, 184, .18);
@@ -1567,6 +1590,11 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .exam-back-link:hover, .exam-secondary-btn:hover, .exam-mark-btn:hover, .exam-primary-btn:hover, .exam-submit-btn:hover { transform: translateY(-2px); }
 .exam-timer { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border: 1px solid rgba(251, 113, 133, .35); border-radius: 14px; background: rgba(127, 29, 29, .24); color: #fda4af; font-size: 1.2rem; font-weight: 800; white-space: nowrap; }
 .exam-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; align-items: start; }
+.exam-workspace[hidden] { display: none !important; }
+.exam-workspace.arena-fullscreen-workspace { position: fixed; inset: 0; z-index: 9999; display: grid; width: 100vw; width: 100dvw; height: 100vh; height: 100dvh; max-width: none; min-height: 0; overflow-y: auto; padding: 24px; background: #020617; grid-template-columns: minmax(0, 1fr) 330px; align-items: start; }
+.exam-session-bar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 14px; border: 1px solid rgba(56,189,248,.24); border-radius: 14px; background: rgba(15,23,42,.88); color: #dbeafe; font-weight: 800; }
+.exam-exit-btn { grid-column: 1 / -1; justify-self: end; border: 1px solid rgba(148,163,184,.28); border-radius: 12px; background: rgba(30,41,59,.92); color: #f8fafc; padding: 11px 14px; font: inherit; font-size: .85rem; font-weight: 800; cursor: pointer; }.exam-exit-btn:hover { background: #334155; }
+.exam-arena-page.arena-exam-active { overflow: hidden !important; }
 .exam-question-card, .exam-navigator-card { border-radius: 24px; padding: clamp(22px, 3vw, 38px); }
 .exam-question-meta { display: flex; justify-content: space-between; gap: 12px; color: #a8b6ca; font-weight: 700; }
 .exam-question-meta span:last-child { color: #7dd3fc; }
@@ -1606,8 +1634,8 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .pvp-challenge-card h3 { margin: 0 0 7px; color: #fff; } .pvp-challenge-card p { margin: 0; color: var(--text-dim); }
 .pvp-challenge-card .bento-btn { flex: 0 0 auto; background: #ff4b4b; color: #fff; border: 0; }
 @media (max-width: 1100px) { .exam-control-panel { grid-template-columns: 1fr; } .exam-setup-form { grid-template-columns: repeat(3, minmax(0, 1fr)); } .exam-setup-form .exam-primary-btn { grid-column: 1 / -1; } }
-@media (max-width: 900px) { .exam-topbar, .exam-workspace { grid-template-columns: 1fr; } .exam-topbar { align-items: flex-start; flex-direction: column; } .exam-topbar-actions { width: 100%; justify-content: space-between; } .exam-navigator-card { order: -1; } }
-@media (max-width: 520px) { .exam-arena-page { padding: 12px; } .exam-topbar-actions { align-items: stretch; flex-direction: column; } .exam-back-link, .exam-timer { justify-content: center; text-align: center; } .exam-setup-form { grid-template-columns: 1fr; } .exam-setup-form .exam-primary-btn { grid-column: auto; } .exam-controls { display: grid; grid-template-columns: 1fr 1fr; } .exam-primary-btn { grid-column: 1 / -1; } }
+@media (max-width: 900px) { .arena-global-navigation a span { display: none; }.arena-global-navigation a { padding: 10px; }.exam-topbar, .exam-workspace { grid-template-columns: 1fr; } .exam-workspace.arena-fullscreen-workspace { grid-template-columns: 1fr; padding: 16px; }.exam-session-bar { align-items: flex-start; flex-direction: column; }.exam-topbar { align-items: flex-start; flex-direction: column; } .exam-topbar-actions { width: 100%; justify-content: space-between; } .exam-navigator-card { order: -1; } }
+@media (max-width: 520px) { .arena-global-topbar { min-height: 64px; padding: 9px 12px; gap: 8px; }.arena-global-brand span,.arena-topbar-back span { display: none; }.arena-global-navigation { gap: 1px; }.arena-global-navigation a { padding: 9px 7px; }.exam-arena-page { padding: 76px 12px 12px; } .exam-topbar-actions { align-items: stretch; flex-direction: column; } .exam-back-link, .exam-timer { justify-content: center; text-align: center; } .exam-setup-form { grid-template-columns: 1fr; } .exam-setup-form .exam-primary-btn { grid-column: auto; } .exam-controls { display: grid; grid-template-columns: 1fr 1fr; } .exam-primary-btn { grid-column: 1 / -1; } }
 
 /* ── Taskbar controls and parent confirmation ─────────────────────────── */
 .stats-header { flex-wrap: wrap; }
@@ -1683,8 +1711,8 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 
 /* ── Student top navigation: replaces the legacy left sidebar on map.html ── */
 .hidden { display: none !important; }
-.student-app { background: #0a1628; }
-.student-app .app-container { display: block !important; min-height: 100dvh !important; height: auto !important; padding: 0 !important; }
+.student-app { min-height: 100dvh; width: 100%; overflow-y: auto !important; background: #0a1628; }
+.student-app .app-container { display: block !important; width: 100% !important; min-height: 100dvh !important; height: auto !important; overflow-y: auto !important; padding: 0 0 8rem !important; }
 .user-top-navbar { position: fixed; inset: 0 0 auto 0; z-index: 5000; min-height: 80px; display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 24px 12px; border-bottom: 1px solid rgba(148,163,184,.2); background: rgba(15,23,42,.92); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 8px 28px rgba(2,6,23,.2); }
 .user-topbar-brand, .user-topbar-navigation, .user-top-navbar .nav-menu, .user-top-navbar .taskbar-actions { display: flex; align-items: center; }
 .user-topbar-brand { gap: 18px; min-width: 0; }
@@ -1740,17 +1768,23 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .user-role-switcher option { background: #0f1d31; color: #e7eef9; }
 .user-top-navbar .taskbar-actions { flex: 0 0 auto; gap: 5px; margin: 0; }
 .user-top-navbar .taskbar-grade { margin: 0; text-align: center; }.user-top-navbar .taskbar-grade select { text-align: center; }
-.student-app .bento-main { display: block !important; width: 100% !important; min-height: 100dvh; margin: 0 !important; padding: 100px 24px 28px !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; }
+.student-app .bento-main { display: block !important; width: 100% !important; min-height: 100dvh; margin: 0 !important; padding: 100px 24px 8rem !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; }
 /* bento.css was written for an absolute-positioned sidebar layout.  The student
    canvas uses a fixed header, so make the active pane explicitly visible in flow. */
 .student-app .bento-main > .tab-pane { position: relative !important; inset: auto !important; grid-row: auto; grid-column: auto; width: 100%; min-height: auto; display: none !important; opacity: 0 !important; pointer-events: none !important; transform: none !important; }
 .student-app .bento-main > .tab-pane.active { display: block !important; opacity: 1 !important; pointer-events: auto !important; }
+.mission-claim-button { width: 100%; margin-top: 16px; border: 0; border-radius: 12px; background: rgba(100,116,139,.55); color: #dbeafe; cursor: not-allowed; }
+.mission-claim-button.is-ready { background: #22c55e; color: #fff; cursor: pointer; animation: mission-claim-pulse 1.4s ease-in-out infinite; }
+.mission-claim-button.is-ready:hover { background: #16a34a; transform: translateY(-1px); }
+.mission-progress-note { margin: 16px 0 0; color: #94a3b8; font-size: .82rem; text-align: center; }
+@keyframes mission-claim-pulse { 50% { box-shadow: 0 0 0 7px rgba(34,197,94,.12); } }
 .student-page-heading { margin: 0 auto 18px; max-width: 1600px; }
 .student-page-heading .topbar-title { margin: 0; }
-.profile-page { min-height: 100dvh; height: auto !important; overflow-x: hidden; overflow-y: auto !important; }
-.profile-page .profile-main { min-height: 100dvh !important; width: 100% !important; height: auto !important; overflow-y: auto !important; overflow-x: hidden !important; align-items: flex-start !important; justify-content: center !important; padding: 40px 24px 8rem !important; }
+.profile-page { display: block !important; min-height: 100dvh; height: auto !important; overflow: visible !important; }
+.profile-page .profile-page-scroll { display: flex; width: 100%; min-height: 100dvh; height: auto; overflow-y: auto; overflow-x: hidden; padding-bottom: 10rem; }
+.profile-page .profile-main { min-height: 100% !important; width: 100% !important; height: auto !important; overflow: visible !important; align-items: flex-start !important; justify-content: center !important; padding: 40px 24px 10rem !important; }
 .profile-page .profile-container { margin: 0 auto; }
-.profile-page.min-h-screen, .profile-page .min-h-screen { min-height: 100dvh !important; }.profile-page .overflow-y-auto { overflow-y: auto !important; }.profile-page .pb-20 { padding-bottom: 5rem !important; }.profile-page .pb-32 { padding-bottom: 8rem !important; }
+.profile-page .min-h-screen { min-height: 100dvh !important; }.profile-page .overflow-y-auto { overflow-y: auto !important; }.profile-page .pb-20 { padding-bottom: 5rem !important; }.profile-page .pb-32 { padding-bottom: 8rem !important; }.profile-page .pb-40 { padding-bottom: 10rem !important; }
 .survey-modal { background: rgba(2, 6, 23, .78) !important; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }.survey-dialog { width: min(100%, 640px); max-height: min(92dvh, 760px); overflow-y: auto; padding: clamp(22px, 4vw, 38px); border: 1px solid rgba(148,163,184,.3); border-radius: 28px; background: linear-gradient(145deg, #182b46, #0e1c30); box-shadow: 0 28px 80px rgba(0,0,0,.48); }.survey-dialog h2 { margin: 4px 0 10px; color: #f8fafc; font-size: clamp(1.6rem, 4vw, 2rem); }.survey-eyebrow { margin: 0; color: #7dd3fc; font-size: .76rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }.survey-description { max-width: 500px; margin: 0 auto 24px; color: #cbd5e1; line-height: 1.6; }.survey-choice-group { min-width: 0; margin: 20px 0 0; padding: 0; border: 0; }.survey-choice-group legend { margin-bottom: 10px; color: #f8fafc; font-size: .96rem; font-weight: 800; }.survey-choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }.survey-choice-card { display: flex; min-height: 90px; align-items: center; justify-content: center; border: 1px solid #94a3b8; border-radius: 14px; background: rgba(15,23,42,.55); color: #e2e8f0; cursor: pointer; font-size: .88rem; font-weight: 700; line-height: 1.45; text-align: center; transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease; }.survey-choice-card input { position: absolute; opacity: 0; pointer-events: none; }.survey-choice-card:hover { border-color: #7dd3fc; background: rgba(219,234,254,.14); transform: translateY(-1px); }.survey-choice-card:has(input:checked) { border-color: #38bdf8; background: rgba(14,165,233,.2); color: #fff; box-shadow: 0 0 0 2px rgba(56,189,248,.18); }.survey-submit { width: 100%; margin-top: 24px; border: 0; background: #0284c7; color: #fff; }.text-center { text-align: center; }
 @media (max-width: 560px) { .survey-dialog { padding: 20px; border-radius: 22px; }.survey-choice-grid { grid-template-columns: 1fr; }.survey-choice-card { min-height: 58px; } }
 .support-chat-panel[hidden] { display: none !important; }

@@ -4,15 +4,16 @@
 
 const defaultGameState = {
     xp: 0,
-    hearts: 5,
+    hearts: 3,
     streak: 1,
-    maxHearts: 5,
+    maxHearts: 3,
     gems: 500, // Tăng thêm xu để dễ test
     currentUnit: 1,
     currentNode: 1,
     completedNodes: [],
     lastLogin: new Date().toISOString().split('T')[0],
     lastLoginDate: new Date().toISOString().split('T')[0],
+    lastHeartUpdate: Date.now(),
     lastStudyDate: null,
     
     // Avatar
@@ -107,7 +108,8 @@ function getGameState() {
     if (parsed.selectedGrade === undefined) parsed.selectedGrade = defaultGameState.selectedGrade;
     // Khởi tạo các trường Premium nếu chưa có
     if (!parsed.accountStatus) parsed.accountStatus = 'free';
-    if (!parsed.lastHeartRegenTime) parsed.lastHeartRegenTime = Date.now();
+    if (!parsed.lastHeartUpdate) parsed.lastHeartUpdate = Number(parsed.lastHeartRegenTime) || Date.now();
+    if (!parsed.lastHeartRegenTime) parsed.lastHeartRegenTime = parsed.lastHeartUpdate;
     
     // Khởi tạo các trường Thành tựu nếu chưa có
     if (parsed.pvpWins === undefined) parsed.pvpWins = 0;
@@ -152,7 +154,8 @@ function getGameState() {
     }
 
     // ⏳ LOGIC HỒI TRÁI TIM ⏳
-    const maxHearts = parsed.accountStatus === 'premium' ? 10 : 2;
+    const maxHearts = 3;
+    parsed.maxHearts = maxHearts;
     // Bỏ qua nếu có bùa vô hạn tim
     const hasInfinite = parsed.inventory.infiniteHeartsExpiry && parsed.inventory.infiniteHeartsExpiry > Date.now();
     
@@ -164,21 +167,23 @@ function getGameState() {
 
         if (parsed.hearts < maxHearts) {
             const now = Date.now();
-            const diffMs = now - parsed.lastHeartRegenTime;
-            const msPerHeart = 60 * 60 * 1000; // 60 phút
+            const diffMs = now - parsed.lastHeartUpdate;
+            const msPerHeart = 15 * 60 * 1000;
             
             if (diffMs >= msPerHeart) {
                 const heartsToAdd = Math.floor(diffMs / msPerHeart);
                 parsed.hearts = Math.min(maxHearts, parsed.hearts + heartsToAdd);
                 // Giữ lại phần dư của thời gian (chỉ lấy phần nguyên)
-                parsed.lastHeartRegenTime += heartsToAdd * msPerHeart; 
+                parsed.lastHeartUpdate += heartsToAdd * msPerHeart;
+                parsed.lastHeartRegenTime = parsed.lastHeartUpdate;
                 
                 // Lưu lại ngay
                 localStorage.setItem('VieGeo_state', JSON.stringify(parsed));
             }
         } else {
             // Đã đầy tim, luôn reset timer về hiện tại để khi vừa mất tim, nó sẽ đếm lại từ đầu là 60 phút
-            parsed.lastHeartRegenTime = Date.now();
+            parsed.lastHeartUpdate = Date.now();
+            parsed.lastHeartRegenTime = parsed.lastHeartUpdate;
         }
     }
 
@@ -200,6 +205,7 @@ function saveGameState(state) {
             avatar: state.avatar,
             avatarIsBase64: state.avatarIsBase64,
             accountStatus: state.accountStatus,
+            lastHeartUpdate: state.lastHeartUpdate,
             lastHeartRegenTime: state.lastHeartRegenTime,
             lastLogin: state.lastLogin,
             lastLoginDate: state.lastLoginDate || state.lastLogin,

@@ -461,25 +461,7 @@ function checkAnswer() {
             return;
         }
         
-        if (mode === 'normal') {
-            const hasInfiniteHearts = state.inventory && state.inventory.infiniteHeartsExpiry && Date.now() < state.inventory.infiniteHeartsExpiry;
-            if (!hasInfiniteHearts) {
-                state.hearts--;
-                updateHeartsUI();
-                saveGameState(state);
-                
-                if (state.hearts <= 0) {
-                    btnCheck.textContent = 'Kết thúc';
-                    btnCheck.addEventListener('click', () => {
-                        window.location.href = '/map';
-                    }, {once: true});
-                    return;
-                }
-            } else {
-                feedbackText.textContent += " (Được bảo vệ bởi Vô Hạn Tim ∞)";
-            }
-        }
-
+        // Stamina is charged once at lesson entry. Wrong answers never deduct it.
         btnCheck.textContent = 'Tiếp tục';
     }
 }

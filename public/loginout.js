@@ -7,7 +7,7 @@ const ROLE_DESTINATIONS = Object.freeze({
     parent: '/parent-dashboard',
     teacher: '/teacher-dashboard',
     cs: '/cs-dashboard',
-    admin: '/admin-dashboard'
+    admin: '/admin'
 });
 
 function normalizeRole(role) {
@@ -46,11 +46,14 @@ async function updateStreakOnLogin(email, userData) {
     const todayKey = toDayKey(new Date());
     const previousKey = toDayKey(userData.lastLoginDate || userData.lastLogin);
     const diffDays = daysBetween(previousKey, todayKey);
-    let streak = Math.max(0, Number(userData.currentStreak ?? userData.streak ?? 0) || 0);
+    const previousStreak = Math.max(0, Number(userData.currentStreak ?? userData.streak ?? 0) || 0);
+    let streak = previousStreak;
 
-    if (!previousKey) streak = Math.max(1, streak + 1);
-    else if (diffDays === 1) streak = Math.max(1, streak + 1);
+    // Compare date keys only: login time must never affect a daily streak.
+    if (!previousKey) streak = Math.max(1, previousStreak);
+    else if (diffDays === 1) streak = Math.max(1, previousStreak + 1);
     else if (diffDays > 1) streak = 1;
+    // diffDays === 0: the user has already checked in today, so keep the streak.
 
     const loginUpdate = {
         streak,
@@ -168,7 +171,7 @@ if (loginForm) {
                                 'user': { name: 'Người dùng (Học viên)', icon: 'fa-graduation-cap', color: '#1cb0f6', url: MAP_PAGE },
                                 'parent': { name: 'Phụ huynh', icon: 'fa-children', color: '#a78bfa', url: '/parent-dashboard' },
                                 'teacher': { name: 'Giáo viên', icon: 'fa-chalkboard-user', color: '#22c55e', url: '/teacher-dashboard' },
-                                'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin-dashboard' },
+                                'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin' },
                                 'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs-dashboard' }
                             };
                             
@@ -348,9 +351,10 @@ if (btnConfirmOtp) {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     lastLoginDate: toDayKey(new Date()),
                     xp: 0,
-                    hearts: 2,
+                    hearts: 3,
                     accountStatus: 'free',
                     lastHeartRegenTime: Date.now(),
+                    lastHeartUpdate: Date.now(),
                     streak: 1,
                     currentStreak: 1,
                     gems: 500,

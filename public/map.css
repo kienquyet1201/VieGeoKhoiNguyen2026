@@ -176,6 +176,16 @@ body {
     transition: transform 0.1s;
 }
 
+/* 34-island province route: small islands, exam checkpoints, then a final boss. */
+.node-btn.island-small { border: 3px solid rgba(255,255,255,.22); }
+.node-btn.island-checkpoint { border: 4px solid #ffc800; box-shadow: 0 9px 0 #b88900, 0 0 22px rgba(255,200,0,.32); }
+.node-btn.island-boss { border: 5px solid #ff6b6b; box-shadow: 0 12px 0 #c83b3b, 0 0 30px rgba(255,75,75,.5); animation: islandBossPulse 1.8s ease-in-out infinite; }
+.map-island-checkpoint .node-btn.current, .map-island-boss .node-btn.current { animation: islandUnlockPulse 1.5s ease-in-out infinite; }
+.map-island-node .node-btn + * { max-width: 230px; text-align: center; line-height: 1.35; }
+
+@keyframes islandBossPulse { 50% { filter: brightness(1.18); transform: scale(1.04); } }
+@keyframes islandUnlockPulse { 50% { filter: brightness(1.14); } }
+
 .node-btn:active {
     transform: translateY(8px);
     box-shadow: 0 0 0 var(--green-shadow);

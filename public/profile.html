@@ -74,7 +74,8 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="profile-page min-h-screen w-full overflow-y-auto pb-32">
+<body class="profile-page">
+    <div class="profile-page-scroll h-full min-h-screen w-full overflow-y-auto pb-40">
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
@@ -91,7 +92,7 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="main-content profile-main min-h-screen w-full overflow-y-auto pb-32">
+    <main class="main-content profile-main w-full pb-40">
         
         <div class="profile-container">
             <div class="avatar-circle">
@@ -143,6 +144,7 @@
         </div>
 
     </main>
+    </div>
 
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>

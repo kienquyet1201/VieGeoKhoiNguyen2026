@@ -7,6 +7,7 @@ const HEARTS_MAX = 3;
 const HEART_REGEN_MS = 15 * 60 * 1000;
 let heartTimerInterval = null;
 let heartRemoteHydrated = false;
+let lessonEntryInProgress = false;
 let gameState = window.gameState || null;
 
 // Shared UI notifications, consolidated here from the removed patch script.
@@ -34,7 +35,7 @@ const ROLE_META = Object.freeze({
     parent: { label: 'Phụ huynh', route: '/parent-dashboard' },
     teacher: { label: 'Giáo viên', route: '/teacher-dashboard' },
     cs: { label: 'Chăm sóc KH', route: '/cs-dashboard' },
-    admin: { label: 'Quản trị viên', route: '/admin-dashboard' }
+    admin: { label: 'Quản trị viên', route: '/admin' }
 });
 
 function normalizeRole(role) {
@@ -181,6 +182,7 @@ function setupRealtimeAuth() {
                 gameState.streak = Number(data.currentStreak ?? data.streak) || 0;
             }
             if (data.gems !== undefined && data.gems !== null) gameState.gems = Number(data.gems) || 0;
+            if (Array.isArray(data.claimedMissionRewards)) gameState.claimedMissionRewards = data.claimedMissionRewards;
             if (data.lastLogin) gameState.lastLogin = data.lastLogin;
             if (data.lastLoginDate) gameState.lastLoginDate = data.lastLoginDate;
             if (data.selectedGrade !== undefined) gameState.selectedGrade = data.selectedGrade || 'all';
@@ -293,13 +295,19 @@ function writeHeartSnapshot(state) {
     }
 }
 
-function persistHearts() {
+async function persistHearts() {
     writeHeartStateToLocal();
-    if (typeof db === 'undefined' || !sessionUser?.email) return;
-    db.collection('users').doc(sessionUser.email).set({
-        hearts: gameState.hearts,
-        lastHeartUpdate: gameState.lastHeartUpdate
-    }, { merge: true }).catch((error) => console.warn('Không thể đồng bộ Trái tim.', error));
+    if (typeof db === 'undefined' || !sessionUser?.email) return true;
+    try {
+        await db.collection('users').doc(sessionUser.email).set({
+            hearts: gameState.hearts,
+            lastHeartUpdate: gameState.lastHeartUpdate
+        }, { merge: true });
+        return true;
+    } catch (error) {
+        console.warn('Không thể đồng bộ Trái tim.', error);
+        return false;
+    }
 }
 
 function formatHeartCountdown(milliseconds) {
@@ -329,10 +337,12 @@ function updateHeartUi() {
 function updateHeaderStats() {
     const streakElement = document.getElementById('hdrStreak');
     const gemsElement = document.getElementById('hdrGems');
+    const xpElement = document.getElementById('hdrXp');
     const trophyElement = document.getElementById('hdrTrophies');
     const levelElement = document.getElementById('hdrLevel');
     if (streakElement) streakElement.textContent = gameState.streak ?? 0;
     if (gemsElement) gemsElement.textContent = gameState.gems ?? 0;
+    if (xpElement) xpElement.textContent = gameState.xp ?? 0;
     if (trophyElement) trophyElement.textContent = gameState.trophies ?? gameState.pvpWins ?? 0;
     if (levelElement) levelElement.textContent = Math.max(1, Math.floor((Number(gameState.xp) || 0) / 250) + 1);
     updateHeartUi();
@@ -419,18 +429,32 @@ function showOutOfHeartsPopup() {
     window.VieGeoUI.warning(message).then(openShop);
 }
 
-function consumeHeart() {
+async function consumeHeart() {
+    if (lessonEntryInProgress) return false;
     if (!checkHasEnoughHearts()) {
         showOutOfHeartsPopup();
         return false;
     }
 
+    lessonEntryInProgress = true;
+    const previousHearts = gameState.hearts;
+    const previousHeartUpdate = gameState.lastHeartUpdate;
     const wasFull = gameState.hearts === HEARTS_MAX;
     gameState.hearts -= 1;
     if (wasFull) gameState.lastHeartUpdate = Date.now();
-    persistHearts();
     updateHeaderStats();
     startHeartTimer();
+    const persisted = await persistHearts();
+    lessonEntryInProgress = false;
+    if (!persisted) {
+        gameState.hearts = previousHearts;
+        gameState.lastHeartUpdate = previousHeartUpdate;
+        writeHeartStateToLocal();
+        updateHeaderStats();
+        startHeartTimer();
+        window.VieGeoUI.error('Không thể cập nhật thể lực. Vui lòng kiểm tra kết nối và thử lại.');
+        return false;
+    }
     return true;
 }
 
@@ -439,11 +463,12 @@ function gateLessonButtons(root = document) {
         const originalClick = button.onclick;
         if (typeof originalClick !== 'function') return;
         button.dataset.heartGated = 'true';
-        button.onclick = function guardedLessonClick(event) {
+        button.onclick = async function guardedLessonClick(event) {
             if (!button.classList.contains('current') && !button.classList.contains('completed')) {
                 return originalClick.call(button, event);
             }
-            if (!consumeHeart()) return false;
+            event?.preventDefault();
+            if (!await consumeHeart()) return false;
             return originalClick.call(button, event);
         };
     });
@@ -616,11 +641,76 @@ async function renderLeaderboard() {
 }
 
 // ── RENDER QUESTS ──
+function missionRewardFor(quest) {
+    const diamondReward = Math.max(0, Number(quest?.reward) || 0);
+    return {
+        exp: Math.max(10, Number(quest?.expReward) || Math.round(diamondReward / 2)),
+        diamonds: diamondReward
+    };
+}
+
+function claimedMissionIds() {
+    if (!Array.isArray(gameState.claimedMissionRewards)) gameState.claimedMissionRewards = [];
+    return gameState.claimedMissionRewards;
+}
+
+async function persistMissionClaim() {
+    saveGameState(gameState);
+    const email = sessionUser?.email;
+    if (!email || typeof db === 'undefined') return true;
+
+    await db.collection('users').doc(email).set({
+        xp: Number(gameState.xp) || 0,
+        gems: Number(gameState.gems) || 0,
+        diamonds: Number(gameState.gems) || 0,
+        claimedMissionRewards: claimedMissionIds()
+    }, { merge: true });
+    return true;
+}
+
+window.claimReward = async function claimReward(missionId) {
+    const quest = DAILY_QUESTS.find((item) => item.id === missionId);
+    if (!quest || !gameState || !gameState.questsProgress) return false;
+
+    const progress = Number(gameState.questsProgress[missionId]) || 0;
+    const claims = claimedMissionIds();
+    if (progress < quest.target || claims.includes(missionId)) return false;
+
+    const reward = missionRewardFor(quest);
+    const previousXp = Number(gameState.xp) || 0;
+    const previousGems = Number(gameState.gems) || 0;
+    claims.push(missionId);
+    gameState.xp = previousXp + reward.exp;
+    gameState.gems = previousGems + reward.diamonds;
+    gameState.diamonds = gameState.gems;
+    updateHeaderStats();
+    renderQuests();
+
+    try {
+        await persistMissionClaim();
+        window.VieGeoUI.success(`Đã nhận ${reward.exp} XP và ${reward.diamonds} Kim cương!`);
+        return true;
+    } catch (error) {
+        console.error('Không thể nhận thưởng nhiệm vụ:', error);
+        gameState.xp = previousXp;
+        gameState.gems = previousGems;
+        gameState.diamonds = previousGems;
+        gameState.claimedMissionRewards = claims.filter((id) => id !== missionId);
+        saveGameState(gameState);
+        updateHeaderStats();
+        renderQuests();
+        window.VieGeoUI.error('Chưa thể nhận thưởng. Vui lòng kiểm tra kết nối và thử lại.');
+        return false;
+    }
+};
+
 function renderQuests() {
     const grid = document.getElementById('questGrid');
+    if (!grid || !gameState) return;
+    if (!gameState.questsProgress) gameState.questsProgress = {};
     grid.innerHTML = '';
 
-    gameState.questsProgress.q3 = gameState.xp; 
+    gameState.questsProgress.q3 = Number(gameState.xp) || 0;
     
     // Phân chia theo Mốc (Milestones)
     const types = [
@@ -647,6 +737,8 @@ function renderQuests() {
             const progress = gameState.questsProgress[quest.id] || 0;
             const percent = Math.min((progress / quest.target) * 100, 100);
             const isDone = progress >= quest.target;
+            const isClaimed = claimedMissionIds().includes(quest.id);
+            const reward = missionRewardFor(quest);
 
             const card = document.createElement('div');
             card.className = 'bento-card';
@@ -657,12 +749,15 @@ function renderQuests() {
                 <div style="margin-top: auto;">
                     <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; margin-bottom: 8px;">
                         <span>${progress} / ${quest.target}</span>
-                        <span style="color: #ffc800;">+${quest.reward} <i class="fa-solid fa-gem"></i></span>
+                        <span style="color: #ffc800;">+${reward.diamonds} <i class="fa-solid fa-gem"></i> · +${reward.exp} XP</span>
                     </div>
                     <div style="height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;">
                         <div style="width: ${percent}%; height: 100%; background: ${isDone ? '#58cc02' : typeGrp.color}; border-radius: 6px;"></div>
                     </div>
-                    ${isDone ? `<button class="bento-btn" style="width: 100%; margin-top: 16px; background: #58cc02;">Đã nhận thưởng</button>` : ''}
+                    ${isDone ? (isClaimed
+                        ? `<button class="bento-btn mission-claim-button" type="button" disabled>Đã nhận</button>`
+                        : `<button class="bento-btn mission-claim-button is-ready" type="button" onclick="claimReward('${quest.id}')">Nhận thưởng</button>`)
+                        : '<p class="mission-progress-note">Hoàn thành nhiệm vụ để mở khóa phần thưởng.</p>'}
                 </div>
             `;
             grid.appendChild(card);
