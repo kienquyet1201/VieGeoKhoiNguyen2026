@@ -94,7 +94,7 @@ window.switchRoleClientOnly = function switchRoleClientOnly(role) {
             return false;
         }
         persistSessionRoles(roles, normalizedRole);
-        window.location.href = ROLE_META[normalizedRole].route;
+        window.location.href = roleLinks[normalizedRole] || ROLE_META[normalizedRole].route;
     } catch (error) {
         console.error('Role switch error:', error);
         window.VieGeoUI.error('Không thể chuyển quyền. Vui lòng thử lại.');
@@ -158,16 +158,21 @@ function setupRealtimeAuth() {
                 return;
             }
 
-            gameState.xp = data.xp || 0;
-            const isHeartModelMigration = data.lastHeartUpdate === undefined;
+            // Preserve the current UI state until Firebase explicitly supplies a value.
+            // A partial snapshot must never flash XP, hearts, gems or streak back to zero.
+            if (data.xp !== undefined && data.xp !== null) gameState.xp = Number(data.xp) || 0;
+            const hasRemoteHearts = data.hearts !== undefined && data.hearts !== null;
+            const isHeartModelMigration = hasRemoteHearts && data.lastHeartUpdate === undefined;
             const remoteHeartUpdate = readHeartTimestamp(data.lastHeartUpdate ?? data.lastHeartRegenTime);
-            if (!heartRemoteHydrated || remoteHeartUpdate >= readHeartTimestamp(gameState.lastHeartUpdate)) {
-                gameState.hearts = data.hearts !== undefined ? data.hearts : HEARTS_MAX;
+            if (hasRemoteHearts && (!heartRemoteHydrated || remoteHeartUpdate >= readHeartTimestamp(gameState.lastHeartUpdate))) {
+                gameState.hearts = data.hearts;
                 gameState.lastHeartUpdate = remoteHeartUpdate;
                 heartRemoteHydrated = true;
             }
-            gameState.streak = Number(data.currentStreak ?? data.streak ?? 0);
-            gameState.gems = data.gems || 0;
+            if (data.currentStreak !== undefined || data.streak !== undefined) {
+                gameState.streak = Number(data.currentStreak ?? data.streak) || 0;
+            }
+            if (data.gems !== undefined && data.gems !== null) gameState.gems = Number(data.gems) || 0;
             if (data.lastLogin) gameState.lastLogin = data.lastLogin;
             if (data.lastLoginDate) gameState.lastLoginDate = data.lastLoginDate;
             if (data.selectedGrade !== undefined) gameState.selectedGrade = data.selectedGrade || 'all';

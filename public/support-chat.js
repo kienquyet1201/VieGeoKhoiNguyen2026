@@ -81,7 +81,11 @@
         const form = byId('supportChatForm');
         const user = session();
         const text = input ? input.value.trim() : '';
-        if (!text && !pendingImage || !user.email || !messagesRef) return;
+        if ((!text && !pendingImage) || !user.email || !messagesRef || typeof db === 'undefined') {
+            if (!text && !pendingImage) input?.focus();
+            else if (window.VieGeoUI) window.VieGeoUI.warning('Đang kết nối kênh hỗ trợ, vui lòng thử lại sau ít giây.');
+            return;
+        }
 
         const submit = form?.querySelector('button[type="submit"]');
         if (submit) submit.disabled = true;
@@ -105,11 +109,15 @@
 
             const staffOnline = await hasOnlineStaff();
             byId('supportAvailability').textContent = staffOnline ? 'CSKH đang trực tuyến' : 'Trợ lý ảo đang hỗ trợ';
-            if (!staffOnline && text) {
-                const reply = await requestAiReply(text);
-                await messagesRef.add({
-                    sender: 'assistant', text: reply, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: Date.now()
-                });
+            if (!staffOnline) {
+                window.setTimeout(() => {
+                    messagesRef.add({
+                        sender: 'AI',
+                        text: 'Chào bạn, hiện tại CSKH đang bận. Mình là Trợ lý AI của VieGeo, mình có thể giúp gì cho bạn?',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdAtClient: Date.now()
+                    }).catch((error) => console.warn('Không thể gửi phản hồi AI tự động.', error));
+                }, 1500);
             }
         } catch (error) {
             console.error('Không thể gửi tin nhắn hỗ trợ:', error);

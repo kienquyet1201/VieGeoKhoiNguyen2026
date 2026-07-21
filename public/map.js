@@ -216,8 +216,8 @@ renderMap();
 
 // One-time learner survey. Firestore is the source of truth; localStorage only keeps the UI usable offline.
 const surveyModal = document.getElementById('surveyModal');
-const surveyGoal = document.getElementById('surveyGoal');
-const surveyInterest = document.getElementById('surveyInterest');
+const surveyGoalInputs = [...document.querySelectorAll('input[name="surveyGoal"]')];
+const surveyInterestInputs = [...document.querySelectorAll('input[name="surveyInterest"]')];
 const surveySubmitButton = document.getElementById('btnSubmitSurvey');
 
 function getSurveySession() {
@@ -236,8 +236,14 @@ function ensureLearningProfile() {
 }
 
 function hydrateSurveyInputs(profile) {
-    if (surveyGoal && profile.goal) surveyGoal.value = profile.goal;
-    if (surveyInterest && profile.interests && profile.interests[0]) surveyInterest.value = profile.interests[0];
+    const goalInput = surveyGoalInputs.find((input) => input.value === profile.goal);
+    const interestInput = surveyInterestInputs.find((input) => input.value === profile.interests?.[0]);
+    if (goalInput) goalInput.checked = true;
+    if (interestInput) interestInput.checked = true;
+}
+
+function selectedSurveyValue(name) {
+    return document.querySelector(`input[name="${name}"]:checked`)?.value || '';
 }
 
 function openSurvey(forceOpen = false) {
@@ -275,7 +281,12 @@ async function initializeLearnerSurvey() {
 }
 
 async function saveLearnerSurvey() {
-    if (!surveyGoal || !surveyInterest) return;
+    const goal = selectedSurveyValue('surveyGoal');
+    const interest = selectedSurveyValue('surveyInterest');
+    if (!goal || !interest) {
+        VieGeoUI.warning('Vui lòng chọn mục tiêu và khu vực bạn quan tâm.');
+        return;
+    }
     const profile = ensureLearningProfile();
     const previousLabel = surveySubmitButton?.textContent;
     if (surveySubmitButton) {
@@ -283,8 +294,8 @@ async function saveLearnerSurvey() {
         surveySubmitButton.textContent = 'Đang lưu…';
     }
 
-    profile.goal = surveyGoal.value;
-    profile.interests = [surveyInterest.value];
+    profile.goal = goal;
+    profile.interests = [interest];
     profile.surveyDone = true;
 
     try {

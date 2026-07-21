@@ -433,31 +433,32 @@
     </div>
 
     <!-- ONBOARDING SURVEY MODAL -->
-    <div id="surveyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); padding: 40px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06); width: 90%; max-width: 500px; text-align: center;">
-            <h2 style="font-size: 2rem; color: var(--blue); margin-bottom: 20px;">Khảo sát Người học</h2>
-            <p style="color: var(--text-main); margin-bottom: 20px;">Hệ thống AI của VieGeo cần một vài thông tin để cá nhân hóa Learning Profile cho bạn.</p>
-            
-            <div style="text-align: left; margin-bottom: 15px;">
-                <label style="color: var(--text-dim); display: block; margin-bottom: 5px;">Mục tiêu học tập của bạn là gì?</label>
-                <select id="surveyGoal" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--gray-border);">
-                    <option value="exam">Ôn thi trên lớp</option>
-                    <option value="knowledge">Khám phá, mở rộng kiến thức</option>
-                    <option value="travel">Yêu thích du lịch</option>
-                </select>
-            </div>
-            
-            <div style="text-align: left; margin-bottom: 20px;">
-                <label style="color: var(--text-dim); display: block; margin-bottom: 5px;">Bạn quan tâm đến khu vực nào nhất?</label>
-                <select id="surveyInterest" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--gray-border);">
-                    <option value="north">Miền Bắc</option>
-                    <option value="central">Miền Trung</option>
-                    <option value="south">Miền Nam</option>
-                </select>
-            </div>
-            
-            <button id="btnSubmitSurvey" class="bento-btn" style="width: 100%; background: var(--blue); color: white;">Hoàn tất & Bắt đầu</button>
-        </div>
+    <div id="surveyModal" class="survey-modal" style="display: none;">
+        <section class="survey-dialog" role="dialog" aria-modal="true" aria-labelledby="surveyTitle">
+            <p class="survey-eyebrow text-center">Cá nhân hóa hành trình</p>
+            <h2 id="surveyTitle" class="text-center">Khảo sát Người học</h2>
+            <p class="survey-description text-center">Chọn nhanh các thông tin phù hợp để VieGeo cá nhân hóa lộ trình học cho bạn.</p>
+
+            <fieldset class="survey-choice-group">
+                <legend>Mục tiêu học tập của bạn là gì?</legend>
+                <div class="survey-choice-grid">
+                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyGoal" value="exam" checked><span>Ôn thi trên lớp</span></label>
+                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyGoal" value="knowledge"><span>Khám phá kiến thức</span></label>
+                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyGoal" value="travel"><span>Yêu thích du lịch</span></label>
+                </div>
+            </fieldset>
+
+            <fieldset class="survey-choice-group">
+                <legend>Bạn quan tâm đến khu vực nào nhất?</legend>
+                <div class="survey-choice-grid">
+                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyInterest" value="north" checked><span>Miền Bắc</span></label>
+                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyInterest" value="central"><span>Miền Trung</span></label>
+                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyInterest" value="south"><span>Miền Nam</span></label>
+                </div>
+            </fieldset>
+
+            <button id="btnSubmitSurvey" class="bento-btn survey-submit" type="button">Hoàn tất & Bắt đầu</button>
+        </section>
     </div>
 
     <!-- Scripts -->

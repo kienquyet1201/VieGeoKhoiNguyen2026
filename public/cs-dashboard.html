@@ -49,7 +49,7 @@
 
         function renderMessages(snapshot) {
             const container = el('csMessages'); const messages = snapshot.docs.map(doc => ({id:doc.id,...doc.data()})).sort((a,b) => (a.createdAtClient || 0) - (b.createdAtClient || 0));
-            container.innerHTML = messages.length ? messages.map(message => { const staff = message.sender === 'staff' || message.sender === 'assistant'; return `<article class="cs-bubble${staff ? ' is-staff' : ''}"><small>${staff ? 'CSKH VieGeo' : 'Học sinh'}</small><p>${escapeHtml(message.text || (message.imageUrl ? 'Đã gửi hình ảnh.' : ''))}</p>${message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="Ảnh đính kèm" style="max-width:100%;margin-top:8px;border-radius:9px">` : ''}</article>`; }).join('') : '<div class="cs-empty">Chưa có tin nhắn trong cuộc hội thoại này.</div>';
+            container.innerHTML = messages.length ? messages.map(message => { const staff = ['staff', 'assistant', 'AI'].includes(message.sender); const senderLabel = message.sender === 'AI' ? 'Trợ lý AI VieGeo' : staff ? 'CSKH VieGeo' : 'Học sinh'; return `<article class="cs-bubble${staff ? ' is-staff' : ''}"><small>${senderLabel}</small><p>${escapeHtml(message.text || (message.imageUrl ? 'Đã gửi hình ảnh.' : ''))}</p>${message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="Ảnh đính kèm" style="max-width:100%;margin-top:8px;border-radius:9px">` : ''}</article>`; }).join('') : '<div class="cs-empty">Chưa có tin nhắn trong cuộc hội thoại này.</div>';
             container.scrollTop = container.scrollHeight;
         }
 
