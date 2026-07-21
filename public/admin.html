@@ -18,14 +18,14 @@
 </head>
 <body>
     <div class="operations-shell" id="adminDashboard">
-        <aside class="operations-rail" aria-label="Điều hướng quản trị">
-            <a class="operations-logo" href="/map" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i></a>
-            <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i></button>
-            <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i></button>
-            <button type="button" data-admin-tab="upload" title="Upload câu hỏi" aria-label="Upload câu hỏi"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-            <button type="button" data-admin-tab="monitoring" title="Giám sát học tập (Live Session)" aria-label="Giám sát học tập"><i class="fa-solid fa-tower-broadcast"></i></button>
-            <button class="rail-bottom" type="button" id="adminRoleButton" title="Đổi vai trò" aria-label="Đổi vai trò"><i class="fa-solid fa-users-gear"></i></button>
-            <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        <aside class="operations-rail w-16 hover:w-64 transition-all duration-300 group overflow-hidden z-50" aria-label="Điều hướng quản trị">
+            <a class="operations-logo" href="/map" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">VieGeo</span></a>
+            <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Tổng quan</span></button>
+            <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Quản lý người dùng</span></button>
+            <button type="button" data-admin-tab="upload" title="Upload câu hỏi" aria-label="Upload câu hỏi"><i class="fa-solid fa-cloud-arrow-up"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Upload câu hỏi</span></button>
+            <button type="button" data-admin-tab="monitoring" title="Giám sát học tập (Live Session)" aria-label="Giám sát học tập"><i class="fa-solid fa-tower-broadcast"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Giám sát học tập</span></button>
+            <button class="rail-bottom" type="button" id="adminRoleButton" title="Đổi vai trò" aria-label="Đổi vai trò"><i class="fa-solid fa-users-gear"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đổi vai trò</span></button>
+            <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đăng xuất</span></button>
         </aside>
 
         <main class="operations-main flex-1 w-full p-8">

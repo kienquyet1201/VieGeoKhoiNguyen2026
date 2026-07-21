@@ -1726,13 +1726,12 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 /* Active navigation opens to the right: the icon glides left, then its name fades in. */
 .user-top-navbar .nav-button[aria-current="page"] .nav-icon-frame { transform: translateX(-6px) scale(1.04); }
 .user-top-navbar .nav-button[aria-current="page"] > .sr-only { max-width: 142px; opacity: 1; transform: translateX(0); transition-delay: 40ms; }
-.user-top-navbar .taskbar-collapsible { position: relative; z-index: 2; flex: 0 0 4rem; flex-direction: column; align-items: stretch; width: 4rem; max-height: 42px; padding: 0; overflow: hidden; border: 1px solid rgba(148,163,184,.22); border-radius: 21px; background: rgba(15,23,42,.92); box-shadow: 0 12px 28px rgba(2,6,23,.26); transition: width .3s ease, max-height .3s ease, border-radius .3s ease; }
-.user-top-navbar .taskbar-collapsible:hover, .user-top-navbar .taskbar-collapsible:focus-within { width: 16rem; max-height: 22rem; border-radius: 18px; }
-.user-top-navbar .taskbar-collapsible .nav-button { flex: 0 0 42px; width: 100%; padding: 0 10px; border-radius: 12px; }
-.user-top-navbar .taskbar-collapsible .nav-icon-frame { flex: 0 0 42px; }
-.user-top-navbar .taskbar-collapsible .nav-label { display: block; max-width: 0; overflow: hidden; color: #e0f2fe; font-size: .82rem; font-weight: 800; line-height: normal; text-align: center; opacity: 0; transform: translateX(8px); transition: max-width .3s ease, opacity .18s ease, transform .3s ease; }
-.user-top-navbar .taskbar-collapsible:hover .nav-label.hidden, .user-top-navbar .taskbar-collapsible:focus-within .nav-label.hidden { display: block !important; max-width: 11.5rem; opacity: 1; transform: translateX(0); }
-.user-top-navbar .taskbar-collapsible:hover .nav-icon-frame, .user-top-navbar .taskbar-collapsible:focus-within .nav-icon-frame { transform: translateX(-4px) scale(1.04); }
+.user-top-navbar .user-navigation-fixed { display: flex; flex: 0 1 auto; align-items: center; gap: 4px; width: auto; max-width: min(58vw, 760px); margin: 0; padding: 2px; overflow-x: auto; scrollbar-width: none; }
+.user-top-navbar .user-navigation-fixed::-webkit-scrollbar { display: none; }
+.user-top-navbar .user-navigation-fixed .nav-button, .user-top-navbar .user-navigation-fixed .nav-button[aria-current="page"] { flex: 0 0 auto; width: auto; min-height: 42px; padding: 0 10px; border-radius: 12px; background: transparent; }
+.user-top-navbar .user-navigation-fixed .nav-button[aria-current="page"] { background: rgba(14,165,233,.13); }
+.user-top-navbar .user-navigation-fixed .nav-icon-frame, .user-top-navbar .user-navigation-fixed .nav-button[aria-current="page"] .nav-icon-frame { transform: none; }
+.user-top-navbar .user-navigation-fixed .nav-label { display: inline-block; margin-left: 3px; color: #dbeafe; font-size: .78rem; font-weight: 800; line-height: normal; white-space: nowrap; }
 .user-top-navbar .nav-menu { flex: 0 1 auto; flex-direction: row !important; width: auto !important; height: auto !important; gap: 3px; margin: 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
 .user-top-navbar .nav-menu::-webkit-scrollbar { display: none; }
 .user-top-navbar .nav-btn { flex: 0 0 40px; display: inline-grid; place-items: center; width: 40px; min-height: 40px; margin: 0; padding: 0; border-radius: 12px; font-size: 0; }
@@ -1773,8 +1772,13 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 
 /* ── Operations dashboards: shared dark platform styles ── */
 .operations-shell { min-height: 100dvh; display: grid; grid-template-columns: 64px minmax(0, 1fr); background: #081525; color: #e7eef9; }
-.operations-rail { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 8px; border-right: 1px solid rgba(148,163,184,.16); background: #0f172a; }
+.operations-rail { position: sticky; top: 0; z-index: 50; box-sizing: border-box; width: 64px; height: 100dvh; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 8px; overflow: hidden; border-right: 1px solid rgba(148,163,184,.16); background: #0f172a; transition: width .3s ease, box-shadow .3s ease; }
 .operations-logo, .operations-rail button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid transparent; border-radius: 13px; background: transparent; color: #9fb0c8; cursor: pointer; transition: .18s ease; }
+.operations-rail .operations-logo, .operations-rail button { display: flex; flex: 0 0 44px; align-items: center; justify-content: center; gap: 12px; min-width: 44px; white-space: nowrap; }
+.operations-rail:hover, .operations-rail:focus-within { width: 256px; align-items: stretch; box-shadow: 18px 0 34px rgba(2,6,23,.26); }
+.operations-rail:hover .operations-logo, .operations-rail:hover button, .operations-rail:focus-within .operations-logo, .operations-rail:focus-within button { width: 100%; padding: 0 12px; justify-content: flex-start; }
+.admin-rail-label { display: none; opacity: 0; overflow: hidden; color: inherit; font-size: .82rem; font-weight: 800; transition: opacity .2s ease; }
+.operations-rail:hover .admin-rail-label.hidden, .operations-rail:focus-within .admin-rail-label.hidden { display: block !important; opacity: 1; }
 .operations-logo { margin-bottom: 12px; color: #38bdf8; font-size: 1.25rem; background: rgba(14,165,233,.1); }
 .operations-rail button:hover, .operations-rail button.is-active { border-color: rgba(56,189,248,.38); background: rgba(14,165,233,.13); color: #e0f2fe; }
 .operations-rail .rail-bottom { margin-top: auto; }
