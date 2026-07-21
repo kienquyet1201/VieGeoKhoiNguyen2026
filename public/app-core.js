@@ -328,8 +328,15 @@ animatedNavButtons.forEach((button) => {
         animatedNavButtons.forEach((item) => item.removeAttribute('aria-current'));
         button.setAttribute('aria-current', 'page');
 
-        // Let the icon complete the first half of its rise before changing documents.
+        // Keep map sections in the current document. This avoids reloading a blank
+        // canvas while still allowing the active-state transition to be perceived.
         window.setTimeout(() => {
+            const targetId = button.getAttribute('data-target');
+            if (targetId && activateTab(targetId)) {
+                const nextUrl = new URL(href, window.location.href);
+                window.history.pushState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+                return;
+            }
             window.location.href = href;
         }, 300);
     });
