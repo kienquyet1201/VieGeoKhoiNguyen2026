@@ -285,22 +285,57 @@ function updateHeaderStats() {
     heartsElement.innerHTML = heartHtml;
 }
 
-// ── TAB SWITCHING ──
-const navBtns = document.querySelectorAll('.nav-btn[data-target]');
+// ── TAB SWITCHING & TOP NAVIGATION ──
+const tabNavControls = document.querySelectorAll('.nav-btn[data-target], .nav-button[data-target]');
 const tabPanes = document.querySelectorAll('.tab-pane');
+const animatedNavButtons = document.querySelectorAll('.nav-button');
 
-navBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        navBtns.forEach(b => b.classList.remove('active'));
-        tabPanes.forEach(p => p.classList.remove('active'));
-        
-        const targetId = btn.getAttribute('data-target');
-        const targetPane = targetId ? document.getElementById(targetId) : null;
-        if (!targetPane) return;
-        btn.classList.add('active');
-        targetPane.classList.add('active');
+function activateTab(targetId) {
+    const targetPane = targetId ? document.getElementById(targetId) : null;
+    if (!targetPane) return false;
+
+    tabPanes.forEach((pane) => pane.classList.remove('active'));
+    tabNavControls.forEach((control) => {
+        const selected = control.getAttribute('data-target') === targetId;
+        control.classList.toggle('active', selected);
+        if (control.classList.contains('nav-button')) {
+            if (selected) control.setAttribute('aria-current', 'page');
+            else control.removeAttribute('aria-current');
+        }
+    });
+    targetPane.classList.add('active');
+    return true;
+}
+
+function activateInitialTabFromUrl() {
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    if (!requestedTab) return;
+    const target = document.querySelector(`.nav-button[data-tab-key="${requestedTab}"]`);
+    if (target) activateTab(target.getAttribute('data-target'));
+}
+
+tabNavControls.forEach((control) => {
+    if (control.classList.contains('nav-button')) return;
+    control.addEventListener('click', () => activateTab(control.getAttribute('data-target')));
+});
+
+animatedNavButtons.forEach((button) => {
+    button.addEventListener('click', (event) => {
+        const href = button.getAttribute('href');
+        if (!href) return;
+        event.preventDefault();
+
+        animatedNavButtons.forEach((item) => item.removeAttribute('aria-current'));
+        button.setAttribute('aria-current', 'page');
+
+        // Let the icon complete the first half of its rise before changing documents.
+        window.setTimeout(() => {
+            window.location.href = href;
+        }, 300);
     });
 });
+
+activateInitialTabFromUrl();
 
 // ── RENDER PATH (ISLANDS & FILTER) ──
 const gradeChips = document.querySelectorAll('.grade-chip');

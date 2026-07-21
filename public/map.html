@@ -36,23 +36,14 @@
             </div>
             <div class="user-topbar-navigation">
             
-            <nav class="nav-menu" id="navMenu">
-                <button class="nav-btn active" data-target="tabMap" title="Lộ trình học" aria-label="Lộ trình học"><i class="fa-solid fa-map-location-dot"></i><span>Lộ Trình Học</span></button>
-                <button class="nav-btn" type="button" onclick="window.location.href='exam-arena.html'" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><i class="fa-solid fa-file-pen"></i><span>Đấu trường Luyện thi</span></button>
-                <button class="nav-btn" data-target="tabLeaderboard" title="Xếp hạng" aria-label="Xếp hạng"><i class="fa-solid fa-trophy"></i><span>Xếp hạng</span></button>
-                <button class="nav-btn" data-target="tabQuests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><i class="fa-solid fa-box-open"></i><span>Nhiệm vụ</span></button>
-                <button class="nav-btn" data-target="tabShop" title="Cửa hàng" aria-label="Cửa hàng">
-                    <i class="fa-solid fa-store"></i>
-                    <span>Cửa Hàng</span>
-                </button>
-                <button class="nav-btn" data-target="tabArena" title="Đấu trường" aria-label="Đấu trường">
-                    <i class="fa-solid fa-khanda"></i>
-                    <span>Đấu Trường</span>
-                </button>
-                <button class="nav-btn" data-target="tabProfile" title="Hồ sơ" aria-label="Hồ sơ">
-                    <i class="fa-solid fa-user"></i>
-                    <span>Hồ Sơ</span>
-                </button>
+            <nav class="nav-items" id="navMenu" aria-label="Điều hướng học tập">
+                <a class="nav-button" href="map.html?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="sr-only">Lộ trình học</span></a>
+                <a class="nav-button" href="exam-arena.html" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><div class="nav-icon-frame"><i class="fa-solid fa-file-pen" aria-hidden="true"></i></div><span class="sr-only">Đấu trường Luyện thi</span></a>
+                <a class="nav-button" href="map.html?tab=leaderboard" data-target="tabLeaderboard" data-tab-key="leaderboard" title="Xếp hạng" aria-label="Xếp hạng"><div class="nav-icon-frame"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div><span class="sr-only">Xếp hạng</span></a>
+                <a class="nav-button" href="map.html?tab=quests" data-target="tabQuests" data-tab-key="quests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><div class="nav-icon-frame"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div><span class="sr-only">Nhiệm vụ</span></a>
+                <a class="nav-button" href="map.html?tab=shop" data-target="tabShop" data-tab-key="shop" title="Cửa hàng" aria-label="Cửa hàng"><div class="nav-icon-frame"><i class="fa-solid fa-store" aria-hidden="true"></i></div><span class="sr-only">Cửa hàng</span></a>
+                <a class="nav-button" href="map.html?tab=arena" data-target="tabArena" data-tab-key="arena" title="Đấu trường PvP" aria-label="Đấu trường PvP"><div class="nav-icon-frame"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div><span class="sr-only">Đấu trường PvP</span></a>
+                <a class="nav-button" href="map.html?tab=profile" data-target="tabProfile" data-tab-key="profile" title="Hồ sơ" aria-label="Hồ sơ"><div class="nav-icon-frame"><i class="fa-solid fa-user" aria-hidden="true"></i></div><span class="sr-only">Hồ sơ</span></a>
             </nav>
             <!-- Role Switcher -->
             <div id="roleSwitcherWrap" class="user-role-switcher" hidden>
@@ -298,7 +289,7 @@
                                 <h3><i class="fa-solid fa-khanda"></i> Thách đấu 1vs1</h3>
                                 <p>So tài kiến thức địa lí trong các trận đấu tốc độ và tích lũy chiến thắng.</p>
                             </div>
-                            <button class="bento-btn" type="button" onclick="document.querySelector('.nav-btn[data-target=&quot;tabArena&quot;]').click()">Vào đấu trường</button>
+                            <button class="bento-btn" type="button" onclick="document.querySelector('.nav-button[data-target=&quot;tabArena&quot;]').click()">Vào đấu trường</button>
                         </section>
 
                         <!-- ── ACHIEVEMENTS COLLECTION ── -->

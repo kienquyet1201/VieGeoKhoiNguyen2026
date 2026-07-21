@@ -143,6 +143,11 @@ body.dashboard-page {
     /* Font Stack */
     --font-heading: 'Be Vietnam Pro', sans-serif;
     --font-body: 'Be Vietnam Pro', sans-serif;
+    --shape-rise: 15px;
+    --move-duration: 400ms;
+    --spring: cubic-bezier(0.4, 0, 0.2, 1);
+    --icon-muted: #64748b;
+    --icon-active: #38bdf8;
     
     /* Shadows & Blur */
     --card-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
@@ -1684,6 +1689,36 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .user-top-navbar .topbar-stats { display: flex; align-items: center; gap: 7px; }
 .user-top-navbar .stat-pill { min-width: 42px; margin: 0; padding: 8px 10px; font-size: .78rem; }
 .user-topbar-navigation { flex: 1 1 auto; justify-content: flex-end; gap: 8px; min-width: 0; }
+
+/* Navigation animation: the base grid is reusable; the student topbar keeps its icons on one row. */
+.nav-items {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.nav-icon-frame {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--icon-muted);
+    transform: translateY(0) scale(1);
+    transition: transform var(--move-duration) var(--spring), color 220ms ease;
+}
+
+.nav-button[aria-current="page"] .nav-icon-frame {
+    color: var(--icon-active);
+    transform: translateY(-31px) scale(1.06);
+}
+
+.user-top-navbar .nav-items { display: flex; flex: 0 1 auto; grid-template-columns: none; align-items: flex-end; gap: 3px; min-width: 0; margin: 0; padding: 31px 0 0; overflow-x: auto; overflow-y: visible; scrollbar-width: none; }
+.user-top-navbar .nav-items::-webkit-scrollbar { display: none; }
+.user-top-navbar .nav-button { display: grid; flex: 0 0 42px; width: 42px; height: 42px; place-items: center; border: 0; border-radius: 50%; color: var(--icon-muted); text-decoration: none; cursor: pointer; transition: background 220ms ease, color 220ms ease; }
+.user-top-navbar .nav-button:hover, .user-top-navbar .nav-button:focus-visible { background: rgba(56,189,248,.12); color: var(--icon-active); outline: none; }
+.user-top-navbar .nav-button i { width: auto; margin: 0; font-size: 1rem; }
+.user-top-navbar .nav-button[aria-current="page"] { background: rgba(14,165,233,.13); }
 .user-top-navbar .nav-menu { flex: 0 1 auto; flex-direction: row !important; width: auto !important; height: auto !important; gap: 3px; margin: 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
 .user-top-navbar .nav-menu::-webkit-scrollbar { display: none; }
 .user-top-navbar .nav-btn { flex: 0 0 40px; display: inline-grid; place-items: center; width: 40px; min-height: 40px; margin: 0; padding: 0; border-radius: 12px; font-size: 0; }
