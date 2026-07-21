@@ -1631,3 +1631,42 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .support-composer { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; padding: 12px; border-top: 1px solid rgba(148,163,184,.15); } .support-composer input { min-width: 0; border: 1px solid rgba(148,163,184,.22); border-radius: 11px; outline: 0; background: rgba(2,12,27,.4); color: #fff; padding: 10px; } .support-composer button { display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 11px; background: rgba(125,211,252,.14); color: #7dd3fc; cursor: pointer; } .support-composer button[type="submit"] { background: #0ea5e9; color: #fff; } .support-composer button:disabled { cursor: wait; opacity: .55; }
 .support-attachment { min-height: 0; margin: -5px 13px 10px; color: #a5f3fc; font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 600px) { .support-chat { right: 14px; bottom: 14px; } .support-chat-toggle span { display: none; } }
+
+/* ── Premium modal: retain a complete, scrollable dialog on short screens ─ */
+#premiumModal {
+    --premium-modal-edge: clamp(12px, 2vw, 24px);
+    padding: var(--premium-modal-edge) !important;
+    overflow: hidden !important;
+    overscroll-behavior: contain;
+}
+#premiumModal > div {
+    width: min(100%, 500px) !important;
+    max-height: calc(100dvh - var(--premium-modal-edge) - var(--premium-modal-edge)) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    padding: clamp(22px, 4vw, 40px) !important;
+    scrollbar-gutter: stable;
+}
+#premiumModal #qrCodeImage {
+    width: min(180px, 52vw) !important;
+    height: min(180px, 52vw) !important;
+    object-fit: contain;
+}
+#premiumModal code,
+#premiumModal [id="premiumTransferContent"] {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+#premiumModal [style*="justify-content: space-between"] {
+    flex-wrap: wrap;
+    gap: 6px 16px;
+}
+@media (max-height: 760px) {
+    #premiumModal > div { padding: 20px !important; border-radius: 22px !important; }
+    #premiumModal > div > div:first-of-type { font-size: 3rem !important; margin-bottom: 4px !important; }
+    #premiumModal h2 { font-size: 1.75rem !important; }
+    #premiumModal #qrCodeImage { width: 132px !important; height: 132px !important; }
+    #premiumModal [style*="margin-bottom: 30px"] { margin-bottom: 16px !important; }
+}
