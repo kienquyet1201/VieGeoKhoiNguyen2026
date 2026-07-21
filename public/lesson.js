@@ -94,10 +94,6 @@ async function initNormal() {
         document.getElementById('theoryContent').textContent = foundNode.content;
         
         document.getElementById('btnFinishTheory').onclick = () => {
-            const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-            if (typeof updateLearningProfile === 'function') {
-                updateLearningProfile(session.email || '', { lessonId: foundNode.id, lessonTitle: foundNode.title, questionMetrics: [] });
-            }
             finishLesson(foundNode);
         };
         return;
@@ -544,6 +540,8 @@ function finishLesson() {
         if (typeof checkAndUnlockAchievements === 'function') {
             checkAndUnlockAchievements(state);
         }
+        if (typeof recordStudyActivity === 'function') recordStudyActivity(state);
+        saveGameState(state);
         const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
         if (typeof updateLearningProfile === 'function') {
             updateLearningProfile(session.email || '', {
@@ -551,10 +549,7 @@ function finishLesson() {
                 lessonTitle: activeLessonTitle,
                 questionMetrics: lessonTelemetry
             });
-        } else if (typeof recordStudyActivity === 'function') {
-            recordStudyActivity(state);
         }
-        saveGameState(state);
     }
 
     bottomBar.className = 'bottom-bar state-correct';

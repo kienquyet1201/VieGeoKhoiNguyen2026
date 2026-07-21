@@ -43,24 +43,9 @@ function daysBetween(dayA, dayB) {
 }
 
 async function updateStreakOnLogin(email, userData) {
-    const todayKey = toDayKey(new Date());
-    const previousKey = toDayKey(userData.lastLoginDate || userData.lastLogin);
-    const diffDays = daysBetween(previousKey, todayKey);
-    const previousStreak = Math.max(0, Number(userData.currentStreak ?? userData.streak ?? 0) || 0);
-    let streak = previousStreak;
-
-    // Compare date keys only: login time must never affect a daily streak.
-    if (!previousKey) streak = Math.max(1, previousStreak);
-    else if (diffDays === 1) streak = Math.max(1, previousStreak + 1);
-    else if (diffDays > 1) streak = 1;
-    // diffDays === 0: the user has already checked in today, so keep the streak.
-
-    const loginUpdate = {
-        streak,
-        currentStreak: streak,
-        lastLogin: new Date().toISOString(),
-        lastLoginDate: todayKey
-    };
+    // Opening the website never changes the streak. It is awarded only after
+    // a completed lesson by recordStudyActivity in gamedata.js.
+    const loginUpdate = { lastLoginAt: new Date().toISOString() };
     await db.collection('users').doc(email).set(loginUpdate, { merge: true });
     Object.assign(userData, loginUpdate);
     return loginUpdate;
@@ -185,7 +170,7 @@ if (loginForm) {
                                 btnRole.onmouseout = () => btnRole.style.background = 'rgba(255,255,255,0.1)';
                                 
                                 btnRole.onclick = () => {
-                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: r, roles: userRoles, role: activeRole, streak: userData.currentStreak }));
+                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, gender: userData.gender || '', activeRole: r, roles: userRoles, role: activeRole, streak: userData.currentStreak }));
                                     window.location.href = destinationForRole(r);
                                 };
                                 container.appendChild(btnRole);
@@ -196,7 +181,7 @@ if (loginForm) {
                     } else {
                         // Single role redirect
                         const role = activeRole;
-                        localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: role, roles: userRoles, role, streak: userData.currentStreak }));
+                        localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, gender: userData.gender || '', activeRole: role, roles: userRoles, role, streak: userData.currentStreak }));
 
                         if (role === 'user') {
                             const pendingAction = localStorage.getItem('pending_action');
@@ -250,9 +235,10 @@ if (regForm) {
         const name = document.getElementById('regName').value.trim();
         const email = document.getElementById('regEmail').value.trim();
         const pass = document.getElementById('regPassword').value;
+        const gender = document.getElementById('regGender').value;
         const btn = regForm.querySelector('button[type="submit"]');
 
-        if (!name || !email || !pass) {
+        if (!name || !email || !pass || !gender) {
             regMsg.textContent = "Vui lòng điền đủ thông tin.";
             regMsg.style.display = "block";
             return;
@@ -281,7 +267,7 @@ if (regForm) {
             currentOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
             
             // Lưu dữ liệu tạm để dùng sau khi xác thực thành công
-            tempRegData = { name, email, pass };
+            tempRegData = { name, email, pass, gender };
 
             btn.textContent = "Đang gửi OTP...";
 
@@ -348,15 +334,18 @@ if (btnConfirmOtp) {
                     name: tempRegData.name,
                     email: tempRegData.email,
                     password: tempRegData.pass,
+                    gender: tempRegData.gender,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastLoginDate: toDayKey(new Date()),
+                    lastLoginDate: null,
                     xp: 0,
                     hearts: 3,
                     accountStatus: 'free',
                     lastHeartRegenTime: Date.now(),
                     lastHeartUpdate: Date.now(),
-                    streak: 1,
-                    currentStreak: 1,
+                    streak: 0,
+                    currentStreak: 0,
+                    lastStudyDate: null,
+                    lastStreakAwardDate: null,
                     gems: 500,
                     avatar: "fa-user-astronaut",
                     avatarIsBase64: false,
@@ -365,7 +354,7 @@ if (btnConfirmOtp) {
 
                 await db.collection('users').doc(tempRegData.email).set(newUser);
                 localStorage.removeItem('VieGeo_state');
-                localStorage.setItem('lm_session', JSON.stringify({ email: tempRegData.email, name: tempRegData.name, activeRole: 'user' }));
+                localStorage.setItem('lm_session', JSON.stringify({ email: tempRegData.email, name: tempRegData.name, gender: tempRegData.gender, activeRole: 'user' }));
                 showToast("🎉 Chúc mừng! Đăng ký thành công.");
                 
                 setTimeout(() => window.location.href = MAP_PAGE, 1500);

@@ -223,6 +223,9 @@ body::after {
 
 .form-input::placeholder { color: transparent; }
 
+select.form-input { appearance: auto; cursor: pointer; }
+select.form-input option { background: #14213a; color: #f8fafc; }
+
 .form-input:hover {
     border-color: rgba(255,255,255,0.18);
     background: rgba(255,255,255,0.07);

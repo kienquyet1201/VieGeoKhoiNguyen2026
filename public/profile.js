@@ -62,6 +62,7 @@ async function loadFirebaseProfile() {
 
         profName.value = currentUser.name || '';
         profPhone.value = currentUser.phone || '';
+        profGender.value = currentUser.gender || '';
         
         // Lưu data hiện tại
         window.currentUserData = currentUser;
@@ -80,12 +81,14 @@ if (profileForm) {
         
         const newName = profName.value.trim();
         const newPhone = profPhone.value.trim();
+        const newGender = profGender.value || '';
         const inputOldPass = oldPass.value;
         const inputNewPass = newPass.value;
         
         const updateData = {
             name: newName,
-            phone: newPhone
+            phone: newPhone,
+            gender: newGender
         };
         
         // Logic đổi mật khẩu
@@ -113,7 +116,7 @@ if (profileForm) {
             await db.collection('users').doc(sessionUser.email).update(updateData);
             
             // Cập nhật session nếu đổi tên
-            localStorage.setItem('lm_session', JSON.stringify({ email: sessionUser.email, name: newName }));
+            localStorage.setItem('lm_session', JSON.stringify({ ...sessionUser, name: newName, gender: newGender }));
             
             Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã lưu thông tin thành công!' });
             

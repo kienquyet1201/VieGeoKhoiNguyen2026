@@ -5,16 +5,17 @@
 const defaultGameState = {
     xp: 0,
     hearts: 3,
-    streak: 1,
+    streak: 0,
     maxHearts: 3,
     gems: 500, // Tăng thêm xu để dễ test
     currentUnit: 1,
     currentNode: 1,
     completedNodes: [],
-    lastLogin: new Date().toISOString().split('T')[0],
-    lastLoginDate: new Date().toISOString().split('T')[0],
+    lastLogin: null,
+    lastLoginDate: null,
     lastHeartUpdate: Date.now(),
     lastStudyDate: null,
+    lastStreakAwardDate: null,
     
     // Avatar
     avatar: "fa-user-astronaut",
@@ -22,6 +23,7 @@ const defaultGameState = {
 
     // Lớp học
     selectedGrade: "all",
+    gender: null,
 
     // Inventory (Shop items active)
     inventory: {
@@ -122,6 +124,7 @@ function getGameState() {
     if (!Array.isArray(parsed.telemetry.weaknessTags)) parsed.telemetry.weaknessTags = [];
     if (!Array.isArray(parsed.telemetry.studyHabits)) parsed.telemetry.studyHabits = [];
     if (!parsed.lastStudyDate) parsed.lastStudyDate = null;
+    if (!parsed.lastStreakAwardDate) parsed.lastStreakAwardDate = parsed.lastStudyDate || null;
 
     // NEW: Learning Profile & Progress Tracking
     if (!parsed.learningProfile) {
@@ -190,17 +193,64 @@ function getGameState() {
     return parsed;
 }
 
+function buildPersistedGameState(state) {
+    const copyObject = (value, fallback = {}) => value && typeof value === 'object' && !Array.isArray(value)
+        ? JSON.parse(JSON.stringify(value))
+        : fallback;
+    const copyArray = (value) => Array.isArray(value) ? JSON.parse(JSON.stringify(value)) : [];
+
+    return {
+        schemaVersion: 2,
+        updatedAt: Date.now(),
+        xp: Number(state.xp) || 0,
+        hearts: Math.max(0, Number(state.hearts) || 0),
+        maxHearts: Number(state.maxHearts) || 3,
+        gems: Number(state.gems) || 0,
+        streak: Number(state.streak) || 0,
+        currentUnit: Number(state.currentUnit) || 1,
+        currentNode: Number(state.currentNode) || 1,
+        completedNodes: [...new Set(copyArray(state.completedNodes).map(String))],
+        lessonResults: copyObject(state.lessonResults),
+        inventory: copyObject(state.inventory),
+        questsProgress: copyObject(state.questsProgress),
+        claimedMissionRewards: copyArray(state.claimedMissionRewards).map(String),
+        unlockedAchievements: copyArray(state.unlockedAchievements).map(String),
+        pvpWins: Number(state.pvpWins) || 0,
+        perfectLessons: Number(state.perfectLessons) || 0,
+        chestsOpened: Number(state.chestsOpened) || 0,
+        achievementPoints: Number(state.achievementPoints) || 0,
+        lastHeartUpdate: Number(state.lastHeartUpdate) || Date.now(),
+        lastHeartRegenTime: Number(state.lastHeartRegenTime || state.lastHeartUpdate) || Date.now(),
+        lastLogin: state.lastLogin || null,
+        lastLoginDate: state.lastLoginDate || state.lastLogin || null,
+        lastStudyDate: state.lastStudyDate || null,
+        lastStreakAwardDate: state.lastStreakAwardDate || state.lastStudyDate || null,
+        selectedGrade: state.selectedGrade || 'all',
+        gender: state.gender || null,
+        avatar: state.avatar || null,
+        avatarIsBase64: state.avatarIsBase64 === true,
+        accountStatus: state.accountStatus || 'free',
+        learningProfile: copyObject(state.learningProfile),
+        telemetry: copyObject(state.telemetry)
+    };
+}
+
 function saveGameState(state) {
-    localStorage.setItem('VieGeo_state', JSON.stringify(state));
+    if (!state || typeof state !== 'object') return Promise.resolve(false);
+    const persistedState = buildPersistedGameState(state);
+    Object.assign(state, persistedState);
+    if (window.gameState && window.gameState !== state) Object.assign(window.gameState, persistedState);
+    localStorage.setItem('VieGeo_state', JSON.stringify(persistedState));
     
     // Đồng bộ lên Firebase (Fire and forget)
     const sessionData = localStorage.getItem('lm_session');
     if (sessionData && typeof db !== 'undefined') {
         const sessionUser = JSON.parse(sessionData);
-        db.collection('users').doc(sessionUser.email).update({
+        return db.collection('users').doc(sessionUser.email).set({
             xp: state.xp,
             hearts: state.hearts,
             streak: state.streak,
+            currentStreak: state.streak,
             gems: state.gems,
             avatar: state.avatar,
             avatarIsBase64: state.avatarIsBase64,
@@ -210,53 +260,53 @@ function saveGameState(state) {
             lastLogin: state.lastLogin,
             lastLoginDate: state.lastLoginDate || state.lastLogin,
             lastStudyDate: state.lastStudyDate,
+            lastStreakAwardDate: state.lastStreakAwardDate || state.lastStudyDate || null,
             grade: state.selectedGrade === 'all' ? null : Number(state.selectedGrade),
             selectedGrade: state.selectedGrade,
+            gender: state.gender || null,
             learningProfile: state.learningProfile || {},
-            telemetry: state.telemetry || {}
-        }).catch(err => console.log("Lỗi đồng bộ Firebase:", err));
+            telemetry: state.telemetry || {},
+            gameState: persistedState,
+            completedNodes: persistedState.completedNodes,
+            currentNode: persistedState.currentNode,
+            lessonResults: persistedState.lessonResults,
+            inventory: persistedState.inventory,
+            questsProgress: persistedState.questsProgress,
+            gameStateUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).then(() => true).catch(err => {
+            console.error("Lỗi đồng bộ Firebase:", err);
+            return false;
+        });
     }
+    return Promise.resolve(false);
 }
 
 function refreshStreakForToday(state) {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const lastActive = state.lastLogin || state.lastStudyDate;
-        if (!lastActive) return state;
-
-        const previous = new Date(lastActive);
-        previous.setHours(0, 0, 0, 0);
-        const daysSinceActivity = Math.floor((today - previous) / 86400000);
-        if (daysSinceActivity > 1) state.streak = 0;
-        return state;
-    } catch (error) {
-        console.error('Không thể cập nhật chuỗi ngày học:', error);
-        return state;
-    }
+    // Opening a page is not study activity: do not increment or reset streaks here.
+    return state;
 }
 
 function recordStudyActivity(state) {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayKey = today.toISOString().split('T')[0];
-        const previousKey = state.lastStudyDate || state.lastLogin;
-        const previous = previousKey ? new Date(previousKey) : null;
-        if (!previousKey) state.streak = 1;
-        else {
-            previous.setHours(0, 0, 0, 0);
-            const diff = Math.floor((today - previous) / 86400000);
-            if (diff === 1) state.streak = (state.streak || 0) + 1;
-            else if (diff > 1) state.streak = 0;
-        }
-        state.lastStudyDate = todayKey;
-        state.lastLogin = todayKey;
-        return state;
-    } catch (error) {
-        console.error('Không thể ghi nhận hoạt động học:', error);
-        return state;
+    const now = new Date();
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const previousKey = state.lastStreakAwardDate || state.lastStudyDate;
+
+    // A second completed lesson on the same calendar day receives no extra streak.
+    if (previousKey === todayKey) return state;
+
+    const previousStreak = Math.max(0, Number(state.streak) || 0);
+    if (!previousKey) {
+        state.streak = Math.max(1, previousStreak);
+    } else {
+        const previousDate = new Date(`${previousKey}T00:00:00`);
+        const todayDate = new Date(`${todayKey}T00:00:00`);
+        const daysElapsed = Math.round((todayDate - previousDate) / 86400000);
+        state.streak = daysElapsed === 1 ? Math.max(1, previousStreak + 1) : 1;
     }
+
+    state.lastStudyDate = todayKey;
+    state.lastStreakAwardDate = todayKey;
+    return state;
 }
 
 // ── LEVEL CALCULATION ──

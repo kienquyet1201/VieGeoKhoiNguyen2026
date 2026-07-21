@@ -65,7 +65,6 @@
                 ? (quizResult.lessonTitle || quizResult.title)
                 : '';
 
-            if (typeof recordStudyActivity === 'function' && metrics.length) recordStudyActivity(state);
             saveGameState(state);
 
             if (userId && userId !== 'guest' && typeof db !== 'undefined') {
@@ -74,7 +73,8 @@
                     learningProfile: profile,
                     streak: state.streak,
                     lastLogin: state.lastLogin,
-                    lastStudyDate: state.lastStudyDate
+                    lastStudyDate: state.lastStudyDate,
+                    lastStreakAwardDate: state.lastStreakAwardDate || state.lastStudyDate || null
                 }, { merge: true }).catch(error => console.warn('Telemetry sync failed:', error));
             }
             return { telemetry, learningProfile: profile };

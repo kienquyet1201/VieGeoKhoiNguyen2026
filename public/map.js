@@ -5,11 +5,12 @@
 const mapContainer = document.getElementById('mapViewContainer');
 const mapTitle = document.getElementById('mapTitle');
 const btnMapBack = document.getElementById('btnMapBack');
-let state = getGameState();
+let state = window.gameState || getGameState();
 
 let currentView = 'regions'; // regions | provinces | lessons
 let selectedRegion = null;
 let selectedProvince = null;
+let routeResizeObserver = null;
 // Update Stats UI
 function updateStatsUI() {
     if (document.getElementById('statHearts')) document.getElementById('statHearts').textContent = state.hearts;
@@ -21,6 +22,9 @@ function updateStatsUI() {
 // Generate the Map based on currentView
 function renderMap() {
     mapContainer.innerHTML = '';
+    mapContainer.classList.remove('map-learning-route');
+    routeResizeObserver?.disconnect();
+    routeResizeObserver = null;
     
     if (currentView === 'regions') {
         mapTitle.textContent = "Khám Phá Việt Nam";
@@ -122,13 +126,17 @@ function renderLessons() {
     mapContainer.style.display = 'flex';
     mapContainer.style.flexDirection = 'column';
     mapContainer.style.alignItems = 'center';
-    mapContainer.style.gap = '25px'; // Increased gap for better zigzag look
+    mapContainer.style.gap = '0';
+    mapContainer.style.position = 'relative';
+    mapContainer.classList.add('map-learning-route');
     const lessons = (window.VieGeoLearningPath && typeof window.VieGeoLearningPath.getLessonsForProvince === 'function')
         ? window.VieGeoLearningPath.getLessonsForProvince(selectedProvince, state.selectedGrade)
         : selectedProvince.lessons;
     
-    // Zigzag offsets array
-    const offsets = [0, -50, -80, -50, 0, 50, 80, 50];
+    // A broad, symmetrical path keeps each island readable and leaves room for
+    // the shared SVG route to connect the real centers of adjacent islands.
+    const routeWidth = Math.max(88, Math.min(210, Math.round(mapContainer.clientWidth * 0.24)));
+    const offsets = [0, -routeWidth * .62, -routeWidth, -routeWidth * .62, 0, routeWidth * .62, routeWidth, routeWidth * .62];
     
     lessons.forEach((lesson, index) => {
         const isCompleted = state.completedNodes && state.completedNodes.includes(lesson.id);
@@ -163,6 +171,9 @@ function renderLessons() {
         wrapper.style.alignItems = 'center';
         wrapper.style.position = 'relative'; // For absolute line positioning
         wrapper.className = `map-island-node map-island-${nodeKind}`;
+        wrapper.dataset.routeNode = String(index);
+        wrapper.dataset.lessonId = lesson.id;
+        wrapper.dataset.completed = String(Boolean(isCompleted));
         wrapper.style.marginBottom = nodeKind === 'boss' ? '52px' : nodeKind === 'checkpoint' ? '42px' : '32px';
         
         // Apply zigzag offset
@@ -183,6 +194,7 @@ function renderLessons() {
         label.style.color = prevCompleted || isCompleted ? '#fff' : 'var(--text-dim)';
         label.textContent = lesson.title;
         label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)'; // Make label readable if lines cross it
+        label.className = 'map-island-label';
         
         btn.onclick = () => {
             if (isCompleted || prevCompleted) {
@@ -201,37 +213,64 @@ function renderLessons() {
         wrapper.appendChild(btn);
         wrapper.appendChild(label);
         
-        // Connector line inside wrapper pointing to the next node
-        if (index < lessons.length - 1) {
-            const nextOffset = offsets[(index + 1) % offsets.length];
-            const dx = nextOffset - currentOffset;
-            const nextNodeSize = islandSizeFor(islandKindFor(lessons[index + 1]));
-            const dy = (nodeSize / 2) + (nextNodeSize / 2) + 25;
-            const length = Math.sqrt(dx*dx + dy*dy);
-            const angle = Math.atan2(dx, dy) * -180 / Math.PI;
-
-            const line = document.createElement('div');
-            line.style.width = '10px';
-            line.style.height = `${length}px`;
-            line.style.background = isCompleted ? '#58cc02' : 'rgba(255,255,255,0.1)';
-            line.style.position = 'absolute';
-            line.style.top = `${nodeSize / 2}px`;
-            line.style.left = '50%';
-            line.style.transformOrigin = '50% 0';
-            line.style.transform = `translateX(-50%) rotate(${angle}deg)`;
-            line.style.borderRadius = '5px';
-            line.style.zIndex = '-1'; // Put line behind button
-            
-            wrapper.appendChild(line);
-        }
-        
         mapContainer.appendChild(wrapper);
     });
+
+    const redrawRoute = () => drawIslandRoute();
+    window.requestAnimationFrame(redrawRoute);
+    if (typeof ResizeObserver !== 'undefined') {
+        routeResizeObserver = new ResizeObserver(redrawRoute);
+        routeResizeObserver.observe(mapContainer);
+    }
+}
+
+function drawIslandRoute() {
+    mapContainer.querySelector('.island-route-svg')?.remove();
+    const wrappers = [...mapContainer.querySelectorAll('[data-route-node]')];
+    if (wrappers.length < 2) return;
+
+    const bounds = mapContainer.getBoundingClientRect();
+    const width = Math.max(1, Math.round(bounds.width));
+    const height = Math.max(1, Math.round(mapContainer.scrollHeight));
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'island-route-svg');
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('width', String(width));
+    svg.setAttribute('height', String(height));
+    svg.setAttribute('aria-hidden', 'true');
+
+    wrappers.slice(0, -1).forEach((wrapper, index) => {
+        const fromButton = wrapper.querySelector('.node-btn');
+        const toButton = wrappers[index + 1].querySelector('.node-btn');
+        if (!fromButton || !toButton) return;
+
+        const from = fromButton.getBoundingClientRect();
+        const to = toButton.getBoundingClientRect();
+        const fromCenter = { x: from.left - bounds.left + from.width / 2, y: from.top - bounds.top + from.height / 2 };
+        const toCenter = { x: to.left - bounds.left + to.width / 2, y: to.top - bounds.top + to.height / 2 };
+        const distance = Math.hypot(toCenter.x - fromCenter.x, toCenter.y - fromCenter.y) || 1;
+        const unit = { x: (toCenter.x - fromCenter.x) / distance, y: (toCenter.y - fromCenter.y) / distance };
+        const start = { x: fromCenter.x + unit.x * (from.width * .42), y: fromCenter.y + unit.y * (from.height * .42) };
+        const end = { x: toCenter.x - unit.x * (to.width * .42), y: toCenter.y - unit.y * (to.height * .42) };
+        const curve = Math.max(46, Math.min(148, distance * .32));
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${start.x} ${start.y} C ${start.x} ${start.y + curve}, ${end.x} ${end.y - curve}, ${end.x} ${end.y}`);
+        path.setAttribute('class', `island-route-segment${wrapper.dataset.completed === 'true' ? ' is-completed' : ''}`);
+        svg.appendChild(path);
+    });
+
+    mapContainer.prepend(svg);
 }
 
 // Initial render
 updateStatsUI();
 renderMap();
+
+window.addEventListener('viegeo:state-hydrated', () => {
+    state = window.gameState || getGameState();
+    updateStatsUI();
+    renderMap();
+});
 
 // One-time learner survey. Firestore is the source of truth; localStorage only keeps the UI usable offline.
 const surveyModal = document.getElementById('surveyModal');

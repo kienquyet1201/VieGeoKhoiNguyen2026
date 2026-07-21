@@ -150,12 +150,48 @@ document.getElementById('roleSwitcherSelect')?.addEventListener('change', (event
     }
 });
 
+function hydratePersistedGameState(remoteState, legacyData = {}) {
+    if (!remoteState || typeof remoteState !== 'object' || !gameState) return false;
+    const remoteUpdatedAt = Number(remoteState.updatedAt) || 0;
+    const localUpdatedAt = Number(gameState.updatedAt) || 0;
+    if (remoteUpdatedAt && localUpdatedAt && remoteUpdatedAt < localUpdatedAt) return false;
+
+    const source = { ...legacyData, ...remoteState };
+    const scalarFields = [
+        'updatedAt', 'xp', 'hearts', 'maxHearts', 'gems', 'streak', 'currentUnit', 'currentNode',
+        'pvpWins', 'perfectLessons', 'chestsOpened', 'achievementPoints', 'lastHeartUpdate',
+            'lastHeartRegenTime', 'lastLogin', 'lastLoginDate', 'lastStudyDate', 'lastStreakAwardDate', 'selectedGrade', 'gender',
+        'avatar', 'avatarIsBase64', 'accountStatus'
+    ];
+    scalarFields.forEach((field) => {
+        if (source[field] !== undefined && source[field] !== null) gameState[field] = source[field];
+    });
+
+    ['completedNodes', 'claimedMissionRewards', 'unlockedAchievements'].forEach((field) => {
+        if (Array.isArray(source[field])) gameState[field] = [...new Set(source[field].map(String))];
+    });
+    ['lessonResults', 'inventory', 'questsProgress', 'learningProfile', 'telemetry'].forEach((field) => {
+        if (source[field] && typeof source[field] === 'object' && !Array.isArray(source[field])) {
+            gameState[field] = { ...(gameState[field] || {}), ...source[field] };
+        }
+    });
+    return true;
+}
+
 // ĐỒNG BỘ DATA TỪ FIREBASE KHI LOAD TRANG (REALTIME)
 function setupRealtimeAuth() {
     if (typeof db === 'undefined' || !sessionUser || !sessionUser.email) return;
     db.collection('users').doc(sessionUser.email).onSnapshot(async (doc) => {
         if (doc.exists) {
             const data = doc.data();
+            const didHydrateProgress = hydratePersistedGameState(data.gameState, {
+                completedNodes: data.completedNodes,
+                currentNode: data.currentNode,
+                lessonResults: data.lessonResults,
+                inventory: data.inventory,
+                questsProgress: data.questsProgress,
+                gender: data.gender
+            });
             
             // Nếu bị admin kick
             if (data.forceLogout) {
@@ -186,6 +222,10 @@ function setupRealtimeAuth() {
             if (data.lastLogin) gameState.lastLogin = data.lastLogin;
             if (data.lastLoginDate) gameState.lastLoginDate = data.lastLoginDate;
             if (data.selectedGrade !== undefined) gameState.selectedGrade = data.selectedGrade || 'all';
+            if (data.gender !== undefined) {
+                gameState.gender = data.gender || null;
+                sessionUser.gender = data.gender || '';
+            }
             gameState.avatar = data.avatar || "fa-user-astronaut";
             gameState.avatarIsBase64 = data.avatarIsBase64 || false;
             // Cập nhật lại accountStatus từ server phòng khi Admin duyệt Premium
@@ -211,6 +251,10 @@ function setupRealtimeAuth() {
             writeHeartStateToLocal();
             syncHearts();
             if (isHeartModelMigration) persistHearts();
+            if (didHydrateProgress) {
+                localStorage.setItem('VieGeo_state', JSON.stringify(gameState));
+                window.dispatchEvent(new CustomEvent('viegeo:state-hydrated'));
+            }
             
             // Cập nhật lại UI
             if(typeof updateHeaderStats === 'function') updateHeaderStats();
@@ -1003,6 +1047,8 @@ function renderProfile() {
     document.getElementById('editProfName').value = sessionUser.name;
     document.getElementById('editProfEmail').value = sessionUser.email;
     document.getElementById('editProfPhone').value = sessionUser.phone || "";
+    const genderInput = document.getElementById('editProfGender');
+    if (genderInput) genderInput.value = sessionUser.gender || gameState.gender || '';
     
     const lvl = getLevel(gameState.xp);
     document.getElementById('profLevel').textContent = "Cấp " + lvl;
@@ -1152,6 +1198,7 @@ if (btnSaveProfileElem) {
     btnSaveProfileElem.addEventListener('click', async () => {
         const newName = document.getElementById('editProfName').value.trim();
         const newPhone = document.getElementById('editProfPhone').value.trim();
+        const newGender = document.getElementById('editProfGender')?.value || '';
         const oldPass = document.getElementById('editOldPass').value;
         const newPass = document.getElementById('editNewPass').value;
     
@@ -1163,7 +1210,7 @@ if (btnSaveProfileElem) {
         const userDoc = await db.collection('users').doc(sessionUser.email).get();
         if (userDoc.exists) {
             const userData = userDoc.data();
-            const updateData = { name: newName, phone: newPhone };
+            const updateData = { name: newName, phone: newPhone, gender: newGender };
 
             if (oldPass || newPass) {
                 if (!oldPass || !newPass) {
@@ -1191,6 +1238,8 @@ if (btnSaveProfileElem) {
             
             sessionUser.name = newName;
             sessionUser.phone = newPhone;
+            sessionUser.gender = newGender;
+            gameState.gender = newGender;
             localStorage.setItem('lm_session', JSON.stringify(sessionUser));
             
             if (gameState.avatar) {
