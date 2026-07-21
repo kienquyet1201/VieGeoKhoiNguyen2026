@@ -2,6 +2,13 @@
 // VieGeo - app-core.js (SPA Logic & Rendering - Arena Update)
 // ============================================================================
 
+// These must be initialized before getHeartAwareGameState() is invoked.
+const HEARTS_MAX = 5;
+const HEART_REGEN_MS = 30 * 60 * 1000;
+let heartTimerInterval = null;
+let heartRemoteHydrated = false;
+let gameState = window.gameState || null;
+
 // Shared UI notifications, consolidated here from the removed patch script.
 window.VieGeoUI = window.VieGeoUI || {
     alert(message, options = {}) {
@@ -131,7 +138,8 @@ getGameState = function getHeartAwareGameState() {
     return state;
 };
 
-let gameState = getGameState();
+gameState = getGameState();
+window.gameState = gameState;
 
 renderRoleSwitcher(sessionUser);
 document.getElementById('roleSwitcherSelect')?.addEventListener('change', (event) => {
@@ -237,11 +245,6 @@ setInterval(() => {
 }, 30000); // Mỗi 30 giây báo cáo đang hoạt động
 
 // ── HEART ECONOMY: one canonical 30-minute regeneration flow ──
-const HEARTS_MAX = 5;
-const HEART_REGEN_MS = 30 * 60 * 1000;
-let heartTimerInterval = null;
-let heartRemoteHydrated = false;
-
 function readHeartTimestamp(value) {
     if (typeof value === 'number' && Number.isFinite(value)) return value;
     if (value instanceof Date) return value.getTime();

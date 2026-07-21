@@ -23,11 +23,11 @@
     }
 
     function persistGrade(grade) {
-        if (typeof gameState !== 'undefined') {
-            gameState.selectedGrade = grade;
-            if (typeof saveGameState === 'function') saveGameState(gameState);
-        }
-        if (typeof state !== 'undefined') state.selectedGrade = grade;
+        const activeGameState = window.gameState;
+        if (!activeGameState) return;
+
+        activeGameState.selectedGrade = grade;
+        if (typeof saveGameState === 'function') saveGameState(activeGameState);
         if (session.email && typeof db !== 'undefined') {
             db.collection('users').doc(session.email).set({
                 grade: grade === 'all' ? null : Number(grade),
@@ -113,8 +113,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         applySavedTheme();
         const grade = byId('quickGradeSelect');
-        if (grade) {
-            grade.value = (typeof gameState !== 'undefined' && gameState.selectedGrade) || 'all';
+        if (grade && window.gameState) {
+            grade.value = window.gameState.selectedGrade || 'all';
             grade.addEventListener('change', () => persistGrade(grade.value));
         }
         byId('btnThemeToggle')?.addEventListener('click', () => {
