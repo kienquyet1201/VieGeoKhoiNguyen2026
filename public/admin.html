@@ -77,7 +77,7 @@
         };
         const roles = [['user','Học sinh'], ['teacher','Giáo viên'], ['parent','Phụ huynh'], ['cs','CSKH'], ['admin','Admin']];
         const roleLabels = Object.fromEntries(roles);
-        const roleRoutes = { user: '/map', parent: '/parent-dashboard', teacher: '/teacher-dashboard', cs: '/cs-dashboard', admin: '/admin' };
+        const roleRoutes = { user: '/map', parent: '/parent', teacher: '/teacher-dashboard', cs: '/cs-dashboard', admin: '/admin' };
         const el = id => document.getElementById(id);
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
         const timestampToMs = value => typeof value === 'number' ? value : (value && typeof value.toMillis === 'function' ? value.toMillis() : 0);

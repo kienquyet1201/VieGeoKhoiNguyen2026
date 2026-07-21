@@ -32,7 +32,7 @@ window.VieGeoUI = window.VieGeoUI || {
 
 const ROLE_META = Object.freeze({
     user: { label: 'Học sinh', route: '/map' },
-    parent: { label: 'Phụ huynh', route: '/parent-dashboard' },
+    parent: { label: 'Phụ huynh', route: '/parent' },
     teacher: { label: 'Giáo viên', route: '/teacher-dashboard' },
     cs: { label: 'Chăm sóc KH', route: '/cs-dashboard' },
     admin: { label: 'Quản trị viên', route: '/admin' }
@@ -88,13 +88,6 @@ window.switchRoleClientOnly = function switchRoleClientOnly(role) {
     try {
         if (!role) return false;
         const normalizedRole = normalizeRole(role);
-        const roleLinks = {
-            user: '/map',
-            parent: '/parent',
-            cs: '/cs-dashboard',
-            admin: '/admin',
-            teacher: '/teacher-dashboard'
-        };
         const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
         const roles = authorizedRoles(session);
         if (!roles.includes(normalizedRole) || !ROLE_META[normalizedRole]) {
@@ -102,7 +95,7 @@ window.switchRoleClientOnly = function switchRoleClientOnly(role) {
             return false;
         }
         persistSessionRoles(roles, normalizedRole);
-        window.location.href = roleLinks[normalizedRole] || ROLE_META[normalizedRole].route;
+        window.location.href = ROLE_META[normalizedRole].route;
     } catch (error) {
         console.error('Role switch error:', error);
         window.VieGeoUI.error('Không thể chuyển quyền. Vui lòng thử lại.');

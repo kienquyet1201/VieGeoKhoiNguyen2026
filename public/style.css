@@ -1786,8 +1786,9 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .mission-claim-button.is-ready:hover { background: #16a34a; transform: translateY(-1px); }
 .mission-progress-note { margin: 16px 0 0; color: #94a3b8; font-size: .82rem; text-align: center; }
 @keyframes mission-claim-pulse { 50% { box-shadow: 0 0 0 7px rgba(34,197,94,.12); } }
-.student-page-heading { margin: 0 auto 18px; max-width: 1600px; }
+.student-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 auto 18px; max-width: 1600px; }
 .student-page-heading .topbar-title { margin: 0; }
+.student-page-heading .map-back-button { flex: 0 0 auto; margin-left: auto; }
 .profile-page { display: block !important; min-height: 100dvh; height: auto !important; overflow: visible !important; }
 .profile-page .profile-page-scroll { display: flex; width: 100%; min-height: 100dvh; height: auto; overflow-y: auto; overflow-x: hidden; padding-bottom: 10rem; }
 .profile-page .profile-main { min-height: 100% !important; width: 100% !important; height: auto !important; overflow: visible !important; align-items: flex-start !important; justify-content: center !important; padding: 40px 24px 10rem !important; }
