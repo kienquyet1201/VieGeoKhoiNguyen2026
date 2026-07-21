@@ -5,11 +5,18 @@
 const mapContainer = document.getElementById('mapViewContainer');
 const mapTitle = document.getElementById('mapTitle');
 const btnMapBack = document.getElementById('btnMapBack');
+const mapSearchInput = document.getElementById('mapSearchInput');
 let state = getGameState();
 
 let currentView = 'regions'; // regions | provinces | lessons
 let selectedRegion = null;
 let selectedProvince = null;
+let mapSearchTerm = '';
+
+mapSearchInput?.addEventListener('input', event => {
+    mapSearchTerm = event.target.value.toLowerCase().trim();
+    renderMap();
+});
 
 // Update Stats UI
 function updateStatsUI() {
@@ -56,6 +63,7 @@ function renderRegions() {
     LEARNING_REGIONS.forEach(region => {
         const card = document.createElement('div');
         card.className = 'bento-card';
+        card.classList.toggle('hidden', Boolean(mapSearchTerm && !region.name.toLowerCase().includes(mapSearchTerm)));
         card.style.cursor = 'pointer';
         card.style.borderTop = `4px solid ${region.color}`;
         card.innerHTML = `
@@ -90,6 +98,7 @@ function renderProvinces() {
         
         const card = document.createElement('div');
         card.className = 'bento-card';
+        card.classList.toggle('hidden', Boolean(mapSearchTerm && !prov.name.toLowerCase().includes(mapSearchTerm)));
         card.style.cursor = 'pointer';
         card.style.borderTop = `4px solid ${prov.color}`;
         card.innerHTML = `
@@ -145,6 +154,7 @@ function renderLessons() {
         if (lesson.type === 'quiz_midterm' || lesson.type === 'quiz_final') icon = 'fa-crown';
         
         const wrapper = document.createElement('div');
+        wrapper.classList.toggle('hidden', Boolean(mapSearchTerm && !lesson.title.toLowerCase().includes(mapSearchTerm)));
         wrapper.style.display = 'flex';
         wrapper.style.flexDirection = 'column';
         wrapper.style.alignItems = 'center';
@@ -215,22 +225,105 @@ function renderLessons() {
 updateStatsUI();
 renderMap();
 
-// ONBOARDING SURVEY LOGIC
-if (state.learningProfile && !state.learningProfile.surveyDone) {
-    const surveyModal = document.getElementById('surveyModal');
-    if (surveyModal) {
-        surveyModal.style.display = 'flex';
-        document.getElementById('btnSubmitSurvey').onclick = () => {
-            state.learningProfile.goal = document.getElementById('surveyGoal').value;
-            state.learningProfile.interests.push(document.getElementById('surveyInterest').value);
-            state.learningProfile.surveyDone = true;
-            saveGameState(state);
-            surveyModal.style.display = 'none';
-            if (typeof showToast === 'function') {
-                showToast('Đã tạo Learning Profile thành công!');
-            } else {
-                VieGeoUI.success('Đã tạo Learning Profile thành công!');
-            }
-        };
+// One-time learner survey. Firestore is the source of truth; localStorage only keeps the UI usable offline.
+const surveyModal = document.getElementById('surveyModal');
+const surveyGoal = document.getElementById('surveyGoal');
+const surveyInterest = document.getElementById('surveyInterest');
+const surveySubmitButton = document.getElementById('btnSubmitSurvey');
+
+function getSurveySession() {
+    try {
+        return JSON.parse(localStorage.getItem('lm_session') || '{}');
+    } catch (error) {
+        return {};
     }
 }
+
+function ensureLearningProfile() {
+    const fallback = { surveyDone: false, goal: null, interests: [], strongTopics: [], weakTopics: [] };
+    state.learningProfile = { ...fallback, ...(state.learningProfile || {}) };
+    if (!Array.isArray(state.learningProfile.interests)) state.learningProfile.interests = [];
+    return state.learningProfile;
+}
+
+function hydrateSurveyInputs(profile) {
+    if (surveyGoal && profile.goal) surveyGoal.value = profile.goal;
+    if (surveyInterest && profile.interests && profile.interests[0]) surveyInterest.value = profile.interests[0];
+}
+
+function openSurvey(forceOpen = false) {
+    const profile = ensureLearningProfile();
+    if (!surveyModal || (!forceOpen && profile.surveyDone)) return;
+    hydrateSurveyInputs(profile);
+    surveyModal.style.display = 'flex';
+}
+
+async function initializeLearnerSurvey() {
+    const profile = ensureLearningProfile();
+    const session = getSurveySession();
+    let completed = profile.surveyDone === true;
+
+    if (session.email && typeof db !== 'undefined') {
+        try {
+            const userSnapshot = await db.collection('users').doc(session.email).get();
+            if (userSnapshot.exists) {
+                const userData = userSnapshot.data() || {};
+                if (userData.learningProfile && typeof userData.learningProfile === 'object') {
+                    state.learningProfile = { ...profile, ...userData.learningProfile };
+                    if (!Array.isArray(state.learningProfile.interests)) state.learningProfile.interests = [];
+                }
+                // Undefined is deliberately treated as not completed, so old accounts receive the survey once.
+                completed = userData.hasCompletedSurvey === true;
+                state.learningProfile.surveyDone = completed;
+                localStorage.setItem('VieGeo_state', JSON.stringify(state));
+            }
+        } catch (error) {
+            console.warn('Không thể đọc trạng thái khảo sát từ Firebase, dùng bản lưu cục bộ.', error);
+        }
+    }
+
+    if (!completed) openSurvey(true);
+}
+
+async function saveLearnerSurvey() {
+    if (!surveyGoal || !surveyInterest) return;
+    const profile = ensureLearningProfile();
+    const previousLabel = surveySubmitButton?.textContent;
+    if (surveySubmitButton) {
+        surveySubmitButton.disabled = true;
+        surveySubmitButton.textContent = 'Đang lưu…';
+    }
+
+    profile.goal = surveyGoal.value;
+    profile.interests = [surveyInterest.value];
+    profile.surveyDone = true;
+
+    try {
+        const session = getSurveySession();
+        if (session.email && typeof db !== 'undefined') {
+            await db.collection('users').doc(session.email).set({
+                learningProfile: profile,
+                hasCompletedSurvey: true,
+                surveyCompletedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+        saveGameState(state);
+        if (surveyModal) surveyModal.style.display = 'none';
+        if (typeof renderProfile === 'function') renderProfile();
+        if (typeof showToast === 'function') showToast('Đã lưu hồ sơ học tập.');
+        else VieGeoUI.success('Đã lưu hồ sơ học tập.');
+    } catch (error) {
+        profile.surveyDone = false;
+        console.error('Không thể lưu khảo sát:', error);
+        VieGeoUI.error('Chưa thể lưu khảo sát. Vui lòng thử lại.');
+    } finally {
+        if (surveySubmitButton) {
+            surveySubmitButton.disabled = false;
+            surveySubmitButton.textContent = previousLabel || 'Lưu khảo sát';
+        }
+    }
+}
+
+window.VieGeoSurvey = { open: () => openSurvey(true) };
+surveySubmitButton?.addEventListener('click', saveLearnerSurvey);
+initializeLearnerSurvey();

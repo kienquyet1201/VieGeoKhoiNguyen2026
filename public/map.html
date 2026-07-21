@@ -16,82 +16,73 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body>
+<body class="student-app">
 
     <div class="app-container">
         
-        <!-- BENTO SIDEBAR -->
-        <aside class="bento-sidebar">
+        <!-- Student top navigation: the learning canvas stays full width below this bar. -->
+        <header class="user-top-navbar">
+            <div class="user-topbar-brand">
             <div class="app-logo">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo
             </div>
+            <div class="topbar-stats" aria-label="Chỉ số học tập">
+                <div class="stat-pill" style="color: #ff4b4b;" title="Tim"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
+                <div class="stat-pill" style="color: #ffc800;" title="Chuỗi ngày học"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
+                <div class="stat-pill" style="color: #1cb0f6;" title="Kim cương"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
+                <div class="stat-pill" title="Cúp"><i class="fa-solid fa-trophy"></i> <span id="hdrTrophies">0</span></div>
+                <div class="stat-pill" title="Cấp độ"><i class="fa-solid fa-star"></i> <span id="hdrLevel">1</span></div>
+            </div>
+            </div>
+            <div class="user-topbar-navigation">
             
             <nav class="nav-menu" id="navMenu">
-                <button class="nav-btn active" data-target="tabMap"><i class="fa-solid fa-map-location-dot"></i> Lộ Trình Học</button>
-                <button class="nav-btn" type="button" onclick="window.location.href='exam-arena.html'"><i class="fa-solid fa-file-pen"></i> Đấu trường Luyện thi</button>
-                <button class="nav-btn" data-target="tabLeaderboard"><i class="fa-solid fa-trophy"></i> Xếp hạng</button>
-                <button class="nav-btn" data-target="tabQuests"><i class="fa-solid fa-box-open"></i> Nhiệm vụ</button>
-                <button class="nav-btn" data-target="tabShop">
+                <button class="nav-btn active" data-target="tabMap" title="Lộ trình học" aria-label="Lộ trình học"><i class="fa-solid fa-map-location-dot"></i><span>Lộ Trình Học</span></button>
+                <button class="nav-btn" type="button" onclick="window.location.href='exam-arena.html'" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><i class="fa-solid fa-file-pen"></i><span>Đấu trường Luyện thi</span></button>
+                <button class="nav-btn" data-target="tabLeaderboard" title="Xếp hạng" aria-label="Xếp hạng"><i class="fa-solid fa-trophy"></i><span>Xếp hạng</span></button>
+                <button class="nav-btn" data-target="tabQuests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><i class="fa-solid fa-box-open"></i><span>Nhiệm vụ</span></button>
+                <button class="nav-btn" data-target="tabShop" title="Cửa hàng" aria-label="Cửa hàng">
                     <i class="fa-solid fa-store"></i>
                     <span>Cửa Hàng</span>
                 </button>
-                <button class="nav-btn" data-target="tabArena">
+                <button class="nav-btn" data-target="tabArena" title="Đấu trường" aria-label="Đấu trường">
                     <i class="fa-solid fa-khanda"></i>
                     <span>Đấu Trường</span>
                 </button>
-                <button class="nav-btn" data-target="tabProfile">
+                <button class="nav-btn" data-target="tabProfile" title="Hồ sơ" aria-label="Hồ sơ">
                     <i class="fa-solid fa-user"></i>
                     <span>Hồ Sơ</span>
                 </button>
             </nav>
             <!-- Role Switcher -->
-            <div style="margin-top: auto; padding: 15px;">
-                <div style="position: relative;" id="roleSwitcherWrap">
-                    <button class="nav-btn" onclick="document.getElementById('roleSwitcherDrop').style.display = document.getElementById('roleSwitcherDrop').style.display === 'block' ? 'none' : 'block'" style="width: 100%; text-align: left;">
-                        <i class="fa-solid fa-users-gear"></i>
-                        <span>Đổi Quyền</span>
-                    </button>
-                    <div id="roleSwitcherDrop" style="display: none; position: absolute; bottom: 100%; left: 0; background: var(--bg-card, #1e293b); border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
-                        <a href="map.html" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
-                        <a href="parent.html" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                        <a href="teacher-dashboard.html" onclick="return switchRoleClientOnly('teacher')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-chalkboard-user"></i> Giáo viên</a>
-                        <a href="cs.html" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
-                        <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
-                    </div>
-                </div>
+            <div id="roleSwitcherWrap" class="user-role-switcher" hidden>
+                <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+                <label class="sr-only" for="roleSwitcherSelect">Đổi quyền</label>
+                <select id="roleSwitcherSelect" title="Đổi quyền" aria-label="Đổi quyền"></select>
             </div>
-        </aside>
+            </div>
+            <div class="taskbar-actions" aria-label="Tiện ích học tập">
+                <label class="taskbar-grade" for="quickGradeSelect" title="Đổi khối lớp"><i class="fa-solid fa-graduation-cap"></i><span class="sr-only">Chọn khối lớp</span>
+                    <select id="quickGradeSelect" title="Đổi khối lớp"><option value="all">Tất cả khối</option><option value="5">Khối 5</option><option value="9">Khối 9</option><option value="12">Khối 12</option></select>
+                </label>
+                <button id="btnThemeToggle" class="taskbar-icon-btn" type="button" title="Chế độ sáng/tối" aria-label="Chế độ sáng/tối"><i class="fa-solid fa-moon"></i></button>
+                <button id="btnParentAccess" class="taskbar-icon-btn" type="button" title="Khu vực phụ huynh" aria-label="Khu vực phụ huynh"><i class="fa-solid fa-children"></i></button>
+                <button id="btnTaskbarLogout" class="taskbar-icon-btn taskbar-logout" type="button" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+            </div>
+            </div>
+        </header>
 
         <!-- BENTO MAIN -->
         <main class="bento-main">
 
-            <!-- Global Stats Header -->
-            <div class="stats-header">
+            <div class="student-page-heading">
                 <h1 class="topbar-title">Không gian học tập</h1>
-                <div class="topbar-stats">
-                    <div class="stat-pill" style="color: #ff4b4b;"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span></div>
-                    <div class="stat-pill" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
-                    <div class="stat-pill" style="color: #1cb0f6;"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
-                </div>
-                <div class="taskbar-actions" aria-label="Tiện ích học tập">
-                    <label class="taskbar-grade" for="quickGradeSelect"><i class="fa-solid fa-graduation-cap"></i><span class="sr-only">Chọn khối lớp</span>
-                        <select id="quickGradeSelect" title="Đổi khối lớp">
-                            <option value="all">Tất cả khối</option>
-                            <option value="5">Khối 5</option>
-                            <option value="9">Khối 9</option>
-                            <option value="12">Khối 12</option>
-                        </select>
-                    </label>
-                    <button id="btnThemeToggle" class="taskbar-icon-btn" type="button" title="Chế độ sáng/tối" aria-label="Chế độ sáng/tối"><i class="fa-solid fa-moon"></i></button>
-                    <button id="btnParentAccess" class="taskbar-icon-btn" type="button" title="Khu vực phụ huynh" aria-label="Khu vực phụ huynh"><i class="fa-solid fa-children"></i></button>
-                    <button id="btnTaskbarLogout" class="taskbar-icon-btn taskbar-logout" type="button" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-                </div>
             </div>
 
             <!-- TAB: MAP (LEARN) -->
             <div id="tabMap" class="tab-pane active">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="font-size: 2rem;" id="mapTitle">Khám Phá Việt Nam</h2>
+                    <div><h2 style="font-size: 2rem;" id="mapTitle">Khám Phá Việt Nam</h2><label class="map-search-wrap" for="mapSearchInput"><i class="fa-solid fa-magnifying-glass"></i><input id="mapSearchInput" type="search" placeholder="Tìm tỉnh thành" autocomplete="off"></label></div>
                     <button id="btnMapBack" class="bento-btn" style="display: none; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
                 </div>
                 
@@ -189,6 +180,20 @@
                             </div>
                         </div>
 
+                        <section class="profile-settings-shell" aria-label="Cài đặt cá nhân">
+                            <div class="profile-settings-heading">
+                                <div>
+                                    <p class="profile-settings-eyebrow">Cài đặt</p>
+                                    <h3>Quản lý tài khoản và trải nghiệm</h3>
+                                </div>
+                                <div class="profile-settings-tabs" role="tablist" aria-label="Nhóm cài đặt">
+                                    <button class="profile-settings-tab is-active" type="button" role="tab" aria-selected="true" data-settings-tab="account"><i class="fa-solid fa-user-gear"></i> Tài khoản</button>
+                                    <button class="profile-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="appearance"><i class="fa-solid fa-palette"></i> Giao diện</button>
+                                    <button class="profile-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="survey"><i class="fa-solid fa-clipboard-question"></i> Khảo sát</button>
+                                </div>
+                            </div>
+
+                            <div class="profile-settings-panel is-active" data-settings-panel="account">
                         <!-- EDIT PROFILE FORM -->
                         <div style="text-align: left; background: rgba(255,200,0,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 20px;">
                             <h4 style="margin-bottom: 15px; font-size: 1.1rem; color: var(--gold);"><i class="fa-solid fa-pen-to-square"></i> Cập nhật Thông tin Cá nhân</h4>
@@ -243,6 +248,29 @@
                             <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất hệ thống
                         </button>
                         
+                            </div>
+
+                            <div class="profile-settings-panel" data-settings-panel="appearance" hidden>
+                                <div class="settings-card">
+                                    <div>
+                                        <h4><i class="fa-solid fa-circle-half-stroke"></i> Chế độ hiển thị</h4>
+                                        <p>Chuyển nhanh giữa giao diện sáng và tối. Lựa chọn được ghi nhớ cho lần truy cập sau.</p>
+                                    </div>
+                                    <button id="btnSettingsTheme" class="settings-action" type="button"><i class="fa-solid fa-moon"></i> Đổi chế độ sáng/tối</button>
+                                </div>
+                            </div>
+
+                            <div class="profile-settings-panel" data-settings-panel="survey" hidden>
+                                <div class="settings-card settings-card-stack">
+                                    <div>
+                                        <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Cập nhật khảo sát người học</h4>
+                                        <p>Mở lại biểu mẫu để điều chỉnh mục tiêu học tập và khu vực kiến thức bạn quan tâm.</p>
+                                    </div>
+                                    <button id="btnReopenSurvey" class="settings-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa khảo sát</button>
+                                </div>
+                            </div>
+                        </section>
+
                         <!-- NEW: LEARNING PROFILE & AI SYNTHESIS -->
                         <div style="margin-top: 40px; background: rgba(255,255,255,0.02); border: 1px solid var(--blue); padding: 25px; border-radius: 20px; position: relative; overflow: hidden;">
                             <div style="position: absolute; top: -20px; right: -20px; font-size: 10rem; opacity: 0.05; color: var(--blue);"><i class="fa-solid fa-brain"></i></div>

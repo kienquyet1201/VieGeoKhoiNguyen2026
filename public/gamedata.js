@@ -12,6 +12,7 @@ const defaultGameState = {
     currentNode: 1,
     completedNodes: [],
     lastLogin: new Date().toISOString().split('T')[0],
+    lastLoginDate: new Date().toISOString().split('T')[0],
     lastStudyDate: null,
     
     // Avatar
@@ -201,6 +202,7 @@ function saveGameState(state) {
             accountStatus: state.accountStatus,
             lastHeartRegenTime: state.lastHeartRegenTime,
             lastLogin: state.lastLogin,
+            lastLoginDate: state.lastLoginDate || state.lastLogin,
             lastStudyDate: state.lastStudyDate,
             grade: state.selectedGrade === 'all' ? null : Number(state.selectedGrade),
             selectedGrade: state.selectedGrade,

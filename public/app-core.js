@@ -22,23 +22,79 @@ window.VieGeoUI = window.VieGeoUI || {
     error(message, options = {}) { return this.alert(message, { title: 'Đã xảy ra lỗi', icon: 'error', ...options }); }
 };
 
+const ROLE_META = Object.freeze({
+    user: { label: 'Học sinh', route: '/map' },
+    parent: { label: 'Phụ huynh', route: '/parent-dashboard' },
+    teacher: { label: 'Giáo viên', route: '/teacher-dashboard' },
+    cs: { label: 'Chăm sóc KH', route: '/cs-dashboard' },
+    admin: { label: 'Quản trị viên', route: '/admin-dashboard' }
+});
+
+function normalizeRole(role) {
+    const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
+    const value = String(role || '').trim().toLowerCase();
+    return aliases[value] || value;
+}
+
+function authorizedRoles(source) {
+    const roles = Array.isArray(source && source.roles)
+        ? source.roles
+        : [source && (source.activeRole || source.role)];
+    const result = [...new Set(roles.map(normalizeRole).filter((role) => Boolean(ROLE_META[role])))];
+    return result.length ? result : ['user'];
+}
+
+function persistSessionRoles(roles, activeRole) {
+    const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+    const safeRoles = authorizedRoles({ roles });
+    const role = safeRoles.includes(normalizeRole(activeRole)) ? normalizeRole(activeRole) : safeRoles[0];
+    session.roles = safeRoles;
+    session.role = role;
+    session.activeRole = role;
+    localStorage.setItem('lm_session', JSON.stringify(session));
+    return session;
+}
+
+function renderRoleSwitcher(source) {
+    const wrapper = document.getElementById('roleSwitcherWrap');
+    const select = document.getElementById('roleSwitcherSelect');
+    if (!wrapper || !select) return;
+
+    const roles = authorizedRoles(source);
+    wrapper.hidden = roles.length < 2;
+    select.disabled = roles.length < 2;
+    select.innerHTML = '';
+    roles.forEach((role) => {
+        const option = document.createElement('option');
+        option.value = role;
+        option.textContent = ROLE_META[role].label;
+        select.appendChild(option);
+    });
+
+    const activeRole = normalizeRole((source && (source.activeRole || source.role)) || sessionUser.activeRole || sessionUser.role);
+    select.value = roles.includes(activeRole) ? activeRole : roles[0];
+}
+
 // Canonical role switcher for every dashboard route.
 window.switchRoleClientOnly = function switchRoleClientOnly(role) {
     try {
         if (!role) return false;
-        const normalizedRole = role === 'map' ? 'user' : role;
+        const normalizedRole = normalizeRole(role);
         const roleLinks = {
             user: 'map.html',
             parent: 'parent.html',
-            cs: 'cs.html',
+            cs: '/cs-dashboard',
             admin: 'admin.html',
             teacher: 'teacher-dashboard.html'
         };
         const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-        session.role = normalizedRole;
-        session.activeRole = normalizedRole;
-        localStorage.setItem('lm_session', JSON.stringify(session));
-        window.location.href = roleLinks[normalizedRole] || roleLinks.user;
+        const roles = authorizedRoles(session);
+        if (!roles.includes(normalizedRole) || !ROLE_META[normalizedRole]) {
+            window.VieGeoUI.warning('Bạn không có quyền chuyển sang vai trò này.');
+            return false;
+        }
+        persistSessionRoles(roles, normalizedRole);
+        window.location.href = ROLE_META[normalizedRole].route;
     } catch (error) {
         console.error('Role switch error:', error);
         window.VieGeoUI.error('Không thể chuyển quyền. Vui lòng thử lại.');
@@ -64,6 +120,14 @@ try {
 
 let gameState = getGameState();
 
+renderRoleSwitcher(sessionUser);
+document.getElementById('roleSwitcherSelect')?.addEventListener('change', (event) => {
+    const nextRole = event.target.value;
+    if (nextRole && nextRole !== normalizeRole(sessionUser.activeRole || sessionUser.role)) {
+        window.switchRoleClientOnly(nextRole);
+    }
+});
+
 // ĐỒNG BỘ DATA TỪ FIREBASE KHI LOAD TRANG (REALTIME)
 function setupRealtimeAuth() {
     if (typeof db === 'undefined' || !sessionUser || !sessionUser.email) return;
@@ -85,12 +149,27 @@ function setupRealtimeAuth() {
             gameState.hearts = data.hearts || 5;
             gameState.streak = Number(data.currentStreak ?? data.streak ?? 0);
             gameState.gems = data.gems || 0;
+            if (data.lastLogin) gameState.lastLogin = data.lastLogin;
+            if (data.lastLoginDate) gameState.lastLoginDate = data.lastLoginDate;
             if (data.selectedGrade !== undefined) gameState.selectedGrade = data.selectedGrade || 'all';
             gameState.avatar = data.avatar || "fa-user-astronaut";
             gameState.avatarIsBase64 = data.avatarIsBase64 || false;
             // Cập nhật lại accountStatus từ server phòng khi Admin duyệt Premium
             gameState.accountStatus = data.accountStatus || 'free';
             gameState.lastHeartRegenTime = data.lastHeartRegenTime || Date.now();
+            if (data.learningProfile && typeof data.learningProfile === 'object') {
+                gameState.learningProfile = { ...gameState.learningProfile, ...data.learningProfile };
+            }
+            if (data.hasCompletedSurvey !== undefined) {
+                gameState.learningProfile = gameState.learningProfile || {};
+                gameState.learningProfile.surveyDone = data.hasCompletedSurvey === true;
+            }
+
+            const roles = authorizedRoles(data);
+            const activeRole = normalizeRole(sessionUser.activeRole || sessionUser.role);
+            sessionUser = { ...sessionUser, roles, role: roles.includes(activeRole) ? activeRole : roles[0], activeRole: roles.includes(activeRole) ? activeRole : roles[0] };
+            persistSessionRoles(roles, sessionUser.activeRole);
+            renderRoleSwitcher(sessionUser);
             
             // Cập nhật lại giới hạn tim ngay lập tức
             const maxHearts = gameState.accountStatus === 'premium' ? 10 : 2;
@@ -139,8 +218,16 @@ setInterval(() => {
 let heartTimerInterval = null;
 
 function updateHeaderStats() {
-    document.getElementById('hdrStreak').textContent = gameState.streak;
-    document.getElementById('hdrGems').textContent = gameState.gems;
+    const heartsElement = document.getElementById('hdrHearts');
+    const streakElement = document.getElementById('hdrStreak');
+    const gemsElement = document.getElementById('hdrGems');
+    if (streakElement) streakElement.textContent = gameState.streak ?? 0;
+    if (gemsElement) gemsElement.textContent = gameState.gems ?? 0;
+    const trophyElement = document.getElementById('hdrTrophies');
+    const levelElement = document.getElementById('hdrLevel');
+    if (trophyElement) trophyElement.textContent = gameState.trophies ?? gameState.pvpWins ?? 0;
+    if (levelElement) levelElement.textContent = Math.max(1, Math.floor((Number(gameState.xp) || 0) / 250) + 1);
+    if (!heartsElement) return;
     
     // Check Infinite Hearts
     if (gameState.inventory && gameState.inventory.infiniteHeartsExpiry) {
@@ -152,7 +239,7 @@ function updateHeaderStats() {
             const diff = gameState.inventory.infiniteHeartsExpiry - now;
             const m = Math.floor(diff / 60000);
             const s = Math.floor((diff % 60000) / 1000);
-            document.getElementById('hdrHearts').innerHTML = `∞ <span style="font-size: 0.8rem; font-weight: normal;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
+            heartsElement.innerHTML = `∞ <span style="font-size: 0.8rem; font-weight: normal;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
             return;
         } else {
             // Expired
@@ -195,7 +282,7 @@ function updateHeaderStats() {
         }
     }
     
-    document.getElementById('hdrHearts').innerHTML = heartHtml;
+    heartsElement.innerHTML = heartHtml;
 }
 
 // ── TAB SWITCHING ──
@@ -639,6 +726,39 @@ function renderProfile() {
     
     renderAchievements();
 }
+
+function initializeProfileSettings() {
+    const tabs = [...document.querySelectorAll('[data-settings-tab]')];
+    const panels = [...document.querySelectorAll('[data-settings-panel]')];
+    if (tabs.length) {
+        tabs.forEach((tab) => tab.addEventListener('click', () => {
+            const tabName = tab.dataset.settingsTab;
+            tabs.forEach((item) => {
+                const active = item === tab;
+                item.classList.toggle('is-active', active);
+                item.setAttribute('aria-selected', String(active));
+            });
+            panels.forEach((panel) => {
+                const active = panel.dataset.settingsPanel === tabName;
+                panel.hidden = !active;
+                panel.classList.toggle('is-active', active);
+            });
+        }));
+    }
+
+    document.getElementById('btnSettingsTheme')?.addEventListener('click', () => {
+        document.getElementById('btnThemeToggle')?.click();
+    });
+    document.getElementById('btnReopenSurvey')?.addEventListener('click', () => {
+        if (window.VieGeoSurvey && typeof window.VieGeoSurvey.open === 'function') {
+            window.VieGeoSurvey.open();
+        } else {
+            window.VieGeoUI.warning('Biểu mẫu khảo sát đang được tải. Vui lòng thử lại sau ít giây.');
+        }
+    });
+}
+
+initializeProfileSettings();
 
 function renderAchievements() {
     const grid = document.getElementById('achievementsGrid');

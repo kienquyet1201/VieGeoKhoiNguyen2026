@@ -21,6 +21,8 @@
         const toggle = byId('supportChatToggle');
         if (!panel || !toggle) return;
         panel.hidden = !open;
+        panel.style.display = open ? 'grid' : 'none';
+        toggle.style.display = open ? 'none' : 'inline-flex';
         toggle.setAttribute('aria-expanded', String(open));
         if (open) byId('supportMessageInput')?.focus();
     }
@@ -85,6 +87,14 @@
         if (submit) submit.disabled = true;
         try {
             const imageUrl = await uploadImage(pendingImage, user.email);
+            await db.collection('support_conversations').doc(user.email).set({
+                email: user.email,
+                name: user.name || user.displayName || user.email,
+                lastMessage: text || 'Đã gửi một hình ảnh',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAtClient: Date.now(),
+                unreadForStaff: true
+            }, { merge: true });
             await messagesRef.add({
                 sender: 'user', text, imageUrl: imageUrl || null,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: Date.now()
@@ -119,8 +129,15 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        byId('supportChatToggle')?.addEventListener('click', () => setOpen(true));
-        byId('supportChatClose')?.addEventListener('click', () => setOpen(false));
+        byId('supportChatToggle')?.addEventListener('click', event => {
+            event.preventDefault();
+            setOpen(true);
+        });
+        byId('supportChatClose')?.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            setOpen(false);
+        });
         byId('supportChatForm')?.addEventListener('submit', sendMessage);
         byId('supportImageButton')?.addEventListener('click', () => byId('supportImageInput')?.click());
         byId('supportImageInput')?.addEventListener('change', event => {

@@ -3,392 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo - Admin Panel</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Firebase SDK (Compat) -->
+    <title>VieGeo | Trung tâm điều hành</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="firebase-init.js"></script>
-    <!-- Mammoth.js for parsing Word Documents -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    
-    <style>
-        :root {
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f8fafc;
-            --text-dim: #94a3b8;
-            --blue: #3b82f6;
-            --green: #10b981;
-            --gold: #f59e0b;
-        }
-        body {
-            margin: 0; padding: 20px; font-family: 'Be Vietnam Pro', sans-serif;
-            background: var(--bg-dark); color: var(--text-primary);
-        }
-        h1 { color: var(--gold); border-bottom: 2px solid var(--bg-card); padding-bottom: 10px; }
-        .req-card {
-            background: var(--bg-card); padding: 15px; margin-bottom: 15px;
-            border-radius: 10px; display: flex; justify-content: space-between; align-items: center;
-        }
-        .req-info h3 { margin: 0 0 5px 0; color: var(--blue); }
-        .req-info p { margin: 0; color: var(--text-dim); }
-        .btn-approve {
-            background: var(--green); color: white; border: none; padding: 10px 20px;
-            border-radius: 8px; cursor: pointer; font-weight: bold;
-        }
-        .btn-approve:hover { opacity: 0.8; }
-        .btn-reject {
-            background: #ef4444; color: white; border: none; padding: 10px 20px;
-            border-radius: 8px; cursor: pointer; font-weight: bold;
-        }
-        .btn-reject:hover { opacity: 0.8; }
-        #toast {
-            position: fixed; bottom: 20px; right: 20px; background: var(--blue);
-            color: white; padding: 15px; border-radius: 8px; display: none;
-        }
-        .role-switcher { position: relative; display: inline-block; }
-        .role-switcher-menu { display: none; position: absolute; top: 100%; right: 0; background: var(--bg-card); border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden; }
-        .role-switcher:hover .role-switcher-menu { display: block; }
-        .role-switcher-menu a { display: block; padding: 10px 15px; color: var(--text-primary); text-decoration: none; border-bottom: 1px solid #334155; }
-        .role-switcher-menu a:last-child { border-bottom: none; }
-        .role-switcher-menu a:hover { background: #334155; }
-    </style>
-    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body class="dashboard-page">
-    <div class="dashboard-shell">
+<body>
+    <div class="operations-shell" id="adminDashboard">
+        <aside class="operations-rail" aria-label="Điều hướng quản trị">
+            <a class="operations-logo" href="map.html" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i></a>
+            <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i></button>
+            <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i></button>
+            <button type="button" data-admin-tab="upload" title="Upload câu hỏi" aria-label="Upload câu hỏi"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+            <button type="button" data-admin-tab="monitoring" title="Giám sát học tập (Live Session)" aria-label="Giám sát học tập"><i class="fa-solid fa-tower-broadcast"></i></button>
+            <button class="rail-bottom" type="button" id="adminRoleButton" title="Đổi vai trò" aria-label="Đổi vai trò"><i class="fa-solid fa-users-gear"></i></button>
+            <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        </aside>
 
-    <h1 class="topbar-title"><i class="fa-solid fa-screwdriver-wrench"></i> Quản Trị Hệ Thống VieGeo</h1>
+        <main class="operations-main">
+            <header class="operations-heading">
+                <div><h1 id="adminPageTitle">Trung tâm điều hành</h1><p id="adminPageSubtitle">Theo dõi hoạt động và vận hành VieGeo trong một nơi.</p></div>
+                <span class="ops-muted" id="adminConnectionStatus"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang kết nối dữ liệu</span>
+            </header>
 
-    <!-- TABS + ROLE SWITCHER -->
-    <div class="dashboard-topbar">
-        <button id="tabUsersBtn" onclick="switchTab('users')" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Quản Lý Người Dùng & Premium</button>
-        <button id="tabUploadBtn" onclick="switchTab('upload')" style="padding: 10px 20px; background: transparent; color: var(--text-dim); border: 1px solid var(--text-dim); border-radius: 8px; cursor: pointer; font-weight: bold;">Upload Câu Hỏi</button>
-        <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
-            <div class="role-switcher">
-                <button style="padding: 10px 20px; background: var(--bg-card); color: white; border: 1px solid #334155; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-users-gear"></i> Chuyển đổi quyền</button>
-                <div class="role-switcher-menu">
-                    <a href="map.html" onclick="return switchRoleClientOnly('user')"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
-                    <a href="parent.html" onclick="return switchRoleClientOnly('parent')"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                    <a href="cs.html" onclick="return switchRoleClientOnly('cs')"><i class="fa-solid fa-headset"></i> CSKH</a>
-                    <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="color: var(--gold);"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+            <section class="operations-tab" data-admin-panel="overview">
+                <div class="ops-stats">
+                    <article class="ops-stat"><span><i class="fa-solid fa-signal"></i> Người đang online</span><strong id="metricOnline">—</strong></article>
+                    <article class="ops-stat"><span><i class="fa-solid fa-file-circle-check"></i> Bài nộp hôm nay</span><strong id="metricSubmissions">—</strong></article>
+                    <article class="ops-stat"><span><i class="fa-solid fa-server"></i> Server load</span><strong id="metricLoad">34%</strong></article>
+                    <article class="ops-stat"><span><i class="fa-solid fa-shield-heart"></i> Báo cáo lỗi</span><strong id="metricErrors">—</strong></article>
                 </div>
-            </div>
-            <button onclick="window.location.href='loginout.html'" style="background: rgba(255,75,75,0.2); color: #ff4b4b; border: 1px solid #ff4b4b; padding: 10px 20px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-right-from-bracket"></i> Đăng xuất</button>
-        </div>
-    </div>
+                <div class="ops-grid">
+                    <article class="ops-card"><h2>Hiệu năng hệ thống</h2><p class="ops-muted">Mức tải phiên hiện tại; sẵn sàng thay bằng telemetry từ hạ tầng production.</p><div class="ops-load-bar" aria-label="Server load 34 phần trăm"><span id="serverLoadBar"></span></div><div class="ops-list" style="margin-top:16px"><div class="ops-list-item"><span>Firestore</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Auth</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Storage</span><strong style="color:#4ade80">Ổn định</strong></div></div></article>
+                    <article class="ops-card"><h2>Thông báo vận hành</h2><div class="ops-list" id="systemErrorList"><p class="ops-muted">Đang kiểm tra báo cáo lỗi…</p></div></article>
+                </div>
+            </section>
 
-    <!-- TAB: QUẢN LÝ NGƯỜI DÙNG -->
-    <div id="tabUsersContent">
-    <p>Danh sách các yêu cầu Nâng cấp Premium đang chờ duyệt:</p>
+            <section class="operations-tab hidden" data-admin-panel="users">
+                <div class="ops-grid">
+                    <article class="ops-card"><h2>Yêu cầu nâng cấp Premium</h2><div class="ops-list" id="requestsList"><p class="ops-muted">Đang tải yêu cầu…</p></div></article>
+                    <article class="ops-card"><h2>Hướng dẫn phân quyền</h2><p class="ops-muted">Vai trò được lưu trực tiếp vào hồ sơ Firebase của người dùng. Thay đổi có hiệu lực ở phiên tải dữ liệu tiếp theo.</p><div class="ops-list"><div class="ops-list-item"><span>Học sinh</span><span class="ops-muted">Lộ trình học</span></div><div class="ops-list-item"><span>Giáo viên</span><span class="ops-muted">Lớp học & thống kê</span></div><div class="ops-list-item"><span>CSKH / Admin</span><span class="ops-muted">Vận hành hệ thống</span></div></div></article>
+                </div>
+                <article class="ops-card" style="margin-top:18px"><div class="operations-heading" style="margin-bottom:16px"><div><h2 style="margin-bottom:4px">Quản lý người dùng</h2><p class="ops-muted">Lọc tức thì theo ID, email hoặc tên.</p></div><label><span class="sr-only">Tìm người dùng</span><input id="searchUser" class="ops-search" type="search" placeholder="Tìm email hoặc tên người dùng" autocomplete="off"></label></div><div class="ops-table-wrap"><table class="ops-table"><thead><tr><th>ID</th><th>Email</th><th>Vai trò hiện tại</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="usersList"><tr><td colspan="5" class="ops-muted">Đang tải người dùng…</td></tr></tbody></table></div></article>
+            </section>
 
-    <div id="requestsList">Đang tải dữ liệu...</div>
+            <section class="operations-tab hidden" data-admin-panel="upload">
+                <article class="ops-card"><h2>Upload bộ câu hỏi</h2><p class="ops-muted">Tách câu hỏi từ DOCX/TXT và lưu vào Firebase theo tỉnh, đảo nhỏ và độ khó.</p><div class="ops-grid"><div class="ops-list"><label class="ops-muted">Tệp câu hỏi<input class="ops-input" id="fileUpload" type="file" accept=".docx,.txt" style="display:block;margin-top:7px"></label><p id="fileNameDisplay" class="ops-muted">Chưa có tệp được chọn.</p><label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="importProvince" type="text" placeholder="Ví dụ: Hà Nội" style="display:block;margin-top:7px"></label><label class="ops-muted">Đảo nhỏ / Bài học<input class="ops-input" id="importIsland" type="text" placeholder="Ví dụ: Khám phá Hồ Gươm" style="display:block;margin-top:7px"></label><label class="ops-muted">Mức độ<select class="ops-input" id="importDifficulty" style="display:block;margin-top:7px"><option value="easy">Cơ bản</option><option value="medium">Trung bình</option><option value="hard">Nâng cao</option></select></label><label class="ops-muted">Mã bài học (tùy chọn)<input class="ops-input" id="importLessonId" type="text" placeholder="Tự tạo nếu để trống" style="display:block;margin-top:7px"></label><button class="ops-button" id="btnProcessUpload" type="button" style="margin-top:6px"><i class="fa-solid fa-wand-magic-sparkles"></i> Bóc tách và cập nhật</button></div><div><h3 style="margin-top:0">Xem trước dữ liệu</h3><pre id="uploadPreview" class="ops-muted" style="min-height:320px;max-height:460px;overflow:auto;white-space:pre-wrap;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:14px;background:#091525">Kết quả xử lý sẽ hiển thị tại đây.</pre></div></div></article>
+            </section>
 
-    <h2 style="color: var(--gold); margin-top: 40px;"><i class="fa-solid fa-users"></i> Quản Lý Người Dùng</h2>
-    <p>Danh sách người dùng hệ thống. Bạn có thể kick (buộc đăng xuất) họ ngay lập tức:</p>
-    
-    <div style="margin-bottom: 20px;">
-        <input type="text" id="searchUser" placeholder="Tìm kiếm theo email..." style="padding: 10px; width: 100%; max-width: 400px; border-radius: 8px; border: 1px solid var(--gray-border); background: var(--bg-card); color: white; outline: none;">
-        <button onclick="loadUsers()" style="padding: 10px 20px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-left: 10px;">Tìm</button>
-    </div>
-
-    <div id="usersList">Đang tải người dùng...</div>
-
-    </div> <!-- END TAB QUẢN LÝ -->
-
-    <!-- TAB: UPLOAD CÂU HỎI -->
-    <div id="tabUploadContent" style="display: none;">
-        <h2 style="color: var(--gold);"><i class="fa-solid fa-cloud-arrow-up"></i> Tải Lên Bộ Câu Hỏi (.docx / .txt)</h2>
-        <p style="color: var(--text-dim); margin-bottom: 20px;">Hệ thống sẽ bóc tách văn bản thành dạng câu hỏi trắc nghiệm và cập nhật vào Firebase.</p>
-        <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 2px dashed var(--blue); text-align: center; margin-bottom: 20px;">
-            <i class="fa-solid fa-file-word" style="font-size: 3rem; color: var(--blue); margin-bottom: 15px;"></i><br>
-            <input type="file" id="fileUpload" accept=".docx,.txt" style="display: none;">
-            <button onclick="document.getElementById('fileUpload').click()" style="padding: 12px 25px; background: var(--blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Chọn File</button>
-            <p id="fileNameDisplay" style="margin-top: 15px; color: var(--green); font-weight: bold;"></p>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-            <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Thành phố (Tỉnh):</label>
-                <input type="text" id="importProvince" placeholder="VD: Hà Nội" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Đảo nhỏ (Bài học):</label>
-                <input type="text" id="importIsland" placeholder="VD: Khám phá Hồ Gươm" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mức độ:</label>
-                <select id="importDifficulty" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
-                    <option value="easy">Cơ bản (Easy)</option>
-                    <option value="medium">Trung bình (Medium)</option>
-                    <option value="hard">Nâng cao (Hard)</option>
-                </select>
-            </div>
-            <div>
-                <label style="display: block; margin-bottom: 5px; color: var(--text-dim);">Mã Bài Học (ID - Tùy chọn):</label>
-                <input type="text" id="importLessonId" placeholder="Hệ thống tự tạo nếu bỏ trống" style="width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-card); color: white; border: 1px solid var(--blue);">
-            </div>
-        </div>
-        <button onclick="processUpload()" id="btnProcessUpload" style="padding: 15px; width: 100%; background: var(--green); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px;"><i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật</button>
-        <div id="uploadPreview" style="background: var(--bg-dark); border: 1px solid var(--bg-card); padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-size: 0.9rem;">Kết quả preview sẽ hiển thị ở đây...</div>
-    </div> <!-- END TAB UPLOAD -->
-
-    <div id="toast">Thông báo</div>
+            <section class="operations-tab hidden" data-admin-panel="monitoring">
+                <article class="ops-card"><h2>Giám sát học tập (Live Session)</h2><p class="ops-muted">Danh sách học viên hoạt động gần đây. Nút Replay là điểm tích hợp sẵn cho luồng session replay bằng rrweb; dữ liệu mô phỏng không ghi nhận màn hình thật.</p><div class="ops-table-wrap"><table class="ops-table"><thead><tr><th>Học viên</th><th>Hoạt động gần nhất</th><th>Trạng thái</th><th>Session replay</th></tr></thead><tbody id="liveSessionList"><tr><td colspan="4" class="ops-muted">Đang tải phiên học tập…</td></tr></tbody></table></div></article>
+            </section>
+        </main>
     </div>
 
     <script>
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 3000);
+    (() => {
+        'use strict';
+        const state = { activeTab: 'overview', users: [] };
+        const tabMetadata = {
+            overview: ['Trung tâm điều hành', 'Theo dõi hoạt động và vận hành VieGeo trong một nơi.'],
+            users: ['Quản lý người dùng', 'Phân quyền, duyệt Premium và kiểm soát phiên người dùng.'],
+            upload: ['Upload câu hỏi', 'Nhập và chuẩn hóa kho câu hỏi cho lộ trình học.'],
+            monitoring: ['Giám sát học tập', 'Theo dõi phiên học đang hoạt động và chuẩn bị tích hợp rrweb.']
+        };
+        const roles = [['user','Học sinh'], ['teacher','Giáo viên'], ['parent','Phụ huynh'], ['cs','Chăm sóc KH'], ['admin','Admin']];
+        const roleLabels = Object.fromEntries(roles);
+        const roleRoutes = { user: '/map', parent: '/parent-dashboard', teacher: '/teacher-dashboard', cs: '/cs-dashboard', admin: '/admin-dashboard' };
+        const el = id => document.getElementById(id);
+        const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+        const timestampToMs = value => typeof value === 'number' ? value : (value && typeof value.toMillis === 'function' ? value.toMillis() : 0);
+
+        function showToast(message, icon = 'success') {
+            if (window.Swal) return Swal.fire({toast:true,position:'top-end',showConfirmButton:false,timer:2600,icon,title:message,background:'#102238',color:'#fff'});
+            console.info(message);
+        }
+
+        function switchTab(tab) {
+            if (!tabMetadata[tab]) return;
+            state.activeTab = tab;
+            document.querySelectorAll('[data-admin-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.adminPanel !== tab));
+            document.querySelectorAll('[data-admin-tab]').forEach(button => button.classList.toggle('is-active', button.dataset.adminTab === tab));
+            el('adminPageTitle').textContent = tabMetadata[tab][0];
+            el('adminPageSubtitle').textContent = tabMetadata[tab][1];
+        }
+
+        function renderUsers() {
+            const keyword = (el('searchUser')?.value || '').trim().toLowerCase();
+            const body = el('usersList');
+            if (!body) return;
+            if (!state.users.length) { body.innerHTML = '<tr><td colspan="5" class="ops-muted">Không có người dùng phù hợp.</td></tr>'; return; }
+            body.innerHTML = state.users.map(user => {
+                const searchable = `${user.id} ${user.email} ${user.name}`.toLowerCase();
+                const role = roles.some(([value]) => value === user.role) ? user.role : 'user';
+                const roleOptions = roles.map(([value, label]) => `<option value="${value}" ${value === role ? 'selected' : ''}>${label}</option>`).join('');
+                const isOnline = Date.now() - user.lastActive <= 90000;
+                return `<tr class="admin-user-row${keyword && !searchable.includes(keyword) ? ' hidden' : ''}" data-search-item="${escapeHtml(searchable)}"><td>${escapeHtml(user.id)}</td><td>${escapeHtml(user.email)}</td><td><select data-role-user="${escapeHtml(user.id)}" aria-label="Đổi vai trò cho ${escapeHtml(user.email)}">${roleOptions}</select></td><td>${isOnline ? '<span style="color:#4ade80">● Online</span>' : '<span class="ops-muted">● Offline</span>'}</td><td><button class="ops-button is-danger" type="button" data-kick-user="${escapeHtml(user.id)}" title="Buộc đăng xuất">Kick</button></td></tr>`;
+            }).join('');
+        }
+
+        async function loadUsers() {
+            if (typeof db === 'undefined') return;
+            const snapshot = await db.collection('users').limit(100).get();
+            state.users = snapshot.docs.map(doc => {
+                const data = doc.data() || {};
+                return { id: doc.id, email: data.email || doc.id, name: data.name || 'Người dùng', role: data.role || (Array.isArray(data.roles) ? data.roles[0] : 'user'), lastActive: timestampToMs(data.lastActive) };
+            });
+            renderUsers(); renderLiveSessions();
+        }
+
+        async function updateUserRole(userId, role) {
+            try { await db.collection('users').doc(userId).set({ role, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); showToast('Đã cập nhật vai trò.'); }
+            catch (error) { console.error(error); showToast('Không thể cập nhật vai trò.', 'error'); }
+        }
+
+        async function kickUser(userId) {
+            try { await db.collection('users').doc(userId).set({ forceLogout: true }, { merge: true }); showToast('Đã yêu cầu đăng xuất phiên người dùng.'); }
+            catch (error) { console.error(error); showToast('Không thể thực hiện thao tác.', 'error'); }
+        }
+
+        function renderLiveSessions() {
+            const body = el('liveSessionList'); if (!body) return;
+            const activeUsers = state.users.filter(user => Date.now() - user.lastActive <= 90000);
+            if (!activeUsers.length) { body.innerHTML = '<tr><td colspan="4" class="ops-muted">Chưa có học viên online trong 90 giây gần nhất.</td></tr>'; return; }
+            body.innerHTML = activeUsers.map(user => `<tr><td>${escapeHtml(user.name)}<br><small class="ops-muted">${escapeHtml(user.email)}</small></td><td>vừa hoạt động</td><td><span style="color:#4ade80">● Online</span></td><td><button class="ops-button is-muted" type="button" data-replay-user="${escapeHtml(user.id)}"><i class="fa-solid fa-play"></i> Xem màn hình (Replay)</button></td></tr>`).join('');
         }
 
         async function loadRequests() {
-            const list = document.getElementById('requestsList');
+            const list = el('requestsList'); if (typeof db === 'undefined') return;
             try {
-                const snapshot = await db.collection('premium_requests').where('status', '==', 'pending').get();
-                if (snapshot.empty) {
-                    list.innerHTML = '<p style="color: var(--green);">Không có yêu cầu nào đang chờ!</p>';
-                    return;
-                }
-
-                list.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = data.timestamp ? data.timestamp.toDate().toLocaleString() : 'N/A';
-                    
-                    const div = document.createElement('div');
-                    div.className = 'req-card';
-                    div.innerHTML = `
-                        <div class="req-info">
-                            <h3><i class="fa-solid fa-user"></i> ${data.name}</h3>
-                            <p><i class="fa-solid fa-envelope"></i> ${data.email} | Yêu cầu lúc: ${date}</p>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-approve" onclick="approveRequest('${doc.id}', '${data.email}')">
-                                <i class="fa-solid fa-check"></i> Duyệt
-                            </button>
-                            <button class="btn-reject" onclick="rejectRequest('${doc.id}', '${data.email}')">
-                                <i class="fa-solid fa-xmark"></i> Từ chối
-                            </button>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-            } catch(e) {
-                list.innerHTML = `<p style="color: red;">Lỗi tải dữ liệu: ${e.message}</p>`;
-            }
+                const snapshot = await db.collection('premium_requests').where('status','==','pending').get();
+                if (snapshot.empty) { list.innerHTML = '<p class="ops-muted">Không có yêu cầu Premium đang chờ duyệt.</p>'; return; }
+                list.innerHTML = snapshot.docs.map(doc => { const data = doc.data() || {}; return `<div class="ops-list-item"><div><strong>${escapeHtml(data.name || 'Người dùng')}</strong><br><small class="ops-muted">${escapeHtml(data.email || doc.id)}</small></div><div><button class="ops-button" data-premium-approve="${doc.id}" data-premium-email="${escapeHtml(data.email || '')}" type="button">Duyệt</button> <button class="ops-button is-danger" data-premium-reject="${doc.id}" type="button">Từ chối</button></div></div>`; }).join('');
+            } catch (error) { list.innerHTML = '<p class="ops-muted">Không thể tải yêu cầu Premium.</p>'; console.error(error); }
         }
 
-        window.approveRequest = async function(reqId, email) {
-            if(!confirm(`Xác nhận cấp Premium cho ${email}?`)) return;
+        async function updateRequest(requestId, email, status) {
             try {
-                // Update User
-                await db.collection('users').doc(email).update({ accountStatus: 'premium' });
-                // Update Request status
-                await db.collection('premium_requests').doc(reqId).update({ status: 'approved' });
-                showToast(`Đã duyệt Premium cho ${email}!`);
-                loadRequests();
-            } catch(e) {
-                showToast("Lỗi: " + e.message);
-            }
-        };
-
-        window.rejectRequest = async function(reqId, email) {
-            if(!confirm(`Xác nhận TỪ CHỐI yêu cầu Premium của ${email}?`)) return;
-            try {
-                // Update Request status
-                await db.collection('premium_requests').doc(reqId).update({ status: 'rejected' });
-                showToast(`Đã từ chối Premium của ${email}!`);
-                loadRequests();
-            } catch(e) {
-                showToast("Lỗi: " + e.message);
-            }
-        };
-
-        async function loadUsers() {
-            const list = document.getElementById('usersList');
-            const searchKeyword = document.getElementById('searchUser').value.trim().toLowerCase();
-            try {
-                // Get all users (or filter if you had many, but here we pull max 50 for admin view)
-                const snapshot = await db.collection('users').limit(50).get();
-                list.innerHTML = '';
-                let count = 0;
-                
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const email = doc.id.toLowerCase();
-                    
-                    if (searchKeyword && !email.includes(searchKeyword)) return;
-                    
-                    const lastActive = data.lastActive || 0;
-                    const isOnline = (Date.now() - lastActive) <= 60000;
-                    const statusHtml = isOnline ? 
-                        '<span style="color:var(--green); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Đang Online</span>' : 
-                        '<span style="color:var(--text-dim); font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-circle"></i> Offline</span>';
-
-                    count++;
-                    const div = document.createElement('div');
-                    div.className = 'req-card';
-                    div.innerHTML = `
-                        <div class="req-info">
-                            <h3><i class="fa-solid fa-user"></i> ${data.name || 'Người dùng'} ${statusHtml}</h3>
-                            <p><i class="fa-solid fa-envelope"></i> ${doc.id} | Quyền: <span style="color:${data.accountStatus === 'premium' ? 'var(--gold)' : 'var(--green)'};">${(data.accountStatus || 'free').toUpperCase()}</span></p>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button class="btn-reject" onclick="kickUser('${doc.id}')" title="Buộc đăng xuất ra sảnh">
-                                <i class="fa-solid fa-ban"></i> Kick
-                            </button>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-
-                if (count === 0) {
-                    list.innerHTML = '<p style="color: var(--text-dim);">Không tìm thấy người dùng nào.</p>';
-                }
-            } catch(e) {
-                list.innerHTML = `<p style="color: red;">Lỗi tải người dùng: ${e.message}</p>`;
-            }
+                if (status === 'approved' && email) await db.collection('users').doc(email).set({ accountStatus: 'premium' }, { merge: true });
+                await db.collection('premium_requests').doc(requestId).set({ status, reviewedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu.'); loadRequests();
+            } catch (error) { console.error(error); showToast('Không thể cập nhật yêu cầu.', 'error'); }
         }
 
-        window.kickUser = async function(email) {
-            if(!confirm(`Xác nhận KICK người dùng ${email} khỏi hệ thống ngay lập tức?`)) return;
+        async function loadOverview() {
+            if (typeof db === 'undefined') return;
             try {
-                await db.collection('users').doc(email).update({ forceLogout: true });
-                showToast(`Đã ra lệnh KICK đối với ${email}!`);
-            } catch(e) {
-                showToast("Lỗi: " + e.message);
-            }
-        };
-
-        // Tab switching
-        function switchTab(tabId) {
-            try {
-                const btnUsers = document.getElementById('tabUsersBtn');
-                const btnUpload = document.getElementById('tabUploadBtn');
-                const contentUsers = document.getElementById('tabUsersContent');
-                const contentUpload = document.getElementById('tabUploadContent');
-                if (tabId === 'users') {
-                    btnUsers.style.background = 'var(--blue)'; btnUsers.style.color = 'white'; btnUsers.style.border = 'none';
-                    btnUpload.style.background = 'transparent'; btnUpload.style.color = 'var(--text-dim)'; btnUpload.style.border = '1px solid var(--text-dim)';
-                    contentUsers.style.display = 'block'; contentUpload.style.display = 'none';
-                } else {
-                    btnUpload.style.background = 'var(--blue)'; btnUpload.style.color = 'white'; btnUpload.style.border = 'none';
-                    btnUsers.style.background = 'transparent'; btnUsers.style.color = 'var(--text-dim)'; btnUsers.style.border = '1px solid var(--text-dim)';
-                    contentUsers.style.display = 'none'; contentUpload.style.display = 'block';
-                }
-            } catch(e) { console.error('switchTab error:', e); }
-        }
-
-        // Upload file listener
-        document.getElementById('fileUpload').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                document.getElementById('fileNameDisplay').textContent = "Đã chọn: " + e.target.files[0].name;
-            }
-        });
-
-        // Upload & Parse
-        async function processUpload() {
-            try {
-                const fileInput = document.getElementById('fileUpload');
-                const file = fileInput.files[0];
-                if (!file) { showToast("Vui lòng chọn file!"); return; }
-                const province = document.getElementById('importProvince').value.trim();
-                const island = document.getElementById('importIsland').value.trim();
-                const difficulty = document.getElementById('importDifficulty').value;
-                let lessonId = document.getElementById('importLessonId').value.trim();
-                if (!province || !island) { showToast("Vui lòng điền Thành phố và Đảo nhỏ!"); return; }
-                if (!lessonId) { lessonId = "node_" + province.toLowerCase().replace(/\s+/g, '') + "_" + new Date().getTime(); }
-                const btn = document.getElementById('btnProcessUpload');
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...'; btn.disabled = true;
-                let textContent = "";
-                if (file.name.endsWith('.txt')) { textContent = await file.text(); }
-                else if (file.name.endsWith('.docx')) {
-                    if (typeof mammoth === 'undefined') throw new Error("Mammoth.js chưa tải!");
-                    const arrayBuffer = await file.arrayBuffer();
-                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-                    textContent = result.value;
-                } else { throw new Error("Định dạng file không hỗ trợ!"); }
-                const questions = parseTextToQuestions(textContent);
-                document.getElementById('uploadPreview').textContent = JSON.stringify(questions, null, 2);
-                if (questions.length === 0) throw new Error("Không trích xuất được câu hỏi nào từ file!");
-                await db.collection('imported_questions').doc(lessonId).set({
-                    province: province, island: island, difficulty: difficulty, lessonId: lessonId,
-                    questions: questions,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: JSON.parse(localStorage.getItem('lm_session'))?.email || 'admin'
-                });
-                showToast("Bóc tách và lưu thành công " + questions.length + " câu hỏi!");
-                document.getElementById('fileUpload').value = ''; document.getElementById('fileNameDisplay').textContent = '';
-            } catch (error) { console.error(error); showToast("Lỗi xử lý: " + error.message); }
-            finally {
-                const btn = document.getElementById('btnProcessUpload');
-                btn.innerHTML = '<i class="fa-solid fa-cogs"></i> Bóc Tách & Cập Nhật'; btn.disabled = false;
+                const usersSnapshot = await db.collection('users').limit(200).get();
+                const users = usersSnapshot.docs.map(doc => doc.data() || {});
+                el('metricOnline').textContent = users.filter(user => Date.now() - timestampToMs(user.lastActive) <= 90000).length;
+                const submissions = await db.collection('submissions').limit(500).get();
+                el('metricSubmissions').textContent = submissions.size;
+                const errors = await db.collection('system_errors').limit(5).get();
+                el('metricErrors').textContent = errors.size;
+                const errorList = el('systemErrorList');
+                errorList.innerHTML = errors.empty ? '<p class="ops-muted">Không có lỗi hệ thống mới.</p>' : errors.docs.map(doc => `<div class="ops-list-item"><span>${escapeHtml((doc.data() || {}).message || 'Lỗi chưa phân loại')}</span><small class="ops-muted">${escapeHtml(doc.id)}</small></div>`).join('');
+            } catch (error) {
+                console.warn('Không thể nạp đủ chỉ số vận hành:', error);
+                el('metricOnline').textContent = '—'; el('metricSubmissions').textContent = '—'; el('metricErrors').textContent = '—';
+                el('systemErrorList').innerHTML = '<p class="ops-muted">Telemetry sẽ hiển thị khi collection đã sẵn sàng.</p>';
             }
         }
 
         function parseTextToQuestions(text) {
-            try {
-                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                const questions = []; let currentQ = null;
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i];
-                    if (/^c[aâ]u\s*\d+[:\.]/i.test(line)) {
-                        if (currentQ) questions.push(currentQ);
-                        currentQ = { text: line.replace(/^c[aâ]u\s*\d+[:\.]\s*/i, ''), options: [], correctAnswer: 0 };
-                    } else if (/^[A-D][\.\:]/i.test(line) && currentQ) {
-                        currentQ.options.push(line.replace(/^[A-D][\.\:]\s*/i, ''));
-                    } else if (/^[ĐD][aá]p\s*[aá]n[:\.]/i.test(line) && currentQ) {
-                        let ans = line.replace(/^[ĐD][aá]p\s*[aá]n[:\.]\s*/i, '').toUpperCase().trim();
-                        if (ans === 'A') currentQ.correctAnswer = 0;
-                        else if (ans === 'B') currentQ.correctAnswer = 1;
-                        else if (ans === 'C') currentQ.correctAnswer = 2;
-                        else if (ans === 'D') currentQ.correctAnswer = 3;
-                    } else if (currentQ && currentQ.options.length === 0) {
-                        currentQ.text += "\n" + line;
-                    }
-                }
-                if (currentQ) questions.push(currentQ);
-                return questions;
-            } catch(e) { console.error('parseTextToQuestions error:', e); return []; }
+            const lines = text.split('\n').map(line => line.trim()).filter(Boolean); const questions = []; let current = null;
+            lines.forEach(line => {
+                if (/^câu\s*\d+[:.]/i.test(line)) { if (current) questions.push(current); current = { text: line.replace(/^câu\s*\d+[:.]\s*/i,''), options:[], correctAnswer:0 }; }
+                else if (/^[A-D][.:]/i.test(line) && current) current.options.push(line.replace(/^[A-D][.:]\s*/i,''));
+                else if (/^đáp\s*án[:.]/i.test(line) && current) { const answer = line.replace(/^đáp\s*án[:.]\s*/i,'').trim().toUpperCase(); current.correctAnswer = Math.max(0, 'ABCD'.indexOf(answer)); }
+                else if (current && current.options.length === 0) current.text += `\n${line}`;
+            });
+            if (current) questions.push(current); return questions;
         }
 
-        // Role Switcher
-        window.switchRoleClientOnly = function(role) {
-            if(!role) return;
+        async function processUpload() {
+            const file = el('fileUpload')?.files?.[0]; const province = el('importProvince').value.trim(); const island = el('importIsland').value.trim();
+            if (!file || !province || !island) { showToast('Hãy chọn tệp, tỉnh/thành và bài học.', 'warning'); return; }
+            const button = el('btnProcessUpload'); button.disabled = true; button.textContent = 'Đang xử lý…';
             try {
-                const session = JSON.parse(localStorage.getItem('lm_session')) || {};
-                const normalizedRole = role === 'map' ? 'user' : role;
-                const roleLinks = { user: 'map.html', parent: 'parent.html', cs: 'cs.html', admin: 'admin.html', teacher: 'teacher-dashboard.html' };
-                session.role = normalizedRole;
-                session.activeRole = normalizedRole;
-                localStorage.setItem('lm_session', JSON.stringify(session));
-                window.location.href = roleLinks[normalizedRole] || roleLinks.user;
-            } catch(e) { console.error('switchRole error:', e); }
-            return false;
-        };
+                let text = '';
+                if (file.name.toLowerCase().endsWith('.txt')) text = await file.text();
+                else if (file.name.toLowerCase().endsWith('.docx') && window.mammoth) text = (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
+                else throw new Error('Tệp phải là TXT hoặc DOCX hợp lệ.');
+                const questions = parseTextToQuestions(text); if (!questions.length) throw new Error('Không tìm thấy câu hỏi trong tệp.');
+                const lessonId = el('importLessonId').value.trim() || `node_${province.toLowerCase().replace(/\s+/g,'_')}_${Date.now()}`;
+                await db.collection('imported_questions').doc(lessonId).set({ province, island, difficulty:el('importDifficulty').value, lessonId, questions, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
+                el('uploadPreview').textContent = JSON.stringify(questions, null, 2); showToast(`Đã lưu ${questions.length} câu hỏi.`);
+            } catch (error) { console.error(error); showToast(error.message || 'Không thể xử lý tệp.', 'error'); }
+            finally { button.disabled = false; button.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Bóc tách và cập nhật'; }
+        }
 
-        // Load initially — flexible RBAC (role-based, not email-only)
-        setTimeout(async () => {
-            const sessionData = localStorage.getItem('lm_session');
-            if (!sessionData) {
-                await Swal.fire({ icon: 'warning', title: 'Lưu ý', text: 'Vui lòng đăng nhập trước!' });
-                window.location.href = 'loginout.html';
-                return;
-            }
-            // DEV MODE: role-based access blocking is intentionally disabled.
-            JSON.parse(sessionData);
+        function permittedRoles() {
+            try {
+                const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+                const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
+                const result = [...new Set(source.map(role => String(role || '').toLowerCase()).filter(role => Boolean(roleRoutes[role])))];
+                return result.length ? result : ['user'];
+            } catch (error) { return ['user']; }
+        }
 
-            if(typeof db !== 'undefined') {
-                loadRequests();
-                loadUsers();
-            }
-            else document.getElementById('requestsList').innerText = "Firebase chưa khởi tạo!";
-        }, 1000);
+        function switchRole(role) {
+            const allowed = permittedRoles();
+            if (!allowed.includes(role)) { showToast('Bạn không có quyền chuyển sang vai trò này.', 'warning'); return; }
+            try { const session = JSON.parse(localStorage.getItem('lm_session') || '{}'); session.roles = allowed; session.role = role; session.activeRole = role; localStorage.setItem('lm_session', JSON.stringify(session)); } catch (error) { console.warn(error); }
+            window.location.href = roleRoutes[role];
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.adminTab)));
+            el('searchUser').addEventListener('input', renderUsers);
+            el('fileUpload').addEventListener('change', event => { el('fileNameDisplay').textContent = event.target.files[0] ? `Đã chọn: ${event.target.files[0].name}` : 'Chưa có tệp được chọn.'; });
+            el('btnProcessUpload').addEventListener('click', processUpload);
+            document.addEventListener('change', event => { if (event.target.matches('[data-role-user]')) updateUserRole(event.target.dataset.roleUser, event.target.value); });
+            document.addEventListener('click', event => {
+                const target = event.target.closest('button'); if (!target) return;
+                if (target.dataset.kickUser) kickUser(target.dataset.kickUser);
+                if (target.dataset.premiumApprove) updateRequest(target.dataset.premiumApprove, target.dataset.premiumEmail, 'approved');
+                if (target.dataset.premiumReject) updateRequest(target.dataset.premiumReject, '', 'rejected');
+                if (target.dataset.replayUser) showToast('Điểm tích hợp rrweb đã sẵn sàng; chưa có bản ghi replay cho phiên này.', 'info');
+            });
+            if (permittedRoles().length < 2) el('adminRoleButton').hidden = true;
+            el('adminRoleButton').addEventListener('click', async () => {
+                const allowed = permittedRoles();
+                if (allowed.length < 2) return;
+                const choice = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(allowed.map(role => [role, roleLabels[role]])),inputValue:allowed.includes('admin') ? 'admin' : allowed[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if (choice.isConfirmed) switchRole(choice.value);
+            });
+            el('adminLogout').addEventListener('click', () => { try { localStorage.removeItem('lm_session'); } finally { window.location.href = 'loginout.html'; } });
+            if (typeof db === 'undefined') { el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Firebase chưa sẵn sàng'; return; }
+            el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80"></i> Firebase đã kết nối';
+            Promise.all([loadOverview(), loadUsers(), loadRequests()]).catch(error => console.error(error));
+        });
+    })();
     </script>
 </body>
 </html>

@@ -12,7 +12,7 @@
         { tag: 'Tự nhiên', prompt: 'Biện pháp nào phù hợp nhất để sử dụng bền vững tài nguyên thiên nhiên ở Việt Nam?' }
     ];
 
-    const questions = Array.from({ length: 40 }, (_, index) => {
+    const fallbackQuestions = Array.from({ length: 40 }, (_, index) => {
         const topic = topicBank[index % topicBank.length];
         const correct = index % answerLabels.length;
         return {
@@ -30,6 +30,8 @@
     });
 
     const elements = {};
+    let questions = [];
+    let selectedExamConfig = null;
     let currentIndex = 0;
     let timeLeft = EXAM_DURATION_SECONDS;
     let timerId = null;
@@ -47,8 +49,129 @@
         [
             'examTimer', 'examQuestionCounter', 'examQuestionTag', 'examQuestionText',
             'examOptions', 'examPrevious', 'examMark', 'examNext', 'examAnsweredCount',
-            'examQuestionNav', 'examSubmit'
+            'examQuestionNav', 'examSubmit', 'examArenaTitle', 'examArenaSubtitle',
+            'examSetupModal', 'examSetupForm', 'examSetupTitle', 'examSetupGrade',
+            'examSetupDifficulty', 'examSetupTopic', 'examSetupStart'
         ].forEach((id) => { elements[id] = getElement(id); });
+    }
+
+    function titleForGrade(grade) {
+        if (Number(grade) === 5) return 'Đấu trường luyện thi THCS';
+        if (Number(grade) === 9) return 'Luyện thi THPT';
+        return 'Luyện thi THPTQG';
+    }
+
+    function updateSetupTitle() {
+        const title = titleForGrade(elements.examSetupGrade?.value);
+        if (elements.examSetupTitle) elements.examSetupTitle.textContent = title;
+    }
+
+    function readExamConfig() {
+        const grade = Number(elements.examSetupGrade?.value || 5);
+        return {
+            grade,
+            difficulty: elements.examSetupDifficulty?.value || 'easy',
+            topic: elements.examSetupTopic?.value || 'Atlat',
+            title: titleForGrade(grade)
+        };
+    }
+
+    function shuffle(items) {
+        const result = [...items];
+        for (let index = result.length - 1; index > 0; index -= 1) {
+            const target = Math.floor(Math.random() * (index + 1));
+            [result[index], result[target]] = [result[target], result[index]];
+        }
+        return result;
+    }
+
+    function answerIndex(answer, options) {
+        if (Number.isInteger(answer) && answer >= 0 && answer < options.length) return answer;
+        const numeric = Number(answer);
+        if (Number.isInteger(numeric) && numeric >= 0 && numeric < options.length) return numeric;
+        const letter = String(answer || '').trim().toUpperCase();
+        if (answerLabels.includes(letter)) return answerLabels.indexOf(letter);
+        const matchingOption = options.findIndex((option) => String(option).trim() === String(answer).trim());
+        return matchingOption >= 0 ? matchingOption : 0;
+    }
+
+    function normalizeQuestion(id, data, number) {
+        const options = Array.isArray(data.options)
+            ? data.options
+            : [data.optionA, data.optionB, data.optionC, data.optionD].filter((option) => option !== undefined && option !== null);
+        if (options.length < 2) return null;
+        return {
+            id: String(id),
+            number,
+            tag: data.topic || data.tag || 'Địa lí Việt Nam',
+            text: data.text || data.question || data.content || 'Câu hỏi chưa có nội dung.',
+            options: options.slice(0, 4),
+            correct: answerIndex(data.correctAnswer ?? data.correct ?? data.answer, options)
+        };
+    }
+
+    async function fetchExamQuestions(config) {
+        let remoteQuestions = [];
+        if (typeof db !== 'undefined') {
+            try {
+                // Admin reminder: every questions document must contain grade (5/9/12), topic and difficulty.
+                const selectedGrade = config.grade;
+                const snapshot = await db.collection('questions').where("grade", "==", selectedGrade).get();
+                remoteQuestions = snapshot.docs
+                    .map((document, index) => normalizeQuestion(document.id, document.data() || {}, index + 1))
+                    .filter(Boolean)
+                    .filter((question) => {
+                        const source = snapshot.docs.find((document) => String(document.id) === question.id)?.data() || {};
+                        return (!source.topic || source.topic === config.topic) && (!source.difficulty || source.difficulty === config.difficulty);
+                    });
+            } catch (error) {
+                console.warn('Không thể tải đề Firebase, dùng đề minh họa an toàn.', error);
+            }
+        }
+
+        const source = remoteQuestions.length >= 40 ? shuffle(remoteQuestions).slice(0, 40) : fallbackQuestions.map((question, index) => ({
+            ...question,
+            id: `demo-${config.grade}-${config.topic}-${index + 1}`,
+            number: index + 1,
+            tag: config.topic,
+            text: `${question.text} — Lớp ${config.grade}, mức ${config.difficulty}`
+        }));
+        return source.map((question, index) => ({ ...question, number: index + 1 }));
+    }
+
+    async function startExamFromSetup(event) {
+        event?.preventDefault();
+        selectedExamConfig = readExamConfig();
+        const startButton = elements.examSetupStart;
+        if (startButton) {
+            startButton.disabled = true;
+            startButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải đề…';
+        }
+
+        try {
+            questions = await fetchExamQuestions(selectedExamConfig);
+            currentIndex = 0;
+            timeLeft = EXAM_DURATION_SECONDS;
+            submitted = false;
+            answers.clear();
+            marked.clear();
+            questionMetrics.clear();
+            questionStartedAt = Date.now();
+            if (elements.examArenaTitle) elements.examArenaTitle.textContent = selectedExamConfig.title;
+            if (elements.examArenaSubtitle) elements.examArenaSubtitle.textContent = `Đề 40 câu · Lớp ${selectedExamConfig.grade} · ${selectedExamConfig.topic} · ${selectedExamConfig.difficulty}`;
+            if (elements.examSetupModal) elements.examSetupModal.style.display = 'none';
+            renderQuestion();
+            renderNavigator();
+            startTimer();
+        } catch (error) {
+            console.error('Không thể khởi tạo đề thi:', error);
+            if (window.Swal) Swal.fire({ icon: 'error', title: 'Chưa thể khởi tạo đề', text: 'Vui lòng thử lại.' });
+        } finally {
+            if (startButton) {
+                startButton.disabled = false;
+                startButton.innerHTML = '<i class="fa-solid fa-play"></i> Bắt đầu làm đề';
+            }
+        }
     }
 
     function formatTime(seconds) {
@@ -68,7 +191,7 @@
 
     function renderQuestion() {
         const question = questions[currentIndex];
-        elements.examQuestionCounter.textContent = `Câu ${question.id} / ${questions.length}`;
+        elements.examQuestionCounter.textContent = `Câu ${question.number || currentIndex + 1} / ${questions.length}`;
         elements.examQuestionTag.textContent = question.tag;
         elements.examQuestionText.textContent = question.text;
         elements.examOptions.innerHTML = '';
@@ -113,8 +236,8 @@
             const hasAnswer = answers.has(question.id);
             const isMarked = marked.has(question.id);
             button.type = 'button';
-            button.textContent = question.id;
-            button.setAttribute('aria-label', `Đi tới câu ${question.id}`);
+            button.textContent = question.number || index + 1;
+            button.setAttribute('aria-label', `Đi tới câu ${question.number || index + 1}`);
             button.className = `exam-nav-number${index === currentIndex ? ' is-current' : ''}${hasAnswer ? ' is-answered' : ''}${isMarked ? ' is-marked' : ''}`;
             button.addEventListener('click', () => goToQuestion(index));
             elements.examQuestionNav.appendChild(button);
@@ -174,7 +297,10 @@
         const correct = telemetry.filter((item) => item.isCorrect).length;
         const result = {
             source: 'exam-arena',
-            title: 'Đấu trường Luyện thi THPT',
+            title: selectedExamConfig?.title || 'Đấu trường Luyện thi',
+            grade: selectedExamConfig?.grade || null,
+            topic: selectedExamConfig?.topic || null,
+            difficulty: selectedExamConfig?.difficulty || null,
             score: correct,
             totalQuestions: questions.length,
             questions: telemetry,
@@ -212,8 +338,8 @@
         cacheElements();
         if (!elements.examQuestionText) return;
         bindEvents();
-        renderQuestion();
-        renderNavigator();
-        startTimer();
+        elements.examSetupGrade?.addEventListener('change', updateSetupTitle);
+        elements.examSetupForm?.addEventListener('submit', startExamFromSetup);
+        updateSetupTitle();
     });
 }());

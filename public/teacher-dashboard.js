@@ -26,6 +26,15 @@
     document.addEventListener('DOMContentLoaded', () => {
         const button = document.getElementById('createClassCode');
         const feedback = document.getElementById('classCodeFeedback');
+        const search = document.getElementById('teacherClassSearch');
+
+        search?.addEventListener('input', event => {
+            const keyword = event.target.value.toLowerCase().trim();
+            document.querySelectorAll('.teacher-class-card').forEach(card => {
+                card.classList.toggle('hidden', Boolean(keyword && !card.textContent.toLowerCase().includes(keyword)));
+            });
+        });
+
         if (!button) return;
 
         button.addEventListener('click', async () => {

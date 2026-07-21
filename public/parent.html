@@ -28,7 +28,7 @@
                 <div id="parentRoleDrop" style="display: none; position: absolute; top: 100%; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
                     <a href="map.html" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
                     <a href="parent.html" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                    <a href="cs.html" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
+                    <a href="/cs-dashboard" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
                     <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
                 </div>
             </div>
@@ -108,15 +108,36 @@
         if(!role) return;
         try {
             var session = JSON.parse(localStorage.getItem('lm_session')) || {};
-            const normalizedRole = role === 'map' ? 'user' : role;
-            const roleLinks = { user: 'map.html', parent: 'parent.html', cs: 'cs.html', admin: 'admin.html', teacher: 'teacher-dashboard.html' };
+            const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
+            const normalizedRole = aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase();
+            const roleLinks = { user: '/map', parent: '/parent-dashboard', cs: '/cs-dashboard', admin: '/admin-dashboard', teacher: '/teacher-dashboard' };
+            const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
+            const allowedRoles = [...new Set(source.map(item => aliases[String(item || '').toLowerCase()] || String(item || '').toLowerCase()).filter(item => Boolean(roleLinks[item])))];
+            if (!allowedRoles.includes(normalizedRole)) { if (window.Swal) Swal.fire({icon:'warning',title:'Không có quyền truy cập',text:'Vai trò này chưa được cấp cho tài khoản của bạn.'}); return false; }
+            session.roles = allowedRoles;
             session.role = normalizedRole;
             session.activeRole = normalizedRole;
             localStorage.setItem('lm_session', JSON.stringify(session));
-            window.location.href = roleLinks[normalizedRole] || roleLinks.user;
+            window.location.href = roleLinks[normalizedRole];
         } catch(e) { console.error('switchRole error:', e); }
         return false;
     };
+    document.addEventListener('DOMContentLoaded', () => {
+        try {
+            const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+            const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
+            const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
+            const allowedRoles = [...new Set(source.map(role => aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase()))];
+            const drop = document.getElementById('parentRoleDrop');
+            const wrap = drop?.parentElement;
+            if (!drop || !wrap) return;
+            if (allowedRoles.length < 2) { wrap.style.display = 'none'; return; }
+            drop.querySelectorAll('a[onclick]').forEach((link) => {
+                const match = link.getAttribute('onclick').match(/'([^']+)'/);
+                if (!match || !allowedRoles.includes(match[1])) link.remove();
+            });
+        } catch (error) { console.warn('Không thể dựng danh sách quyền:', error); }
+    });
     </script>
 </body>
 </html>

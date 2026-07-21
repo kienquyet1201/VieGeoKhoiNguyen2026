@@ -14,7 +14,7 @@ const nextConfig = {
       { source: '/user-dashboard',    destination: '/map.html',               permanent: false },
       { source: '/map-dashboard',     destination: '/map.html',               permanent: false },
       { source: '/admin-dashboard',   destination: '/admin.html',             permanent: false },
-      { source: '/cs-dashboard',      destination: '/cs.html',                permanent: false },
+      { source: '/cs-dashboard',      destination: '/cs-dashboard.html',      permanent: false },
       { source: '/teacher-dashboard', destination: '/teacher-dashboard.html', permanent: false },
       { source: '/parent-dashboard',  destination: '/parent.html',            permanent: false },
     ];

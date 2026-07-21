@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo | CS Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <main class="operations-main" style="max-width:1540px;margin:0 auto">
+        <header class="operations-heading">
+            <div><h1><i class="fa-solid fa-headset" style="color:#38bdf8"></i> CS Portal</h1><p>Tiếp nhận và giải đáp yêu cầu học sinh theo thời gian thực.</p></div>
+            <div style="display:flex;gap:8px"><button class="ops-button is-muted" id="csRoleSwitch" type="button"><i class="fa-solid fa-users-gear"></i> Đổi vai trò</button><button class="ops-button is-muted" id="csBackToMap" type="button" title="Về không gian học tập"><i class="fa-solid fa-graduation-cap"></i> Không gian học tập</button></div>
+        </header>
+        <section class="cs-portal" aria-label="Không gian chăm sóc khách hàng">
+            <aside class="cs-queues">
+                <div class="cs-queue-head"><h2>Hàng đợi hỗ trợ</h2><label><span class="sr-only">Tìm hội thoại</span><input class="ops-search" id="csSearchInput" type="search" placeholder="Tìm học sinh hoặc tin nhắn" autocomplete="off"></label></div>
+                <div class="cs-queue-list" id="csQueueList"><p class="ops-muted" style="padding:12px">Đang tải hàng đợi…</p></div>
+            </aside>
+            <section class="cs-thread">
+                <header class="cs-thread-head"><div><h2 id="csThreadTitle">Chọn một cuộc hội thoại</h2><p id="csThreadMeta">Hàng đợi chat sẽ hiển thị ở cột bên trái.</p></div><span class="ops-muted" id="csPresence">CSKH online</span></header>
+                <div class="cs-thread-messages" id="csMessages"><div class="cs-empty"><div><i class="fa-solid fa-comments" style="font-size:2rem"></i><p>Chọn một học sinh để bắt đầu hỗ trợ.</p></div></div></div>
+                <form class="cs-composer" id="csComposer"><input id="csMessageInput" type="text" maxlength="1000" placeholder="Nhập phản hồi cho học sinh…" disabled><button class="ops-button" type="submit" id="csSendButton" disabled><i class="fa-solid fa-paper-plane"></i> Gửi</button></form>
+            </section>
+        </section>
+    </main>
+    <script>
+    (() => {
+        'use strict';
+        const el = id => document.getElementById(id); let conversations = []; let currentConversation = null; let unsubscribeMessages = null;
+        const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+        const nameFor = item => item.name || item.email || item.id || 'Học sinh VieGeo';
+        const show = (message, icon='info') => window.Swal ? Swal.fire({toast:true,position:'top-end',timer:2400,showConfirmButton:false,title:message,icon,background:'#102238',color:'#fff'}) : console.info(message);
+        const session = () => { try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); } catch { return {}; } };
+
+        function renderQueue() {
+            const term = el('csSearchInput').value.trim().toLowerCase(); const list = el('csQueueList');
+            if (!conversations.length) { list.innerHTML = '<p class="ops-muted" style="padding:12px">Chưa có yêu cầu hỗ trợ mới.</p>'; return; }
+            list.innerHTML = conversations.map(item => { const haystack = `${nameFor(item)} ${item.email || ''} ${item.lastMessage || ''}`.toLowerCase(); const initial = nameFor(item).trim().charAt(0).toUpperCase(); return `<button class="cs-queue-row${currentConversation === item.id ? ' is-active' : ''}${term && !haystack.includes(term) ? ' hidden' : ''}" type="button" data-conversation-id="${escapeHtml(item.id)}"><span class="cs-avatar">${escapeHtml(initial)}</span><span class="cs-queue-name">${escapeHtml(nameFor(item))}</span><span class="cs-queue-preview">${escapeHtml(item.lastMessage || 'Yêu cầu hỗ trợ mới')}</span></button>`; }).join('');
+        }
+
+        function renderMessages(snapshot) {
+            const container = el('csMessages'); const messages = snapshot.docs.map(doc => ({id:doc.id,...doc.data()})).sort((a,b) => (a.createdAtClient || 0) - (b.createdAtClient || 0));
+            container.innerHTML = messages.length ? messages.map(message => { const staff = message.sender === 'staff' || message.sender === 'assistant'; return `<article class="cs-bubble${staff ? ' is-staff' : ''}"><small>${staff ? 'CSKH VieGeo' : 'Học sinh'}</small><p>${escapeHtml(message.text || (message.imageUrl ? 'Đã gửi hình ảnh.' : ''))}</p>${message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="Ảnh đính kèm" style="max-width:100%;margin-top:8px;border-radius:9px">` : ''}</article>`; }).join('') : '<div class="cs-empty">Chưa có tin nhắn trong cuộc hội thoại này.</div>';
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function selectConversation(id) {
+            const item = conversations.find(conversation => conversation.id === id); if (!item || typeof db === 'undefined') return;
+            currentConversation = id; renderQueue();
+            el('csThreadTitle').textContent = nameFor(item); el('csThreadMeta').textContent = item.email || id; el('csMessageInput').disabled = false; el('csSendButton').disabled = false;
+            if (unsubscribeMessages) unsubscribeMessages();
+            unsubscribeMessages = db.collection('support_conversations').doc(id).collection('messages').onSnapshot(renderMessages, error => { console.error(error); show('Không thể tải tin nhắn.', 'error'); });
+            db.collection('support_conversations').doc(id).set({ unreadForStaff:false, updatedAtClient:Date.now() }, {merge:true}).catch(console.warn);
+        }
+
+        async function sendMessage(event) {
+            event.preventDefault(); const input = el('csMessageInput'); const text = input.value.trim(); if (!text || !currentConversation) return;
+            try {
+                const ref = db.collection('support_conversations').doc(currentConversation);
+                await ref.collection('messages').add({ sender:'staff', text, createdAt:firebase.firestore.FieldValue.serverTimestamp(), createdAtClient:Date.now(), staffEmail:session().email || 'support@viegeo' });
+                await ref.set({ lastMessage:text, updatedAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAtClient:Date.now(), unreadForStudent:true }, {merge:true}); input.value = '';
+            } catch (error) { console.error(error); show('Không thể gửi phản hồi.', 'error'); }
+        }
+
+        const roleLabels = { user: 'Học sinh', teacher: 'Giáo viên', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Admin' };
+        const roleUrls = { user: '/map', parent: '/parent-dashboard', teacher: '/teacher-dashboard', cs: '/cs-dashboard', admin: '/admin-dashboard' };
+        function allowedRoles() { const data = session(); const source = Array.isArray(data.roles) ? data.roles : [data.role || data.activeRole]; const roles = [...new Set(source.map(role => String(role || '').toLowerCase()).filter(role => Boolean(roleUrls[role])))]; return roles.length ? roles : ['user']; }
+        function navigateRole(role) { const data = session(); const roles = allowedRoles(); if (!roles.includes(role)) { show('Bạn không có quyền chuyển sang vai trò này.', 'warning'); return; } data.roles = roles; data.role = role; data.activeRole = role; localStorage.setItem('lm_session',JSON.stringify(data)); window.location.href = roleUrls[role]; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            el('csSearchInput').addEventListener('input', renderQueue); el('csComposer').addEventListener('submit', sendMessage); el('csQueueList').addEventListener('click', event => { const row = event.target.closest('[data-conversation-id]'); if (row) selectConversation(row.dataset.conversationId); });
+            el('csBackToMap').addEventListener('click', () => navigateRole('user'));
+            if (allowedRoles().length < 2) el('csRoleSwitch').hidden = true;
+            el('csRoleSwitch').addEventListener('click', async () => { const roles = allowedRoles(); if (roles.length < 2) return; const result = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(roles.map(role => [role, roleLabels[role]])),inputValue:roles.includes('cs') ? 'cs' : roles[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if(result.isConfirmed) navigateRole(result.value); });
+            if (typeof db === 'undefined') { el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Firebase chưa sẵn sàng.</p>'; return; }
+            db.collection('support_conversations').orderBy('updatedAtClient','desc').limit(100).onSnapshot(snapshot => { conversations=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})); renderQueue(); }, error => { console.error(error); el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Không thể tải hàng đợi hỗ trợ.</p>'; });
+        });
+    })();
+    </script>
+</body>
+</html>

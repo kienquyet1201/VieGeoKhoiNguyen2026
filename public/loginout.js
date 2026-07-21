@@ -2,12 +2,75 @@
 // VieGeo - loginout.js (Auth Logic with Firebase)
 // ============================================================================
 
+const ROLE_DESTINATIONS = Object.freeze({
+    user: '/map',
+    parent: '/parent-dashboard',
+    teacher: '/teacher-dashboard',
+    cs: '/cs-dashboard',
+    admin: '/admin-dashboard'
+});
+
+function normalizeRole(role) {
+    const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs' };
+    const value = String(role || '').trim().toLowerCase();
+    return aliases[value] || value;
+}
+
+function getUserRoles(user) {
+    const source = Array.isArray(user && user.roles)
+        ? user.roles
+        : [user && (user.activeRole || user.role)];
+    const roles = [...new Set(source.map(normalizeRole).filter((role) => Boolean(ROLE_DESTINATIONS[role])))];
+    return roles.length ? roles : ['user'];
+}
+
+function destinationForRole(role) {
+    return ROLE_DESTINATIONS[normalizeRole(role)] || ROLE_DESTINATIONS.user;
+}
+
+function toDayKey(value) {
+    if (value === undefined || value === null || value === '') return '';
+    const date = typeof value.toDate === 'function' ? value.toDate() : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function daysBetween(dayA, dayB) {
+    if (!dayA || !dayB) return NaN;
+    const [yearA, monthA, dateA] = dayA.split('-').map(Number);
+    const [yearB, monthB, dateB] = dayB.split('-').map(Number);
+    return Math.round((Date.UTC(yearB, monthB - 1, dateB) - Date.UTC(yearA, monthA - 1, dateA)) / 86400000);
+}
+
+async function updateStreakOnLogin(email, userData) {
+    const todayKey = toDayKey(new Date());
+    const previousKey = toDayKey(userData.lastLoginDate || userData.lastLogin);
+    const diffDays = daysBetween(previousKey, todayKey);
+    let streak = Math.max(0, Number(userData.currentStreak ?? userData.streak ?? 0) || 0);
+
+    if (!previousKey) streak = Math.max(1, streak + 1);
+    else if (diffDays === 1) streak = Math.max(1, streak + 1);
+    else if (diffDays > 1) streak = 1;
+
+    const loginUpdate = {
+        streak,
+        currentStreak: streak,
+        lastLogin: new Date().toISOString(),
+        lastLoginDate: todayKey
+    };
+    await db.collection('users').doc(email).set(loginUpdate, { merge: true });
+    Object.assign(userData, loginUpdate);
+    return loginUpdate;
+}
+
 const currentSession = localStorage.getItem('lm_session');
 if (currentSession) {
     try {
         const savedSession = JSON.parse(currentSession);
-        const savedRole = savedSession.activeRole || savedSession.role || 'user';
-        window.location.replace('/' + savedRole + '-dashboard');
+        const savedRoles = getUserRoles(savedSession);
+        const savedRole = normalizeRole(savedSession.activeRole || savedSession.role);
+        const role = savedRoles.includes(savedRole) ? savedRole : savedRoles[0];
+        window.location.replace(destinationForRole(role));
     } catch (error) {
         console.error('Invalid saved session:', error);
         localStorage.removeItem('lm_session');
@@ -85,42 +148,16 @@ if (loginForm) {
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 if (userData.password === pass) {
-                    // STREAK LOGIC
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    
-                    let newStreak = Number(userData.currentStreak ?? userData.streak ?? 0);
-                    let lastLogin = (userData.lastLoginDate || userData.lastLogin)
-                        ? new Date(userData.lastLoginDate || userData.lastLogin)
-                        : new Date(0);
-                    lastLogin.setHours(0, 0, 0, 0);
-                    
-                    const diffDays = Math.floor((today - lastLogin) / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays === 1) {
-                        newStreak += 1;
-                    } else if (diffDays > 1) {
-                        newStreak = 0;
-                    }
-                    
-                    await db.collection('users').doc(email).update({
-                        streak: newStreak,
-                        currentStreak: newStreak,
-                        lastLogin: new Date().toISOString(),
-                        lastLoginDate: new Date().toISOString()
-                    });
+                    await updateStreakOnLogin(email, userData);
                     
                     // Cập nhật lại vào object để dùng cho localStorage
-                    userData.streak = newStreak;
-                    userData.currentStreak = newStreak;
+                    // updateStreakOnLogin has already synchronized the in-memory user data.
                     
                                         // RBAC check
-                    let userRoles = userData.roles || ['user'];
-                    if (email === 'kienquyet1201@gmail.com') {
-                        userRoles = ['admin', 'user', 'cs'];
-                        userData.role = 'admin'; // Override role state for client
-                        db.collection('users').doc(email).set({ role: 'admin', email: 'kienquyet1201@gmail.com', roles: userRoles }, { merge: true }); // Write to Firestore
-                    }
+                    const userRoles = getUserRoles(userData);
+                    const activeRole = userRoles.includes(normalizeRole(userData.role))
+                        ? normalizeRole(userData.role)
+                        : userRoles[0];
                     
                     if (userRoles.length > 1) {
                         // Multi-role Gateway
@@ -145,8 +182,8 @@ if (loginForm) {
                                 btnRole.onmouseout = () => btnRole.style.background = 'rgba(255,255,255,0.1)';
                                 
                                 btnRole.onclick = () => {
-                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: r, roles: userRoles, role: userData.role || r }));
-                                    window.location.href = rd.url;
+                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: r, roles: userRoles, role: activeRole, streak: userData.currentStreak }));
+                                    window.location.href = destinationForRole(r);
                                 };
                                 container.appendChild(btnRole);
                             });
@@ -155,21 +192,19 @@ if (loginForm) {
                         }
                     } else {
                         // Single role redirect
-                        const role = userRoles[0] || 'user';
-                        localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: role, roles: userRoles, role: userData.role || role }));
-                        
-                        if (role === 'admin') window.location.href = '/admin-dashboard';
-                        else if (role === 'cs') window.location.href = '/cs-dashboard';
-                        else if (role === 'teacher') window.location.href = '/teacher-dashboard';
-                        else if (role === 'parent') window.location.href = '/parent-dashboard';
-                        else {
+                        const role = activeRole;
+                        localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, activeRole: role, roles: userRoles, role, streak: userData.currentStreak }));
+
+                        if (role === 'user') {
                             const pendingAction = localStorage.getItem('pending_action');
                             if (pendingAction) {
                                 localStorage.removeItem('pending_action');
-                                window.location.href = MAP_PAGE + pendingAction;
+                                window.location.href = `${MAP_PAGE}${pendingAction.startsWith('?') ? pendingAction : ''}`;
                             } else {
-                                window.location.href = MAP_PAGE;
+                                window.location.href = destinationForRole(role);
                             }
+                        } else {
+                            window.location.href = destinationForRole(role);
                         }
                     }
                 } else {
@@ -311,7 +346,7 @@ if (btnConfirmOtp) {
                     email: tempRegData.email,
                     password: tempRegData.pass,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastLoginDate: new Date().toISOString(),
+                    lastLoginDate: toDayKey(new Date()),
                     xp: 0,
                     hearts: 2,
                     accountStatus: 'free',

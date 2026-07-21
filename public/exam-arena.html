@@ -17,8 +17,8 @@
         <header class="exam-topbar">
             <div>
                 <p class="exam-eyebrow"><i class="fa-solid fa-graduation-cap"></i> VieGeo Exam Prep</p>
-                <h1>Đấu trường Luyện thi THPT</h1>
-                <p>Đề luyện 40 câu · Bám sát nhịp làm bài trong 50 phút</p>
+                <h1 id="examArenaTitle">Đấu trường Luyện thi</h1>
+                <p id="examArenaSubtitle">Chọn cấu hình đề trước khi bắt đầu 40 câu hỏi trong 50 phút</p>
             </div>
             <div class="exam-topbar-actions">
                 <a class="exam-back-link" href="map.html"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
@@ -62,6 +62,39 @@
             </aside>
         </div>
     </main>
+
+    <div id="examSetupModal" class="exam-setup-modal" role="dialog" aria-modal="true" aria-labelledby="examSetupTitle">
+        <form id="examSetupForm" class="exam-setup-card">
+            <p class="exam-eyebrow"><i class="fa-solid fa-sliders"></i> Thiết lập đề luyện</p>
+            <h2 id="examSetupTitle">Đấu trường luyện thi THCS</h2>
+            <p>Chọn lớp, độ khó và chủ đề. VieGeo sẽ tải đúng nhóm câu hỏi phù hợp từ Firebase.</p>
+            <label for="examSetupGrade">Lớp học
+                <select id="examSetupGrade" required>
+                    <option value="5">Lớp 5</option>
+                    <option value="9">Lớp 9</option>
+                    <option value="12">Lớp 12</option>
+                </select>
+            </label>
+            <label for="examSetupDifficulty">Mức độ
+                <select id="examSetupDifficulty" required>
+                    <option value="easy">Dễ</option>
+                    <option value="medium">Trung bình</option>
+                    <option value="hard">Khó</option>
+                </select>
+            </label>
+            <label for="examSetupTopic">Chủ đề kiến thức
+                <select id="examSetupTopic" required>
+                    <option value="Atlat">Atlat & kỹ năng địa lí</option>
+                    <option value="Biểu đồ">Biểu đồ</option>
+                    <option value="Kinh tế vùng">Kinh tế vùng</option>
+                    <option value="Dân cư">Dân cư</option>
+                    <option value="Tự nhiên">Điều kiện tự nhiên</option>
+                </select>
+            </label>
+            <p class="exam-setup-note"><i class="fa-solid fa-database"></i> Quản trị viên cần khai báo <code>grade</code>, <code>topic</code> và <code>difficulty</code> cho mọi tài liệu trong collection <code>questions</code>.</p>
+            <button id="examSetupStart" class="exam-primary-btn" type="submit"><i class="fa-solid fa-play"></i> Bắt đầu làm đề</button>
+        </form>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>

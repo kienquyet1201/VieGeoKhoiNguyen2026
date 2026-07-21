@@ -44,19 +44,10 @@
                 </button>
             </nav>
             <!-- Role Switcher -->
-            <div style="margin-top: auto; padding: 15px;">
-                <div style="position: relative;" id="roleSwitcherWrap">
-                    <button class="nav-btn" onclick="document.getElementById('roleSwitcherDrop').style.display = document.getElementById('roleSwitcherDrop').style.display === 'block' ? 'none' : 'block'" style="width: 100%; text-align: left;">
-                        <i class="fa-solid fa-users-gear"></i>
-                        <span>Đổi Quyền</span>
-                    </button>
-                    <div id="roleSwitcherDrop" style="display: none; position: absolute; bottom: 100%; left: 0; background: var(--bg-card, #1e293b); border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
-                        <a href="map.html" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
-                        <a href="parent.html" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                        <a href="cs.html" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
-                        <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
-                    </div>
-                </div>
+            <div id="roleSwitcherWrap" class="user-role-switcher" style="margin-top:auto; margin-inline:15px;" hidden>
+                <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+                <label class="sr-only" for="roleSwitcherSelect">Đổi quyền</label>
+                <select id="roleSwitcherSelect" title="Đổi quyền" aria-label="Đổi quyền"></select>
             </div>
         </aside>
 
