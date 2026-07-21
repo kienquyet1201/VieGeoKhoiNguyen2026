@@ -81,11 +81,11 @@ window.switchRoleClientOnly = function switchRoleClientOnly(role) {
         if (!role) return false;
         const normalizedRole = normalizeRole(role);
         const roleLinks = {
-            user: 'map.html',
-            parent: 'parent.html',
+            user: '/map',
+            parent: '/parent',
             cs: '/cs-dashboard',
-            admin: 'admin.html',
-            teacher: 'teacher-dashboard.html'
+            admin: '/admin',
+            teacher: '/teacher-dashboard'
         };
         const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
         const roles = authorizedRoles(session);
@@ -107,7 +107,7 @@ if (!sessionData) {
     if (window.location.search) {
         localStorage.setItem('pending_action', window.location.search);
     }
-    window.location.href = 'loginout.html';
+    window.location.href = '/loginout';
 }
 let sessionUser = {};
 try {
@@ -115,8 +115,21 @@ try {
 } catch (error) {
     console.error('Dữ liệu phiên đăng nhập không hợp lệ:', error);
     localStorage.removeItem('lm_session');
-    window.location.replace('loginout.html');
+    window.location.replace('/loginout');
 }
+
+const legacyGetGameState = getGameState;
+getGameState = function getHeartAwareGameState() {
+    const storedHearts = readStoredHeartSnapshot();
+    const state = legacyGetGameState();
+    if (storedHearts) {
+        state.hearts = storedHearts.hearts;
+        state.lastHeartUpdate = storedHearts.lastHeartUpdate;
+    }
+    normalizeHeartState(state);
+    writeHeartSnapshot(state);
+    return state;
+};
 
 let gameState = getGameState();
 
@@ -141,12 +154,18 @@ function setupRealtimeAuth() {
                 await db.collection('users').doc(sessionUser.email).update({ forceLogout: false });
                 localStorage.clear();
                 await VieGeoUI.warning("Tài khoản của bạn đã bị Quản trị viên đăng xuất khỏi hệ thống!");
-                window.location.href = 'loginout.html';
+                window.location.href = '/loginout';
                 return;
             }
 
             gameState.xp = data.xp || 0;
-            gameState.hearts = data.hearts || 5;
+            const isHeartModelMigration = data.lastHeartUpdate === undefined;
+            const remoteHeartUpdate = readHeartTimestamp(data.lastHeartUpdate ?? data.lastHeartRegenTime);
+            if (!heartRemoteHydrated || remoteHeartUpdate >= readHeartTimestamp(gameState.lastHeartUpdate)) {
+                gameState.hearts = data.hearts !== undefined ? data.hearts : HEARTS_MAX;
+                gameState.lastHeartUpdate = remoteHeartUpdate;
+                heartRemoteHydrated = true;
+            }
             gameState.streak = Number(data.currentStreak ?? data.streak ?? 0);
             gameState.gems = data.gems || 0;
             if (data.lastLogin) gameState.lastLogin = data.lastLogin;
@@ -156,7 +175,6 @@ function setupRealtimeAuth() {
             gameState.avatarIsBase64 = data.avatarIsBase64 || false;
             // Cập nhật lại accountStatus từ server phòng khi Admin duyệt Premium
             gameState.accountStatus = data.accountStatus || 'free';
-            gameState.lastHeartRegenTime = data.lastHeartRegenTime || Date.now();
             if (data.learningProfile && typeof data.learningProfile === 'object') {
                 gameState.learningProfile = { ...gameState.learningProfile, ...data.learningProfile };
             }
@@ -171,14 +189,13 @@ function setupRealtimeAuth() {
             persistSessionRoles(roles, sessionUser.activeRole);
             renderRoleSwitcher(sessionUser);
             
-            // Cập nhật lại giới hạn tim ngay lập tức
-            const maxHearts = gameState.accountStatus === 'premium' ? 10 : 2;
-            if (gameState.hearts > maxHearts) {
-                gameState.hearts = maxHearts;
+            normalizeHeartState(gameState);
+            if (isHeartModelMigration && gameState.hearts >= HEARTS_MAX) {
+                gameState.lastHeartUpdate = Date.now();
             }
-
-            // Lưu đè xuống LocalStorage
-            saveGameState(gameState);
+            writeHeartStateToLocal();
+            syncHearts();
+            if (isHeartModelMigration) persistHearts();
             
             // Cập nhật lại UI
             if(typeof updateHeaderStats === 'function') updateHeaderStats();
@@ -214,76 +231,199 @@ setInterval(() => {
     }
 }, 30000); // Mỗi 30 giây báo cáo đang hoạt động
 
-// ── GLOBAL STATS UI & TIMERS ──
+// ── HEART ECONOMY: one canonical 30-minute regeneration flow ──
+const HEARTS_MAX = 5;
+const HEART_REGEN_MS = 30 * 60 * 1000;
 let heartTimerInterval = null;
+let heartRemoteHydrated = false;
+
+function readHeartTimestamp(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (value instanceof Date) return value.getTime();
+    if (value && typeof value.toMillis === 'function') return value.toMillis();
+    if (value && Number.isFinite(value.seconds)) return value.seconds * 1000;
+    return Date.now();
+}
+
+function readStoredHeartSnapshot() {
+    try {
+        const stored = JSON.parse(localStorage.getItem('VieGeo_state') || 'null');
+        if (!stored || typeof stored !== 'object' || stored.hearts === undefined) return null;
+        return {
+            hearts: Math.min(HEARTS_MAX, Math.max(0, Math.floor(Number(stored.hearts) || 0))),
+            lastHeartUpdate: readHeartTimestamp(stored.lastHeartUpdate ?? stored.lastHeartRegenTime)
+        };
+    } catch (error) {
+        return null;
+    }
+}
+
+function normalizeHeartState(state, now = Date.now()) {
+    if (!state || typeof state !== 'object') return state;
+    state.hearts = Math.min(HEARTS_MAX, Math.max(0, Math.floor(Number(state.hearts) || 0)));
+    state.lastHeartUpdate = readHeartTimestamp(state.lastHeartUpdate ?? state.lastHeartRegenTime ?? now);
+    if (state.lastHeartUpdate > now) state.lastHeartUpdate = now;
+    return state;
+}
+
+function writeHeartStateToLocal() {
+    try {
+        localStorage.setItem('VieGeo_state', JSON.stringify(gameState));
+    } catch (error) {
+        console.warn('Không thể lưu Trái tim trên thiết bị.', error);
+    }
+}
+
+function writeHeartSnapshot(state) {
+    try {
+        const stored = JSON.parse(localStorage.getItem('VieGeo_state') || 'null') || {};
+        stored.hearts = state.hearts;
+        stored.lastHeartUpdate = state.lastHeartUpdate;
+        localStorage.setItem('VieGeo_state', JSON.stringify(stored));
+    } catch (error) {
+        console.warn('Không thể cập nhật mốc hồi Trái tim trên thiết bị.', error);
+    }
+}
+
+function persistHearts() {
+    writeHeartStateToLocal();
+    if (typeof db === 'undefined' || !sessionUser?.email) return;
+    db.collection('users').doc(sessionUser.email).set({
+        hearts: gameState.hearts,
+        lastHeartUpdate: gameState.lastHeartUpdate
+    }, { merge: true }).catch((error) => console.warn('Không thể đồng bộ Trái tim.', error));
+}
+
+function formatHeartCountdown(milliseconds) {
+    const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateHeartUi() {
+    const heartsElement = document.getElementById('hdrHearts');
+    const timerElement = document.getElementById('hdrHeartTimer');
+    if (heartsElement) heartsElement.textContent = String(gameState.hearts);
+    if (!timerElement) return;
+
+    if (gameState.hearts >= HEARTS_MAX) {
+        timerElement.hidden = true;
+        timerElement.textContent = '';
+        return;
+    }
+
+    const remaining = Math.max(0, HEART_REGEN_MS - (Date.now() - gameState.lastHeartUpdate));
+    timerElement.hidden = false;
+    timerElement.textContent = formatHeartCountdown(remaining);
+}
 
 function updateHeaderStats() {
-    const heartsElement = document.getElementById('hdrHearts');
     const streakElement = document.getElementById('hdrStreak');
     const gemsElement = document.getElementById('hdrGems');
-    if (streakElement) streakElement.textContent = gameState.streak ?? 0;
-    if (gemsElement) gemsElement.textContent = gameState.gems ?? 0;
     const trophyElement = document.getElementById('hdrTrophies');
     const levelElement = document.getElementById('hdrLevel');
+    if (streakElement) streakElement.textContent = gameState.streak ?? 0;
+    if (gemsElement) gemsElement.textContent = gameState.gems ?? 0;
     if (trophyElement) trophyElement.textContent = gameState.trophies ?? gameState.pvpWins ?? 0;
     if (levelElement) levelElement.textContent = Math.max(1, Math.floor((Number(gameState.xp) || 0) / 250) + 1);
-    if (!heartsElement) return;
-    
-    // Check Infinite Hearts
-    if (gameState.inventory && gameState.inventory.infiniteHeartsExpiry) {
-        const now = Date.now();
-        if (now < gameState.inventory.infiniteHeartsExpiry) {
-            if (!heartTimerInterval) {
-                heartTimerInterval = setInterval(updateHeaderStats, 1000);
-            }
-            const diff = gameState.inventory.infiniteHeartsExpiry - now;
-            const m = Math.floor(diff / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            heartsElement.innerHTML = `∞ <span style="font-size: 0.8rem; font-weight: normal;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
-            return;
-        } else {
-            // Expired
-            gameState.inventory.infiniteHeartsExpiry = null;
-            saveGameState(gameState);
-            if (heartTimerInterval) {
-                clearInterval(heartTimerInterval);
-                heartTimerInterval = null;
-            }
-        }
-    }
-    
-    // Hiển thị Trái tim & Đếm ngược
-    const maxHearts = gameState.accountStatus === 'premium' ? 10 : 2;
-    let heartHtml = gameState.hearts;
-    
-    if (gameState.hearts < maxHearts) {
-        if (!heartTimerInterval) {
-            heartTimerInterval = setInterval(() => {
-                // Force update state & check regen
-                gameState = getGameState();
-                updateHeaderStats();
-            }, 1000);
-        }
-        
-        const now = Date.now();
-        const diffMs = now - gameState.lastHeartRegenTime;
-        const msPerHeart = 60 * 60 * 1000; // 60 phút
-        const remainMs = msPerHeart - diffMs;
-        
-        if (remainMs > 0) {
-            const m = Math.floor(remainMs / 60000);
-            const s = Math.floor((remainMs % 60000) / 1000);
-            heartHtml = `${gameState.hearts} <span style="font-size: 0.8rem; font-weight: normal; color: #ff8c8c;">(${m}:${s < 10 ? '0' : ''}${s})</span>`;
-        }
-    } else {
-        if (heartTimerInterval) {
-            clearInterval(heartTimerInterval);
-            heartTimerInterval = null;
-        }
-    }
-    
-    heartsElement.innerHTML = heartHtml;
+    updateHeartUi();
 }
+
+function syncHearts() {
+    const now = Date.now();
+    normalizeHeartState(gameState, now);
+    let changed = false;
+
+    if (gameState.hearts < HEARTS_MAX) {
+        const elapsed = Math.max(0, now - gameState.lastHeartUpdate);
+        const heartsToAdd = Math.floor(elapsed / HEART_REGEN_MS);
+        if (heartsToAdd > 0) {
+            gameState.hearts = Math.min(HEARTS_MAX, gameState.hearts + heartsToAdd);
+            gameState.lastHeartUpdate = gameState.hearts >= HEARTS_MAX
+                ? now
+                : gameState.lastHeartUpdate + (heartsToAdd * HEART_REGEN_MS);
+            changed = true;
+        }
+    }
+
+    if (changed) persistHearts();
+    else writeHeartStateToLocal();
+    updateHeaderStats();
+    startHeartTimer();
+    return gameState.hearts;
+}
+
+function startHeartTimer() {
+    if (heartTimerInterval) {
+        clearInterval(heartTimerInterval);
+        heartTimerInterval = null;
+    }
+
+    updateHeartUi();
+    if (gameState.hearts >= HEARTS_MAX) return;
+
+    heartTimerInterval = window.setInterval(() => {
+        const remaining = HEART_REGEN_MS - (Date.now() - gameState.lastHeartUpdate);
+        if (remaining <= 0) {
+            syncHearts();
+            return;
+        }
+        updateHeartUi();
+    }, 1000);
+}
+
+function checkHasEnoughHearts() {
+    syncHearts();
+    return gameState.hearts > 0;
+}
+
+function consumeHeart() {
+    if (!checkHasEnoughHearts()) {
+        window.VieGeoUI.warning('Bạn đã hết trái tim! Vui lòng đợi hồi phục hoặc mua thêm trong Cửa hàng.');
+        return false;
+    }
+
+    const wasFull = gameState.hearts === HEARTS_MAX;
+    gameState.hearts -= 1;
+    if (wasFull) gameState.lastHeartUpdate = Date.now();
+    persistHearts();
+    updateHeaderStats();
+    startHeartTimer();
+    return true;
+}
+
+function gateLessonButtons(root = document) {
+    root.querySelectorAll('.node-btn:not([data-heart-gated])').forEach((button) => {
+        const originalClick = button.onclick;
+        if (typeof originalClick !== 'function') return;
+        button.dataset.heartGated = 'true';
+        button.onclick = function guardedLessonClick(event) {
+            if (!button.classList.contains('current') && !button.classList.contains('completed')) {
+                return originalClick.call(button, event);
+            }
+            if (!consumeHeart()) return false;
+            return originalClick.call(button, event);
+        };
+    });
+}
+
+window.syncHearts = syncHearts;
+window.startHeartTimer = startHeartTimer;
+window.checkHasEnoughHearts = checkHasEnoughHearts;
+window.consumeHeart = consumeHeart;
+
+syncHearts();
+const heartGateObserver = new MutationObserver((records) => {
+    records.forEach((record) => record.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) gateLessonButtons(node);
+    }));
+});
+heartGateObserver.observe(document.body, { childList: true, subtree: true });
+gateLessonButtons();
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) syncHearts();
+});
 
 // ── TAB SWITCHING & TOP NAVIGATION ──
 const tabNavControls = document.querySelectorAll('.nav-btn[data-target], .nav-button[data-target]');
@@ -556,7 +696,7 @@ window.startArena = async function(arenaId, fee) {
                 localStorage.setItem('VieGeo_arena_id', arenaId);
                 localStorage.setItem('VieGeo_pvp_room', roomDoc.id);
                 localStorage.setItem('VieGeo_pvp_role', 'player2');
-                setTimeout(() => window.location.href = 'lesson.html', 1500);
+                setTimeout(() => window.location.href = '/lesson', 1500);
             } else {
                 // Create new room and wait
                 const newRoom = await roomsRef.add({
@@ -582,7 +722,7 @@ window.startArena = async function(arenaId, fee) {
                         localStorage.setItem('VieGeo_arena_id', arenaId);
                         localStorage.setItem('VieGeo_pvp_room', newRoom.id);
                         localStorage.setItem('VieGeo_pvp_role', 'player1');
-                        setTimeout(() => window.location.href = 'lesson.html', 1500);
+                        setTimeout(() => window.location.href = '/lesson', 1500);
                     }
                 });
 
@@ -973,7 +1113,7 @@ const btnLogoutElem = document.getElementById('btnLogout');
 if (btnLogoutElem) {
     btnLogoutElem.addEventListener('click', () => {
         localStorage.clear();
-        window.location.href = 'loginout.html';
+        window.location.href = '/loginout';
     });
 }
 

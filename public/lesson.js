@@ -80,7 +80,7 @@ async function initNormal() {
 
     if (!foundNode) {
         Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Lỗi tải bài học!' });
-        window.location.href = 'map.html';
+        window.location.href = '/map';
         return;
     }
 
@@ -126,7 +126,7 @@ function initArena() {
     if (arenaBuffs) arenaBuffs.style.display = 'flex';
 
     const matchData = ARENA_MATCHES.find(m => m.id === arenaId);
-    if (!matchData) { window.location.href = 'map.html'; return; }
+    if (!matchData) { window.location.href = '/map'; return; }
     matchReward = matchData.reward;
 
     // Load questions based on gradeFilter
@@ -471,7 +471,7 @@ function checkAnswer() {
                 if (state.hearts <= 0) {
                     btnCheck.textContent = 'Kết thúc';
                     btnCheck.addEventListener('click', () => {
-                        window.location.href = 'map.html';
+                        window.location.href = '/map';
                     }, {once: true});
                     return;
                 }
@@ -527,7 +527,7 @@ function finishLesson() {
         
         btnCheck.textContent = 'Trở về Bản đồ';
         btnCheck.classList.add('active');
-        btnCheck.onclick = () => window.location.href = 'map.html';
+        btnCheck.onclick = () => window.location.href = '/map';
 
     } else {
         // Normal mode
@@ -580,7 +580,7 @@ function finishLesson() {
     btnCheck.textContent = 'Hoàn tất';
 
     btnCheck.addEventListener('click', () => {
-        window.location.href = 'map.html';
+        window.location.href = '/map';
     }, {once: true});
 }
 

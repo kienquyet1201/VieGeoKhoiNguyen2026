@@ -152,7 +152,7 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
-// Check auto-redirect for existing users (handled by index.html or loginout.js but we leave it here just in case)
+// Check auto-redirect for existing users (handled by the root page or loginout.js but we leave it here just in case)
 const sess = localStorage.getItem('lm_session');
 if (!sess) {
     window.location.href = '/loginout';

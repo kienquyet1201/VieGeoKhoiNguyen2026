@@ -19,7 +19,7 @@
 <body>
     <div class="operations-shell" id="adminDashboard">
         <aside class="operations-rail" aria-label="Điều hướng quản trị">
-            <a class="operations-logo" href="map.html" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i></a>
+            <a class="operations-logo" href="/map" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i></a>
             <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i></button>
             <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i></button>
             <button type="button" data-admin-tab="upload" title="Upload câu hỏi" aria-label="Upload câu hỏi"><i class="fa-solid fa-cloud-arrow-up"></i></button>
@@ -236,7 +236,7 @@
                 if (allowed.length < 2) return;
                 const choice = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(allowed.map(role => [role, roleLabels[role]])),inputValue:allowed.includes('admin') ? 'admin' : allowed[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if (choice.isConfirmed) switchRole(choice.value);
             });
-            el('adminLogout').addEventListener('click', () => { try { localStorage.removeItem('lm_session'); } finally { window.location.href = 'loginout.html'; } });
+            el('adminLogout').addEventListener('click', () => { try { localStorage.removeItem('lm_session'); } finally { window.location.href = '/loginout'; } });
             if (typeof db === 'undefined') { el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Firebase chưa sẵn sàng'; return; }
             el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80"></i> Firebase đã kết nối';
             Promise.all([loadOverview(), loadUsers(), loadRequests()]).catch(error => console.error(error));

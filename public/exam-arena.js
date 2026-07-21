@@ -344,7 +344,7 @@
         if (window.Swal) {
             await Swal.fire({ title: autoSubmitted ? 'Đã hết giờ' : 'Đã nộp bài', text: message, icon: correct >= 28 ? 'success' : 'info', confirmButtonText: 'Về lộ trình' });
         }
-        window.location.href = 'map.html';
+        window.location.href = '/map';
     }
 
     function bindEvents() {

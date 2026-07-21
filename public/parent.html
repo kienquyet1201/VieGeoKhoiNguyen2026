@@ -22,14 +22,14 @@
             <div class="app-logo" style="margin-bottom: 0;">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo <span style="font-size: 1.2rem; color: var(--gold);">| Phụ Huynh</span>
             </div>
-            <button class="bento-btn" onclick="window.location.href='index.html'" style="background: rgba(255,255,255,0.1);">Trở về Trang chủ</button>
+            <button class="bento-btn" onclick="window.location.href='/'" style="background: rgba(255,255,255,0.1);">Trở về Trang chủ</button>
             <div style="position: relative; display: inline-block; margin-left: 10px;" onmouseover="document.getElementById('parentRoleDrop').style.display='block'" onmouseout="document.getElementById('parentRoleDrop').style.display='none'">
                 <button class="bento-btn" style="background: rgba(255,255,255,0.1);"><i class="fa-solid fa-users-gear"></i> Đổi Quyền</button>
                 <div id="parentRoleDrop" style="display: none; position: absolute; top: 100%; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
-                    <a href="map.html" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
-                    <a href="parent.html" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
+                    <a href="/map" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
+                    <a href="/parent" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
                     <a href="/cs-dashboard" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
-                    <a href="admin.html" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+                    <a href="/admin" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
                 </div>
             </div>
         </div>
