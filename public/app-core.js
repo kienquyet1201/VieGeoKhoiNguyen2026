@@ -190,7 +190,12 @@ function setupRealtimeAuth() {
                 lessonResults: data.lessonResults,
                 inventory: data.inventory,
                 questsProgress: data.questsProgress,
-                gender: data.gender
+                gender: data.gender,
+                pvpWins: data.pvpWins,
+                perfectLessons: data.perfectLessons,
+                chestsOpened: data.chestsOpened,
+                achievementPoints: data.achievementPoints,
+                unlockedAchievements: data.unlockedAchievements
             });
             
             // Nếu bị admin kick
@@ -255,6 +260,7 @@ function setupRealtimeAuth() {
                 localStorage.setItem('VieGeo_state', JSON.stringify(gameState));
                 window.dispatchEvent(new CustomEvent('viegeo:state-hydrated'));
             }
+            if (typeof checkAndUnlockAchievements === 'function') checkAndUnlockAchievements(gameState);
             
             // Cập nhật lại UI
             if(typeof updateHeaderStats === 'function') updateHeaderStats();
@@ -1129,9 +1135,8 @@ function renderAchievements() {
     if (!grid) return;
     grid.innerHTML = '';
     
-    // Sync points with unlocked array length
-    if (!gameState.unlockedAchievements) gameState.unlockedAchievements = [];
-    gameState.achievementPoints = gameState.unlockedAchievements.length;
+    if (typeof synchronizeAchievementsWithState === 'function') synchronizeAchievementsWithState(gameState);
+    else if (!gameState.unlockedAchievements) gameState.unlockedAchievements = [];
     
     const profAchPoints = document.getElementById('profAchPoints');
     if (profAchPoints) profAchPoints.textContent = gameState.achievementPoints;
@@ -1139,12 +1144,9 @@ function renderAchievements() {
     ACHIEVEMENTS_LIST.forEach(ach => {
         const isUnlocked = gameState.unlockedAchievements && gameState.unlockedAchievements.includes(ach.id);
         
-        let currentProgress = 0;
-        if (ach.type === 'pvpWins') currentProgress = gameState.pvpWins || 0;
-        if (ach.type === 'perfectLessons') currentProgress = gameState.perfectLessons || 0;
-        if (ach.type === 'streak') currentProgress = gameState.streak || 0;
-        if (ach.type === 'gems') currentProgress = gameState.gems || 0;
-        if (ach.type === 'chestsOpened') currentProgress = gameState.chestsOpened || 0;
+        let currentProgress = typeof getAchievementProgress === 'function'
+            ? getAchievementProgress(gameState, ach.type)
+            : 0;
 
         // Cap progress at target
         if (currentProgress > ach.target) currentProgress = ach.target;
@@ -1383,25 +1385,12 @@ checkAndUnlockAchievements(gameState);
 
 
 function checkAndUnlockAchievements(state) {
-    if (!state.unlockedAchievements) state.unlockedAchievements = [];
-    let newlyUnlocked = false;
-
-    ACHIEVEMENTS_LIST.forEach(ach => {
-        if (!state.unlockedAchievements.includes(ach.id)) {
-            let progress = 0;
-            if (ach.type === 'pvpWins') progress = state.pvpWins || 0;
-            if (ach.type === 'perfectLessons') progress = state.perfectLessons || 0;
-            if (ach.type === 'streak') progress = state.streak || 0;
-            if (ach.type === 'gems') progress = state.gems || 0;
-            if (ach.type === 'chestsOpened') progress = state.chestsOpened || 0;
-
-            if (progress >= ach.target) {
-                state.unlockedAchievements.push(ach.id);
-                state.achievementPoints = (state.achievementPoints || 0) + 1;
-                newlyUnlocked = true;
-                showToast('Đã mở khóa danh hiệu: ' + ach.title + ' (+1 Thành tựu)');
-            }
-        }
+    const unlockedNow = typeof synchronizeAchievementsWithState === 'function'
+        ? synchronizeAchievementsWithState(state)
+        : [];
+    const newlyUnlocked = unlockedNow.length > 0;
+    unlockedNow.forEach((achievement) => {
+        showToast('Đã mở khóa danh hiệu: ' + achievement.title + ' (+1 Thành tựu)');
     });
 
     if (newlyUnlocked) {

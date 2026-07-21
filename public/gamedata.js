@@ -81,6 +81,41 @@ const ACHIEVEMENTS_LIST = [
     { id: "ach_chest_5", title: "Thợ Săn Kho Báu", desc: "Mở 5 rương báu", target: 5, type: "chestsOpened", icon: "fa-gem", color: "#ce82ff" }
 ];
 
+function getAchievementProgress(state, type) {
+    const progressFields = {
+        pvpWins: 'pvpWins',
+        perfectLessons: 'perfectLessons',
+        streak: 'streak',
+        gems: 'gems',
+        chestsOpened: 'chestsOpened'
+    };
+    return Math.max(0, Number(state?.[progressFields[type]]) || 0);
+}
+
+// Keeps achievement badges and their counter derived from the real game state.
+// Once unlocked, a badge remains unlocked even if a spendable stat later drops.
+function synchronizeAchievementsWithState(state) {
+    if (!state || typeof state !== 'object') return [];
+    const knownIds = new Set(ACHIEVEMENTS_LIST.map((achievement) => achievement.id));
+    const unlocked = [...new Set((Array.isArray(state.unlockedAchievements) ? state.unlockedAchievements : [])
+        .map(String)
+        .filter((id) => knownIds.has(id)))];
+    const unlockedSet = new Set(unlocked);
+    const newlyUnlocked = [];
+
+    ACHIEVEMENTS_LIST.forEach((achievement) => {
+        if (!unlockedSet.has(achievement.id) && getAchievementProgress(state, achievement.type) >= achievement.target) {
+            unlocked.push(achievement.id);
+            unlockedSet.add(achievement.id);
+            newlyUnlocked.push(achievement);
+        }
+    });
+
+    state.unlockedAchievements = unlocked;
+    state.achievementPoints = unlocked.length;
+    return newlyUnlocked;
+}
+
 function getGameState() {
     // MIGRATION: VieGeo -> VieGeo
     if (localStorage.getItem('VieGeo_state') && !localStorage.getItem('VieGeo_state')) {
@@ -149,12 +184,13 @@ function getGameState() {
 
     refreshStreakForToday(parsed);
 
-    // PATCH: Fix old storage auto counting PvP wins
+    // Preserve recorded PvP progress. Earlier versions reset it here, which
+    // made achievement data disagree with the rest of the user's progress.
     if (!parsed._pvpResetPatch2) {
-        parsed.pvpWins = 0;
-        parsed.unlockedAchievements = parsed.unlockedAchievements.filter(a => !a.startsWith('ach_pvp_'));
         parsed._pvpResetPatch2 = true;
     }
+
+    synchronizeAchievementsWithState(parsed);
 
     // ⏳ LOGIC HỒI TRÁI TIM ⏳
     const maxHearts = 3;
@@ -194,6 +230,7 @@ function getGameState() {
 }
 
 function buildPersistedGameState(state) {
+    synchronizeAchievementsWithState(state);
     const copyObject = (value, fallback = {}) => value && typeof value === 'object' && !Array.isArray(value)
         ? JSON.parse(JSON.stringify(value))
         : fallback;
@@ -252,6 +289,11 @@ function saveGameState(state) {
             streak: state.streak,
             currentStreak: state.streak,
             gems: state.gems,
+            pvpWins: state.pvpWins,
+            perfectLessons: state.perfectLessons,
+            chestsOpened: state.chestsOpened,
+            achievementPoints: state.achievementPoints,
+            unlockedAchievements: persistedState.unlockedAchievements,
             avatar: state.avatar,
             avatarIsBase64: state.avatarIsBase64,
             accountStatus: state.accountStatus,
