@@ -63,12 +63,27 @@
         }
 
         async function sendMessage(event) {
-            event.preventDefault(); const input = el('csMessageInput'); const text = input.value.trim(); if (!text || !currentConversation) return;
+            event.preventDefault();
+            const input = el('csMessageInput');
+            const text = input?.value.trim() || '';
+            if (!text || !currentConversation) { input?.focus(); return; }
             try {
+                const timestampClient = Date.now();
+                const senderId = session().email || 'support@viegeo';
                 const ref = db.collection('support_conversations').doc(currentConversation);
-                await ref.collection('messages').add({ sender:'staff', text, createdAt:firebase.firestore.FieldValue.serverTimestamp(), createdAtClient:Date.now(), staffEmail:session().email || 'support@viegeo' });
-                await ref.set({ lastMessage:text, updatedAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAtClient:Date.now(), unreadForStudent:true }, {merge:true}); input.value = '';
-            } catch (error) { console.error(error); show('Không thể gửi phản hồi.', 'error'); }
+                await ref.collection('messages').add({
+                    sender: 'staff', senderId, staffEmail: senderId, text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), timestampClient,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: timestampClient
+                });
+                await ref.set({ lastMessage:text, updatedAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAtClient:timestampClient, unreadForStudent:true }, {merge:true});
+                input.value = '';
+                const container = el('csMessages');
+                if (container) container.scrollTop = container.scrollHeight;
+            } catch (error) {
+                console.error(error);
+                show(error?.code === 'permission-denied' ? 'Bạn chưa có quyền gửi phản hồi trong hội thoại này.' : 'Không thể gửi phản hồi.', 'error');
+            }
         }
 
         const roleLabels = { user: 'Học sinh', teacher: 'Giáo viên', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Admin' };

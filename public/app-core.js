@@ -3,8 +3,8 @@
 // ============================================================================
 
 // These must be initialized before getHeartAwareGameState() is invoked.
-const HEARTS_MAX = 5;
-const HEART_REGEN_MS = 30 * 60 * 1000;
+const HEARTS_MAX = 3;
+const HEART_REGEN_MS = 15 * 60 * 1000;
 let heartTimerInterval = null;
 let heartRemoteHydrated = false;
 let gameState = window.gameState || null;
@@ -386,9 +386,42 @@ function checkHasEnoughHearts() {
     return gameState.hearts > 0;
 }
 
+function showOutOfHeartsPopup() {
+    const message = 'Bạn đã hết trái tim! Hãy đợi 15 phút hoặc Mua Premium.';
+    const openShop = () => {
+        const shopControl = document.querySelector('.nav-button[data-target="tabShop"]');
+        if (shopControl) {
+            shopControl.click();
+            return;
+        }
+        window.location.href = '/map?tab=shop';
+    };
+
+    if (window.Swal && typeof window.Swal.fire === 'function') {
+        window.Swal.fire({
+            title: 'Bạn đã hết trái tim!',
+            text: message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Mở Cửa hàng',
+            cancelButtonText: 'Để sau',
+            confirmButtonColor: '#0284c7',
+            cancelButtonColor: '#475569',
+            background: '#13253a',
+            color: '#f8fafc',
+            heightAuto: false
+        }).then((result) => {
+            if (result.isConfirmed) openShop();
+        });
+        return;
+    }
+
+    window.VieGeoUI.warning(message).then(openShop);
+}
+
 function consumeHeart() {
     if (!checkHasEnoughHearts()) {
-        window.VieGeoUI.warning('Bạn đã hết trái tim! Vui lòng đợi hồi phục hoặc mua thêm trong Cửa hàng.');
+        showOutOfHeartsPopup();
         return false;
     }
 

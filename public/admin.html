@@ -28,7 +28,7 @@
             <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
         </aside>
 
-        <main class="operations-main flex-1 w-full">
+        <main class="operations-main flex-1 w-full p-8">
             <header class="operations-heading">
                 <div><h1 id="adminPageTitle">Trung tâm điều hành</h1><p id="adminPageSubtitle">Theo dõi hoạt động và vận hành VieGeo trong một nơi.</p></div>
                 <span class="ops-muted" id="adminConnectionStatus"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang kết nối dữ liệu</span>
@@ -75,7 +75,7 @@
             upload: ['Upload câu hỏi', 'Nhập và chuẩn hóa kho câu hỏi cho lộ trình học.'],
             monitoring: ['Giám sát học tập', 'Theo dõi phiên học đang hoạt động và chuẩn bị tích hợp rrweb.']
         };
-        const roles = [['user','Học sinh'], ['teacher','Giáo viên'], ['parent','Phụ huynh'], ['cs','Chăm sóc KH'], ['admin','Admin']];
+        const roles = [['user','Học sinh'], ['teacher','Giáo viên'], ['parent','Phụ huynh'], ['cs','CSKH'], ['admin','Admin']];
         const roleLabels = Object.fromEntries(roles);
         const roleRoutes = { user: '/map', parent: '/parent-dashboard', teacher: '/teacher-dashboard', cs: '/cs-dashboard', admin: '/admin-dashboard' };
         const el = id => document.getElementById(id);
@@ -96,6 +96,13 @@
             el('adminPageSubtitle').textContent = tabMetadata[tab][1];
         }
 
+        function normalizeUserRoles(user) {
+            const source = Array.isArray(user?.roles) ? user.roles : [user?.activeRole || user?.role];
+            const allowed = new Set(roles.map(([value]) => value));
+            const normalized = [...new Set(source.map(role => String(role || '').toLowerCase()).filter(role => allowed.has(role)))];
+            return normalized.length ? normalized : ['user'];
+        }
+
         function renderUsers() {
             const keyword = (el('searchUser')?.value || '').trim().toLowerCase();
             const body = el('usersList');
@@ -103,10 +110,10 @@
             if (!state.users.length) { body.innerHTML = '<tr><td colspan="5" class="ops-muted">Không có người dùng phù hợp.</td></tr>'; return; }
             body.innerHTML = state.users.map(user => {
                 const searchable = `${user.id} ${user.email} ${user.name}`.toLowerCase();
-                const role = roles.some(([value]) => value === user.role) ? user.role : 'user';
-                const roleOptions = roles.map(([value, label]) => `<option value="${value}" ${value === role ? 'selected' : ''}>${label}</option>`).join('');
+                const assignedRoles = normalizeUserRoles(user);
+                const roleCheckboxes = roles.map(([value, label]) => `<label><input type="checkbox" data-role-checkbox value="${value}" ${assignedRoles.includes(value) ? 'checked' : ''}><span>${label}</span></label>`).join('');
                 const isOnline = Date.now() - user.lastActive <= 90000;
-                return `<tr class="admin-user-row${keyword && !searchable.includes(keyword) ? ' hidden' : ''}" data-search-item="${escapeHtml(searchable)}"><td>${escapeHtml(user.id)}</td><td>${escapeHtml(user.email)}</td><td><select data-role-user="${escapeHtml(user.id)}" aria-label="Đổi vai trò cho ${escapeHtml(user.email)}">${roleOptions}</select></td><td>${isOnline ? '<span style="color:#4ade80">● Online</span>' : '<span class="ops-muted">● Offline</span>'}</td><td><button class="ops-button is-danger" type="button" data-kick-user="${escapeHtml(user.id)}" title="Buộc đăng xuất">Kick</button></td></tr>`;
+                return `<tr class="admin-user-row${keyword && !searchable.includes(keyword) ? ' hidden' : ''}" data-search-item="${escapeHtml(searchable)}"><td>${escapeHtml(user.id)}</td><td>${escapeHtml(user.email)}</td><td><fieldset class="role-checkbox-list" aria-label="Quyền của ${escapeHtml(user.email)}">${roleCheckboxes}</fieldset></td><td>${isOnline ? '<span style="color:#4ade80">● Online</span>' : '<span class="ops-muted">● Offline</span>'}</td><td><div class="admin-user-actions"><button class="ops-button" type="button" data-save-roles="${escapeHtml(user.id)}" title="Lưu các quyền đã chọn">Lưu quyền</button><button class="ops-button is-danger" type="button" data-kick-user="${escapeHtml(user.id)}" title="Buộc đăng xuất">Kick</button></div></td></tr>`;
             }).join('');
         }
 
@@ -115,14 +122,22 @@
             const snapshot = await db.collection('users').limit(100).get();
             state.users = snapshot.docs.map(doc => {
                 const data = doc.data() || {};
-                return { id: doc.id, email: data.email || doc.id, name: data.name || 'Người dùng', role: data.role || (Array.isArray(data.roles) ? data.roles[0] : 'user'), lastActive: timestampToMs(data.lastActive) };
+                const userRoles = normalizeUserRoles(data);
+                return { id: doc.id, email: data.email || doc.id, name: data.name || 'Người dùng', roles: userRoles, activeRole: userRoles.includes(data.activeRole) ? data.activeRole : userRoles[0], lastActive: timestampToMs(data.lastActive) };
             });
             renderUsers(); renderLiveSessions();
         }
 
-        async function updateUserRole(userId, role) {
-            try { await db.collection('users').doc(userId).set({ role, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true }); showToast('Đã cập nhật vai trò.'); }
-            catch (error) { console.error(error); showToast('Không thể cập nhật vai trò.', 'error'); }
+        async function updateUserRoles(userId, selectedRoles) {
+            const validRoles = [...new Set(selectedRoles.filter(role => roles.some(([value]) => value === role)))];
+            if (!validRoles.length) { showToast('Người dùng cần có ít nhất một quyền.', 'warning'); return; }
+            const user = state.users.find(item => item.id === userId);
+            const activeRole = validRoles.includes(user?.activeRole) ? user.activeRole : validRoles[0];
+            try {
+                await db.collection('users').doc(userId).set({ roles: validRoles, role: activeRole, activeRole, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                if (user) { user.roles = validRoles; user.activeRole = activeRole; }
+                showToast('Đã lưu các quyền người dùng.');
+            } catch (error) { console.error(error); showToast('Không thể cập nhật quyền người dùng.', 'error'); }
         }
 
         async function kickUser(userId) {
@@ -222,9 +237,13 @@
             el('searchUser').addEventListener('input', renderUsers);
             el('fileUpload').addEventListener('change', event => { el('fileNameDisplay').textContent = event.target.files[0] ? `Đã chọn: ${event.target.files[0].name}` : 'Chưa có tệp được chọn.'; });
             el('btnProcessUpload').addEventListener('click', processUpload);
-            document.addEventListener('change', event => { if (event.target.matches('[data-role-user]')) updateUserRole(event.target.dataset.roleUser, event.target.value); });
+            document.addEventListener('change', event => { if (event.target.matches('[data-role-checkbox]')) event.target.closest('tr')?.classList.add('is-role-dirty'); });
             document.addEventListener('click', event => {
                 const target = event.target.closest('button'); if (!target) return;
+                if (target.dataset.saveRoles) {
+                    const selectedRoles = [...target.closest('tr').querySelectorAll('[data-role-checkbox]:checked')].map(input => input.value);
+                    updateUserRoles(target.dataset.saveRoles, selectedRoles);
+                }
                 if (target.dataset.kickUser) kickUser(target.dataset.kickUser);
                 if (target.dataset.premiumApprove) updateRequest(target.dataset.premiumApprove, target.dataset.premiumEmail, 'approved');
                 if (target.dataset.premiumReject) updateRequest(target.dataset.premiumReject, '', 'rejected');

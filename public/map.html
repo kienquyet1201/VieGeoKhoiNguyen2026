@@ -27,7 +27,7 @@
                 <i class="fa-solid fa-earth-asia"></i> VieGeo
             </div>
             <div class="topbar-stats" aria-label="Chỉ số học tập">
-                <div class="stat-pill" style="color: #ff4b4b;" title="Trái tim · hồi 1 tim mỗi 30 phút"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">5</span><span id="hdrHeartTimer" aria-live="polite" hidden style="margin-left: 4px; color: #ff9a9a; font-size: .7rem; font-variant-numeric: tabular-nums;">29:59</span></div>
+                <div class="stat-pill" style="color: #ff4b4b;" title="Trái tim · hồi 1 tim mỗi 15 phút"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">3</span><span id="hdrHeartTimer" aria-live="polite" hidden style="margin-left: 4px; color: #ff9a9a; font-size: .7rem; font-variant-numeric: tabular-nums;">14:59</span></div>
                 <div class="stat-pill" style="color: #ffc800;" title="Chuỗi ngày học"><i class="fa-solid fa-fire"></i> <span id="hdrStreak">1</span></div>
                 <div class="stat-pill" style="color: #1cb0f6;" title="Kim cương"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
                 <div class="stat-pill" title="Cúp"><i class="fa-solid fa-trophy"></i> <span id="hdrTrophies">0</span></div>
@@ -36,14 +36,14 @@
             </div>
             <div class="user-topbar-navigation">
             
-            <nav class="nav-items" id="navMenu" aria-label="Điều hướng học tập">
-                <a class="nav-button" href="/map?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="sr-only">Lộ trình học</span></a>
-                <a class="nav-button" href="/exam-arena" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><div class="nav-icon-frame"><i class="fa-solid fa-file-pen" aria-hidden="true"></i></div><span class="sr-only">Đấu trường Luyện thi</span></a>
-                <a class="nav-button" href="/map?tab=leaderboard" data-target="tabLeaderboard" data-tab-key="leaderboard" title="Xếp hạng" aria-label="Xếp hạng"><div class="nav-icon-frame"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div><span class="sr-only">Xếp hạng</span></a>
-                <a class="nav-button" href="/map?tab=quests" data-target="tabQuests" data-tab-key="quests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><div class="nav-icon-frame"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div><span class="sr-only">Nhiệm vụ</span></a>
-                <a class="nav-button" href="/map?tab=shop" data-target="tabShop" data-tab-key="shop" title="Cửa hàng" aria-label="Cửa hàng"><div class="nav-icon-frame"><i class="fa-solid fa-store" aria-hidden="true"></i></div><span class="sr-only">Cửa hàng</span></a>
-                <a class="nav-button" href="/map?tab=arena" data-target="tabArena" data-tab-key="arena" title="Đấu trường PvP" aria-label="Đấu trường PvP"><div class="nav-icon-frame"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div><span class="sr-only">Đấu trường PvP</span></a>
-                <a class="nav-button" href="/map?tab=profile" data-target="tabProfile" data-tab-key="profile" title="Hồ sơ" aria-label="Hồ sơ"><div class="nav-icon-frame"><i class="fa-solid fa-user" aria-hidden="true"></i></div><span class="sr-only">Hồ sơ</span></a>
+            <nav class="nav-items taskbar-collapsible group w-16 hover:w-64 transition-all duration-300" id="navMenu" aria-label="Điều hướng học tập">
+                <a class="nav-button" href="/map?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="nav-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap">Lộ trình học</span></a>
+                <a class="nav-button" href="/exam-arena" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><div class="nav-icon-frame"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div><span class="nav-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap">Đấu trường Luyện thi</span></a>
+                <a class="nav-button" href="/map?tab=leaderboard" data-target="tabLeaderboard" data-tab-key="leaderboard" title="Xếp hạng" aria-label="Xếp hạng"><div class="nav-icon-frame"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div><span class="nav-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap">Xếp hạng</span></a>
+                <a class="nav-button" href="/map?tab=quests" data-target="tabQuests" data-tab-key="quests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><div class="nav-icon-frame"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div><span class="nav-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap">Nhiệm vụ</span></a>
+                <a class="nav-button" href="/map?tab=shop" data-target="tabShop" data-tab-key="shop" title="Cửa hàng" aria-label="Cửa hàng"><div class="nav-icon-frame"><i class="fa-solid fa-store" aria-hidden="true"></i></div><span class="nav-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap">Cửa hàng</span></a>
+                <a class="nav-button" href="/map?tab=arena" data-target="tabArena" data-tab-key="arena" title="Đấu trường PvP" aria-label="Đấu trường PvP"><div class="nav-icon-frame"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div><span class="nav-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap">Đấu trường PvP</span></a>
+                <a class="nav-button" href="/map?tab=profile" data-target="tabProfile" data-tab-key="profile" title="Hồ sơ" aria-label="Hồ sơ"><div class="nav-icon-frame"><i class="fa-solid fa-user" aria-hidden="true"></i></div><span class="nav-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap">Hồ sơ</span></a>
             </nav>
             <!-- Role Switcher -->
             <div id="roleSwitcherWrap" class="user-role-switcher" hidden>

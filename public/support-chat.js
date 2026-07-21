@@ -56,6 +56,12 @@
         container.scrollTop = container.scrollHeight;
     }
 
+    function scrollMessagesToBottom() {
+        const container = byId('supportMessages');
+        if (!container) return;
+        window.requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+    }
+
     async function uploadImage(file, email) {
         if (!file) return '';
         if (!window.firebase || typeof window.firebase.storage !== 'function') throw new Error('Firebase Storage chưa sẵn sàng.');
@@ -90,38 +96,44 @@
         const submit = form?.querySelector('button[type="submit"]');
         if (submit) submit.disabled = true;
         try {
+            const timestampClient = Date.now();
             const imageUrl = await uploadImage(pendingImage, user.email);
             await db.collection('support_conversations').doc(user.email).set({
                 email: user.email,
                 name: user.name || user.displayName || user.email,
                 lastMessage: text || 'Đã gửi một hình ảnh',
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAtClient: Date.now(),
+                updatedAtClient: timestampClient,
                 unreadForStaff: true
             }, { merge: true });
             await messagesRef.add({
-                sender: 'user', text, imageUrl: imageUrl || null,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: Date.now()
+                sender: 'user', senderId: user.email, text, imageUrl: imageUrl || null,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(), timestampClient,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: timestampClient
             });
             input.value = '';
             pendingImage = null;
             byId('supportAttachmentLabel').textContent = '';
+            scrollMessagesToBottom();
 
             const staffOnline = await hasOnlineStaff();
             byId('supportAvailability').textContent = staffOnline ? 'CSKH đang trực tuyến' : 'Trợ lý ảo đang hỗ trợ';
             if (!staffOnline) {
                 window.setTimeout(() => {
                     messagesRef.add({
-                        sender: 'AI',
+                        sender: 'AI', senderId: 'ai-viegeo',
                         text: 'Chào bạn, hiện tại CSKH đang bận. Mình là Trợ lý AI của VieGeo, mình có thể giúp gì cho bạn?',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        createdAtClient: Date.now()
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(), timestampClient: Date.now(),
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: Date.now()
                     }).catch((error) => console.warn('Không thể gửi phản hồi AI tự động.', error));
                 }, 1500);
             }
         } catch (error) {
             console.error('Không thể gửi tin nhắn hỗ trợ:', error);
-            if (window.VieGeoUI) window.VieGeoUI.error('Chưa thể gửi yêu cầu hỗ trợ. Vui lòng thử lại.');
+            const message = error?.code === 'permission-denied'
+                ? 'Bạn chưa có quyền gửi tin nhắn. Vui lòng đăng nhập lại và thử lại.'
+                : 'Chưa thể gửi yêu cầu hỗ trợ. Vui lòng thử lại.';
+            if (window.VieGeoUI) window.VieGeoUI.error(message);
         } finally {
             if (submit) submit.disabled = false;
         }
