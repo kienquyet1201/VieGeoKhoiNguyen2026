@@ -40,6 +40,84 @@ function closeIslandTheory() {
     activeIslandLearning = null;
 }
 
+function showIslandLoadingFeedback(clickedIsland) {
+    const title = clickedIsland?.dataset.lessonTitle || 'Đảo tri thức';
+    const province = clickedIsland?.dataset.province || selectedProvince?.name || 'Việt Nam';
+    const difficulty = clickedIsland?.dataset.difficulty || 'easy';
+
+    if (!islandTheoryModal) {
+        // This should never run on map.html, but it prevents a silent click if
+        // the modal markup is accidentally removed in a future layout change.
+        window.alert('Đã nhận click! Đang kết nối Firebase...');
+        return;
+    }
+
+    islandTheoryModal.hidden = false;
+    islandTheoryTitle.textContent = title;
+    islandTheoryMeta.textContent = `${province} · ${difficulty} · 5 câu hỏi`;
+    islandTheoryContent.classList.add('is-loading');
+    islandTheoryContent.setAttribute('aria-busy', 'true');
+    islandTheoryContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tải dữ liệu...';
+    if (btnStartIslandQuiz) btnStartIslandQuiz.disabled = true;
+}
+
+function findRenderedIslandLesson(lessonId) {
+    if (!lessonId) return null;
+    const dynamicLesson = window.VieGeoLearningPath?.findLesson?.(lessonId);
+    if (dynamicLesson) return dynamicLesson;
+    return selectedProvince?.lessons?.find((lesson) => lesson.id === lessonId) || null;
+}
+
+async function handleDelegatedIslandClick(event) {
+    const clickedIsland = event.target.closest('.island');
+    if (!clickedIsland || !mapContainer?.contains(clickedIsland)) return;
+
+    console.log('✅ Đã nhận sự kiện click vào đảo:', clickedIsland);
+    showIslandLoadingFeedback(clickedIsland);
+
+    const lesson = findRenderedIslandLesson(clickedIsland.dataset.lessonId);
+    const isUnlocked = clickedIsland.dataset.unlocked === 'true';
+    const nodeKind = clickedIsland.dataset.nodeKind || 'small';
+
+    if (!lesson) {
+        console.error('Không tìm thấy dữ liệu bài học cho đảo:', clickedIsland.dataset.lessonId);
+        islandTheoryContent.classList.remove('is-loading');
+        islandTheoryContent.setAttribute('aria-busy', 'false');
+        islandTheoryContent.textContent = 'Không tìm thấy dữ liệu bài học. Vui lòng tải lại trang và thử lại.';
+        return;
+    }
+
+    if (!isUnlocked) {
+        islandTheoryContent.classList.remove('is-loading');
+        islandTheoryContent.setAttribute('aria-busy', 'false');
+        islandTheoryContent.textContent = 'Đảo này chưa mở khóa. Hãy hoàn thành đảo ngay trước đó để tiếp tục hành trình.';
+        return;
+    }
+
+    if (nodeKind === 'small') {
+        // openIslandTheory keeps the visible loading modal in place, then fetches
+        // Firestore inside its own try/catch without blocking the click feedback.
+        await openIslandTheory(lesson);
+        return;
+    }
+
+    try {
+        islandTheoryContent.classList.remove('is-loading');
+        islandTheoryContent.setAttribute('aria-busy', 'false');
+        islandTheoryContent.textContent = 'Đang chuẩn bị bài kiểm tra...';
+        if (typeof window.consumeHeart === 'function' && !await window.consumeHeart()) {
+            closeIslandTheory();
+            return;
+        }
+        localStorage.setItem('VieGeo_current_lesson', lesson.id);
+        localStorage.setItem('VieGeo_mode', 'normal');
+        window.location.href = '/lesson';
+    } catch (error) {
+        console.error('Không thể mở bài kiểm tra của đảo:', error);
+        islandTheoryContent.textContent = 'Chưa thể mở bài học. Vui lòng thử lại.';
+    }
+}
+
 async function openIslandTheory(lesson) {
     if (!islandTheoryModal || !lesson) return;
     const requestId = ++islandTheoryRequest;
@@ -71,7 +149,7 @@ async function openIslandTheory(lesson) {
             else console.warn(notice);
         }
     } catch (error) {
-        console.warn('Không thể tải nội dung Đảo nhỏ:', error);
+        console.error('Lỗi Firebase khi tải nội dung Đảo nhỏ:', error);
         if (requestId !== islandTheoryRequest) return;
         activeIslandLearning = { lesson, theory: fallbackTheoryFor(lesson), questions: emergencyFallbackQuestions() };
         islandTheoryContent.classList.remove('is-loading');
@@ -120,6 +198,10 @@ islandTheoryModal?.addEventListener('click', (event) => {
 document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && islandTheoryModal && !islandTheoryModal.hidden) closeIslandTheory();
 });
+
+// Islands are rendered again whenever the learner changes region/province.
+// Event delegation keeps their click flow intact after every dynamic render.
+mapContainer?.addEventListener('click', handleDelegatedIslandClick);
 
 // Update Stats UI
 function updateStatsUI() {
@@ -282,10 +364,15 @@ function renderLessons() {
         wrapper.style.flexDirection = 'column';
         wrapper.style.alignItems = 'center';
         wrapper.style.position = 'relative'; // For absolute line positioning
-        wrapper.className = `map-island-node map-island-${nodeKind}`;
+        wrapper.className = `map-island-node map-island-${nodeKind} island`;
         wrapper.dataset.routeNode = String(index);
         wrapper.dataset.lessonId = lesson.id;
         wrapper.dataset.completed = String(Boolean(isCompleted));
+        wrapper.dataset.unlocked = String(Boolean(isCompleted || prevCompleted));
+        wrapper.dataset.nodeKind = nodeKind;
+        wrapper.dataset.lessonTitle = lesson.title || 'Đảo tri thức';
+        wrapper.dataset.province = lesson.province || selectedProvince?.name || 'Việt Nam';
+        wrapper.dataset.difficulty = lesson.difficulty || 'easy';
         wrapper.style.marginBottom = nodeKind === 'boss' ? '52px' : nodeKind === 'checkpoint' ? '42px' : '32px';
         
         // Apply zigzag offset
@@ -298,6 +385,10 @@ function renderLessons() {
         btn.style.background = nodeColor;
         btn.style.width = `${nodeSize}px`;
         btn.style.height = `${nodeSize}px`;
+        btn.type = 'button';
+        // Heart consumption is handled by handleDelegatedIslandClick. This marker
+        // avoids the legacy per-button wrapper in app-core.js.
+        btn.dataset.heartGated = 'delegated';
         if (nodeKind === 'small') btn.dataset.skipHeartGate = 'true';
         btn.innerHTML = `<i class="fa-solid ${icon}" style="color: ${iconColor}; font-size: ${nodeKind === 'boss' ? '2.35rem' : nodeKind === 'checkpoint' ? '1.9rem' : '1.5rem'};"></i>`;
         
@@ -308,24 +399,6 @@ function renderLessons() {
         label.textContent = lesson.title;
         label.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)'; // Make label readable if lines cross it
         label.className = 'map-island-label';
-        
-        btn.onclick = () => {
-            if (isCompleted || prevCompleted) {
-                if (nodeKind === 'small') {
-                    openIslandTheory(lesson);
-                    return;
-                }
-                localStorage.setItem('VieGeo_current_lesson', lesson.id);
-                localStorage.setItem('VieGeo_mode', 'normal');
-                window.location.href = '/lesson';
-            } else {
-                if (typeof showToast === 'function') {
-                    showToast("Bạn cần hoàn thành bài trước đó!", true);
-                } else {
-                    VieGeoUI.warning("Bạn cần hoàn thành bài trước đó!");
-                }
-            }
-        };
         
         wrapper.appendChild(btn);
         wrapper.appendChild(label);
