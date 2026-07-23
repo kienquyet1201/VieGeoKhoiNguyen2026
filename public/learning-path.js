@@ -161,5 +161,39 @@
         }
     }
 
-    window.VieGeoLearningPath = { getLessonsForProvince, findLesson, loadQuestions };
+    async function fetchIslandDocuments(lesson) {
+        if (typeof db === 'undefined' || !lesson?.id) return [];
+        for (const collectionName of ['questions', 'question']) {
+            try {
+                // Questions created by the Admin parser are bound to this island.
+                const snapshot = await db.collection(collectionName)
+                    .where('lessonId', '==', lesson.id)
+                    .limit(50)
+                    .get();
+                if (!snapshot.empty) return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } catch (error) {
+                console.warn(`Unable to load island questions from ${collectionName}:`, error);
+            }
+        }
+        return [];
+    }
+
+    async function loadIslandContent(lesson) {
+        const fallback = {
+            question: `Kiến thức nào phù hợp với ${lesson.title}?`,
+            options: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
+            correctAnswer: 0,
+            explanation: 'Hãy xem lại kiến thức nền tảng trước khi tiếp tục.'
+        };
+        const documents = await fetchIslandDocuments(lesson);
+        const theory = String(documents.map(item => item.theory || item.theoryContent || item.lyThuyet || '').find(Boolean)
+            || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
+        const questions = randomFive(documents, fallback);
+        return {
+            theory,
+            questions: questions.length === 5 ? questions : await loadQuestions(lesson)
+        };
+    }
+
+    window.VieGeoLearningPath = { getLessonsForProvince, findLesson, loadQuestions, loadIslandContent };
 }());

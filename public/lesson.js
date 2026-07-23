@@ -16,7 +16,43 @@ let lessonTelemetry = [];
 let activeLessonId = nodeId || '';
 let activeLessonTitle = '';
 let activeLessonReward = { xp: 15, gems: 10, booster: null };
+let activeIslandNodeKind = '';
 let usedBoostersForQuestion = new Set();
+
+function readIslandLearningSession() {
+    try {
+        const session = JSON.parse(localStorage.getItem('VieGeo_island_learning') || 'null');
+        if (!session || session.lessonId !== nodeId) return null;
+        localStorage.removeItem('VieGeo_island_learning');
+        return session;
+    } catch (error) {
+        localStorage.removeItem('VieGeo_island_learning');
+        return null;
+    }
+}
+
+function starsForScore(correctAnswers) {
+    if (correctAnswers >= 5) return 3;
+    if (correctAnswers >= 3) return 2;
+    if (correctAnswers >= 1) return 1;
+    return 0;
+}
+
+function presentIslandResult(stars, correctAnswers) {
+    if (activeIslandNodeKind !== 'small' || !window.Swal) return;
+    const starText = stars ? '⭐'.repeat(stars) : 'Chưa đạt sao';
+    window.setTimeout(() => {
+        Swal.fire({
+            title: 'Kết quả Đảo nhỏ',
+            html: `<div style="font-size:2rem;letter-spacing:4px;margin:8px 0">${starText}</div><p>Bạn trả lời đúng <strong>${correctAnswers}/5</strong> câu.</p><p style="color:#64748b;font-size:.9rem">Hệ thống đã lưu số sao cao nhất của bạn trên đảo này.</p>`,
+            confirmButtonText: 'Tuyệt vời',
+            confirmButtonColor: '#16a34a',
+            background: '#102238',
+            color: '#f8fafc',
+            heightAuto: false
+        });
+    }, 220);
+}
 
 // DOM Elements
 const questionText = document.getElementById('questionText');
@@ -84,6 +120,7 @@ async function initNormal() {
         return;
     }
 
+    const islandLearning = readIslandLearningSession();
     if (foundNode.type === 'theory') {
         activeLessonTitle = foundNode.title || '';
         document.getElementById('quizContainer').style.display = 'none';
@@ -101,10 +138,14 @@ async function initNormal() {
         activeLessonId = foundNode.id || activeLessonId;
         activeLessonTitle = foundNode.title || '';
         activeLessonReward = foundNode.reward || activeLessonReward;
+        activeIslandNodeKind = foundNode.nodeKind || '';
         document.getElementById('quizContainer').style.display = 'block';
         document.getElementById('theoryContainer').style.display = 'none';
-        currentQuestions = foundNode.questions || [];
-        if (foundNode.dynamicPath && window.VieGeoLearningPath && typeof window.VieGeoLearningPath.loadQuestions === 'function') {
+        const cachedQuestions = Array.isArray(islandLearning?.questions) && islandLearning.questions.length === 5
+            ? islandLearning.questions
+            : null;
+        currentQuestions = cachedQuestions || foundNode.questions || [];
+        if (!cachedQuestions && foundNode.dynamicPath && window.VieGeoLearningPath && typeof window.VieGeoLearningPath.loadQuestions === 'function') {
             currentQuestions = await window.VieGeoLearningPath.loadQuestions(foundNode);
         }
         updateHeartsUI();
@@ -509,11 +550,26 @@ function finishLesson() {
 
     } else {
         // Normal mode
+        const correctAnswers = lessonTelemetry.filter(item => item.isCorrect).length;
+        const earnedStars = starsForScore(correctAnswers);
+        if (!state.lessonResults || typeof state.lessonResults !== 'object') state.lessonResults = {};
+        const previousResult = state.lessonResults[activeLessonId] || {};
+        const highestStars = Math.max(Number(previousResult.stars) || 0, earnedStars);
+        state.lessonResults[activeLessonId] = {
+            ...previousResult,
+            stars: highestStars,
+            bestCorrectAnswers: Math.max(Number(previousResult.bestCorrectAnswers) || 0, correctAnswers),
+            lastCorrectAnswers: correctAnswers,
+            questionCount: 5,
+            color: highestStars === 3 ? 'green' : highestStars === 2 ? 'yellow' : 'red',
+            updatedAt: Date.now()
+        };
         questionText.textContent = "Hoàn thành xuất sắc!";
         optionsGrid.innerHTML = `
             <div style="text-align: center; width:100%; grid-column: span 2;">
                 <i class="fa-solid fa-gem" style="font-size: 4rem; color: var(--blue); margin-bottom: 20px;"></i>
                 <h3 style="font-size: 1.5rem;">+${activeLessonReward.xp || 15} XP</h3>
+                <p style="margin:10px 0 0;color:#ffc800;font-size:1.25rem;letter-spacing:2px;">${earnedStars ? '⭐'.repeat(earnedStars) : 'Chưa đạt sao'} · ${correctAnswers}/5 câu đúng</p>
             </div>
         `;
         
@@ -542,6 +598,7 @@ function finishLesson() {
         }
         if (typeof recordStudyActivity === 'function') recordStudyActivity(state);
         saveGameState(state);
+        presentIslandResult(earnedStars, correctAnswers);
         const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
         if (typeof updateLearningProfile === 'function') {
             updateLearningProfile(session.email || '', {

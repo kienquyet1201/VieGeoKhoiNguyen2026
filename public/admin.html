@@ -13,7 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="firebase-init.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -56,7 +55,26 @@
             </section>
 
             <section class="operations-tab hidden" data-admin-panel="upload">
-                <article class="ops-card"><h2>Upload bộ câu hỏi</h2><p class="ops-muted">Tách câu hỏi từ DOCX/TXT và lưu vào Firebase theo tỉnh, đảo nhỏ và độ khó.</p><div class="ops-grid"><div class="ops-list"><label class="ops-muted">Tệp câu hỏi<input class="ops-input" id="fileUpload" type="file" accept=".docx,.txt" style="display:block;margin-top:7px"></label><p id="fileNameDisplay" class="ops-muted">Chưa có tệp được chọn.</p><label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="importProvince" type="text" placeholder="Ví dụ: Hà Nội" style="display:block;margin-top:7px"></label><label class="ops-muted">Đảo nhỏ / Bài học<input class="ops-input" id="importIsland" type="text" placeholder="Ví dụ: Khám phá Hồ Gươm" style="display:block;margin-top:7px"></label><label class="ops-muted">Mức độ<select class="ops-input" id="importDifficulty" style="display:block;margin-top:7px"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label><label class="ops-muted">Mã bài học (tùy chọn)<input class="ops-input" id="importLessonId" type="text" placeholder="Tự tạo nếu để trống" style="display:block;margin-top:7px"></label><button class="ops-button" id="btnProcessUpload" type="button" style="margin-top:6px"><i class="fa-solid fa-wand-magic-sparkles"></i> Bóc tách và cập nhật</button></div><div><h3 style="margin-top:0">Xem trước dữ liệu</h3><pre id="uploadPreview" class="ops-muted" style="min-height:320px;max-height:460px;overflow:auto;white-space:pre-wrap;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:14px;background:#091525">Kết quả xử lý sẽ hiển thị tại đây.</pre></div></div></article>
+                <article class="ops-card">
+                    <h2>Nhập bộ câu hỏi bằng văn bản</h2>
+                    <p class="ops-muted">Dán nội dung Lý thuyết và nhiều khối câu hỏi vào một ô duy nhất. Hệ thống sẽ kiểm tra định dạng, xem trước và lưu từng câu vào collection <code>questions</code>.</p>
+                    <div class="ops-grid">
+                        <div class="ops-list">
+                            <label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="importProvince" type="text" placeholder="Ví dụ: Hà Nội" style="display:block;margin-top:7px"></label>
+                            <label class="ops-muted">Chủ đề Đảo nhỏ<input class="ops-input" id="importIsland" type="text" placeholder="Ví dụ: Hồ Gươm" style="display:block;margin-top:7px"></label>
+                            <label class="ops-muted">Mức độ<select class="ops-input" id="importDifficulty" style="display:block;margin-top:7px"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
+                            <label class="ops-muted">Mã đảo trên lộ trình<input class="ops-input" id="importLessonId" type="text" placeholder="Ví dụ: path-ha-noi-deasy-i1" style="display:block;margin-top:7px"></label>
+                            <p class="ops-muted" style="font-size:.78rem;line-height:1.5">Mã đảo phải trùng với đảo trên bản đồ để học sinh nhận đúng Lý thuyết và 5 câu hỏi.</p>
+                            <button class="ops-button" id="btnProcessUpload" type="button" style="margin-top:6px"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích và lưu câu hỏi</button>
+                        </div>
+                        <div>
+                            <label class="ops-muted" for="bulkQuestionText">Nội dung văn bản</label>
+                            <textarea class="ops-input" id="bulkQuestionText" rows="16" spellcheck="false" placeholder="Lý Thuyết: Nội dung lý thuyết...&#10;[Câu hỏi]&#10;Câu hỏi của bạn?&#10;A. Đáp án A&#10;B. Đáp án B&#10;C. Đáp án C&#10;D. Đáp án D&#10;ĐÁP ÁN: A&#10;Giải thích: Nội dung giải thích" style="display:block;width:100%;min-height:320px;margin-top:7px;resize:vertical;line-height:1.6"></textarea>
+                            <h3 style="margin:18px 0 8px">Xem trước dữ liệu</h3>
+                            <pre id="uploadPreview" class="ops-muted" style="min-height:160px;max-height:300px;overflow:auto;white-space:pre-wrap;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:14px;background:#091525">Kết quả xử lý sẽ hiển thị tại đây.</pre>
+                        </div>
+                    </div>
+                </article>
             </section>
 
             <section class="operations-tab hidden" data-admin-panel="monitoring">
@@ -188,32 +206,86 @@
             }
         }
 
-        function parseTextToQuestions(text) {
-            const lines = text.split('\n').map(line => line.trim()).filter(Boolean); const questions = []; let current = null;
-            lines.forEach(line => {
-                if (/^câu\s*\d+[:.]/i.test(line)) { if (current) questions.push(current); current = { text: line.replace(/^câu\s*\d+[:.]\s*/i,''), options:[], correctAnswer:0 }; }
-                else if (/^[A-D][.:]/i.test(line) && current) current.options.push(line.replace(/^[A-D][.:]\s*/i,''));
-                else if (/^đáp\s*án[:.]/i.test(line) && current) { const answer = line.replace(/^đáp\s*án[:.]\s*/i,'').trim().toUpperCase(); current.correctAnswer = Math.max(0, 'ABCD'.indexOf(answer)); }
-                else if (current && current.options.length === 0) current.text += `\n${line}`;
+        function parseBulkQuestionText(rawText) {
+            const text = String(rawText || '').replace(/\r\n?/g, '\n').trim();
+            if (!text) throw new Error('Hãy dán nội dung Lý Thuyết và câu hỏi vào ô văn bản.');
+
+            const theoryMatch = text.match(/^\s*Lý\s*Thuyết\s*:\s*([\s\S]*?)(?=\s*\[\s*Câu\s*hỏi\s*\])/i);
+            if (!theoryMatch || !theoryMatch[1].trim()) {
+                throw new Error('Không tìm thấy phần “Lý Thuyết:” đứng trước [Câu hỏi].');
+            }
+            const theory = theoryMatch[1].trim();
+            const questionBlocks = text.split(/\[\s*Câu\s*hỏi\s*\]/i).slice(1);
+            if (!questionBlocks.length) throw new Error('Cần ít nhất một khối [Câu hỏi].');
+
+            return questionBlocks.map((block, index) => {
+                const match = block.match(/^\s*([\s\S]*?)\s*(?:\n)?A\.\s*([\s\S]*?)\s*(?:\n)?B\.\s*([\s\S]*?)\s*(?:\n)?C\.\s*([\s\S]*?)\s*(?:\n)?D\.\s*([\s\S]*?)\s*(?:\n)?ĐÁP\s*ÁN\s*:\s*([A-D])\s*(?:\n)?Giải\s*thích\s*:\s*([\s\S]*?)\s*$/i);
+                if (!match) {
+                    throw new Error(`Câu hỏi thứ ${index + 1} không đúng định dạng A/B/C/D, ĐÁP ÁN hoặc Giải thích.`);
+                }
+                const [, question, optionA, optionB, optionC, optionD, answer, explanation] = match;
+                const options = [optionA, optionB, optionC, optionD].map(value => value.trim());
+                if (!question.trim() || options.some(option => !option) || !explanation.trim()) {
+                    throw new Error(`Câu hỏi thứ ${index + 1} đang thiếu nội dung bắt buộc.`);
+                }
+                return {
+                    theory,
+                    question: question.trim(),
+                    options,
+                    correctAnswer: 'ABCD'.indexOf(answer.toUpperCase()),
+                    explanation: explanation.trim()
+                };
             });
-            if (current) questions.push(current); return questions;
         }
 
-        async function processUpload() {
-            const file = el('fileUpload')?.files?.[0]; const province = el('importProvince').value.trim(); const island = el('importIsland').value.trim();
-            if (!file || !province || !island) { showToast('Hãy chọn tệp, tỉnh/thành và bài học.', 'warning'); return; }
-            const button = el('btnProcessUpload'); button.disabled = true; button.textContent = 'Đang xử lý…';
+        async function processBulkTextImport() {
+            const province = el('importProvince')?.value.trim();
+            const island = el('importIsland')?.value.trim();
+            const lessonId = el('importLessonId')?.value.trim();
+            const difficulty = el('importDifficulty')?.value || 'easy';
+            const button = el('btnProcessUpload');
+
+            if (!province || !island || !lessonId) {
+                showToast('Hãy điền Tỉnh/Thành, Chủ đề Đảo nhỏ và Mã đảo trên lộ trình.', 'warning');
+                return;
+            }
+            if (typeof db === 'undefined') {
+                showToast('Firebase chưa sẵn sàng để lưu câu hỏi.', 'error');
+                return;
+            }
+
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích…';
             try {
-                let text = '';
-                if (file.name.toLowerCase().endsWith('.txt')) text = await file.text();
-                else if (file.name.toLowerCase().endsWith('.docx') && window.mammoth) text = (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
-                else throw new Error('Tệp phải là TXT hoặc DOCX hợp lệ.');
-                const questions = parseTextToQuestions(text); if (!questions.length) throw new Error('Không tìm thấy câu hỏi trong tệp.');
-                const lessonId = el('importLessonId').value.trim() || `node_${province.toLowerCase().replace(/\s+/g,'_')}_${Date.now()}`;
-                await db.collection('imported_questions').doc(lessonId).set({ province, island, difficulty:el('importDifficulty').value, lessonId, questions, updatedAt:firebase.firestore.FieldValue.serverTimestamp() });
-                el('uploadPreview').textContent = JSON.stringify(questions, null, 2); showToast(`Đã lưu ${questions.length} câu hỏi.`);
-            } catch (error) { console.error(error); showToast(error.message || 'Không thể xử lý tệp.', 'error'); }
-            finally { button.disabled = false; button.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Bóc tách và cập nhật'; }
+                const questions = parseBulkQuestionText(el('bulkQuestionText')?.value);
+                for (let start = 0; start < questions.length; start += 450) {
+                    const batch = db.batch();
+                    questions.slice(start, start + 450).forEach((question, offset) => {
+                        const doc = db.collection('questions').doc();
+                        batch.set(doc, {
+                            ...question,
+                            province,
+                            island,
+                            topic: island,
+                            lessonId,
+                            difficulty,
+                            importOrder: start + offset + 1,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                    await batch.commit();
+                }
+                el('uploadPreview').textContent = JSON.stringify({ province, island, lessonId, difficulty, questions }, null, 2);
+                showToast(`Đã lưu ${questions.length} câu hỏi vào kho dữ liệu.`);
+                el('bulkQuestionText').value = '';
+            } catch (error) {
+                console.error(error);
+                showToast(error.message || 'Không thể phân tích nội dung đã dán.', 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích và lưu câu hỏi';
+            }
         }
 
         function permittedRoles() {
@@ -234,9 +306,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.adminTab)));
-            el('searchUser').addEventListener('input', renderUsers);
-            el('fileUpload').addEventListener('change', event => { el('fileNameDisplay').textContent = event.target.files[0] ? `Đã chọn: ${event.target.files[0].name}` : 'Chưa có tệp được chọn.'; });
-            el('btnProcessUpload').addEventListener('click', processUpload);
+            el('searchUser')?.addEventListener('input', renderUsers);
+            el('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
             document.addEventListener('change', event => { if (event.target.matches('[data-role-checkbox]')) event.target.closest('tr')?.classList.add('is-role-dirty'); });
             document.addEventListener('click', event => {
                 const target = event.target.closest('button'); if (!target) return;

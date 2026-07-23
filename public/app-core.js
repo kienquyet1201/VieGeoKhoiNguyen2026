@@ -523,6 +523,9 @@ async function consumeHeart() {
 
 function gateLessonButtons(root = document) {
     root.querySelectorAll('.node-btn:not([data-heart-gated])').forEach((button) => {
+        // Small islands show a theory step first. Their confirm action calls
+        // consumeHeart() explicitly, so opening theory never spends stamina.
+        if (button.dataset.skipHeartGate === 'true') return;
         const originalClick = button.onclick;
         if (typeof originalClick !== 'function') return;
         button.dataset.heartGated = 'true';

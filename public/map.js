@@ -11,6 +11,85 @@ let currentView = 'regions'; // regions | provinces | lessons
 let selectedRegion = null;
 let selectedProvince = null;
 let routeResizeObserver = null;
+const islandTheoryModal = document.getElementById('islandTheoryModal');
+const islandTheoryTitle = document.getElementById('islandTheoryTitle');
+const islandTheoryMeta = document.getElementById('islandTheoryMeta');
+const islandTheoryContent = document.getElementById('islandTheoryContent');
+const btnStartIslandQuiz = document.getElementById('btnStartIslandQuiz');
+let activeIslandLearning = null;
+let islandTheoryRequest = 0;
+
+function fallbackTheoryFor(lesson) {
+    return `Trước khi làm bài, hãy nắm các ý chính của ${lesson.title}.\n\nQuan sát đặc điểm địa lí, ghi nhớ từ khóa quan trọng và liên hệ kiến thức với địa phương đang khám phá. Sau đó, bạn sẽ trả lời 5 câu hỏi để kiểm tra mức độ hiểu bài.`;
+}
+
+function closeIslandTheory() {
+    if (islandTheoryModal) islandTheoryModal.hidden = true;
+    activeIslandLearning = null;
+}
+
+async function openIslandTheory(lesson) {
+    if (!islandTheoryModal || !lesson) return;
+    const requestId = ++islandTheoryRequest;
+    activeIslandLearning = { lesson, theory: fallbackTheoryFor(lesson), questions: [] };
+    islandTheoryModal.hidden = false;
+    islandTheoryTitle.textContent = lesson.title || 'Lý thuyết Đảo nhỏ';
+    islandTheoryMeta.textContent = `${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${lesson.difficulty || 'easy'} · 5 câu hỏi`;
+    islandTheoryContent.textContent = 'Đang tải lý thuyết phù hợp với đảo này...';
+    btnStartIslandQuiz.disabled = true;
+
+    try {
+        const loaded = await window.VieGeoLearningPath?.loadIslandContent?.(lesson);
+        if (requestId !== islandTheoryRequest || !islandTheoryModal || islandTheoryModal.hidden) return;
+        activeIslandLearning = {
+            lesson,
+            theory: String(loaded?.theory || fallbackTheoryFor(lesson)).trim(),
+            questions: Array.isArray(loaded?.questions) ? loaded.questions.slice(0, 5) : []
+        };
+        islandTheoryContent.textContent = activeIslandLearning.theory;
+    } catch (error) {
+        console.warn('Không thể tải nội dung Đảo nhỏ:', error);
+        if (requestId !== islandTheoryRequest) return;
+        islandTheoryContent.textContent = activeIslandLearning.theory;
+    } finally {
+        if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
+            btnStartIslandQuiz.disabled = false;
+        }
+    }
+}
+
+async function beginIslandQuiz() {
+    if (!activeIslandLearning?.lesson || btnStartIslandQuiz?.disabled) return;
+    btnStartIslandQuiz.disabled = true;
+    try {
+        if (typeof window.consumeHeart === 'function' && !await window.consumeHeart()) return;
+        localStorage.setItem('VieGeo_current_lesson', activeIslandLearning.lesson.id);
+        localStorage.setItem('VieGeo_mode', 'normal');
+        localStorage.setItem('VieGeo_island_learning', JSON.stringify({
+            lessonId: activeIslandLearning.lesson.id,
+            theory: activeIslandLearning.theory,
+            questions: activeIslandLearning.questions,
+            createdAt: Date.now()
+        }));
+        closeIslandTheory();
+        window.location.href = '/lesson';
+    } catch (error) {
+        console.error('Không thể bắt đầu bài học Đảo nhỏ:', error);
+        if (typeof VieGeoUI !== 'undefined') VieGeoUI.error('Chưa thể bắt đầu bài học. Vui lòng thử lại.');
+    } finally {
+        if (islandTheoryModal && !islandTheoryModal.hidden) btnStartIslandQuiz.disabled = false;
+    }
+}
+
+document.getElementById('btnCloseIslandTheory')?.addEventListener('click', closeIslandTheory);
+btnStartIslandQuiz?.addEventListener('click', beginIslandQuiz);
+islandTheoryModal?.addEventListener('click', (event) => {
+    if (event.target === islandTheoryModal) closeIslandTheory();
+});
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && islandTheoryModal && !islandTheoryModal.hidden) closeIslandTheory();
+});
+
 // Update Stats UI
 function updateStatsUI() {
     if (document.getElementById('statHearts')) document.getElementById('statHearts').textContent = state.hearts;
@@ -141,12 +220,14 @@ function renderLessons() {
     lessons.forEach((lesson, index) => {
         const isCompleted = state.completedNodes && state.completedNodes.includes(lesson.id);
         const prevCompleted = index === 0 || (state.completedNodes && state.completedNodes.includes(lessons[index-1].id));
+        const islandResult = state.lessonResults && state.lessonResults[lesson.id];
+        const starCount = Math.max(0, Math.min(3, Number(islandResult?.stars) || 0));
         
         // Colors for grades
         let nodeColor = 'rgba(255,255,255,0.1)';
         let iconColor = 'var(--text-dim)';
         if (isCompleted) {
-            const result = state.lessonResults && state.lessonResults[lesson.id];
+            const result = islandResult;
             if (result && result.color) {
                 if (result.color === 'green') { nodeColor = '#58cc02'; iconColor = '#fff'; }
                 if (result.color === 'yellow') { nodeColor = '#ffc800'; iconColor = '#fff'; }
@@ -186,6 +267,7 @@ function renderLessons() {
         btn.style.background = nodeColor;
         btn.style.width = `${nodeSize}px`;
         btn.style.height = `${nodeSize}px`;
+        if (nodeKind === 'small') btn.dataset.skipHeartGate = 'true';
         btn.innerHTML = `<i class="fa-solid ${icon}" style="color: ${iconColor}; font-size: ${nodeKind === 'boss' ? '2.35rem' : nodeKind === 'checkpoint' ? '1.9rem' : '1.5rem'};"></i>`;
         
         const label = document.createElement('div');
@@ -198,6 +280,10 @@ function renderLessons() {
         
         btn.onclick = () => {
             if (isCompleted || prevCompleted) {
+                if (nodeKind === 'small') {
+                    openIslandTheory(lesson);
+                    return;
+                }
                 localStorage.setItem('VieGeo_current_lesson', lesson.id);
                 localStorage.setItem('VieGeo_mode', 'normal');
                 window.location.href = '/lesson';
@@ -212,6 +298,13 @@ function renderLessons() {
         
         wrapper.appendChild(btn);
         wrapper.appendChild(label);
+        if (starCount > 0) {
+            const stars = document.createElement('div');
+            stars.className = 'map-island-stars';
+            stars.textContent = `${'⭐'.repeat(starCount)}${'☆'.repeat(3 - starCount)}`;
+            stars.setAttribute('aria-label', `${starCount} trên 3 sao`);
+            wrapper.appendChild(stars);
+        }
         
         mapContainer.appendChild(wrapper);
     });
