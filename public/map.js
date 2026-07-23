@@ -243,7 +243,7 @@ function presentTheoryAfterFirebaseLoad(questions) {
     const loadedQuestions = Array.isArray(questions) ? questions.slice(0, 5) : [];
     activeIslandLearning = {
         ...activeIslandLearning,
-        theory: theoryHtmlFor(activeIslandLearning.lesson),
+        theory: theoryHtmlFromLoadedContent(activeIslandLearning.lesson, { questions: loadedQuestions }),
         questions: loadedQuestions
     };
     const modal = rebuildTheoryModalWithInlineCss(activeIslandLearning.theory);
@@ -283,6 +283,22 @@ function theoryHtmlFor(lesson) {
     if (PROVINCE_THEORIES[provinceSlug]) return PROVINCE_THEORIES[provinceSlug];
 
     return `<div class="text-left"><h3>${lesson?.title || 'Đảo tri thức'}</h3><p>${fallbackTheoryFor(lesson || {})}</p></div>`;
+}
+
+function theoryHtmlFromLoadedContent(lesson, loadedContent) {
+    const fallback = theoryHtmlFor(lesson);
+    const rawTheory = String(
+        loadedContent?.theory
+        || loadedContent?.questions?.map((question) => question?.theory || question?.theoryContent || question?.lyThuyet || '').find(Boolean)
+        || ''
+    ).trim();
+    if (!rawTheory) return fallback;
+
+    // Admin text imports are plain text. Preserve paragraphs while still
+    // accepting trusted rich HTML that was deliberately entered by an admin.
+    if (/<[a-z][\s\S]*>/i.test(rawTheory)) return rawTheory;
+    const paragraphs = rawTheory.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
+    return `<div style="text-align:left">${paragraphs.map((paragraph) => `<p style="margin:0 0 14px">${escapeQuizHtml(paragraph).replace(/\n/g, '<br>')}</p>`).join('')}</div>`;
 }
 
 function closeIslandTheory() {
@@ -441,6 +457,39 @@ function persistIslandQuizResult(correctAnswers, questionCount) {
     islandQuizSubmitted = true;
 }
 
+function renderIslandQuizWrongAnswerReview(questions) {
+    const wrongAnswers = questions.map((question, index) => {
+        const correctIndex = islandQuizCorrectAnswerIndex(question);
+        const selectedIndex = islandQuizAnswers[index];
+        return { question, index, correctIndex, selectedIndex };
+    }).filter(({ correctIndex, selectedIndex }) => selectedIndex !== correctIndex);
+
+    if (!wrongAnswers.length) {
+        return '<p style="margin:0;color:#86efac;font-weight:700"><i class="fa-solid fa-circle-check"></i> Xuất sắc! Bạn không có câu trả lời sai.</p>';
+    }
+
+    const cards = wrongAnswers.map(({ question, index, correctIndex, selectedIndex }) => {
+        const options = Array.isArray(question.options) ? question.options : [];
+        const selectedText = Number.isInteger(selectedIndex) ? options[selectedIndex] : 'Chưa chọn đáp án';
+        const correctText = options[correctIndex] || 'Chưa có đáp án đúng';
+        const explanation = String(question.explanation || '').trim();
+        return `<article style="padding:15px;border:1px solid rgba(248,113,113,.35);border-radius:14px;background:rgba(127,29,29,.16);text-align:left">
+            <strong style="display:block;color:#fecaca;margin-bottom:7px">Câu ${index + 1}: ${escapeQuizHtml(question.question || question.questionText)}</strong>
+            <p style="margin:5px 0;color:#fecaca">Bạn chọn: ${escapeQuizHtml(selectedText || 'Chưa chọn đáp án')}</p>
+            <p style="margin:5px 0;color:#bbf7d0">Đáp án đúng: ${escapeQuizHtml(correctText)}</p>
+            ${explanation ? `<p style="margin:9px 0 0;color:#cbd5e1"><strong>Giải thích:</strong> ${escapeQuizHtml(explanation)}</p>` : ''}
+        </article>`;
+    }).join('');
+
+    return `<section style="display:grid;gap:12px;width:100%;margin-top:18px;text-align:left">
+        <div style="padding:14px 16px;border:1px solid rgba(250,204,21,.32);border-radius:14px;background:rgba(250,204,21,.1);color:#fef3c7">
+            <strong><i class="fa-solid fa-book-open"></i> Hãy đọc lại lý thuyết</strong>
+            <p style="margin:5px 0 0">Bạn còn ${wrongAnswers.length} câu chưa đúng. Ôn lại phần lý thuyết của đảo trước khi làm lại để ghi nhớ tốt hơn.</p>
+        </div>
+        ${cards}
+    </section>`;
+}
+
 async function renderIslandQuizResult() {
     const questions = activeIslandQuizQuestions();
     const correctAnswers = questions.reduce((total, question, index) => total + (islandQuizAnswers[index] === islandQuizCorrectAnswerIndex(question) ? 1 : 0), 0);
@@ -469,6 +518,7 @@ async function renderIslandQuizResult() {
         <div style="font-size: 2rem; letter-spacing: 6px;">${stars ? '⭐'.repeat(stars) : '☆'}</div>
         <h3 style="margin: 0; color: #f8fafc; font-size: 1.5rem;">Bạn trả lời đúng ${correctAnswers}/${questions.length} câu</h3>
         <p style="margin: 0; color: #cbd5e1;">Số sao cao nhất của đảo đã được lưu vào hành trình học tập.</p>
+        ${renderIslandQuizWrongAnswerReview(questions)}
     </div>`;
     backButton.style.visibility = 'hidden';
     nextButton.textContent = 'Hoàn tất';
@@ -673,7 +723,7 @@ async function openIslandTheory(lesson) {
         if (requestId !== islandTheoryRequest || !ensureIslandModalDom() || islandTheoryModal.hidden) return;
         activeIslandLearning = {
             lesson,
-            theory: theoryHtmlFor(lesson),
+            theory: theoryHtmlFromLoadedContent(lesson, loaded),
             questions: Array.isArray(loaded?.questions) ? loaded.questions.slice(0, 5) : []
         };
         islandTheoryContent.classList.remove('is-loading');
@@ -749,7 +799,9 @@ mapContainer?.addEventListener('click', handleDelegatedIslandClick);
 
 // Update Stats UI
 function updateStatsUI() {
-    if (document.getElementById('statHearts')) document.getElementById('statHearts').textContent = state.hearts;
+    if (document.getElementById('statHearts')) {
+        document.getElementById('statHearts').textContent = isPremiumIslandLearner() ? '∞' : state.hearts;
+    }
     if (document.getElementById('statStreak')) document.getElementById('statStreak').textContent = state.streak;
     if (document.getElementById('statGems')) document.getElementById('statGems').textContent = state.gems;
     if (document.getElementById('statXp')) document.getElementById('statXp').textContent = state.xp;
@@ -858,6 +910,27 @@ function islandSizeFor(kind) {
     return 70;
 }
 
+let islandTopicSyncRequest = 0;
+
+async function syncIslandTopicsFromAdmin(lessons) {
+    const loadIslandTopics = window.VieGeoLearningPath?.loadIslandTopics;
+    if (typeof loadIslandTopics !== 'function' || !Array.isArray(lessons) || !lessons.length) return;
+
+    const requestId = ++islandTopicSyncRequest;
+    const topicsByLessonId = await loadIslandTopics(lessons);
+    if (requestId !== islandTopicSyncRequest || !topicsByLessonId || !mapContainer) return;
+
+    mapContainer.querySelectorAll('.island[data-lesson-id]').forEach((island) => {
+        const lessonId = island.dataset.lessonId;
+        const topic = String(topicsByLessonId[lessonId] || '').trim();
+        if (!topic) return;
+        island.dataset.lessonTitle = topic;
+        const label = island.querySelector('.map-island-label');
+        if (label) label.textContent = topic;
+    });
+    window.requestAnimationFrame(() => drawIslandRoute());
+}
+
 function renderLessons() {
     mapContainer.style.display = 'flex';
     mapContainer.style.flexDirection = 'column';
@@ -956,6 +1029,8 @@ function renderLessons() {
         
         mapContainer.appendChild(wrapper);
     });
+
+    void syncIslandTopicsFromAdmin(lessons);
 
     const redrawRoute = () => drawIslandRoute();
     window.requestAnimationFrame(redrawRoute);

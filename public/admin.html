@@ -305,6 +305,7 @@
                         const doc = db.collection('Questions').doc();
                         batch.set(doc, {
                             ...question,
+                            answer: question.correctAnswer,
                             province,
                             island,
                             topic: island,

@@ -293,8 +293,9 @@ function renderArenaLeaderboard() {
 }
 
 function updateHeartsUI() {
-    const hasInfiniteHearts = state.inventory && state.inventory.infiniteHeartsExpiry && Date.now() < state.inventory.infiniteHeartsExpiry;
-    if (hasInfiniteHearts) {
+    const hasUnlimitedHearts = String(state.accountStatus || '').trim().toLowerCase() === 'premium'
+        || (state.inventory && state.inventory.infiniteHeartsExpiry && Date.now() < state.inventory.infiniteHeartsExpiry);
+    if (hasUnlimitedHearts) {
         heartsCount.innerHTML = `<i class="fa-solid fa-heart"></i> ∞`;
     } else {
         heartsCount.innerHTML = `<i class="fa-solid fa-heart"></i> ${state.hearts}`;

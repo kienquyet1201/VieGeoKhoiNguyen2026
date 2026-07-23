@@ -43,6 +43,7 @@
             return {
                 id: `path-${provinceKey(province)}-d${difficulty}-i${islandIndex}`,
                 title,
+                defaultTitle: title,
                 islandIndex,
                 isBoss,
                 nodeKind,
@@ -284,14 +285,129 @@
         }
     }
 
+    function firestoreProvinceSlug(value) {
+        return String(value || 'ha-noi')
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '') || 'ha-noi';
+    }
+
+    function mapFirestoreQuestions(snapshot) {
+        return snapshot.docs.map((doc, index) => {
+            const data = doc.data() || {};
+            const options = optionsFromQuestionDocument(data);
+            const correctAnswer = answerIndexFromQuestionDocument(data, options);
+            const question = String(data.question ?? data.questionText ?? data.text ?? '').trim();
+            if (!question || options.length < 2 || correctAnswer < 0 || correctAnswer >= options.length) {
+                console.warn(`Skipping Questions/${doc.id}: invalid question data.`);
+                return null;
+            }
+            return {
+                id: doc.id || `question-${index}`,
+                questionText: question,
+                question,
+                options,
+                correctAnswer,
+                explanation: String(data.explanation ?? data.solution ?? data.explain ?? '').trim(),
+                theory: String(data.theory ?? data.theoryContent ?? data.lyThuyet ?? '').trim(),
+                lessonId: String(data.lessonId ?? '').trim()
+            };
+        }).filter(Boolean);
+    }
+
+    // Prefer the exact lessonId saved by Admin. The province/difficulty query is
+    // retained only for legacy question documents that are not island-specific.
+    async function fetchQuestionsForLesson(lesson = {}) {
+        const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+        if (!firestore) throw new Error('Firestore is not ready.');
+
+        const lessonId = String(lesson.id || lesson.lessonId || '').trim();
+        if (lessonId) {
+            const islandSnapshot = await firestore.collection('Questions')
+                .where('lessonId', '==', lessonId)
+                .limit(100)
+                .get();
+            const islandQuestions = mapFirestoreQuestions(islandSnapshot);
+            if (islandQuestions.length) {
+                window.VieGeoQuestionLoadState = 'ready';
+                console.log('Questions loaded for island:', islandQuestions);
+                return islandQuestions;
+            }
+        }
+
+        const difficulty = ['easy', 'medium', 'hard'].includes(String(lesson.difficulty).toLowerCase())
+            ? String(lesson.difficulty).toLowerCase()
+            : 'easy';
+        const province = firestoreProvinceSlug(lesson.province || 'ha-noi');
+        const snapshot = await firestore.collection('Questions')
+            .where('province', '==', province)
+            .where('difficulty', '==', difficulty)
+            .limit(100)
+            .get();
+        const questions = mapFirestoreQuestions(snapshot);
+        window.VieGeoQuestionLoadState = questions.length ? 'ready' : 'empty';
+        console.log('Questions loaded for province/difficulty:', questions);
+        return questions;
+    }
+
+    // Reads the topic entered in Admin and applies it to the matching route
+    // node. Querying by the known lesson IDs avoids any dependency on how an
+    // administrator typed the province name.
+    async function loadIslandTopics(lessons) {
+        const routeLessons = Array.isArray(lessons) ? lessons.filter((lesson) => lesson?.id) : [];
+        const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+        if (!routeLessons.length || !firestore) return {};
+
+        const topicsByLessonId = {};
+        try {
+            for (let start = 0; start < routeLessons.length; start += 30) {
+                const lessonIds = routeLessons.slice(start, start + 30).map((lesson) => lesson.id);
+                const snapshot = await firestore.collection('Questions')
+                    .where('lessonId', 'in', lessonIds)
+                    .limit(100)
+                    .get();
+                snapshot.docs.forEach((doc) => {
+                    const data = doc.data() || {};
+                    const lessonId = String(data.lessonId || '').trim();
+                    const topic = String(data.topic || data.island || '').trim();
+                    if (lessonId && topic && !topicsByLessonId[lessonId]) topicsByLessonId[lessonId] = topic;
+                });
+            }
+            routeLessons.forEach((lesson) => {
+                lesson.title = topicsByLessonId[lesson.id] || lesson.defaultTitle || lesson.title;
+            });
+        } catch (error) {
+            // A missing permission/index must never prevent the learning route
+            // from rendering with its default island labels.
+            console.warn('Không thể tải tên chủ đề đảo từ Firebase:', error);
+        }
+        return topicsByLessonId;
+    }
+
     function randomFiveFirestoreQuestions(questions) {
         if (!Array.isArray(questions) || !questions.length) return [];
         return [...questions].sort(() => Math.random() - 0.5).slice(0, 5);
     }
 
     async function loadFirebaseIslandContent(lesson) {
-        const questions = randomFiveFirestoreQuestions(await fetchHanoiQuestions(lesson?.difficulty || 'easy'));
+        let sourceQuestions = [];
+        try {
+            sourceQuestions = await fetchQuestionsForLesson(lesson || {});
+        } catch (error) {
+            console.error('Firebase island content load failed:', error);
+            window.VieGeoQuestionLoadState = 'network-error';
+            notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!', true);
+        }
+        const questions = randomFiveFirestoreQuestions(sourceQuestions);
+        if (!questions.length && window.VieGeoQuestionLoadState !== 'network-error') {
+            notifyQuestionLoad('Hiện chưa có câu hỏi nào cho đảo này, vui lòng quay lại sau!');
+        }
         const theory = String(questions.map(item => item.theory || item.theoryContent || '').find(Boolean)
+            || sourceQuestions.map(item => item.theory || item.theoryContent || '').find(Boolean)
             || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
         return { theory, questions, status: window.VieGeoQuestionLoadState || (questions.length ? 'ready' : 'empty') };
     }
@@ -304,6 +420,7 @@
     window.VieGeoLearningPath = {
         getLessonsForProvince,
         findLesson,
+        loadIslandTopics,
         loadQuestions: loadFirebaseIslandQuestions,
         loadIslandContent: loadFirebaseIslandContent,
         fetchHanoiQuestions

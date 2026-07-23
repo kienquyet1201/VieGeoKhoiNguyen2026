@@ -339,6 +339,15 @@ function normalizeHeartState(state, now = Date.now()) {
     return state;
 }
 
+function isPremiumAccount() {
+    return String(gameState?.accountStatus || '').trim().toLowerCase() === 'premium';
+}
+
+function hasUnlimitedHearts() {
+    return isPremiumAccount()
+        || Boolean(gameState?.inventory?.infiniteHeartsExpiry && Number(gameState.inventory.infiniteHeartsExpiry) > Date.now());
+}
+
 function writeHeartStateToLocal() {
     try {
         localStorage.setItem('VieGeo_state', JSON.stringify(gameState));
@@ -383,10 +392,10 @@ function formatHeartCountdown(milliseconds) {
 function updateHeartUi() {
     const heartsElement = document.getElementById('hdrHearts');
     const timerElement = document.getElementById('hdrHeartTimer');
-    if (heartsElement) heartsElement.textContent = String(gameState.hearts);
+    if (heartsElement) heartsElement.textContent = hasUnlimitedHearts() ? '∞' : String(gameState.hearts);
     if (!timerElement) return;
 
-    if (gameState.hearts >= HEARTS_MAX) {
+    if (hasUnlimitedHearts() || gameState.hearts >= HEARTS_MAX) {
         timerElement.hidden = true;
         timerElement.textContent = '';
         return;
@@ -442,7 +451,7 @@ function startHeartTimer() {
     }
 
     updateHeartUi();
-    if (gameState.hearts >= HEARTS_MAX) return;
+    if (hasUnlimitedHearts() || gameState.hearts >= HEARTS_MAX) return;
 
     heartTimerInterval = window.setInterval(() => {
         const remaining = HEART_REGEN_MS - (Date.now() - gameState.lastHeartUpdate);
@@ -494,6 +503,10 @@ function showOutOfHeartsPopup() {
 
 async function consumeHeart() {
     if (lessonEntryInProgress) return false;
+    if (hasUnlimitedHearts()) {
+        updateHeaderStats();
+        return true;
+    }
     if (!checkHasEnoughHearts()) {
         showOutOfHeartsPopup();
         return false;
@@ -528,9 +541,7 @@ async function deductHeartForIslandSummary() {
     if (lessonEntryInProgress) return { applied: false, gameOver: false };
     syncHearts();
 
-    const hasInfiniteHearts = gameState.inventory
-        && Number(gameState.inventory.infiniteHeartsExpiry) > Date.now();
-    if (hasInfiniteHearts) {
+    if (hasUnlimitedHearts()) {
         return { applied: false, protected: true, gameOver: false, hearts: gameState.hearts };
     }
     if (gameState.hearts <= 0) {
@@ -586,6 +597,7 @@ window.startHeartTimer = startHeartTimer;
 window.checkHasEnoughHearts = checkHasEnoughHearts;
 window.consumeHeart = consumeHeart;
 window.deductHeartForIslandSummary = deductHeartForIslandSummary;
+window.isPremiumUser = isPremiumAccount;
 
 syncHearts();
 const heartGateObserver = new MutationObserver((records) => {
