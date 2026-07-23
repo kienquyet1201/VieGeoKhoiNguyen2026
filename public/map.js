@@ -13,8 +13,8 @@ const PROVINCE_THEORIES = Object.freeze({
   <p>Hà Nội nằm ở miền Bắc của Việt Nam. Đây là khu vực có bốn mùa rõ rệt là xuân, hạ, thu và đông. Mỗi mùa đều mang một vẻ đẹp riêng và tạo nên những nét đặc trưng trong cuộc sống của người dân.</p>
   <p>Theo phân chia địa lí, Hà Nội thuộc vùng Đồng bằng sông Hồng. Vùng này nổi tiếng với đất đai màu mỡ, hệ thống sông ngòi dày đặc và dân cư đông đúc. Từ lâu, đây đã là một trong những cái nôi của nền văn minh lúa nước Việt Nam.</p>
 
-  <h3 class="text-xl font-bold text-blue-600">3. Hà Nội là tỉnh hay thành phố?</h3>
-  <p>Hà Nội là thành phố trực thuộc Trung ương chứ không phải là một tỉnh. Thành phố được chia thành các quận, huyện và thị xã. Các quận là nơi tập trung nhiều cơ quan, trường học, bệnh viện và khu dân cư. Trong khi đó, các huyện ngoại thành vẫn còn nhiều làng quê, cánh đồng và làng nghề truyền thống.</p>
+  <h3 class="text-xl font-bold text-blue-600">3. Khí hậu Hà Nội có gì đặc trưng?</h3>
+  <p>Hà Nội có khí hậu nhiệt đới gió mùa với bốn mùa khá rõ rệt: xuân, hạ, thu và đông. Mùa hè thường nóng, ẩm và có mưa nhiều; mùa đông se lạnh, đôi khi có mưa phùn. Mùa thu mát mẻ, trong lành là một nét đặc trưng được nhiều người yêu thích.</p>
 
   <h3 class="text-xl font-bold text-blue-600">4. Điều gì làm Hà Nội nổi bật?</h3>
   <p>Điều làm Hà Nội nổi bật là bề dày lịch sử hơn một nghìn năm và vai trò là Thủ đô của Việt Nam. Thành phố nổi tiếng với Hồ Gươm, Văn Miếu – Quốc Tử Giám, Hoàng thành Thăng Long, Lăng Chủ tịch Hồ Chí Minh và khu phố cổ.</p>
@@ -36,8 +36,17 @@ const islandTheoryTitle = document.getElementById('islandTheoryTitle');
 const islandTheoryMeta = document.getElementById('islandTheoryMeta');
 const islandTheoryContent = document.getElementById('islandTheoryContent');
 const btnStartIslandQuiz = document.getElementById('btnStartIslandQuiz');
+const islandQuizModal = document.getElementById('islandQuizModal');
+const islandQuizTitle = document.getElementById('islandQuizTitle');
+const islandQuizMeta = document.getElementById('islandQuizMeta');
+const islandQuizContent = document.getElementById('islandQuizContent');
+const btnLaunchIslandQuiz = document.getElementById('btnLaunchIslandQuiz');
 let activeIslandLearning = null;
 let islandTheoryRequest = 0;
+
+function hasTheoryModalDom() {
+    return Boolean(islandTheoryModal && islandTheoryTitle && islandTheoryMeta && islandTheoryContent && btnStartIslandQuiz);
+}
 
 function fallbackTheoryFor(lesson) {
     return `Trước khi làm bài, hãy nắm các ý chính của ${lesson.title}.\n\nQuan sát đặc điểm địa lí, ghi nhớ từ khóa quan trọng và liên hệ kiến thức với địa phương đang khám phá. Sau đó, bạn sẽ trả lời 5 câu hỏi để kiểm tra mức độ hiểu bài.`;
@@ -86,26 +95,71 @@ function closeIslandTheory() {
     activeIslandLearning = null;
 }
 
+function closeIslandQuiz() {
+    if (!islandQuizModal) return;
+    islandQuizModal.hidden = true;
+    islandQuizModal.classList.add('hidden');
+}
+
+function escapeQuizHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[character]));
+}
+
+function openIslandQuizPreview() {
+    if (!activeIslandLearning?.lesson || !Array.isArray(activeIslandLearning.questions) || activeIslandLearning.questions.length !== 5) {
+        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Cần tải đủ 5 câu hỏi trước khi bắt đầu làm bài.');
+        return;
+    }
+    if (!islandQuizModal || !islandQuizContent || !islandQuizTitle || !islandQuizMeta) {
+        console.error('Không tìm thấy cấu trúc Modal trắc nghiệm trên map.html.');
+        return;
+    }
+
+    // Keep the loaded session in memory; only the visible layer changes here.
+    if (islandTheoryModal) {
+        islandTheoryModal.hidden = true;
+        islandTheoryModal.classList.add('hidden');
+    }
+    islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
+    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · 5 câu hỏi từ Firebase`;
+    islandQuizContent.innerHTML = activeIslandLearning.questions.map((question, questionIndex) => {
+        const options = Array.isArray(question.options) ? question.options : [];
+        return `<article class="island-quiz-preview-card" data-question-index="${questionIndex}">
+            <h3>Câu ${questionIndex + 1}. ${escapeQuizHtml(question.question || question.questionText)}</h3>
+            <ol>${options.map((option, optionIndex) => `<li><strong>${String.fromCharCode(65 + optionIndex)}.</strong> ${escapeQuizHtml(option)}</li>`).join('')}</ol>
+        </article>`;
+    }).join('');
+    islandQuizModal.hidden = false;
+    islandQuizModal.classList.remove('hidden');
+    btnLaunchIslandQuiz?.focus();
+}
+
 function showIslandLoadingFeedback(clickedIsland) {
     const title = clickedIsland?.dataset.lessonTitle || 'Đảo tri thức';
     const province = clickedIsland?.dataset.province || selectedProvince?.name || 'Việt Nam';
     const difficulty = clickedIsland?.dataset.difficulty || 'easy';
 
-    if (!islandTheoryModal) {
-        // This should never run on map.html, but it prevents a silent click if
-        // the modal markup is accidentally removed in a future layout change.
+    if (!hasTheoryModalDom()) {
+        console.error('Không tìm thấy cấu trúc Modal lý thuyết trên map.html.');
         window.alert('Đã nhận click! Đang kết nối Firebase...');
-        return;
+        return false;
     }
 
     islandTheoryModal.hidden = false;
     islandTheoryModal.classList.remove('hidden');
-    islandTheoryTitle.textContent = title;
-    islandTheoryMeta.textContent = `${province} · ${difficulty} · 5 câu hỏi`;
+    islandTheoryTitle.textContent = 'Lý thuyết trước khi thực chiến';
+    islandTheoryMeta.textContent = `${title} · ${province} · ${difficulty} · 5 câu hỏi`;
     islandTheoryContent.classList.add('is-loading');
     islandTheoryContent.setAttribute('aria-busy', 'true');
     islandTheoryContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tải dữ liệu...';
-    if (btnStartIslandQuiz) btnStartIslandQuiz.disabled = true;
+    btnStartIslandQuiz.disabled = true;
+    return true;
 }
 
 function findRenderedIslandLesson(lessonId) {
@@ -120,7 +174,7 @@ async function handleDelegatedIslandClick(event) {
     if (!clickedIsland || !mapContainer?.contains(clickedIsland)) return;
 
     console.log('✅ Đã nhận sự kiện click vào đảo:', clickedIsland);
-    showIslandLoadingFeedback(clickedIsland);
+    if (!showIslandLoadingFeedback(clickedIsland)) return;
 
     const lesson = findRenderedIslandLesson(clickedIsland.dataset.lessonId);
     const isUnlocked = clickedIsland.dataset.unlocked === 'true';
@@ -166,14 +220,17 @@ async function handleDelegatedIslandClick(event) {
 }
 
 async function openIslandTheory(lesson) {
-    if (!islandTheoryModal || !lesson) return;
+    if (!lesson || !hasTheoryModalDom()) {
+        if (!hasTheoryModalDom()) console.error('Không thể mở lý thuyết vì thiếu phần tử DOM cần thiết.');
+        return;
+    }
     const requestId = ++islandTheoryRequest;
     const theoryHtml = theoryHtmlFor(lesson);
     activeIslandLearning = { lesson, theory: theoryHtml, questions: [] };
     islandTheoryModal.hidden = false;
     islandTheoryModal.classList.remove('hidden');
-    islandTheoryTitle.textContent = lesson.title || 'Lý thuyết Đảo nhỏ';
-    islandTheoryMeta.textContent = `${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${lesson.difficulty || 'easy'} · Đang chuẩn bị 5 câu hỏi`;
+    islandTheoryTitle.textContent = 'Lý thuyết trước khi thực chiến';
+    islandTheoryMeta.textContent = `${lesson.title || 'Đảo tri thức'} · ${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${lesson.difficulty || 'easy'} · Đang chuẩn bị 5 câu hỏi`;
     islandTheoryContent.classList.remove('is-loading');
     islandTheoryContent.setAttribute('aria-busy', 'true');
     islandTheoryContent.innerHTML = theoryHtml;
@@ -213,12 +270,14 @@ async function openIslandTheory(lesson) {
 }
 
 async function beginIslandQuiz() {
-    if (!activeIslandLearning?.lesson || btnStartIslandQuiz?.disabled) return;
+    if (!activeIslandLearning?.lesson) return;
     if (!Array.isArray(activeIslandLearning.questions) || activeIslandLearning.questions.length !== 5) {
         if (typeof VieGeoUI !== 'undefined') VieGeoUI.warning('Cần tải đủ 5 câu hỏi thật từ Firebase trước khi bắt đầu.');
         return;
     }
-    btnStartIslandQuiz.disabled = true;
+    const launchButton = btnLaunchIslandQuiz || btnStartIslandQuiz;
+    if (launchButton?.disabled) return;
+    if (launchButton) launchButton.disabled = true;
     try {
         if (typeof window.consumeHeart === 'function' && !await window.consumeHeart()) return;
         localStorage.setItem('VieGeo_current_lesson', activeIslandLearning.lesson.id);
@@ -229,23 +288,32 @@ async function beginIslandQuiz() {
             questions: activeIslandLearning.questions,
             createdAt: Date.now()
         }));
+        closeIslandQuiz();
         closeIslandTheory();
         window.location.href = '/lesson';
     } catch (error) {
         console.error('Không thể bắt đầu bài học Đảo nhỏ:', error);
         if (typeof VieGeoUI !== 'undefined') VieGeoUI.error('Chưa thể bắt đầu bài học. Vui lòng thử lại.');
     } finally {
-        if (islandTheoryModal && !islandTheoryModal.hidden) btnStartIslandQuiz.disabled = false;
+        if (islandQuizModal && !islandQuizModal.hidden && launchButton) launchButton.disabled = false;
+        if (islandTheoryModal && !islandTheoryModal.hidden && btnStartIslandQuiz) btnStartIslandQuiz.disabled = false;
     }
 }
 
 document.getElementById('btnCloseIslandTheory')?.addEventListener('click', closeIslandTheory);
-btnStartIslandQuiz?.addEventListener('click', beginIslandQuiz);
+btnStartIslandQuiz?.addEventListener('click', openIslandQuizPreview);
+document.getElementById('btnCloseIslandQuiz')?.addEventListener('click', closeIslandQuiz);
+btnLaunchIslandQuiz?.addEventListener('click', beginIslandQuiz);
 islandTheoryModal?.addEventListener('click', (event) => {
     if (event.target === islandTheoryModal) closeIslandTheory();
 });
+islandQuizModal?.addEventListener('click', (event) => {
+    if (event.target === islandQuizModal) closeIslandQuiz();
+});
 document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && islandTheoryModal && !islandTheoryModal.hidden) closeIslandTheory();
+    if (event.key !== 'Escape') return;
+    if (islandQuizModal && !islandQuizModal.hidden) closeIslandQuiz();
+    else if (islandTheoryModal && !islandTheoryModal.hidden) closeIslandTheory();
 });
 
 // Islands are rendered again whenever the learner changes region/province.

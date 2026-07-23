@@ -85,14 +85,25 @@
                 </div>
             </div>
 
-            <div id="islandTheoryModal" class="island-theory-modal" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" hidden>
-                <section class="island-theory-dialog">
+            <div id="islandTheoryModal" class="island-theory-modal fixed inset-0 z-[999999] hidden" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" hidden>
+                <section class="island-theory-dialog w-full max-w-3xl rounded-3xl">
                     <button id="btnCloseIslandTheory" class="island-theory-close" type="button" aria-label="Đóng lý thuyết"><i class="fa-solid fa-xmark"></i></button>
-                    <p class="island-theory-eyebrow"><i class="fa-solid fa-book-open"></i> Lý thuyết Đảo nhỏ</p>
-                    <h2 id="islandTheoryTitle">Đang chuẩn bị nội dung...</h2>
+                    <p class="island-theory-eyebrow"><i class="fa-solid fa-book-open"></i> Hành trang trước thử thách</p>
+                    <h2 id="islandTheoryTitle">Lý thuyết trước khi thực chiến</h2>
                     <p id="islandTheoryMeta" class="island-theory-meta"></p>
-                    <article id="islandTheoryContent" class="island-theory-content" aria-live="polite">Đang tải lý thuyết phù hợp với đảo này...</article>
-                    <button id="btnStartIslandQuiz" class="island-theory-start" type="button" disabled><i class="fa-solid fa-play"></i> Đã đọc xong - Bắt đầu làm bài</button>
+                    <article id="islandTheoryContent" class="island-theory-content max-h-[55vh] overflow-y-auto" aria-live="polite">Đang tải lý thuyết phù hợp với đảo này...</article>
+                    <button id="btnStartIslandQuiz" class="island-theory-start w-full" type="button" disabled><i class="fa-solid fa-play"></i> Đã hiểu &amp; Bắt đầu làm bài</button>
+                </section>
+            </div>
+
+            <div id="islandQuizModal" class="island-theory-modal fixed inset-0 z-[999999] hidden" role="dialog" aria-modal="true" aria-labelledby="islandQuizTitle" hidden>
+                <section class="island-theory-dialog w-full max-w-3xl rounded-3xl">
+                    <button id="btnCloseIslandQuiz" class="island-theory-close" type="button" aria-label="Đóng bảng trắc nghiệm"><i class="fa-solid fa-xmark"></i></button>
+                    <p class="island-theory-eyebrow"><i class="fa-solid fa-list-check"></i> Trắc nghiệm Đảo nhỏ</p>
+                    <h2 id="islandQuizTitle">5 câu hỏi đã sẵn sàng</h2>
+                    <p id="islandQuizMeta" class="island-theory-meta"></p>
+                    <section id="islandQuizContent" class="island-theory-content max-h-[55vh] overflow-y-auto" aria-live="polite"></section>
+                    <button id="btnLaunchIslandQuiz" class="island-theory-start w-full" type="button"><i class="fa-solid fa-pen-to-square"></i> Vào bài trắc nghiệm</button>
                 </section>
             </div>
 
