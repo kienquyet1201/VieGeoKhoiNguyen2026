@@ -75,18 +75,6 @@ function theoryHtmlFor(lesson) {
     return `<div class="text-left"><h3>${lesson?.title || 'Đảo tri thức'}</h3><p>${fallbackTheoryFor(lesson || {})}</p></div>`;
 }
 
-function emergencyFallbackQuestions() {
-    const supplied = window.VieGeoLearningPath?.createFallbackQuestions?.();
-    if (Array.isArray(supplied) && supplied.length === 5) return supplied;
-    return [
-        { question: 'Thủ đô của Việt Nam là thành phố nào?', options: ['Hà Nội', 'Huế', 'Đà Nẵng', 'Cần Thơ'], correctAnswer: 0 },
-        { question: 'Việt Nam nằm ở khu vực nào?', options: ['Đông Nam Á', 'Nam Á', 'Tây Á', 'Trung Á'], correctAnswer: 0 },
-        { question: 'Biển nào nằm ở phía đông Việt Nam?', options: ['Biển Đông', 'Biển Đen', 'Biển Đỏ', 'Biển Baltic'], correctAnswer: 0 },
-        { question: 'Đồng bằng lớn nhất Việt Nam là gì?', options: ['Đồng bằng sông Cửu Long', 'Đồng bằng sông Hồng', 'Đồng bằng duyên hải miền Trung', 'Đồng bằng Thanh Nghệ Tĩnh'], correctAnswer: 0 },
-        { question: 'Núi cao nhất Việt Nam là gì?', options: ['Phan-xi-păng', 'Ngọc Linh', 'Tây Côn Lĩnh', 'Bạch Mã'], correctAnswer: 0 }
-    ];
-}
-
 function closeIslandTheory() {
     if (islandTheoryModal) {
         islandTheoryModal.hidden = true;
@@ -112,8 +100,8 @@ function escapeQuizHtml(value) {
 }
 
 function openIslandQuizPreview() {
-    if (!activeIslandLearning?.lesson || !Array.isArray(activeIslandLearning.questions) || activeIslandLearning.questions.length !== 5) {
-        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Cần tải đủ 5 câu hỏi trước khi bắt đầu làm bài.');
+    if (!activeIslandLearning?.lesson || !Array.isArray(activeIslandLearning.questions) || !activeIslandLearning.questions.length) {
+        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Hiện chưa có câu hỏi để bắt đầu bài học này.');
         return;
     }
     if (!islandQuizModal || !islandQuizContent || !islandQuizTitle || !islandQuizMeta) {
@@ -127,7 +115,7 @@ function openIslandQuizPreview() {
         islandTheoryModal.classList.add('hidden');
     }
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
-    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · 5 câu hỏi từ Firebase`;
+    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
     islandQuizContent.innerHTML = activeIslandLearning.questions.map((question, questionIndex) => {
         const options = Array.isArray(question.options) ? question.options : [];
         return `<article class="island-quiz-preview-card" data-question-index="${questionIndex}">
@@ -249,30 +237,34 @@ async function openIslandTheory(lesson) {
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
         islandTheoryContent.innerHTML = activeIslandLearning.theory;
-        if (loaded?.isFallback) {
-            const notice = 'Lỗi kết nối máy chủ, đang sử dụng dữ liệu dự phòng.';
-            if (window.VieGeoUI?.warning) window.VieGeoUI.warning(notice);
-            else console.warn(notice);
+        const questionCount = activeIslandLearning.questions.length;
+        islandTheoryMeta.textContent = `${lesson.title || 'Đảo tri thức'} · ${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${questionCount} câu hỏi sẵn sàng`;
+        if (!questionCount) {
+            const notice = loaded?.status === 'network-error'
+                ? 'Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!'
+                : 'Hiện chưa có câu hỏi nào cho khu vực này, vui lòng quay lại sau!';
+            islandTheoryContent.insertAdjacentHTML('beforeend', `<p><strong>Thông báo:</strong> ${notice}</p>`);
         }
     } catch (error) {
-        console.error('Lỗi Firebase khi tải nội dung Đảo nhỏ:', error);
+        const message = error?.message || 'Không thể kết nối Firestore.';
+        console.error('Lỗi Firebase khi tải nội dung Đảo nhỏ:', message, error);
         if (requestId !== islandTheoryRequest) return;
-        activeIslandLearning = { lesson, theory: theoryHtmlFor(lesson), questions: emergencyFallbackQuestions() };
+        activeIslandLearning = { lesson, theory: theoryHtmlFor(lesson), questions: [] };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.innerHTML = `${activeIslandLearning.theory}<p><strong>Lỗi kết nối máy chủ:</strong> đang sử dụng dữ liệu dự phòng. Bạn vẫn có thể bắt đầu làm bài.</p>`;
-        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi kết nối máy chủ, đang sử dụng dữ liệu dự phòng.');
+        islandTheoryContent.innerHTML = `${activeIslandLearning.theory}<p><strong>Lỗi đường truyền hoặc máy chủ Firebase.</strong> Vui lòng kiểm tra lại mạng!</p>`;
+        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!');
     } finally {
         if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
-            btnStartIslandQuiz.disabled = activeIslandLearning?.questions?.length !== 5;
+            btnStartIslandQuiz.disabled = !activeIslandLearning?.questions?.length;
         }
     }
 }
 
 async function beginIslandQuiz() {
     if (!activeIslandLearning?.lesson) return;
-    if (!Array.isArray(activeIslandLearning.questions) || activeIslandLearning.questions.length !== 5) {
-        if (typeof VieGeoUI !== 'undefined') VieGeoUI.warning('Cần tải đủ 5 câu hỏi thật từ Firebase trước khi bắt đầu.');
+    if (!Array.isArray(activeIslandLearning.questions) || !activeIslandLearning.questions.length) {
+        if (typeof VieGeoUI !== 'undefined') VieGeoUI.warning('Hiện chưa có câu hỏi để bắt đầu bài học này.');
         return;
     }
     const launchButton = btnLaunchIslandQuiz || btnStartIslandQuiz;

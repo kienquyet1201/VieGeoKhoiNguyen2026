@@ -141,7 +141,7 @@ async function initNormal() {
         activeIslandNodeKind = foundNode.nodeKind || '';
         document.getElementById('quizContainer').style.display = 'block';
         document.getElementById('theoryContainer').style.display = 'none';
-        const cachedQuestions = Array.isArray(islandLearning?.questions) && islandLearning.questions.length === 5
+        const cachedQuestions = Array.isArray(islandLearning?.questions) && islandLearning.questions.length > 0
             ? islandLearning.questions
             : null;
         currentQuestions = cachedQuestions || foundNode.questions || [];
@@ -560,7 +560,7 @@ function finishLesson() {
             stars: highestStars,
             bestCorrectAnswers: Math.max(Number(previousResult.bestCorrectAnswers) || 0, correctAnswers),
             lastCorrectAnswers: correctAnswers,
-            questionCount: 5,
+            questionCount: currentQuestions.length,
             color: highestStars === 3 ? 'green' : highestStars === 2 ? 'yellow' : 'red',
             updatedAt: Date.now()
         };
@@ -569,7 +569,7 @@ function finishLesson() {
             <div style="text-align: center; width:100%; grid-column: span 2;">
                 <i class="fa-solid fa-gem" style="font-size: 4rem; color: var(--blue); margin-bottom: 20px;"></i>
                 <h3 style="font-size: 1.5rem;">+${activeLessonReward.xp || 15} XP</h3>
-                <p style="margin:10px 0 0;color:#ffc800;font-size:1.25rem;letter-spacing:2px;">${earnedStars ? '⭐'.repeat(earnedStars) : 'Chưa đạt sao'} · ${correctAnswers}/5 câu đúng</p>
+                <p style="margin:10px 0 0;color:#ffc800;font-size:1.25rem;letter-spacing:2px;">${earnedStars ? '⭐'.repeat(earnedStars) : 'Chưa đạt sao'} · ${correctAnswers}/${currentQuestions.length} câu đúng</p>
             </div>
         `;
         
