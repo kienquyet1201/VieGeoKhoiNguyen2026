@@ -195,5 +195,84 @@
         };
     }
 
-    window.VieGeoLearningPath = { getLessonsForProvince, findLesson, loadQuestions, loadIslandContent };
+    function optionsFromQuestionDocument(data) {
+        if (Array.isArray(data?.options)) return data.options.map(String).map(value => value.trim()).filter(Boolean);
+        if (Array.isArray(data?.answers)) return data.answers.map(String).map(value => value.trim()).filter(Boolean);
+        if (data?.options && typeof data.options === 'object') {
+            return ['A', 'B', 'C', 'D'].map(key => data.options[key] ?? data.options[key.toLowerCase()]).filter(value => value !== undefined && value !== null).map(String).map(value => value.trim());
+        }
+        return [data?.optionA ?? data?.a, data?.optionB ?? data?.b, data?.optionC ?? data?.c, data?.optionD ?? data?.d]
+            .filter(value => value !== undefined && value !== null)
+            .map(String)
+            .map(value => value.trim());
+    }
+
+    function answerIndexFromQuestionDocument(data, options) {
+        const raw = data?.correctAnswer ?? data?.answerIndex ?? data?.correct ?? data?.answer;
+        const asText = String(raw ?? '').trim();
+        const letterIndex = 'ABCD'.indexOf(asText.toUpperCase());
+        if (letterIndex >= 0) return letterIndex;
+        const numericIndex = Number(asText);
+        if (Number.isInteger(numericIndex) && numericIndex >= 0 && numericIndex < options.length) return numericIndex;
+        return options.findIndex(option => option.toLowerCase() === asText.toLowerCase());
+    }
+
+    // Firestore source of truth for Island quizzes. The collection name is
+    // intentionally case-sensitive because production data lives in Question.
+    async function fetchHanoiQuestions() {
+        try {
+            if (typeof db === 'undefined') throw new Error('Firestore chưa sẵn sàng.');
+            const snapshot = await db.collection('Question').get();
+            const questions = snapshot.docs.map((doc, index) => {
+                const data = doc.data() || {};
+                const options = optionsFromQuestionDocument(data);
+                const correctAnswer = answerIndexFromQuestionDocument(data, options);
+                const question = String(data.questionText ?? data.question ?? data.q ?? data.text ?? '').trim();
+                if (!question || options.length < 4 || correctAnswer < 0 || correctAnswer >= options.length) {
+                    console.warn(`Bỏ qua Question/${doc.id}: thiếu nội dung, đáp án hoặc đáp án đúng.`);
+                    return null;
+                }
+                return {
+                    id: doc.id || `question-${index}`,
+                    question,
+                    options: options.slice(0, 4),
+                    correctAnswer,
+                    explanation: String(data.explanation ?? data.solution ?? data.explain ?? '').trim(),
+                    theory: String(data.theory ?? data.theoryContent ?? data.lyThuyet ?? '').trim()
+                };
+            }).filter(Boolean);
+            if (!questions.length) throw new Error('Collection Question chưa có câu hỏi hợp lệ.');
+            return questions;
+        } catch (error) {
+            console.error('Không thể tải câu hỏi từ collection Question:', error);
+            throw error;
+        }
+    }
+
+    function randomFiveFirestoreQuestions(questions) {
+        if (!Array.isArray(questions) || questions.length < 5) {
+            throw new Error('Collection Question cần tối thiểu 5 câu hỏi hợp lệ để bắt đầu một Đảo.');
+        }
+        return [...questions].sort(() => Math.random() - 0.5).slice(0, 5);
+    }
+
+    async function loadFirebaseIslandContent(lesson) {
+        const questions = randomFiveFirestoreQuestions(await fetchHanoiQuestions());
+        const theory = String(questions.map(item => item.theory || item.theoryContent || '').find(Boolean)
+            || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
+        return { theory, questions };
+    }
+
+    async function loadFirebaseIslandQuestions(lesson) {
+        return (await loadFirebaseIslandContent(lesson)).questions;
+    }
+
+    window.fetchHanoiQuestions = fetchHanoiQuestions;
+    window.VieGeoLearningPath = {
+        getLessonsForProvince,
+        findLesson,
+        loadQuestions: loadFirebaseIslandQuestions,
+        loadIslandContent: loadFirebaseIslandContent,
+        fetchHanoiQuestions
+    };
 }());

@@ -35,7 +35,9 @@ async function openIslandTheory(lesson) {
     islandTheoryModal.hidden = false;
     islandTheoryTitle.textContent = lesson.title || 'Lý thuyết Đảo nhỏ';
     islandTheoryMeta.textContent = `${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${lesson.difficulty || 'easy'} · 5 câu hỏi`;
-    islandTheoryContent.textContent = 'Đang tải lý thuyết phù hợp với đảo này...';
+    islandTheoryContent.classList.add('is-loading');
+    islandTheoryContent.setAttribute('aria-busy', 'true');
+    islandTheoryContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tải câu hỏi thật từ Firebase...';
     btnStartIslandQuiz.disabled = true;
 
     try {
@@ -46,20 +48,29 @@ async function openIslandTheory(lesson) {
             theory: String(loaded?.theory || fallbackTheoryFor(lesson)).trim(),
             questions: Array.isArray(loaded?.questions) ? loaded.questions.slice(0, 5) : []
         };
+        islandTheoryContent.classList.remove('is-loading');
+        islandTheoryContent.setAttribute('aria-busy', 'false');
         islandTheoryContent.textContent = activeIslandLearning.theory;
     } catch (error) {
         console.warn('Không thể tải nội dung Đảo nhỏ:', error);
         if (requestId !== islandTheoryRequest) return;
-        islandTheoryContent.textContent = activeIslandLearning.theory;
+        activeIslandLearning = { lesson, theory: fallbackTheoryFor(lesson), questions: [] };
+        islandTheoryContent.classList.remove('is-loading');
+        islandTheoryContent.setAttribute('aria-busy', 'false');
+        islandTheoryContent.textContent = `Chưa thể tải 5 câu hỏi từ Firebase. ${error.message || 'Vui lòng kiểm tra collection Question và thử lại.'}`;
     } finally {
         if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
-            btnStartIslandQuiz.disabled = false;
+            btnStartIslandQuiz.disabled = activeIslandLearning?.questions?.length !== 5;
         }
     }
 }
 
 async function beginIslandQuiz() {
     if (!activeIslandLearning?.lesson || btnStartIslandQuiz?.disabled) return;
+    if (!Array.isArray(activeIslandLearning.questions) || activeIslandLearning.questions.length !== 5) {
+        if (typeof VieGeoUI !== 'undefined') VieGeoUI.warning('Cần tải đủ 5 câu hỏi thật từ Firebase trước khi bắt đầu.');
+        return;
+    }
     btnStartIslandQuiz.disabled = true;
     try {
         if (typeof window.consumeHeart === 'function' && !await window.consumeHeart()) return;

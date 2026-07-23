@@ -57,7 +57,7 @@
             <section class="operations-tab hidden" data-admin-panel="upload">
                 <article class="ops-card">
                     <h2>Nhập bộ câu hỏi bằng văn bản</h2>
-                    <p class="ops-muted">Dán nội dung Lý thuyết và nhiều khối câu hỏi vào một ô duy nhất. Hệ thống sẽ kiểm tra định dạng, xem trước và lưu từng câu vào collection <code>questions</code>.</p>
+                    <p class="ops-muted">Dán nội dung Lý thuyết và nhiều khối câu hỏi vào một ô duy nhất. Hệ thống sẽ kiểm tra định dạng, xem trước và lưu từng câu vào collection <code>Question</code>.</p>
                     <div class="ops-grid">
                         <div class="ops-list">
                             <label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="importProvince" type="text" placeholder="Ví dụ: Hà Nội" style="display:block;margin-top:7px"></label>
@@ -261,7 +261,7 @@
                 for (let start = 0; start < questions.length; start += 450) {
                     const batch = db.batch();
                     questions.slice(start, start + 450).forEach((question, offset) => {
-                        const doc = db.collection('questions').doc();
+                        const doc = db.collection('Question').doc();
                         batch.set(doc, {
                             ...question,
                             province,
