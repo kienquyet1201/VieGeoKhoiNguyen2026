@@ -46,6 +46,8 @@ let islandTheoryRequest = 0;
 let islandQuizCurrentIndex = 0;
 let islandQuizAnswers = {};
 let islandQuizSubmitted = false;
+let islandQuizPenalizedQuestionIndexes = new Set();
+let islandQuizAnswerPenaltyPending = false;
 
 function hasTheoryModalDom() {
     return Boolean(islandTheoryModal && islandTheoryTitle && islandTheoryMeta && islandTheoryContent && btnStartIslandQuiz);
@@ -318,6 +320,55 @@ function islandQuizWarning(message) {
     window.alert(message);
 }
 
+function islandQuizCorrectAnswerIndex(question) {
+    const rawAnswer = question?.correctAnswer ?? question?.answerIndex ?? question?.answer;
+    const normalized = String(rawAnswer ?? '').trim();
+    const letterIndex = 'ABCD'.indexOf(normalized.toUpperCase());
+    if (letterIndex >= 0) return letterIndex;
+    const numericIndex = Number(normalized);
+    return Number.isInteger(numericIndex) ? numericIndex : -1;
+}
+
+async function applyIslandQuizWrongAnswerPenalty() {
+    if (typeof window.deductHeartForWrongAnswer === 'function') {
+        return window.deductHeartForWrongAnswer();
+    }
+
+    // Keep the quiz usable if the shared heart module is unavailable. The
+    // canonical app-core handler above remains responsible for Firebase sync.
+    state = window.gameState || state;
+    if (!state || Number(state.hearts) <= 0) return { applied: false, gameOver: true, hearts: 0 };
+    state.hearts = Math.max(0, Number(state.hearts) - 1);
+    state.lastHeartUpdate = Date.now();
+    if (typeof saveGameState === 'function') await saveGameState(state);
+    if (typeof updateHeaderStats === 'function') updateHeaderStats();
+    updateStatsUI();
+    return { applied: true, gameOver: state.hearts <= 0, hearts: state.hearts };
+}
+
+async function endIslandQuizForGameOver() {
+    const modal = islandQuizModal;
+    modal?.remove();
+    refreshIslandModalReferences();
+    activeIslandLearning = null;
+    state = window.gameState || state;
+    updateStatsUI();
+
+    const options = {
+        title: 'Hết sinh mệnh!',
+        text: 'Bạn đã hết trái tim sau khi nộp đáp án sai. Hãy hồi phục trái tim rồi làm lại bài từ đầu.',
+        icon: 'error',
+        confirmButtonText: 'Làm lại sau',
+        confirmButtonColor: '#0284c7',
+        background: '#13253a',
+        color: '#f8fafc',
+        heightAuto: false
+    };
+    if (window.Swal && typeof window.Swal.fire === 'function') await window.Swal.fire(options);
+    else if (window.VieGeoUI?.error) await window.VieGeoUI.error(options.text, options);
+    renderMap();
+}
+
 function islandQuizStars(correctAnswers, questionCount) {
     if (!questionCount || !correctAnswers) return 0;
     if (questionCount >= 5) {
@@ -361,7 +412,7 @@ function persistIslandQuizResult(correctAnswers, questionCount) {
 
 function renderIslandQuizResult() {
     const questions = activeIslandQuizQuestions();
-    const correctAnswers = questions.reduce((total, question, index) => total + (islandQuizAnswers[index] === Number(question.correctAnswer) ? 1 : 0), 0);
+    const correctAnswers = questions.reduce((total, question, index) => total + (islandQuizAnswers[index] === islandQuizCorrectAnswerIndex(question) ? 1 : 0), 0);
     const stars = islandQuizStars(correctAnswers, questions.length);
     persistIslandQuizResult(correctAnswers, questions.length);
 
@@ -434,7 +485,7 @@ function mountIslandQuizStepper() {
     document.getElementById('islandQuizStepBack')?.addEventListener('click', () => {
         if (!islandQuizSubmitted && islandQuizCurrentIndex > 0) renderIslandQuizQuestion(islandQuizCurrentIndex - 1);
     });
-    document.getElementById('islandQuizStepNext')?.addEventListener('click', () => {
+    document.getElementById('islandQuizStepNext')?.addEventListener('click', async () => {
         if (islandQuizSubmitted) {
             closeIslandQuiz();
             activeIslandLearning = null;
@@ -444,6 +495,35 @@ function mountIslandQuizStepper() {
         if (!Number.isInteger(islandQuizAnswers[islandQuizCurrentIndex])) {
             islandQuizWarning('Hãy chọn một đáp án trước khi tiếp tục.');
             return;
+        }
+        if (islandQuizAnswerPenaltyPending) return;
+
+        const currentQuestion = activeIslandQuizQuestions()[islandQuizCurrentIndex];
+        const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
+        const correctAnswer = islandQuizCorrectAnswerIndex(currentQuestion);
+        if (!Number.isInteger(correctAnswer) || correctAnswer < 0) {
+            islandQuizWarning('Câu hỏi này chưa có đáp án hợp lệ. Vui lòng chọn câu khác.');
+            return;
+        }
+
+        // Choosing an option is always free. The penalty is evaluated only
+        // here, when the learner submits the selected answer to move forward.
+        if (selectedAnswer !== correctAnswer && !islandQuizPenalizedQuestionIndexes.has(islandQuizCurrentIndex)) {
+            islandQuizAnswerPenaltyPending = true;
+            const nextButton = document.getElementById('islandQuizStepNext');
+            if (nextButton) nextButton.disabled = true;
+            try {
+                const penalty = await applyIslandQuizWrongAnswerPenalty();
+                if (penalty.gameOver) {
+                    await endIslandQuizForGameOver();
+                    return;
+                }
+                if (!penalty.applied && !penalty.protected) return;
+                islandQuizPenalizedQuestionIndexes.add(islandQuizCurrentIndex);
+            } finally {
+                islandQuizAnswerPenaltyPending = false;
+                if (nextButton?.isConnected) nextButton.disabled = false;
+            }
         }
         if (islandQuizCurrentIndex === activeIslandQuizQuestions().length - 1) {
             renderIslandQuizResult();
@@ -460,11 +540,6 @@ async function openIslandQuizPreview() {
         return;
     }
 
-    if (!activeIslandLearning.entryFeePaid) {
-        if (typeof window.consumeHeart === 'function' && !await window.consumeHeart()) return;
-        activeIslandLearning.entryFeePaid = true;
-    }
-
     // A quiz always starts on a brand-new root so no duplicate IDs or stale
     // hidden styles can capture the event or hide the current attempt.
     const quizModal = rebuildIslandQuizModalWithInlineCss();
@@ -475,6 +550,8 @@ async function openIslandQuizPreview() {
     islandQuizCurrentIndex = 0;
     islandQuizAnswers = {};
     islandQuizSubmitted = false;
+    islandQuizPenalizedQuestionIndexes = new Set();
+    islandQuizAnswerPenaltyPending = false;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
     islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';
@@ -624,7 +701,6 @@ async function beginIslandQuiz() {
     if (launchButton?.disabled) return;
     if (launchButton) launchButton.disabled = true;
     try {
-        if (typeof window.consumeHeart === 'function' && !await window.consumeHeart()) return;
         localStorage.setItem('VieGeo_current_lesson', activeIslandLearning.lesson.id);
         localStorage.setItem('VieGeo_mode', 'normal');
         localStorage.setItem('VieGeo_island_learning', JSON.stringify({

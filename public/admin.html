@@ -104,6 +104,7 @@
                             <p class="ops-muted">Tích chọn các câu cần dọn dẹp, sau đó xóa một lần an toàn.</p>
                         </div>
                         <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+                            <label for="adminQuestionSelectAll" class="ops-muted" style="display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border:1px solid rgba(148,163,184,.22);border-radius:10px;cursor:pointer;white-space:nowrap"><input id="adminQuestionSelectAll" type="checkbox" disabled> Chọn tất cả</label>
                             <button class="ops-button is-muted" id="btnReloadAdminQuestions" type="button"><i class="fa-solid fa-rotate-right"></i> Tải lại</button>
                             <button class="ops-button is-danger" id="btnDeleteSelectedQuestions" type="button" disabled aria-disabled="true"><i class="fa-solid fa-trash-can"></i> Xóa các câu đã chọn</button>
                         </div>
@@ -374,15 +375,27 @@
 
         const selectedAdminQuestionIds = new Set();
 
+        function syncAdminQuestionMasterCheckbox() {
+            const masterCheckbox = el('adminQuestionSelectAll');
+            if (!masterCheckbox) return;
+            const questionCheckboxes = [...document.querySelectorAll('#adminQuestionsList .admin-question-checkbox')];
+            const selectedVisibleCount = questionCheckboxes.filter(input => selectedAdminQuestionIds.has(input.dataset.id)).length;
+            masterCheckbox.disabled = questionCheckboxes.length === 0;
+            masterCheckbox.checked = questionCheckboxes.length > 0 && selectedVisibleCount === questionCheckboxes.length;
+            masterCheckbox.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < questionCheckboxes.length;
+        }
+
         function updateSelectedQuestionDeleteButton() {
             const button = el('btnDeleteSelectedQuestions');
-            if (!button) return;
             const count = selectedAdminQuestionIds.size;
-            button.disabled = count === 0;
-            button.setAttribute('aria-disabled', String(count === 0));
-            button.innerHTML = count
-                ? `<i class="fa-solid fa-trash-can"></i> Xóa (${count}) câu`
-                : '<i class="fa-solid fa-trash-can"></i> Xóa các câu đã chọn';
+            if (button) {
+                button.disabled = count === 0;
+                button.setAttribute('aria-disabled', String(count === 0));
+                button.innerHTML = count
+                    ? `<i class="fa-solid fa-trash-can"></i> Xóa (${count}) câu`
+                    : '<i class="fa-solid fa-trash-can"></i> Xóa các câu đã chọn';
+            }
+            syncAdminQuestionMasterCheckbox();
         }
 
         function renderAdminQuestionList(questionDocs) {
@@ -482,6 +495,16 @@
             el('adminQuestionForm')?.addEventListener('submit', submitAdminQuestion);
             el('btnReloadAdminQuestions')?.addEventListener('click', loadAdminQuestions);
             el('btnDeleteSelectedQuestions')?.addEventListener('click', deleteSelectedAdminQuestions);
+            el('adminQuestionSelectAll')?.addEventListener('change', (event) => {
+                const masterCheckbox = event.currentTarget;
+                const questionCheckboxes = [...document.querySelectorAll('#adminQuestionsList .admin-question-checkbox')];
+                selectedAdminQuestionIds.clear();
+                questionCheckboxes.forEach((checkbox) => {
+                    checkbox.checked = masterCheckbox.checked;
+                    if (masterCheckbox.checked && checkbox.dataset.id) selectedAdminQuestionIds.add(checkbox.dataset.id);
+                });
+                updateSelectedQuestionDeleteButton();
+            });
             document.addEventListener('change', event => {
                 if (event.target.matches('[data-role-checkbox]')) event.target.closest('tr')?.classList.add('is-role-dirty');
                 if (event.target.matches('.admin-question-checkbox')) {

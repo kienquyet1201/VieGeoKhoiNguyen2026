@@ -521,10 +521,50 @@ async function consumeHeart() {
     return true;
 }
 
+// Quiz penalties are deliberately separate from lesson-entry gating. A heart
+// may only be deducted after a learner has submitted an incorrect answer.
+async function deductHeartForWrongAnswer() {
+    if (lessonEntryInProgress) return { applied: false, gameOver: false };
+    syncHearts();
+
+    const hasInfiniteHearts = gameState.inventory
+        && Number(gameState.inventory.infiniteHeartsExpiry) > Date.now();
+    if (hasInfiniteHearts) {
+        return { applied: false, protected: true, gameOver: false, hearts: gameState.hearts };
+    }
+    if (gameState.hearts <= 0) {
+        updateHeaderStats();
+        return { applied: false, gameOver: true, hearts: 0 };
+    }
+
+    lessonEntryInProgress = true;
+    const previousHearts = gameState.hearts;
+    const previousHeartUpdate = gameState.lastHeartUpdate;
+    const wasFull = gameState.hearts === HEARTS_MAX;
+    gameState.hearts = Math.max(0, gameState.hearts - 1);
+    if (wasFull) gameState.lastHeartUpdate = Date.now();
+    updateHeaderStats();
+    startHeartTimer();
+
+    const persisted = await persistHearts();
+    lessonEntryInProgress = false;
+    if (!persisted) {
+        gameState.hearts = previousHearts;
+        gameState.lastHeartUpdate = previousHeartUpdate;
+        writeHeartStateToLocal();
+        updateHeaderStats();
+        startHeartTimer();
+        window.VieGeoUI.error('Không thể cập nhật trái tim. Vui lòng kiểm tra kết nối và thử lại.');
+        return { applied: false, gameOver: false, hearts: gameState.hearts };
+    }
+
+    return { applied: true, gameOver: gameState.hearts <= 0, hearts: gameState.hearts };
+}
+
 function gateLessonButtons(root = document) {
     root.querySelectorAll('.node-btn:not([data-heart-gated])').forEach((button) => {
-        // Small islands show a theory step first. Their confirm action calls
-        // consumeHeart() explicitly, so opening theory never spends stamina.
+        // Small islands show a theory step first. Their quiz handles heart
+        // penalties only after an incorrect answer is submitted.
         if (button.dataset.skipHeartGate === 'true') return;
         const originalClick = button.onclick;
         if (typeof originalClick !== 'function') return;
@@ -544,6 +584,7 @@ window.syncHearts = syncHearts;
 window.startHeartTimer = startHeartTimer;
 window.checkHasEnoughHearts = checkHasEnoughHearts;
 window.consumeHeart = consumeHeart;
+window.deductHeartForWrongAnswer = deductHeartForWrongAnswer;
 
 syncHearts();
 const heartGateObserver = new MutationObserver((records) => {
