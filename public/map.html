@@ -194,6 +194,10 @@
                         </div>
 
                         <section class="profile-settings-shell" aria-label="Cài đặt cá nhân">
+                            <button id="profileSettingsToggle" class="profile-settings-toggle" type="button" aria-expanded="false" aria-controls="profileSettingsContent">
+                                <span><small>CÀI ĐẶT</small><strong>Quản lý tài khoản và trải nghiệm</strong></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                            </button>
+                            <div id="profileSettingsContent" class="profile-settings-content" hidden>
                             <div class="profile-settings-heading">
                                 <div>
                                     <p class="profile-settings-eyebrow">Cài đặt</p>
@@ -293,6 +297,7 @@
                                     <button id="btnReopenSurvey" class="settings-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa khảo sát</button>
                                 </div>
                             </div>
+                            </div>
                         </section>
 
                         <!-- NEW: LEARNING PROFILE & AI SYNTHESIS -->
@@ -362,7 +367,12 @@
     </div>
 
     <section id="supportChat" class="support-chat" aria-label="Hỗ trợ VieGeo">
-        <button id="supportChatToggle" class="support-chat-toggle" type="button" aria-expanded="false" aria-controls="supportChatPanel"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Hỗ trợ</span></button>
+        <button id="supportChatToggle" class="support-chat-toggle" type="button" aria-expanded="false" aria-controls="supportChatPanel"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Hỗ trợ</span><b id="supportUnreadBadge" class="support-unread-badge" hidden aria-label="Có tin nhắn mới"></b></button>
+        <div id="supportActionMenu" class="support-action-menu" role="menu" aria-label="Tùy chọn hỗ trợ" hidden>
+            <button type="button" data-support-action="report" role="menuitem"><i class="fa-solid fa-bug"></i><span><strong>Báo cáo lỗi</strong><small>Gửi chi tiết lỗi đang gặp</small></span></button>
+            <button type="button" data-support-action="feedback" role="menuitem"><i class="fa-solid fa-lightbulb"></i><span><strong>Góp ý trang web</strong><small>Đề xuất để VieGeo tốt hơn</small></span></button>
+            <button type="button" data-support-action="chat" role="menuitem"><i class="fa-solid fa-headset"></i><span><strong>Chat với CSKH</strong><small>Trao đổi trực tiếp với hỗ trợ</small></span></button>
+        </div>
         <div id="supportChatPanel" class="support-chat-panel" hidden>
             <header><div><strong>Trợ lý VieGeo</strong><p id="supportAvailability">Đang kiểm tra CSKH…</p></div><button id="supportChatClose" type="button" aria-label="Đóng hỗ trợ"><i class="fa-solid fa-xmark"></i></button></header>
             <div id="supportMessages" class="support-messages" aria-live="polite"></div>
@@ -374,7 +384,23 @@
             </form>
             <p id="supportAttachmentLabel" class="support-attachment" aria-live="polite"></p>
         </div>
+        <div id="supportRecallMenu" class="support-recall-menu" role="menu" hidden><button id="supportRecallButton" type="button" role="menuitem"><i class="fa-solid fa-rotate-left"></i> Thu hồi tin nhắn</button></div>
     </section>
+
+    <div id="supportRequestModal" class="support-request-modal" role="dialog" aria-modal="true" aria-labelledby="supportRequestTitle" hidden>
+        <form id="supportRequestForm" class="support-request-dialog">
+            <button id="supportRequestClose" class="support-request-close" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
+            <p id="supportRequestEyebrow" class="support-request-eyebrow">VIEGEO CARE</p>
+            <h2 id="supportRequestTitle">Gửi yêu cầu hỗ trợ</h2>
+            <p id="supportRequestHint">Hãy mô tả rõ để đội ngũ VieGeo có thể hỗ trợ bạn tốt hơn.</p>
+            <input id="supportRequestType" type="hidden" value="feedback">
+            <label for="supportRequestSubject">Tiêu đề</label>
+            <input id="supportRequestSubject" maxlength="120" required placeholder="Tóm tắt nội dung">
+            <label for="supportRequestMessage">Nội dung</label>
+            <textarea id="supportRequestMessage" rows="6" maxlength="2000" required placeholder="Mô tả chi tiết, các bước gây lỗi hoặc góp ý của bạn…"></textarea>
+            <div class="support-request-actions"><button class="support-request-cancel" type="button" data-close-support-request>Hủy</button><button class="support-request-submit" type="submit"><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu</button></div>
+        </form>
+    </div>
 
     <div id="parentPinModal" class="parent-pin-modal" role="dialog" aria-modal="true" aria-labelledby="parentPinTitle" aria-hidden="true">
         <form id="parentPinForm" class="parent-pin-card">

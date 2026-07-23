@@ -55,7 +55,11 @@
             </section>
 
             <section class="operations-tab hidden" data-admin-panel="upload">
-                <article class="ops-card">
+                <div role="tablist" aria-label="Chế độ nhập câu hỏi" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+                    <button class="ops-button" type="button" data-question-entry-mode="bulk" aria-selected="true"><i class="fa-solid fa-file-lines"></i> Nhập văn bản hàng loạt</button>
+                    <button class="ops-button is-muted" type="button" data-question-entry-mode="single" aria-selected="false"><i class="fa-solid fa-circle-plus"></i> Thêm từng câu</button>
+                </div>
+                <article class="ops-card" id="bulkQuestionUploadPane">
                     <h2>Nhập bộ câu hỏi bằng văn bản</h2>
                     <p class="ops-muted">Dán nội dung Lý thuyết và nhiều khối câu hỏi vào một ô duy nhất. Hệ thống sẽ kiểm tra định dạng, xem trước và lưu từng câu vào collection <code>Questions</code>.</p>
                     <div class="ops-grid">
@@ -76,7 +80,7 @@
                     </div>
                 </article>
 
-                <article class="ops-card" style="margin-top:18px">
+                <article class="ops-card hidden" id="singleQuestionUploadPane" style="margin-top:18px">
                     <h2>Thêm câu hỏi</h2>
                     <p class="ops-muted">Tạo nhanh một câu hỏi theo đúng schema collection <code>Questions</code>.</p>
                     <form id="adminQuestionForm" class="ops-list" novalidate>
@@ -375,6 +379,119 @@
         }
 
         const selectedAdminQuestionIds = new Set();
+        const adminQuestionDocuments = new Map();
+
+        function switchQuestionEntryMode(mode) {
+            const showBulk = mode !== 'single';
+            el('bulkQuestionUploadPane')?.classList.toggle('hidden', !showBulk);
+            el('singleQuestionUploadPane')?.classList.toggle('hidden', showBulk);
+            document.querySelectorAll('[data-question-entry-mode]').forEach((button) => {
+                const isActive = button.dataset.questionEntryMode === (showBulk ? 'bulk' : 'single');
+                button.setAttribute('aria-selected', String(isActive));
+                button.classList.toggle('is-muted', !isActive);
+            });
+        }
+
+        function setQuestionEditorOpen(isOpen) {
+            const modal = el('adminQuestionEditModal');
+            if (!modal) return;
+            modal.hidden = !isOpen;
+            modal.style.display = isOpen ? 'flex' : 'none';
+            document.body.style.overflow = isOpen ? 'hidden' : '';
+        }
+
+        function openQuestionEditor(questionId) {
+            const doc = adminQuestionDocuments.get(questionId);
+            if (!doc) {
+                showToast('Không tìm thấy câu hỏi cần sửa. Hãy tải lại danh sách.', 'warning');
+                return;
+            }
+            const data = doc.data() || {};
+            const options = Array.isArray(data.options) ? data.options : [];
+            const answer = Number(data.answer ?? data.correctAnswer ?? 0);
+            el('editQuestionId').value = doc.id;
+            el('editQuestionText').value = data.question || data.questionText || '';
+            [0, 1, 2, 3].forEach((index) => { el(`editOption${index}`).value = options[index] || ''; });
+            el('editCorrectAnswer').value = Number.isInteger(answer) && answer >= 0 && answer <= 3 ? String(answer) : '0';
+            el('editQuestionProvince').value = data.province || '';
+            el('editQuestionDifficulty').value = ['easy', 'medium', 'hard'].includes(data.difficulty) ? data.difficulty : 'easy';
+            el('editQuestionGrade').value = data.grade || '';
+            el('editQuestionTopic').value = data.topic || data.island || '';
+            el('editQuestionLessonId').value = data.lessonId || '';
+            el('editQuestionTheory').value = data.theory || data.theoryContent || data.lyThuyet || '';
+            el('editQuestionExplanation').value = data.explanation || data.solution || data.explain || '';
+            setQuestionEditorOpen(true);
+            el('editQuestionText')?.focus();
+        }
+
+        async function updateAdminQuestion(event) {
+            event.preventDefault();
+            const questionId = el('editQuestionId')?.value.trim();
+            const question = el('editQuestionText')?.value.trim();
+            const options = [0, 1, 2, 3].map((index) => el(`editOption${index}`)?.value.trim() || '');
+            const answer = Number(el('editCorrectAnswer')?.value);
+            const province = el('editQuestionProvince')?.value.trim();
+            const difficulty = el('editQuestionDifficulty')?.value;
+            const grade = el('editQuestionGrade')?.value.trim();
+            const topic = el('editQuestionTopic')?.value.trim();
+            const lessonId = el('editQuestionLessonId')?.value.trim();
+            const theory = el('editQuestionTheory')?.value.trim();
+            const explanation = el('editQuestionExplanation')?.value.trim();
+            const button = el('btnUpdateAdminQuestion');
+            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+
+            if (!questionId || !question || options.some((option) => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !difficulty || !firestore) {
+                showToast('Hãy nhập đủ nội dung, bốn đáp án và đáp án đúng trước khi lưu.', 'warning');
+                return;
+            }
+
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+            try {
+                await firestore.collection('Questions').doc(questionId).update({
+                    question,
+                    options,
+                    answer,
+                    correctAnswer: answer,
+                    province,
+                    difficulty,
+                    grade,
+                    topic,
+                    island: topic,
+                    lessonId,
+                    theory,
+                    explanation,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                setQuestionEditorOpen(false);
+                showToast('Đã cập nhật câu hỏi!');
+                await loadAdminQuestions();
+            } catch (error) {
+                console.error('Lỗi cập nhật câu hỏi:', error);
+                showToast('Không thể cập nhật câu hỏi. Vui lòng thử lại!', 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi';
+            }
+        }
+
+        async function deleteAdminQuestion(questionId) {
+            if (!questionId || !window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này không?')) return;
+            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+            if (!firestore) {
+                showToast('Firebase chưa sẵn sàng để xóa câu hỏi.', 'error');
+                return;
+            }
+            try {
+                await firestore.collection('Questions').doc(questionId).delete();
+                selectedAdminQuestionIds.delete(questionId);
+                showToast('Đã xóa câu hỏi.');
+                await loadAdminQuestions();
+            } catch (error) {
+                console.error('Lỗi xóa câu hỏi:', error);
+                showToast('Không thể xóa câu hỏi. Vui lòng thử lại!', 'error');
+            }
+        }
 
         function syncAdminQuestionMasterCheckbox() {
             const masterCheckbox = el('adminQuestionSelectAll');
@@ -399,9 +516,19 @@
             syncAdminQuestionMasterCheckbox();
         }
 
+        function ensureAdminQuestionActionColumn() {
+            const header = el('adminQuestionsList')?.closest('table')?.querySelector('thead tr');
+            if (header && !header.querySelector('[data-admin-question-actions]')) {
+                header.insertAdjacentHTML('beforeend', '<th scope="col" data-admin-question-actions>Thao tác</th>');
+            }
+        }
+
         function renderAdminQuestionList(questionDocs) {
             const body = el('adminQuestionsList');
             if (!body) return;
+            adminQuestionDocuments.clear();
+            questionDocs.forEach((doc) => adminQuestionDocuments.set(doc.id, doc));
+            ensureAdminQuestionActionColumn();
             if (!questionDocs.length) {
                 body.innerHTML = '<tr><td colspan="5" class="ops-muted">Chưa có câu hỏi trong kho dữ liệu.</td></tr>';
                 return;
@@ -417,6 +544,7 @@
                     <td>${escapeHtml(details)}</td>
                     <td>${escapeHtml(data.difficulty || '—')}</td>
                     <td><code>${escapeHtml(doc.id)}</code></td>
+                    <td style="white-space:nowrap"><button class="ops-button is-muted" type="button" data-edit-question="${escapeHtml(doc.id)}" title="Sửa câu hỏi"><i class="fa-solid fa-pen"></i> Sửa</button> <button class="ops-button is-danger" type="button" data-delete-question="${escapeHtml(doc.id)}" title="Xóa câu hỏi"><i class="fa-solid fa-trash-can"></i> Xóa</button></td>
                 </tr>`;
             }).join('');
         }
@@ -494,8 +622,16 @@
             el('searchUser')?.addEventListener('input', renderUsers);
             el('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
             el('adminQuestionForm')?.addEventListener('submit', submitAdminQuestion);
+            el('adminQuestionEditForm')?.addEventListener('submit', updateAdminQuestion);
+            document.querySelectorAll('[data-question-entry-mode]').forEach((button) => {
+                button.addEventListener('click', () => switchQuestionEntryMode(button.dataset.questionEntryMode));
+            });
+            switchQuestionEntryMode('bulk');
             el('btnReloadAdminQuestions')?.addEventListener('click', loadAdminQuestions);
             el('btnDeleteSelectedQuestions')?.addEventListener('click', deleteSelectedAdminQuestions);
+            el('adminQuestionEditModal')?.addEventListener('click', (event) => {
+                if (event.target === event.currentTarget) setQuestionEditorOpen(false);
+            });
             el('adminQuestionSelectAll')?.addEventListener('change', (event) => {
                 const masterCheckbox = event.currentTarget;
                 const questionCheckboxes = [...document.querySelectorAll('#adminQuestionsList .admin-question-checkbox')];
@@ -526,6 +662,9 @@
                 if (target.dataset.premiumApprove) updateRequest(target.dataset.premiumApprove, target.dataset.premiumEmail, 'approved');
                 if (target.dataset.premiumReject) updateRequest(target.dataset.premiumReject, '', 'rejected');
                 if (target.dataset.replayUser) showToast('Điểm tích hợp rrweb đã sẵn sàng; chưa có bản ghi replay cho phiên này.', 'info');
+                if (target.dataset.editQuestion) openQuestionEditor(target.dataset.editQuestion);
+                if (target.dataset.deleteQuestion) deleteAdminQuestion(target.dataset.deleteQuestion);
+                if (target.hasAttribute('data-close-question-editor')) setQuestionEditorOpen(false);
             });
             if (permittedRoles().length < 2) el('adminRoleButton').hidden = true;
             el('adminRoleButton').addEventListener('click', async () => {
@@ -540,5 +679,27 @@
         });
     })();
     </script>
+    <div id="adminQuestionEditModal" hidden role="dialog" aria-modal="true" aria-labelledby="adminQuestionEditTitle" style="position:fixed;inset:0;z-index:2147483647;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(2,6,23,.78);backdrop-filter:blur(6px)">
+        <form id="adminQuestionEditForm" class="ops-card" style="width:min(820px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.45)" novalidate>
+            <div class="operations-heading" style="margin-bottom:18px"><div><h2 id="adminQuestionEditTitle" style="margin:0">Sửa câu hỏi</h2><p class="ops-muted" style="margin:6px 0 0">Cập nhật nội dung và lưu trực tiếp vào Firestore.</p></div><button class="ops-button is-muted" type="button" data-close-question-editor title="Đóng"><i class="fa-solid fa-xmark"></i></button></div>
+            <input id="editQuestionId" type="hidden">
+            <label class="ops-muted">Nội dung câu hỏi<textarea class="ops-input" id="editQuestionText" rows="3" required style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
+            <div class="ops-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px">
+                <label class="ops-muted">Đáp án 0<input class="ops-input" id="editOption0" required style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Đáp án 1<input class="ops-input" id="editOption1" required style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Đáp án 2<input class="ops-input" id="editOption2" required style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Đáp án 3<input class="ops-input" id="editOption3" required style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Đáp án đúng<select class="ops-input" id="editCorrectAnswer" required style="display:block;margin-top:7px"><option value="0">Đáp án 0</option><option value="1">Đáp án 1</option><option value="2">Đáp án 2</option><option value="3">Đáp án 3</option></select></label>
+                <label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="editQuestionProvince" required style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Mức độ<select class="ops-input" id="editQuestionDifficulty" required style="display:block;margin-top:7px"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
+                <label class="ops-muted">Khối lớp<input class="ops-input" id="editQuestionGrade" style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Chủ đề đảo<input class="ops-input" id="editQuestionTopic" style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Mã đảo<input class="ops-input" id="editQuestionLessonId" style="display:block;margin-top:7px"></label>
+            </div>
+            <label class="ops-muted" style="display:block;margin-top:14px">Lý thuyết<textarea class="ops-input" id="editQuestionTheory" rows="5" style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
+            <label class="ops-muted" style="display:block;margin-top:14px">Giải thích<textarea class="ops-input" id="editQuestionExplanation" rows="3" style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button class="ops-button is-muted" type="button" data-close-question-editor>Hủy</button><button class="ops-button" id="btnUpdateAdminQuestion" type="submit" style="background:#16a34a"><i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi</button></div>
+        </form>
+    </div>
 </body>
 </html>

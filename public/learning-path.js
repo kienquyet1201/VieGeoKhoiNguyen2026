@@ -108,8 +108,7 @@
     function randomFive(items, fallback) {
         const pool = items.map((item, index) => normalizeQuestion(item, fallback, index)).filter(Boolean);
         if (!pool.length) return [];
-        const shuffled = [...pool].sort(() => Math.random() - 0.5);
-        return shuffled.slice(0, 5);
+        return fisherYatesShuffle(pool).slice(0, 5);
     }
 
     async function fetchQuestionsFromFirebase(lesson, fallback) {
@@ -388,9 +387,20 @@
         return topicsByLessonId;
     }
 
+    function fisherYatesShuffle(items) {
+        const shuffled = Array.isArray(items) ? [...items] : [];
+        for (let index = shuffled.length - 1; index > 0; index -= 1) {
+            const randomIndex = Math.floor(Math.random() * (index + 1));
+            [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+        }
+        return shuffled;
+    }
+
     function randomFiveFirestoreQuestions(questions) {
         if (!Array.isArray(questions) || !questions.length) return [];
-        return [...questions].sort(() => Math.random() - 0.5).slice(0, 5);
+        // Firestore provides the full available question pool for this island
+        // (up to the query limit); draw a new unbiased set of five each time.
+        return fisherYatesShuffle(questions).slice(0, 5);
     }
 
     async function loadFirebaseIslandContent(lesson) {

@@ -47,6 +47,31 @@ let islandQuizCurrentIndex = 0;
 let islandQuizAnswers = {};
 let islandQuizSubmitted = false;
 let islandQuizSummaryPenaltyPending = false;
+let islandQuizScrollLock = null;
+
+function setIslandQuizScrollLocked(locked) {
+    const root = document.documentElement;
+    const page = document.body;
+    if (!root || !page) return;
+    if (locked) {
+        if (islandQuizScrollLock) return;
+        islandQuizScrollLock = {
+            rootOverflow: root.style.overflow,
+            pageOverflow: page.style.overflow,
+            pagePaddingRight: page.style.paddingRight
+        };
+        const scrollbarWidth = Math.max(0, window.innerWidth - root.clientWidth);
+        root.style.overflow = 'hidden';
+        page.style.overflow = 'hidden';
+        if (scrollbarWidth) page.style.paddingRight = `${scrollbarWidth}px`;
+        return;
+    }
+    if (!islandQuizScrollLock) return;
+    root.style.overflow = islandQuizScrollLock.rootOverflow;
+    page.style.overflow = islandQuizScrollLock.pageOverflow;
+    page.style.paddingRight = islandQuizScrollLock.pagePaddingRight;
+    islandQuizScrollLock = null;
+}
 
 function hasTheoryModalDom() {
     return Boolean(islandTheoryModal && islandTheoryTitle && islandTheoryMeta && islandTheoryContent && btnStartIslandQuiz);
@@ -59,6 +84,7 @@ function removeGhostIslandModals() {
     // returned by getElementById, before drawing a fresh modal under <body>.
     const selector = ISLAND_MODAL_ROOT_IDS.map((id) => `[id="${id}"]`).join(', ');
     document.querySelectorAll(selector).forEach((modal) => modal.remove());
+    setIslandQuizScrollLocked(false);
     islandTheoryModal = null;
     islandQuizModal = null;
     islandTheoryTitle = null;
@@ -136,6 +162,7 @@ function forceShowIslandModal(modal) {
     modal.style.setProperty('pointer-events', 'auto', 'important');
     modal.style.setProperty('width', '100vw', 'important');
     modal.style.setProperty('height', '100vh', 'important');
+    if (modal.id === 'islandQuizModal') setIslandQuizScrollLocked(true);
     return true;
 }
 
@@ -145,6 +172,7 @@ function forceHideIslandModal(modal) {
     modal.classList.remove('flex');
     modal.classList.add('hidden');
     modal.style.setProperty('display', 'none', 'important');
+    if (modal.id === 'islandQuizModal') setIslandQuizScrollLocked(false);
 }
 
 window.ensureIslandTheoryModal = ensureIslandModalDom;
@@ -215,11 +243,20 @@ function rebuildIslandQuizModalWithInlineCss() {
     console.log('Bước 2.2: Đã làm sạch DOM và chèn Modal Trắc nghiệm mới vào body');
     const insertedQuizModal = document.getElementById('islandQuizModal');
     const quizCloseButton = insertedQuizModal?.querySelector('#btnCloseIslandQuiz');
+    const quizDialog = insertedQuizModal?.querySelector('section');
+    if (insertedQuizModal) {
+        insertedQuizModal.style.setProperty('padding', '0', 'important');
+        insertedQuizModal.style.setProperty('overflow', 'hidden', 'important');
+    }
+    if (quizDialog) {
+        quizDialog.style.cssText = 'position:relative;display:flex;width:100vw;height:100dvh;max-width:none;max-height:none;min-height:0;flex-direction:column;overflow:hidden;box-sizing:border-box;border:0;border-radius:0;padding:clamp(18px,3vw,34px);background:#102238;color:#f8fafc;box-shadow:none;';
+    }
     if (insertedQuizModal) {
         insertedQuizModal.dataset.viegeoBound = 'true';
         insertedQuizModal.addEventListener('click', (event) => {
             if (event.target !== insertedQuizModal) return;
             activeIslandLearning = null;
+            setIslandQuizScrollLocked(false);
             insertedQuizModal.remove();
             refreshIslandModalReferences();
         });
@@ -227,6 +264,7 @@ function rebuildIslandQuizModalWithInlineCss() {
     if (quizCloseButton) {
         quizCloseButton.addEventListener('click', () => {
             activeIslandLearning = null;
+            setIslandQuizScrollLocked(false);
             insertedQuizModal?.remove();
             refreshIslandModalReferences();
         });
@@ -311,6 +349,7 @@ function closeIslandTheory() {
 function closeIslandQuiz() {
     if (!islandQuizModal) return;
     forceHideIslandModal(islandQuizModal);
+    setIslandQuizScrollLocked(false);
 }
 
 function escapeQuizHtml(value) {
@@ -451,6 +490,15 @@ function persistIslandQuizResult(correctAnswers, questionCount) {
         state.xp = (Number(state.xp) || 0) + (Number(reward.xp) || 15);
         state.gems = (Number(state.gems) || 0) + (Number(reward.gems) || 10);
     }
+    if (typeof recordLessonHistory === 'function') {
+        recordLessonHistory(state, {
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            correctAnswers,
+            questionCount,
+            completedAt: Date.now()
+        });
+    }
     if (typeof recordStudyActivity === 'function') recordStudyActivity(state);
     if (typeof saveGameState === 'function') saveGameState(state);
     if (typeof updateHeaderStats === 'function') updateHeaderStats();
@@ -565,10 +613,10 @@ function renderIslandQuizQuestion(index) {
 
 function mountIslandQuizStepper() {
     if (!islandQuizContent) return false;
-    islandQuizContent.style.cssText = 'display: flex; min-height: min(520px, 62vh); padding: 0; overflow: hidden; background: #102238;';
-    islandQuizContent.innerHTML = `<section style="display: flex; width: 100%; min-height: inherit; flex-direction: column;">
+    islandQuizContent.style.cssText = 'display:flex;flex:1 1 auto;min-height:0;padding:0;overflow:hidden;background:#102238;';
+    islandQuizContent.innerHTML = `<section style="display:flex;width:100%;min-height:0;flex:1 1 auto;flex-direction:column;overflow:hidden;">
         <header id="islandQuizStepHeader" style="padding: 16px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.22); color: #7dd3fc; font-weight: 800;">Câu 1</header>
-        <main id="islandQuizStepBody" style="flex: 1; overflow-y: auto; padding: 24px 20px;"></main>
+        <main id="islandQuizStepBody" style="flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 20px;"></main>
         <footer style="display: flex; justify-content: space-between; gap: 12px; padding: 16px 20px; border-top: 1px solid rgba(148, 163, 184, 0.22);">
             <button id="islandQuizStepBack" type="button" style="min-width: 112px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 12px; padding: 12px 16px; background: transparent; color: #e2e8f0; font: inherit; font-weight: 700; cursor: pointer;">Quay lại</button>
             <button id="islandQuizStepNext" type="button" style="min-width: 130px; border: 0; border-radius: 12px; padding: 12px 16px; background: #0284c7; color: #fff; font: inherit; font-weight: 800; cursor: pointer;">Tiếp tục</button>

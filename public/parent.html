@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="bento.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-init.js"></script>
 </head>
 <body style="padding: 40px; justify-content: flex-start; height: auto; min-height: 100vh;">
 
@@ -55,6 +58,11 @@
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Hoạt động hôm nay</p>
                     <h3 id="statActivity" style="font-size: 1.5rem; color: var(--green);">Đã học</h3>
                 </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                    <i class="fa-solid fa-square-poll-vertical" style="font-size: 2.5rem; color: #58cc02; margin-bottom: 10px;"></i>
+                    <p style="color: var(--text-dim); margin-bottom: 5px;">Điểm trung bình hôm nay</p>
+                    <h3 id="statAverageScore" style="font-size: 2rem;">0.0/10</h3>
+                </div>
             </div>
         </div>
         
@@ -66,6 +74,62 @@
         </div>
     </div>
 
+    <script>
+    (() => {
+        'use strict';
+        const byId = id => document.getElementById(id);
+        const startOfToday = () => { const now = new Date(); now.setHours(0, 0, 0, 0); return now.getTime(); };
+        const timeToMs = value => typeof value === 'number' ? value : (value && typeof value.toMillis === 'function' ? value.toMillis() : Number(value) || 0);
+
+        function historyFromState(state) {
+            if (Array.isArray(state?.studyHistory) && state.studyHistory.length) return state.studyHistory;
+            return Object.entries(state?.lessonResults || {}).map(([lessonId, result]) => ({
+                lessonId,
+                lessonTitle: lessonId,
+                correctAnswers: Number(result?.lastCorrectAnswers) || 0,
+                questionCount: Number(result?.questionCount) || 0,
+                completedAt: timeToMs(result?.updatedAt)
+            }));
+        }
+
+        function renderParentMetrics(source) {
+            const state = source?.gameState && typeof source.gameState === 'object' ? { ...source, ...source.gameState } : (source || {});
+            const todayAttempts = historyFromState(state).filter(item => timeToMs(item.completedAt) >= startOfToday());
+            const islandsToday = todayAttempts.length;
+            const correctAnswers = todayAttempts.reduce((total, item) => total + Math.max(0, Number(item.correctAnswers) || 0), 0);
+            const totalQuestions = todayAttempts.reduce((total, item) => total + Math.max(0, Number(item.questionCount) || 0), 0);
+            const average = totalQuestions ? (correctAnswers / totalQuestions) * 10 : 0;
+            const score = Math.round(average * 10) / 10;
+            const completedAll = Array.isArray(state.completedNodes) ? state.completedNodes.length : 0;
+            const todayLearned = islandsToday > 0;
+
+            byId('statStreak').textContent = `${Number(state.streak || state.currentStreak || 0)} Ngày`;
+            byId('statCompleted').textContent = `${islandsToday} Đảo`;
+            byId('statActivity').textContent = todayLearned ? 'Đã học bài' : 'Chưa học bài';
+            byId('statActivity').style.color = todayLearned ? 'var(--green)' : 'var(--red)';
+            byId('statAverageScore').textContent = `${score.toFixed(1)}/10`;
+
+            const evaluation = !totalQuestions ? { title: 'Chưa có dữ liệu hôm nay', color: 'var(--red)', text: 'Hôm nay bé chưa hoàn thành bài học nào. Phụ huynh có thể nhắc bé học một đảo ngắn để duy trì thói quen.' }
+                : score >= 9 ? { title: 'Xuất sắc', color: 'var(--green)', text: 'Bé nắm bài rất tốt. Hãy duy trì nhịp học đều đặn.' }
+                : score >= 7 ? { title: 'Khá', color: 'var(--blue)', text: 'Bé đã có nền tảng tốt; nên đọc lại phần lý thuyết của các câu chưa đúng.' }
+                : { title: 'Cần nhắc nhở bé tập trung hơn', color: 'var(--red)', text: 'Bé nên học lại phần lý thuyết trước khi làm lại các đảo để củng cố kiến thức.' };
+            byId('parentReport').innerHTML = `Hôm nay bé đã hoàn thành <b>${islandsToday} đảo</b> (${completedAll} đảo tích lũy), trả lời đúng <b>${correctAnswers}/${totalQuestions}</b> câu. <br><br><span style="color:${evaluation.color}"><i class="fa-solid fa-circle-info"></i> <b>${evaluation.title}:</b> ${evaluation.text}</span>`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let localState = {};
+            try { localState = JSON.parse(localStorage.getItem('VieGeo_state') || '{}'); } catch (_) {}
+            renderParentMetrics(localState);
+            window.setTimeout(() => renderParentMetrics(localState), 0);
+            let session = {};
+            try { session = JSON.parse(localStorage.getItem('lm_session') || '{}'); } catch (_) {}
+            if (typeof db === 'undefined' || !session.email) return;
+            db.collection('users').doc(session.email).onSnapshot((doc) => {
+                if (doc.exists) renderParentMetrics(doc.data() || {});
+            }, (error) => console.warn('Không thể tải số liệu phụ huynh từ Firebase:', error));
+        });
+    })();
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const rawState = localStorage.getItem('VieGeo_state');

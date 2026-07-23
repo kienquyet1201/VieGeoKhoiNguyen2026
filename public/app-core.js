@@ -165,8 +165,12 @@ function hydratePersistedGameState(remoteState, legacyData = {}) {
         delete gameState.selectedGrade;
     }
 
-    ['completedNodes', 'claimedMissionRewards', 'unlockedAchievements'].forEach((field) => {
+    ['completedNodes', 'claimedMissionRewards', 'unlockedAchievements', 'studyHistory'].forEach((field) => {
         if (!Array.isArray(source[field])) return;
+        if (field === 'studyHistory') {
+            gameState.studyHistory = source[field].slice(-500);
+            return;
+        }
         const values = field === 'completedNodes' && typeof migrateLegacyLearningNodeId === 'function'
             ? source[field].map(migrateLegacyLearningNodeId)
             : source[field].map(String);
@@ -192,6 +196,7 @@ function setupRealtimeAuth() {
             const data = doc.data();
             const didHydrateProgress = hydratePersistedGameState(data.gameState, {
                 completedNodes: data.completedNodes,
+                studyHistory: data.studyHistory,
                 currentNode: data.currentNode,
                 lessonResults: data.lessonResults,
                 inventory: data.inventory,
@@ -1169,6 +1174,19 @@ function renderProfile() {
 }
 
 function initializeProfileSettings() {
+    const settingsToggle = document.getElementById('profileSettingsToggle');
+    const settingsContent = document.getElementById('profileSettingsContent');
+    if (settingsToggle && settingsContent) {
+        const setSettingsExpanded = (expanded) => {
+            settingsContent.hidden = !expanded;
+            settingsToggle.setAttribute('aria-expanded', String(expanded));
+        };
+        setSettingsExpanded(false);
+        settingsToggle.addEventListener('click', () => {
+            setSettingsExpanded(settingsContent.hidden);
+        });
+    }
+
     const tabs = [...document.querySelectorAll('[data-settings-tab]')];
     const panels = [...document.querySelectorAll('[data-settings-panel]')];
     if (tabs.length) {

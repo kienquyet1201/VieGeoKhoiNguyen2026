@@ -11,6 +11,7 @@ const defaultGameState = {
     currentUnit: 1,
     currentNode: 1,
     completedNodes: [],
+    studyHistory: [],
     lastLogin: null,
     lastLoginDate: null,
     lastHeartUpdate: Date.now(),
@@ -207,6 +208,7 @@ function getGameState() {
     if (!Array.isArray(parsed.learningProfile.weakTopics)) parsed.learningProfile.weakTopics = [];
     if (!Number.isFinite(parsed.learningProfile.totalQuestionsAnswered)) parsed.learningProfile.totalQuestionsAnswered = 0;
     if (!parsed.lessonResults) parsed.lessonResults = {};
+    if (!Array.isArray(parsed.studyHistory)) parsed.studyHistory = [];
     if (parsed.lessonResults && typeof parsed.lessonResults === 'object' && !Array.isArray(parsed.lessonResults)) {
         parsed.lessonResults = Object.fromEntries(Object.entries(parsed.lessonResults)
             .map(([lessonId, result]) => [migrateLegacyLearningNodeId(lessonId), result]));
@@ -281,6 +283,7 @@ function buildPersistedGameState(state) {
         currentUnit: Number(state.currentUnit) || 1,
         currentNode: Number(state.currentNode) || 1,
         completedNodes: [...new Set(copyArray(state.completedNodes).map(migrateLegacyLearningNodeId))],
+        studyHistory: copyArray(state.studyHistory).slice(-500),
         lessonResults: Object.fromEntries(Object.entries(copyObject(state.lessonResults))
             .map(([lessonId, result]) => [migrateLegacyLearningNodeId(lessonId), result])),
         inventory: copyObject(state.inventory),
@@ -346,6 +349,7 @@ function saveGameState(state) {
             telemetry: state.telemetry || {},
             gameState: persistedState,
             completedNodes: persistedState.completedNodes,
+            studyHistory: persistedState.studyHistory,
             currentNode: persistedState.currentNode,
             lessonResults: persistedState.lessonResults,
             inventory: persistedState.inventory,
@@ -385,6 +389,23 @@ function recordStudyActivity(state) {
     state.lastStudyDate = todayKey;
     state.lastStreakAwardDate = todayKey;
     return state;
+}
+
+// Immutable attempt history feeds the parent dashboard. An entry is recorded
+// whenever an island is completed, including a repeat attempt of the same node.
+function recordLessonHistory(state, entry = {}) {
+    if (!state || typeof state !== 'object') return;
+    if (!Array.isArray(state.studyHistory)) state.studyHistory = [];
+    const questionCount = Math.max(0, Number(entry.questionCount) || 0);
+    const correctAnswers = Math.max(0, Math.min(questionCount, Number(entry.correctAnswers) || 0));
+    state.studyHistory.push({
+        lessonId: String(entry.lessonId || ''),
+        lessonTitle: String(entry.lessonTitle || 'Đảo tri thức'),
+        correctAnswers,
+        questionCount,
+        completedAt: Number(entry.completedAt) || Date.now()
+    });
+    state.studyHistory = state.studyHistory.slice(-500);
 }
 
 // ── LEVEL CALCULATION ──

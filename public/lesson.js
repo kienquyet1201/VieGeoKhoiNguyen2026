@@ -589,6 +589,15 @@ function finishLesson() {
         if (!state.completedNodes.includes(nodeId)) {
             state.completedNodes.push(nodeId);
         }
+        if (typeof recordLessonHistory === 'function') {
+            recordLessonHistory(state, {
+                lessonId: activeLessonId,
+                lessonTitle: activeLessonTitle,
+                correctAnswers,
+                questionCount: currentQuestions.length,
+                completedAt: Date.now()
+            });
+        }
         
         if (!madeMistake) {
             state.perfectLessons = (state.perfectLessons || 0) + 1;

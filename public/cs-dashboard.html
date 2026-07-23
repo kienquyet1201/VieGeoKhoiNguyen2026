@@ -41,6 +41,15 @@
         const show = (message, icon='info') => window.Swal ? Swal.fire({toast:true,position:'top-end',timer:2400,showConfirmButton:false,title:message,icon,background:'#102238',color:'#fff'}) : console.info(message);
         const session = () => { try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); } catch { return {}; } };
 
+        function startAgentPresence() {
+            if (typeof db === 'undefined') return;
+            const staff = session();
+            if (!staff.email) return;
+            const heartbeat = () => db.collection('users').doc(staff.email).set({ lastActive: Date.now() }, { merge: true }).catch(error => console.warn('Không thể cập nhật trạng thái CSKH.', error));
+            heartbeat();
+            window.setInterval(heartbeat, 30000);
+        }
+
         function renderQueue() {
             const term = el('csSearchInput').value.trim().toLowerCase(); const list = el('csQueueList');
             if (!conversations.length) { list.innerHTML = '<p class="ops-muted" style="padding:12px">Chưa có yêu cầu hỗ trợ mới.</p>'; return; }
@@ -49,8 +58,16 @@
 
         function renderMessages(snapshot) {
             const container = el('csMessages'); const messages = snapshot.docs.map(doc => ({id:doc.id,...doc.data()})).sort((a,b) => (a.createdAtClient || 0) - (b.createdAtClient || 0));
-            container.innerHTML = messages.length ? messages.map(message => { const staff = ['staff', 'assistant', 'AI'].includes(message.sender); const senderLabel = message.sender === 'AI' ? 'Trợ lý AI VieGeo' : staff ? 'CSKH VieGeo' : 'Học sinh'; return `<article class="cs-bubble${staff ? ' is-staff' : ''}"><small>${senderLabel}</small><p>${escapeHtml(message.text || (message.imageUrl ? 'Đã gửi hình ảnh.' : ''))}</p>${message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="Ảnh đính kèm" style="max-width:100%;margin-top:8px;border-radius:9px">` : ''}</article>`; }).join('') : '<div class="cs-empty">Chưa có tin nhắn trong cuộc hội thoại này.</div>';
+            container.innerHTML = messages.length ? messages.map(message => { const staff = ['staff', 'assistant', 'AI'].includes(message.sender); const senderLabel = message.sender === 'AI' ? 'CSKH tự động (AI)' : message.sender === 'staff' ? `CSKH + ${escapeHtml(message.staffName || message.senderName || message.staffEmail || 'VieGeo')}` : 'Học sinh'; const recalled = message.recalled || message.status === 'recalled'; const status = message.status === 'read' ? 'Đã xem' : message.status === 'received' ? 'Đã nhận' : message.status === 'recalled' ? 'Đã thu hồi' : 'Đã gửi'; return `<article class="cs-bubble${staff ? ' is-staff' : ''}"><small>${senderLabel}</small><p>${escapeHtml(recalled ? 'Đã thu hồi tin nhắn.' : (message.text || (message.imageUrl ? 'Đã gửi hình ảnh.' : '')))}</p>${!recalled && message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="Ảnh đính kèm" style="max-width:100%;margin-top:8px;border-radius:9px">` : ''}<small style="display:block;margin-top:6px;opacity:.72">${status}</small></article>`; }).join('') : '<div class="cs-empty">Chưa có tin nhắn trong cuộc hội thoại này.</div>';
             container.scrollTop = container.scrollHeight;
+        }
+
+        async function markStudentMessagesRead(snapshot) {
+            if (typeof db === 'undefined' || !currentConversation) return;
+            const unread = snapshot.docs.filter(doc => { const message = doc.data() || {}; return message.sender === 'user' && !message.recalled && message.status !== 'read'; });
+            if (!unread.length) return;
+            const batch = db.batch(); unread.forEach(doc => batch.update(doc.ref, {status:'read', readAtClient:Date.now()}));
+            try { await batch.commit(); } catch (error) { console.warn('Không thể đánh dấu tin nhắn đã đọc.', error); }
         }
 
         function selectConversation(id) {
@@ -58,7 +75,7 @@
             currentConversation = id; renderQueue();
             el('csThreadTitle').textContent = nameFor(item); el('csThreadMeta').textContent = item.email || id; el('csMessageInput').disabled = false; el('csSendButton').disabled = false;
             if (unsubscribeMessages) unsubscribeMessages();
-            unsubscribeMessages = db.collection('support_conversations').doc(id).collection('messages').onSnapshot(renderMessages, error => { console.error(error); show('Không thể tải tin nhắn.', 'error'); });
+            unsubscribeMessages = db.collection('support_conversations').doc(id).collection('messages').onSnapshot(snapshot => { renderMessages(snapshot); void markStudentMessagesRead(snapshot); }, error => { console.error(error); show('Không thể tải tin nhắn.', 'error'); });
             db.collection('support_conversations').doc(id).set({ unreadForStaff:false, updatedAtClient:Date.now() }, {merge:true}).catch(console.warn);
         }
 
@@ -69,10 +86,10 @@
             if (!text || !currentConversation) { input?.focus(); return; }
             try {
                 const timestampClient = Date.now();
-                const senderId = session().email || 'support@viegeo';
+                const currentStaff = session(); const senderId = currentStaff.email || 'support@viegeo'; const staffName = currentStaff.name || currentStaff.displayName || senderId;
                 const ref = db.collection('support_conversations').doc(currentConversation);
                 await ref.collection('messages').add({
-                    sender: 'staff', senderId, staffEmail: senderId, text,
+                    sender: 'staff', senderId, staffEmail: senderId, staffName, text, status:'sent',
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(), timestampClient,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: timestampClient
                 });
@@ -97,6 +114,7 @@
             if (allowedRoles().length < 2) el('csRoleSwitch').hidden = true;
             el('csRoleSwitch').addEventListener('click', async () => { const roles = allowedRoles(); if (roles.length < 2) return; const result = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(roles.map(role => [role, roleLabels[role]])),inputValue:roles.includes('cs') ? 'cs' : roles[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if(result.isConfirmed) navigateRole(result.value); });
             if (typeof db === 'undefined') { el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Firebase chưa sẵn sàng.</p>'; return; }
+            startAgentPresence();
             db.collection('support_conversations').orderBy('updatedAtClient','desc').limit(100).onSnapshot(snapshot => { conversations=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})); renderQueue(); }, error => { console.error(error); el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Không thể tải hàng đợi hỗ trợ.</p>'; });
         });
     })();
