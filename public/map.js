@@ -2,6 +2,26 @@
 // VieGeo - map.js (Rendering Learning Path Multi-Tier)
 // ============================================================================
 
+const PROVINCE_THEORIES = Object.freeze({
+    'ha-noi': `<div class="space-y-4 text-left">
+  <h3 class="text-xl font-bold text-blue-600">1. Hà Nội là nơi như thế nào?</h3>
+  <p>Hà Nội có tên chính thức là Thành phố Hà Nội và là Thủ đô của nước Cộng hòa xã hội chủ nghĩa Việt Nam. Đây là một trong năm thành phố trực thuộc Trung ương, đồng thời là trung tâm chính trị, hành chính, văn hóa, giáo dục và khoa học của cả nước.</p>
+  <p>Quốc hội, Chính phủ, Phủ Chủ tịch cùng nhiều bộ, ngành trung ương đều đặt trụ sở tại Hà Nội. Thành phố cũng là nơi diễn ra nhiều sự kiện quan trọng như các kỳ họp Quốc hội, lễ kỷ niệm lớn của đất nước, hội nghị quốc tế và các hoạt động ngoại giao.</p>
+  <p>Với lịch sử hơn 1.000 năm, Hà Nội từng mang tên Thăng Long. Trải qua nhiều giai đoạn lịch sử, thành phố vẫn giữ được nhiều công trình cổ, di tích lịch sử và giá trị văn hóa. Ngày nay, Hà Nội vừa là một đô thị hiện đại vừa là nơi lưu giữ những nét đẹp truyền thống của dân tộc.</p>
+
+  <h3 class="text-xl font-bold text-blue-600">2. Hà Nội thuộc miền và vùng nào?</h3>
+  <p>Hà Nội nằm ở miền Bắc của Việt Nam. Đây là khu vực có bốn mùa rõ rệt là xuân, hạ, thu và đông. Mỗi mùa đều mang một vẻ đẹp riêng và tạo nên những nét đặc trưng trong cuộc sống của người dân.</p>
+  <p>Theo phân chia địa lí, Hà Nội thuộc vùng Đồng bằng sông Hồng. Vùng này nổi tiếng với đất đai màu mỡ, hệ thống sông ngòi dày đặc và dân cư đông đúc. Từ lâu, đây đã là một trong những cái nôi của nền văn minh lúa nước Việt Nam.</p>
+
+  <h3 class="text-xl font-bold text-blue-600">3. Hà Nội là tỉnh hay thành phố?</h3>
+  <p>Hà Nội là thành phố trực thuộc Trung ương chứ không phải là một tỉnh. Thành phố được chia thành các quận, huyện và thị xã. Các quận là nơi tập trung nhiều cơ quan, trường học, bệnh viện và khu dân cư. Trong khi đó, các huyện ngoại thành vẫn còn nhiều làng quê, cánh đồng và làng nghề truyền thống.</p>
+
+  <h3 class="text-xl font-bold text-blue-600">4. Điều gì làm Hà Nội nổi bật?</h3>
+  <p>Điều làm Hà Nội nổi bật là bề dày lịch sử hơn một nghìn năm và vai trò là Thủ đô của Việt Nam. Thành phố nổi tiếng với Hồ Gươm, Văn Miếu – Quốc Tử Giám, Hoàng thành Thăng Long, Lăng Chủ tịch Hồ Chí Minh và khu phố cổ.</p>
+  <p>Ngoài các công trình lịch sử, Hà Nội còn được biết đến với những hàng cây xanh, nhiều hồ nước và nền ẩm thực phong phú như phở, bún chả hay cốm. Đây là những hình ảnh thường được nhắc đến khi giới thiệu về Thủ đô.</p>
+</div>`
+});
+
 const mapContainer = document.getElementById('mapViewContainer');
 const mapTitle = document.getElementById('mapTitle');
 const btnMapBack = document.getElementById('btnMapBack');
@@ -23,6 +43,29 @@ function fallbackTheoryFor(lesson) {
     return `Trước khi làm bài, hãy nắm các ý chính của ${lesson.title}.\n\nQuan sát đặc điểm địa lí, ghi nhớ từ khóa quan trọng và liên hệ kiến thức với địa phương đang khám phá. Sau đó, bạn sẽ trả lời 5 câu hỏi để kiểm tra mức độ hiểu bài.`;
 }
 
+function normalizeProvinceSlug(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function provinceSlugFor(lesson) {
+    const fromId = /^path-(.+)-(?:d(?:easy|medium|hard)|g(?:5|9|12))-i\d+$/i.exec(String(lesson?.id || ''));
+    return normalizeProvinceSlug(lesson?.provinceSlug || fromId?.[1] || lesson?.province || selectedProvince?.name);
+}
+
+function theoryHtmlFor(lesson) {
+    const provinceSlug = provinceSlugFor(lesson);
+    if (PROVINCE_THEORIES[provinceSlug]) return PROVINCE_THEORIES[provinceSlug];
+
+    return `<div class="text-left"><h3>${lesson?.title || 'Đảo tri thức'}</h3><p>${fallbackTheoryFor(lesson || {})}</p></div>`;
+}
+
 function emergencyFallbackQuestions() {
     const supplied = window.VieGeoLearningPath?.createFallbackQuestions?.();
     if (Array.isArray(supplied) && supplied.length === 5) return supplied;
@@ -36,7 +79,10 @@ function emergencyFallbackQuestions() {
 }
 
 function closeIslandTheory() {
-    if (islandTheoryModal) islandTheoryModal.hidden = true;
+    if (islandTheoryModal) {
+        islandTheoryModal.hidden = true;
+        islandTheoryModal.classList.add('hidden');
+    }
     activeIslandLearning = null;
 }
 
@@ -53,6 +99,7 @@ function showIslandLoadingFeedback(clickedIsland) {
     }
 
     islandTheoryModal.hidden = false;
+    islandTheoryModal.classList.remove('hidden');
     islandTheoryTitle.textContent = title;
     islandTheoryMeta.textContent = `${province} · ${difficulty} · 5 câu hỏi`;
     islandTheoryContent.classList.add('is-loading');
@@ -121,13 +168,15 @@ async function handleDelegatedIslandClick(event) {
 async function openIslandTheory(lesson) {
     if (!islandTheoryModal || !lesson) return;
     const requestId = ++islandTheoryRequest;
-    activeIslandLearning = { lesson, theory: fallbackTheoryFor(lesson), questions: [] };
+    const theoryHtml = theoryHtmlFor(lesson);
+    activeIslandLearning = { lesson, theory: theoryHtml, questions: [] };
     islandTheoryModal.hidden = false;
+    islandTheoryModal.classList.remove('hidden');
     islandTheoryTitle.textContent = lesson.title || 'Lý thuyết Đảo nhỏ';
-    islandTheoryMeta.textContent = `${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${lesson.difficulty || 'easy'} · 5 câu hỏi`;
-    islandTheoryContent.classList.add('is-loading');
+    islandTheoryMeta.textContent = `${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${lesson.difficulty || 'easy'} · Đang chuẩn bị 5 câu hỏi`;
+    islandTheoryContent.classList.remove('is-loading');
     islandTheoryContent.setAttribute('aria-busy', 'true');
-    islandTheoryContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tải câu hỏi thật từ Firebase...';
+    islandTheoryContent.innerHTML = theoryHtml;
     btnStartIslandQuiz.disabled = true;
 
     try {
@@ -137,12 +186,12 @@ async function openIslandTheory(lesson) {
         if (requestId !== islandTheoryRequest || !islandTheoryModal || islandTheoryModal.hidden) return;
         activeIslandLearning = {
             lesson,
-            theory: String(loaded?.theory || fallbackTheoryFor(lesson)).trim(),
+            theory: theoryHtmlFor(lesson),
             questions: Array.isArray(loaded?.questions) ? loaded.questions.slice(0, 5) : []
         };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.textContent = activeIslandLearning.theory;
+        islandTheoryContent.innerHTML = activeIslandLearning.theory;
         if (loaded?.isFallback) {
             const notice = 'Lỗi kết nối máy chủ, đang sử dụng dữ liệu dự phòng.';
             if (window.VieGeoUI?.warning) window.VieGeoUI.warning(notice);
@@ -151,10 +200,10 @@ async function openIslandTheory(lesson) {
     } catch (error) {
         console.error('Lỗi Firebase khi tải nội dung Đảo nhỏ:', error);
         if (requestId !== islandTheoryRequest) return;
-        activeIslandLearning = { lesson, theory: fallbackTheoryFor(lesson), questions: emergencyFallbackQuestions() };
+        activeIslandLearning = { lesson, theory: theoryHtmlFor(lesson), questions: emergencyFallbackQuestions() };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.textContent = 'Lỗi kết nối máy chủ, đang sử dụng dữ liệu dự phòng. Bạn vẫn có thể bắt đầu làm bài.';
+        islandTheoryContent.innerHTML = `${activeIslandLearning.theory}<p><strong>Lỗi kết nối máy chủ:</strong> đang sử dụng dữ liệu dự phòng. Bạn vẫn có thể bắt đầu làm bài.</p>`;
         if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi kết nối máy chủ, đang sử dụng dữ liệu dự phòng.');
     } finally {
         if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
