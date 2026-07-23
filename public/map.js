@@ -126,7 +126,13 @@ function forceShowIslandModal(modal) {
     modal.hidden = false;
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    modal.style.setProperty('z-index', '99999', 'important');
+    modal.style.setProperty('position', 'fixed', 'important');
+    modal.style.setProperty('top', '0', 'important');
+    modal.style.setProperty('right', '0', 'important');
+    modal.style.setProperty('bottom', '0', 'important');
+    modal.style.setProperty('left', '0', 'important');
+    modal.style.setProperty('z-index', '2147483647', 'important');
+    modal.style.setProperty('background', 'rgba(0, 0, 0, 0.85)', 'important');
     modal.style.display = 'flex';
     return true;
 }
@@ -141,9 +147,33 @@ function forceHideIslandModal(modal) {
 
 window.ensureIslandTheoryModal = ensureIslandModalDom;
 
+function rebuildTheoryModalWithInlineCss(theoryHtml) {
+    ['theory-modal', 'islandTheoryModal'].forEach((id) => document.getElementById(id)?.remove());
+
+    const modal = document.createElement('div');
+    modal.id = 'theory-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'islandTheoryTitle');
+    modal.style.cssText = 'position: fixed !important; top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important; z-index: 2147483647 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 24px !important; background: rgba(0, 0, 0, 0.85) !important; backdrop-filter: blur(8px) !important; overflow: auto !important;';
+    modal.innerHTML = `
+        <section style="position: relative; width: min(760px, 100%); max-height: 80vh; overflow-y: auto; box-sizing: border-box; border: 1px solid rgba(96, 165, 250, 0.48); border-radius: 24px; padding: clamp(24px, 5vw, 42px); background: #102238; color: #f8fafc; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.62);">
+            <button id="btnCloseIslandTheory" type="button" aria-label="Đóng lý thuyết" style="position: absolute; top: 16px; right: 16px; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(148, 163, 184, 0.2); color: #fff; font-size: 20px; cursor: pointer;">×</button>
+            <p style="margin: 0 0 8px; color: #7dd3fc; font-weight: 800;">HÀNH TRANG TRƯỚC THỬ THÁCH</p>
+            <h2 id="islandTheoryTitle" style="margin: 0; padding-right: 44px; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.25;">Lý thuyết trước khi thực chiến</h2>
+            <p id="islandTheoryMeta" style="margin: 10px 0 20px; color: #94a3b8;">Hà Nội · Kiến thức nền tảng</p>
+            <article id="islandTheoryContent" aria-live="polite" style="color: #dbeafe; line-height: 1.75; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; padding: 20px; background: rgba(2, 12, 27, 0.45);">${theoryHtml}</article>
+            <button id="btnStartIslandQuiz" type="button" style="display: flex; width: 100%; min-height: 54px; align-items: center; justify-content: center; gap: 9px; margin-top: 22px; border: 0; border-radius: 14px; background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; font-size: 1rem; font-weight: 800; cursor: pointer;">Đã hiểu &amp; Bắt đầu làm bài</button>
+        </section>`;
+    document.body.appendChild(modal);
+    refreshIslandModalReferences();
+    bindIslandModalEvents();
+    return modal;
+}
+
 function presentTheoryAfterFirebaseLoad(questions) {
     console.log('Bước 1: Bắt đầu xử lý UI sau khi Firebase trả dữ liệu');
-    if (!activeIslandLearning?.lesson || !ensureIslandModalDom()) return;
+    if (!activeIslandLearning?.lesson || !document.body) return;
 
     const loadedQuestions = Array.isArray(questions) ? questions.slice(0, 5) : [];
     activeIslandLearning = {
@@ -151,13 +181,15 @@ function presentTheoryAfterFirebaseLoad(questions) {
         theory: theoryHtmlFor(activeIslandLearning.lesson),
         questions: loadedQuestions
     };
-    forceShowIslandModal(islandTheoryModal);
+    const modal = rebuildTheoryModalWithInlineCss(activeIslandLearning.theory);
+    if (!modal) return;
     islandTheoryTitle.textContent = 'Lý thuyết trước khi thực chiến';
     islandTheoryMeta.textContent = `${activeIslandLearning.lesson.title || 'Đảo tri thức'} · ${loadedQuestions.length} câu hỏi đã tải xong`;
     islandTheoryContent.classList.remove('is-loading');
     islandTheoryContent.setAttribute('aria-busy', 'false');
     islandTheoryContent.innerHTML = activeIslandLearning.theory;
     btnStartIslandQuiz.disabled = !loadedQuestions.length;
+    forceShowIslandModal(modal);
     console.log('Bước 3: Đã hiển thị Modal Lý thuyết');
 }
 
@@ -227,6 +259,8 @@ function openIslandQuizPreview() {
     // Keep the loaded session in memory; only the visible layer changes here.
     if (islandTheoryModal) {
         forceHideIslandModal(islandTheoryModal);
+        islandTheoryModal.remove();
+        refreshIslandModalReferences();
     }
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
     islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
