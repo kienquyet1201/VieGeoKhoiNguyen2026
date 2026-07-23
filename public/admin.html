@@ -96,6 +96,25 @@
                         <button class="ops-button" id="btnSaveAdminQuestion" type="submit" style="margin-top:6px;background:#16a34a"><i class="fa-solid fa-floppy-disk"></i> Lưu câu hỏi</button>
                     </form>
                 </article>
+
+                <article class="ops-card" style="margin-top:18px">
+                    <div class="operations-heading" style="gap:14px;margin-bottom:16px">
+                        <div>
+                            <h2 style="margin-bottom:4px">Danh sách câu hỏi</h2>
+                            <p class="ops-muted">Tích chọn các câu cần dọn dẹp, sau đó xóa một lần an toàn.</p>
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap">
+                            <button class="ops-button is-muted" id="btnReloadAdminQuestions" type="button"><i class="fa-solid fa-rotate-right"></i> Tải lại</button>
+                            <button class="ops-button is-danger" id="btnDeleteSelectedQuestions" type="button" disabled aria-disabled="true"><i class="fa-solid fa-trash-can"></i> Xóa các câu đã chọn</button>
+                        </div>
+                    </div>
+                    <div class="ops-table-wrap">
+                        <table class="ops-table">
+                            <thead><tr><th scope="col">Chọn</th><th scope="col">Câu hỏi</th><th scope="col">Tỉnh / Chủ đề</th><th scope="col">Mức độ</th><th scope="col">ID</th></tr></thead>
+                            <tbody id="adminQuestionsList"><tr><td colspan="5" class="ops-muted">Đang tải câu hỏi…</td></tr></tbody>
+                        </table>
+                    </div>
+                </article>
             </section>
 
             <section class="operations-tab hidden" data-admin-panel="monitoring">
@@ -343,12 +362,100 @@
                 await firestore.collection('Questions').add(newQuestion);
                 form.reset();
                 showToast('Thêm câu hỏi thành công!');
+                loadAdminQuestions();
             } catch (error) {
                 console.error('Lỗi thêm câu hỏi:', error);
                 showToast('Có lỗi xảy ra, vui lòng thử lại!', 'error');
             } finally {
                 button.disabled = false;
                 button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu câu hỏi';
+            }
+        }
+
+        const selectedAdminQuestionIds = new Set();
+
+        function updateSelectedQuestionDeleteButton() {
+            const button = el('btnDeleteSelectedQuestions');
+            if (!button) return;
+            const count = selectedAdminQuestionIds.size;
+            button.disabled = count === 0;
+            button.setAttribute('aria-disabled', String(count === 0));
+            button.innerHTML = count
+                ? `<i class="fa-solid fa-trash-can"></i> Xóa (${count}) câu`
+                : '<i class="fa-solid fa-trash-can"></i> Xóa các câu đã chọn';
+        }
+
+        function renderAdminQuestionList(questionDocs) {
+            const body = el('adminQuestionsList');
+            if (!body) return;
+            if (!questionDocs.length) {
+                body.innerHTML = '<tr><td colspan="5" class="ops-muted">Chưa có câu hỏi trong kho dữ liệu.</td></tr>';
+                return;
+            }
+            body.innerHTML = questionDocs.map(doc => {
+                const data = doc.data() || {};
+                const details = [data.province, data.topic || data.island].filter(Boolean).join(' · ') || '—';
+                const question = String(data.question || 'Câu hỏi chưa có nội dung').trim();
+                const isSelected = selectedAdminQuestionIds.has(doc.id);
+                return `<tr data-question-row="${escapeHtml(doc.id)}">
+                    <td><label title="Chọn câu hỏi"><input class="admin-question-checkbox" type="checkbox" value="${escapeHtml(doc.id)}" data-id="${escapeHtml(doc.id)}" ${isSelected ? 'checked' : ''}><span class="sr-only">Chọn câu hỏi ${escapeHtml(doc.id)}</span></label></td>
+                    <td><strong>${escapeHtml(question)}</strong></td>
+                    <td>${escapeHtml(details)}</td>
+                    <td>${escapeHtml(data.difficulty || '—')}</td>
+                    <td><code>${escapeHtml(doc.id)}</code></td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function loadAdminQuestions() {
+            const body = el('adminQuestionsList');
+            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+            if (!body || !firestore) return;
+            body.innerHTML = '<tr><td colspan="5" class="ops-muted">Đang tải câu hỏi…</td></tr>';
+            try {
+                const snapshot = await firestore.collection('Questions').limit(200).get();
+                const existingIds = new Set(snapshot.docs.map(doc => doc.id));
+                selectedAdminQuestionIds.forEach(id => {
+                    if (!existingIds.has(id)) selectedAdminQuestionIds.delete(id);
+                });
+                renderAdminQuestionList(snapshot.docs);
+                updateSelectedQuestionDeleteButton();
+            } catch (error) {
+                console.error('Lỗi tải danh sách câu hỏi:', error);
+                body.innerHTML = '<tr><td colspan="5" class="ops-muted">Không thể tải danh sách câu hỏi.</td></tr>';
+                showToast('Không thể tải danh sách câu hỏi.', 'error');
+            }
+        }
+
+        async function deleteSelectedAdminQuestions() {
+            const ids = [...selectedAdminQuestionIds];
+            if (!ids.length) return;
+            if (!window.confirm(`Bạn có chắc chắn muốn xóa ${ids.length} câu hỏi đã chọn không?`)) return;
+
+            const button = el('btnDeleteSelectedQuestions');
+            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+            if (!button || !firestore) {
+                showToast('Firebase chưa sẵn sàng để xóa câu hỏi.', 'error');
+                return;
+            }
+
+            button.disabled = true;
+            button.setAttribute('aria-disabled', 'true');
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+            try {
+                for (let start = 0; start < ids.length; start += 450) {
+                    const batch = firestore.batch();
+                    ids.slice(start, start + 450).forEach(id => batch.delete(firestore.collection('Questions').doc(id)));
+                    await batch.commit();
+                }
+                selectedAdminQuestionIds.clear();
+                showToast('Đã xóa thành công!');
+                await loadAdminQuestions();
+            } catch (error) {
+                console.error('Lỗi xóa các câu hỏi đã chọn:', error);
+                showToast('Không thể xóa các câu hỏi đã chọn.', 'error');
+            } finally {
+                updateSelectedQuestionDeleteButton();
             }
         }
 
@@ -373,7 +480,18 @@
             el('searchUser')?.addEventListener('input', renderUsers);
             el('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
             el('adminQuestionForm')?.addEventListener('submit', submitAdminQuestion);
-            document.addEventListener('change', event => { if (event.target.matches('[data-role-checkbox]')) event.target.closest('tr')?.classList.add('is-role-dirty'); });
+            el('btnReloadAdminQuestions')?.addEventListener('click', loadAdminQuestions);
+            el('btnDeleteSelectedQuestions')?.addEventListener('click', deleteSelectedAdminQuestions);
+            document.addEventListener('change', event => {
+                if (event.target.matches('[data-role-checkbox]')) event.target.closest('tr')?.classList.add('is-role-dirty');
+                if (event.target.matches('.admin-question-checkbox')) {
+                    const questionId = event.target.dataset.id;
+                    if (!questionId) return;
+                    if (event.target.checked) selectedAdminQuestionIds.add(questionId);
+                    else selectedAdminQuestionIds.delete(questionId);
+                    updateSelectedQuestionDeleteButton();
+                }
+            });
             document.addEventListener('click', event => {
                 const target = event.target.closest('button'); if (!target) return;
                 if (target.dataset.saveRoles) {
@@ -394,7 +512,7 @@
             el('adminLogout').addEventListener('click', () => { try { localStorage.removeItem('lm_session'); } finally { window.location.href = '/loginout'; } });
             if (typeof db === 'undefined') { el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Firebase chưa sẵn sàng'; return; }
             el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80"></i> Firebase đã kết nối';
-            Promise.all([loadOverview(), loadUsers(), loadRequests()]).catch(error => console.error(error));
+            Promise.all([loadOverview(), loadUsers(), loadRequests(), loadAdminQuestions()]).catch(error => console.error(error));
         });
     })();
     </script>
