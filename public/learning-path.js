@@ -268,10 +268,12 @@
             }
             window.VieGeoQuestionLoadState = 'ready';
             console.log('Dữ liệu tải về:', questions);
+            console.log('Bước 1: Bắt đầu xử lý UI');
             // map.js guarantees a visible theory surface even if a layout edit
             // removed the original modal markup from map.html.
             window.ensureIslandTheoryModal?.();
             window.dispatchEvent(new CustomEvent('viegeo:questions-loaded', { detail: { questions } }));
+            console.log('Bước 3: Đã chuyển dữ liệu sang Modal Lý thuyết');
             return questions;
         } catch (error) {
             const message = error?.message || 'Không thể kết nối Firestore.';
