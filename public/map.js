@@ -46,8 +46,7 @@ let islandTheoryRequest = 0;
 let islandQuizCurrentIndex = 0;
 let islandQuizAnswers = {};
 let islandQuizSubmitted = false;
-let islandQuizPenalizedQuestionIndexes = new Set();
-let islandQuizAnswerPenaltyPending = false;
+let islandQuizSummaryPenaltyPending = false;
 
 function hasTheoryModalDom() {
     return Boolean(islandTheoryModal && islandTheoryTitle && islandTheoryMeta && islandTheoryContent && btnStartIslandQuiz);
@@ -329,21 +328,33 @@ function islandQuizCorrectAnswerIndex(question) {
     return Number.isInteger(numericIndex) ? numericIndex : -1;
 }
 
-async function applyIslandQuizWrongAnswerPenalty() {
-    if (typeof window.deductHeartForWrongAnswer === 'function') {
-        return window.deductHeartForWrongAnswer();
+function isPremiumIslandLearner() {
+    const playerState = window.gameState || state || {};
+    if (String(playerState.accountStatus || '').trim().toLowerCase() === 'premium') return true;
+    try {
+        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+        return String(session.accountStatus || '').trim().toLowerCase() === 'premium';
+    } catch (error) {
+        return false;
     }
+}
 
-    // Keep the quiz usable if the shared heart module is unavailable. The
-    // canonical app-core handler above remains responsible for Firebase sync.
-    state = window.gameState || state;
-    if (!state || Number(state.hearts) <= 0) return { applied: false, gameOver: true, hearts: 0 };
-    state.hearts = Math.max(0, Number(state.hearts) - 1);
-    state.lastHeartUpdate = Date.now();
-    if (typeof saveGameState === 'function') await saveGameState(state);
-    if (typeof updateHeaderStats === 'function') updateHeaderStats();
-    updateStatsUI();
-    return { applied: true, gameOver: state.hearts <= 0, hearts: state.hearts };
+function showIslandSummaryPenaltyNotice() {
+    const message = 'Bạn chưa đạt 5/5! Đã bị trừ 1 sinh mệnh 💔';
+    if (window.Swal && typeof window.Swal.fire === 'function') {
+        window.Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'warning',
+            title: message,
+            showConfirmButton: false,
+            timer: 3000,
+            background: '#13253a',
+            color: '#f8fafc'
+        });
+        return;
+    }
+    if (window.VieGeoUI?.warning) window.VieGeoUI.warning(message);
 }
 
 async function endIslandQuizForGameOver() {
@@ -356,7 +367,7 @@ async function endIslandQuizForGameOver() {
 
     const options = {
         title: 'Hết sinh mệnh!',
-        text: 'Bạn đã hết trái tim sau khi nộp đáp án sai. Hãy hồi phục trái tim rồi làm lại bài từ đầu.',
+        text: 'Bạn đã hết trái tim vì chưa đạt 5/5. Hãy hồi phục trái tim rồi làm lại bài từ đầu.',
         icon: 'error',
         confirmButtonText: 'Làm lại sau',
         confirmButtonColor: '#0284c7',
@@ -367,6 +378,26 @@ async function endIslandQuizForGameOver() {
     if (window.Swal && typeof window.Swal.fire === 'function') await window.Swal.fire(options);
     else if (window.VieGeoUI?.error) await window.VieGeoUI.error(options.text, options);
     renderMap();
+}
+
+async function applyIslandSummaryPenalty(correctAnswers) {
+    const isPremium = isPremiumIslandLearner();
+    if (isPremium || correctAnswers >= 5) return { continueQuiz: true, isPremium };
+
+    const penalty = typeof window.deductHeartForIslandSummary === 'function'
+        ? await window.deductHeartForIslandSummary()
+        : { applied: false, gameOver: false };
+
+    if (penalty.applied) {
+        state = window.gameState || state;
+        updateStatsUI();
+        showIslandSummaryPenaltyNotice();
+    }
+    if (penalty.gameOver) {
+        await endIslandQuizForGameOver();
+        return { continueQuiz: false, isPremium: false };
+    }
+    return { continueQuiz: Boolean(penalty.applied || penalty.protected), isPremium: false };
 }
 
 function islandQuizStars(correctAnswers, questionCount) {
@@ -410,11 +441,22 @@ function persistIslandQuizResult(correctAnswers, questionCount) {
     islandQuizSubmitted = true;
 }
 
-function renderIslandQuizResult() {
+async function renderIslandQuizResult() {
     const questions = activeIslandQuizQuestions();
     const correctAnswers = questions.reduce((total, question, index) => total + (islandQuizAnswers[index] === islandQuizCorrectAnswerIndex(question) ? 1 : 0), 0);
     const stars = islandQuizStars(correctAnswers, questions.length);
-    persistIslandQuizResult(correctAnswers, questions.length);
+
+    if (!islandQuizSubmitted) {
+        if (islandQuizSummaryPenaltyPending) return;
+        islandQuizSummaryPenaltyPending = true;
+        try {
+            const summary = await applyIslandSummaryPenalty(correctAnswers);
+            if (!summary.continueQuiz) return;
+            persistIslandQuizResult(correctAnswers, questions.length);
+        } finally {
+            islandQuizSummaryPenaltyPending = false;
+        }
+    }
 
     const header = document.getElementById('islandQuizStepHeader');
     const body = document.getElementById('islandQuizStepBody');
@@ -435,7 +477,7 @@ function renderIslandQuizResult() {
 function renderIslandQuizQuestion(index) {
     const questions = activeIslandQuizQuestions();
     if (!questions.length || islandQuizSubmitted) {
-        if (islandQuizSubmitted) renderIslandQuizResult();
+        if (islandQuizSubmitted) void renderIslandQuizResult();
         return;
     }
     islandQuizCurrentIndex = Math.max(0, Math.min(index, questions.length - 1));
@@ -496,37 +538,8 @@ function mountIslandQuizStepper() {
             islandQuizWarning('Hãy chọn một đáp án trước khi tiếp tục.');
             return;
         }
-        if (islandQuizAnswerPenaltyPending) return;
-
-        const currentQuestion = activeIslandQuizQuestions()[islandQuizCurrentIndex];
-        const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
-        const correctAnswer = islandQuizCorrectAnswerIndex(currentQuestion);
-        if (!Number.isInteger(correctAnswer) || correctAnswer < 0) {
-            islandQuizWarning('Câu hỏi này chưa có đáp án hợp lệ. Vui lòng chọn câu khác.');
-            return;
-        }
-
-        // Choosing an option is always free. The penalty is evaluated only
-        // here, when the learner submits the selected answer to move forward.
-        if (selectedAnswer !== correctAnswer && !islandQuizPenalizedQuestionIndexes.has(islandQuizCurrentIndex)) {
-            islandQuizAnswerPenaltyPending = true;
-            const nextButton = document.getElementById('islandQuizStepNext');
-            if (nextButton) nextButton.disabled = true;
-            try {
-                const penalty = await applyIslandQuizWrongAnswerPenalty();
-                if (penalty.gameOver) {
-                    await endIslandQuizForGameOver();
-                    return;
-                }
-                if (!penalty.applied && !penalty.protected) return;
-                islandQuizPenalizedQuestionIndexes.add(islandQuizCurrentIndex);
-            } finally {
-                islandQuizAnswerPenaltyPending = false;
-                if (nextButton?.isConnected) nextButton.disabled = false;
-            }
-        }
         if (islandQuizCurrentIndex === activeIslandQuizQuestions().length - 1) {
-            renderIslandQuizResult();
+            await renderIslandQuizResult();
             return;
         }
         renderIslandQuizQuestion(islandQuizCurrentIndex + 1);
@@ -550,8 +563,7 @@ async function openIslandQuizPreview() {
     islandQuizCurrentIndex = 0;
     islandQuizAnswers = {};
     islandQuizSubmitted = false;
-    islandQuizPenalizedQuestionIndexes = new Set();
-    islandQuizAnswerPenaltyPending = false;
+    islandQuizSummaryPenaltyPending = false;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
     islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';

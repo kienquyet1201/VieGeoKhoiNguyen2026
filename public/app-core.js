@@ -521,9 +521,10 @@ async function consumeHeart() {
     return true;
 }
 
-// Quiz penalties are deliberately separate from lesson-entry gating. A heart
-// may only be deducted after a learner has submitted an incorrect answer.
-async function deductHeartForWrongAnswer() {
+// Island summaries are deliberately separate from lesson-entry gating. This
+// charge is called once, only after a non-Premium learner finishes an island
+// without a perfect score.
+async function deductHeartForIslandSummary() {
     if (lessonEntryInProgress) return { applied: false, gameOver: false };
     syncHearts();
 
@@ -584,7 +585,7 @@ window.syncHearts = syncHearts;
 window.startHeartTimer = startHeartTimer;
 window.checkHasEnoughHearts = checkHasEnoughHearts;
 window.consumeHeart = consumeHeart;
-window.deductHeartForWrongAnswer = deductHeartForWrongAnswer;
+window.deductHeartForIslandSummary = deductHeartForIslandSummary;
 
 syncHearts();
 const heartGateObserver = new MutationObserver((records) => {
