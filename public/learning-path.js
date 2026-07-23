@@ -227,24 +227,30 @@
         ].map((question, index) => ({ ...question, id: `offline-fallback-${index + 1}`, source: 'fallback' }));
     }
 
-    // Firestore source of truth for Island quizzes. The collection name is
-    // intentionally case-sensitive because production data lives in Question.
-    async function fetchHanoiQuestions() {
+    // Firestore source of truth for Hà Nội Island quizzes.
+    async function fetchHanoiQuestions(difficulty = 'easy') {
         try {
             const firestore = window.db || (typeof db !== 'undefined' ? db : null);
             if (!firestore) throw new Error('Firestore chưa sẵn sàng.');
-            const snapshot = await firestore.collection('Question').get();
+            const selectedDifficulty = ['easy', 'medium', 'hard'].includes(String(difficulty).toLowerCase())
+                ? String(difficulty).toLowerCase()
+                : 'easy';
+            const snapshot = await firestore.collection('Questions')
+                .where('province', '==', 'ha-noi')
+                .where('difficulty', '==', selectedDifficulty)
+                .get();
             const questions = snapshot.docs.map((doc, index) => {
                 const data = doc.data() || {};
-                const options = optionsFromQuestionDocument(data);
-                const correctAnswer = answerIndexFromQuestionDocument(data, options);
-                const question = String(data.questionText ?? data.question ?? data.q ?? data.text ?? '').trim();
-                if (!question || options.length < 4 || correctAnswer < 0 || correctAnswer >= options.length) {
-                    console.warn(`Bỏ qua Question/${doc.id}: thiếu nội dung, đáp án hoặc đáp án đúng.`);
+                const options = Array.isArray(data.options) ? data.options.map(String).map(value => value.trim()) : [];
+                const correctAnswer = Number(data.answer);
+                const question = String(data.question || '').trim();
+                if (!question || options.length < 4 || !Number.isInteger(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) {
+                    console.warn(`Bỏ qua Questions/${doc.id}: thiếu nội dung, đáp án hoặc đáp án đúng.`);
                     return null;
                 }
                 return {
                     id: doc.id || `question-${index}`,
+                    questionText: question,
                     question,
                     options: options.slice(0, 4),
                     correctAnswer,
@@ -252,7 +258,7 @@
                     theory: String(data.theory ?? data.theoryContent ?? data.lyThuyet ?? '').trim()
                 };
             }).filter(Boolean);
-            if (questions.length < 5) throw new Error('Collection Question cần tối thiểu 5 câu hỏi hợp lệ.');
+            if (questions.length < 5) throw new Error('Collection Questions cần tối thiểu 5 câu hỏi hợp lệ.');
             console.log('Dữ liệu tải về:', questions);
             return questions;
         } catch (error) {
@@ -269,7 +275,7 @@
     }
 
     async function loadFirebaseIslandContent(lesson) {
-        const questions = randomFiveFirestoreQuestions(await fetchHanoiQuestions());
+        const questions = randomFiveFirestoreQuestions(await fetchHanoiQuestions(lesson?.difficulty || 'easy'));
         const theory = String(questions.map(item => item.theory || item.theoryContent || '').find(Boolean)
             || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
         return { theory, questions, isFallback: questions.some(question => question.source === 'fallback') };

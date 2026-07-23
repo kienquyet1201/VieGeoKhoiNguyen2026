@@ -57,7 +57,7 @@
             <section class="operations-tab hidden" data-admin-panel="upload">
                 <article class="ops-card">
                     <h2>Nhập bộ câu hỏi bằng văn bản</h2>
-                    <p class="ops-muted">Dán nội dung Lý thuyết và nhiều khối câu hỏi vào một ô duy nhất. Hệ thống sẽ kiểm tra định dạng, xem trước và lưu từng câu vào collection <code>Question</code>.</p>
+                    <p class="ops-muted">Dán nội dung Lý thuyết và nhiều khối câu hỏi vào một ô duy nhất. Hệ thống sẽ kiểm tra định dạng, xem trước và lưu từng câu vào collection <code>Questions</code>.</p>
                     <div class="ops-grid">
                         <div class="ops-list">
                             <label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="importProvince" type="text" placeholder="Ví dụ: Hà Nội" style="display:block;margin-top:7px"></label>
@@ -74,6 +74,27 @@
                             <pre id="uploadPreview" class="ops-muted" style="min-height:160px;max-height:300px;overflow:auto;white-space:pre-wrap;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:14px;background:#091525">Kết quả xử lý sẽ hiển thị tại đây.</pre>
                         </div>
                     </div>
+                </article>
+
+                <article class="ops-card" style="margin-top:18px">
+                    <h2>Thêm câu hỏi</h2>
+                    <p class="ops-muted">Tạo nhanh một câu hỏi theo đúng schema collection <code>Questions</code>.</p>
+                    <form id="adminQuestionForm" class="ops-list" novalidate>
+                        <label class="ops-muted">Nội dung câu hỏi<textarea class="ops-input" id="adminQuestionText" rows="3" required placeholder="Nhập nội dung câu hỏi..." style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
+                        <div class="ops-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+                            <label class="ops-muted">Đáp án 0<input class="ops-input" id="adminOption0" type="text" required style="display:block;margin-top:7px"></label>
+                            <label class="ops-muted">Đáp án 1<input class="ops-input" id="adminOption1" type="text" required style="display:block;margin-top:7px"></label>
+                            <label class="ops-muted">Đáp án 2<input class="ops-input" id="adminOption2" type="text" required style="display:block;margin-top:7px"></label>
+                            <label class="ops-muted">Đáp án 3<input class="ops-input" id="adminOption3" type="text" required style="display:block;margin-top:7px"></label>
+                        </div>
+                        <div class="ops-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
+                            <label class="ops-muted">Đáp án đúng<select class="ops-input" id="adminCorrectAnswer" required style="display:block;margin-top:7px"><option value="0">Đáp án 0</option><option value="1">Đáp án 1</option><option value="2">Đáp án 2</option><option value="3">Đáp án 3</option></select></label>
+                            <label class="ops-muted">Tỉnh / Thành phố<select class="ops-input" id="adminQuestionProvince" required style="display:block;margin-top:7px"><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
+                            <label class="ops-muted">Độ khó<select class="ops-input" id="adminQuestionDifficulty" required style="display:block;margin-top:7px"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
+                            <label class="ops-muted">Khối lớp<select class="ops-input" id="adminQuestionGrade" required style="display:block;margin-top:7px"><option value="5">Khối 5</option><option value="9">Khối 9</option><option value="12">Khối 12</option></select></label>
+                        </div>
+                        <button class="ops-button" id="btnSaveAdminQuestion" type="submit" style="margin-top:6px;background:#16a34a"><i class="fa-solid fa-floppy-disk"></i> Lưu câu hỏi</button>
+                    </form>
                 </article>
             </section>
 
@@ -261,7 +282,7 @@
                 for (let start = 0; start < questions.length; start += 450) {
                     const batch = db.batch();
                     questions.slice(start, start + 450).forEach((question, offset) => {
-                        const doc = db.collection('Question').doc();
+                        const doc = db.collection('Questions').doc();
                         batch.set(doc, {
                             ...question,
                             province,
@@ -288,6 +309,49 @@
             }
         }
 
+        async function submitAdminQuestion(event) {
+            event.preventDefault();
+            const form = event.currentTarget;
+            const button = el('btnSaveAdminQuestion');
+            const question = el('adminQuestionText')?.value.trim();
+            const options = [0, 1, 2, 3].map(index => el(`adminOption${index}`)?.value.trim() || '');
+            const answer = Number(el('adminCorrectAnswer')?.value);
+            const province = el('adminQuestionProvince')?.value;
+            const difficulty = el('adminQuestionDifficulty')?.value;
+            const grade = el('adminQuestionGrade')?.value;
+
+            if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !difficulty || !grade) {
+                showToast('Hãy nhập đầy đủ nội dung và chọn đáp án đúng.', 'warning');
+                return;
+            }
+
+            const newQuestion = {
+                question,
+                options,
+                answer,
+                province,
+                difficulty,
+                grade,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
+            try {
+                const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+                if (!firestore) throw new Error('Firebase chưa sẵn sàng.');
+                await firestore.collection('Questions').add(newQuestion);
+                form.reset();
+                showToast('Thêm câu hỏi thành công!');
+            } catch (error) {
+                console.error('Lỗi thêm câu hỏi:', error);
+                showToast('Có lỗi xảy ra, vui lòng thử lại!', 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Lưu câu hỏi';
+            }
+        }
+
         function permittedRoles() {
             try {
                 const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
@@ -308,6 +372,7 @@
             document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.adminTab)));
             el('searchUser')?.addEventListener('input', renderUsers);
             el('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
+            el('adminQuestionForm')?.addEventListener('submit', submitAdminQuestion);
             document.addEventListener('change', event => { if (event.target.matches('[data-role-checkbox]')) event.target.closest('tr')?.classList.add('is-role-dirty'); });
             document.addEventListener('click', event => {
                 const target = event.target.closest('button'); if (!target) return;
