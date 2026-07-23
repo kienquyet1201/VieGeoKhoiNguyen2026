@@ -31,21 +31,122 @@ let currentView = 'regions'; // regions | provinces | lessons
 let selectedRegion = null;
 let selectedProvince = null;
 let routeResizeObserver = null;
-const islandTheoryModal = document.getElementById('islandTheoryModal');
-const islandTheoryTitle = document.getElementById('islandTheoryTitle');
-const islandTheoryMeta = document.getElementById('islandTheoryMeta');
-const islandTheoryContent = document.getElementById('islandTheoryContent');
-const btnStartIslandQuiz = document.getElementById('btnStartIslandQuiz');
-const islandQuizModal = document.getElementById('islandQuizModal');
-const islandQuizTitle = document.getElementById('islandQuizTitle');
-const islandQuizMeta = document.getElementById('islandQuizMeta');
-const islandQuizContent = document.getElementById('islandQuizContent');
-const btnLaunchIslandQuiz = document.getElementById('btnLaunchIslandQuiz');
+let islandTheoryModal = document.getElementById('islandTheoryModal');
+let islandTheoryTitle = document.getElementById('islandTheoryTitle');
+let islandTheoryMeta = document.getElementById('islandTheoryMeta');
+let islandTheoryContent = document.getElementById('islandTheoryContent');
+let btnStartIslandQuiz = document.getElementById('btnStartIslandQuiz');
+let islandQuizModal = document.getElementById('islandQuizModal');
+let islandQuizTitle = document.getElementById('islandQuizTitle');
+let islandQuizMeta = document.getElementById('islandQuizMeta');
+let islandQuizContent = document.getElementById('islandQuizContent');
+let btnLaunchIslandQuiz = document.getElementById('btnLaunchIslandQuiz');
 let activeIslandLearning = null;
 let islandTheoryRequest = 0;
 
 function hasTheoryModalDom() {
     return Boolean(islandTheoryModal && islandTheoryTitle && islandTheoryMeta && islandTheoryContent && btnStartIslandQuiz);
+}
+
+function refreshIslandModalReferences() {
+    islandTheoryModal = document.getElementById('islandTheoryModal');
+    islandTheoryTitle = document.getElementById('islandTheoryTitle');
+    islandTheoryMeta = document.getElementById('islandTheoryMeta');
+    islandTheoryContent = document.getElementById('islandTheoryContent');
+    btnStartIslandQuiz = document.getElementById('btnStartIslandQuiz');
+    islandQuizModal = document.getElementById('islandQuizModal');
+    islandQuizTitle = document.getElementById('islandQuizTitle');
+    islandQuizMeta = document.getElementById('islandQuizMeta');
+    islandQuizContent = document.getElementById('islandQuizContent');
+    btnLaunchIslandQuiz = document.getElementById('btnLaunchIslandQuiz');
+}
+
+function bindIslandModalEvents() {
+    if (islandTheoryModal && !islandTheoryModal.dataset.viegeoBound) {
+        islandTheoryModal.dataset.viegeoBound = 'true';
+        document.getElementById('btnCloseIslandTheory')?.addEventListener('click', closeIslandTheory);
+        btnStartIslandQuiz?.addEventListener('click', openIslandQuizPreview);
+        islandTheoryModal.addEventListener('click', (event) => {
+            if (event.target === islandTheoryModal) closeIslandTheory();
+        });
+    }
+    if (islandQuizModal && !islandQuizModal.dataset.viegeoBound) {
+        islandQuizModal.dataset.viegeoBound = 'true';
+        document.getElementById('btnCloseIslandQuiz')?.addEventListener('click', closeIslandQuiz);
+        btnLaunchIslandQuiz?.addEventListener('click', beginIslandQuiz);
+        islandQuizModal.addEventListener('click', (event) => {
+            if (event.target === islandQuizModal) closeIslandQuiz();
+        });
+    }
+}
+
+function ensureIslandModalDom() {
+    if (!document.body) return false;
+
+    if (!document.getElementById('islandTheoryModal')) {
+        const theoryModal = document.createElement('div');
+        theoryModal.id = 'islandTheoryModal';
+        theoryModal.className = 'island-theory-modal fixed inset-0 z-[999999] hidden flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm';
+        theoryModal.hidden = true;
+        theoryModal.setAttribute('role', 'dialog');
+        theoryModal.setAttribute('aria-modal', 'true');
+        theoryModal.setAttribute('aria-labelledby', 'islandTheoryTitle');
+        theoryModal.innerHTML = `
+            <section class="island-theory-dialog w-full max-w-3xl rounded-3xl">
+                <button id="btnCloseIslandTheory" class="island-theory-close" type="button" aria-label="Đóng lý thuyết"><i class="fa-solid fa-xmark"></i></button>
+                <p class="island-theory-eyebrow"><i class="fa-solid fa-book-open"></i> Hành trang trước thử thách</p>
+                <h2 id="islandTheoryTitle">Lý thuyết trước khi thực chiến</h2>
+                <p id="islandTheoryMeta" class="island-theory-meta"></p>
+                <article id="islandTheoryContent" class="island-theory-content max-h-[55vh] overflow-y-auto" aria-live="polite"></article>
+                <button id="btnStartIslandQuiz" class="island-theory-start w-full" type="button" disabled><i class="fa-solid fa-play"></i> Đã hiểu &amp; Bắt đầu làm bài</button>
+            </section>`;
+        document.body.appendChild(theoryModal);
+    }
+
+    if (!document.getElementById('islandQuizModal')) {
+        const quizModal = document.createElement('div');
+        quizModal.id = 'islandQuizModal';
+        quizModal.className = 'island-theory-modal fixed inset-0 z-[999999] hidden flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm';
+        quizModal.hidden = true;
+        quizModal.setAttribute('role', 'dialog');
+        quizModal.setAttribute('aria-modal', 'true');
+        quizModal.setAttribute('aria-labelledby', 'islandQuizTitle');
+        quizModal.innerHTML = `
+            <section class="island-theory-dialog w-full max-w-3xl rounded-3xl">
+                <button id="btnCloseIslandQuiz" class="island-theory-close" type="button" aria-label="Đóng bảng trắc nghiệm"><i class="fa-solid fa-xmark"></i></button>
+                <p class="island-theory-eyebrow"><i class="fa-solid fa-list-check"></i> Trắc nghiệm Đảo nhỏ</p>
+                <h2 id="islandQuizTitle">Câu hỏi đã sẵn sàng</h2>
+                <p id="islandQuizMeta" class="island-theory-meta"></p>
+                <section id="islandQuizContent" class="island-theory-content max-h-[55vh] overflow-y-auto" aria-live="polite"></section>
+                <button id="btnLaunchIslandQuiz" class="island-theory-start w-full" type="button"><i class="fa-solid fa-pen-to-square"></i> Vào bài trắc nghiệm</button>
+            </section>`;
+        document.body.appendChild(quizModal);
+    }
+
+    refreshIslandModalReferences();
+    bindIslandModalEvents();
+    return hasTheoryModalDom();
+}
+
+window.ensureIslandTheoryModal = ensureIslandModalDom;
+
+function presentTheoryAfterFirebaseLoad(questions) {
+    if (!activeIslandLearning?.lesson || !ensureIslandModalDom()) return;
+
+    const loadedQuestions = Array.isArray(questions) ? questions.slice(0, 5) : [];
+    activeIslandLearning = {
+        ...activeIslandLearning,
+        theory: theoryHtmlFor(activeIslandLearning.lesson),
+        questions: loadedQuestions
+    };
+    islandTheoryModal.hidden = false;
+    islandTheoryModal.classList.remove('hidden');
+    islandTheoryTitle.textContent = 'Lý thuyết trước khi thực chiến';
+    islandTheoryMeta.textContent = `${activeIslandLearning.lesson.title || 'Đảo tri thức'} · ${loadedQuestions.length} câu hỏi đã tải xong`;
+    islandTheoryContent.classList.remove('is-loading');
+    islandTheoryContent.setAttribute('aria-busy', 'false');
+    islandTheoryContent.innerHTML = activeIslandLearning.theory;
+    btnStartIslandQuiz.disabled = !loadedQuestions.length;
 }
 
 function fallbackTheoryFor(lesson) {
@@ -100,6 +201,10 @@ function escapeQuizHtml(value) {
 }
 
 function openIslandQuizPreview() {
+    if (!ensureIslandModalDom()) {
+        console.error('Không thể tạo Modal trắc nghiệm trong DOM.');
+        return;
+    }
     if (!activeIslandLearning?.lesson || !Array.isArray(activeIslandLearning.questions) || !activeIslandLearning.questions.length) {
         if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Hiện chưa có câu hỏi để bắt đầu bài học này.');
         return;
@@ -133,8 +238,8 @@ function showIslandLoadingFeedback(clickedIsland) {
     const province = clickedIsland?.dataset.province || selectedProvince?.name || 'Việt Nam';
     const difficulty = clickedIsland?.dataset.difficulty || 'easy';
 
-    if (!hasTheoryModalDom()) {
-        console.error('Không tìm thấy cấu trúc Modal lý thuyết trên map.html.');
+    if (!ensureIslandModalDom()) {
+        console.error('Không thể tạo cấu trúc Modal lý thuyết trong DOM.');
         window.alert('Đã nhận click! Đang kết nối Firebase...');
         return false;
     }
@@ -208,7 +313,7 @@ async function handleDelegatedIslandClick(event) {
 }
 
 async function openIslandTheory(lesson) {
-    if (!lesson || !hasTheoryModalDom()) {
+    if (!lesson || !ensureIslandModalDom()) {
         if (!hasTheoryModalDom()) console.error('Không thể mở lý thuyết vì thiếu phần tử DOM cần thiết.');
         return;
     }
@@ -228,7 +333,7 @@ async function openIslandTheory(lesson) {
         const loadIslandContent = window.VieGeoLearningPath?.loadIslandContent;
         if (typeof loadIslandContent !== 'function') throw new Error('Không thể khởi tạo trình tải câu hỏi.');
         const loaded = await loadIslandContent(lesson);
-        if (requestId !== islandTheoryRequest || !islandTheoryModal || islandTheoryModal.hidden) return;
+        if (requestId !== islandTheoryRequest || !ensureIslandModalDom() || islandTheoryModal.hidden) return;
         activeIslandLearning = {
             lesson,
             theory: theoryHtmlFor(lesson),
@@ -292,15 +397,9 @@ async function beginIslandQuiz() {
     }
 }
 
-document.getElementById('btnCloseIslandTheory')?.addEventListener('click', closeIslandTheory);
-btnStartIslandQuiz?.addEventListener('click', openIslandQuizPreview);
-document.getElementById('btnCloseIslandQuiz')?.addEventListener('click', closeIslandQuiz);
-btnLaunchIslandQuiz?.addEventListener('click', beginIslandQuiz);
-islandTheoryModal?.addEventListener('click', (event) => {
-    if (event.target === islandTheoryModal) closeIslandTheory();
-});
-islandQuizModal?.addEventListener('click', (event) => {
-    if (event.target === islandQuizModal) closeIslandQuiz();
+ensureIslandModalDom();
+window.addEventListener('viegeo:questions-loaded', (event) => {
+    presentTheoryAfterFirebaseLoad(event.detail?.questions);
 });
 document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
