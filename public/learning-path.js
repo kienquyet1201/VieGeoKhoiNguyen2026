@@ -217,12 +217,23 @@
         return options.findIndex(option => option.toLowerCase() === asText.toLowerCase());
     }
 
+    function createFallbackQuestions() {
+        return [
+            { question: 'Thủ đô của Việt Nam là thành phố nào?', options: ['Hà Nội', 'Đà Nẵng', 'Huế', 'Cần Thơ'], correctAnswer: 0, explanation: 'Hà Nội là thủ đô của Việt Nam.' },
+            { question: 'Việt Nam thuộc khu vực nào của châu Á?', options: ['Đông Nam Á', 'Nam Á', 'Tây Á', 'Trung Á'], correctAnswer: 0, explanation: 'Việt Nam nằm ở khu vực Đông Nam Á.' },
+            { question: 'Biển nào nằm ở phía đông Việt Nam?', options: ['Biển Đông', 'Biển Đen', 'Biển Đỏ', 'Biển Baltic'], correctAnswer: 0, explanation: 'Việt Nam giáp Biển Đông ở phía đông.' },
+            { question: 'Dãy núi nào là ranh giới tự nhiên giữa Bắc Bộ và Trung Bộ?', options: ['Tam Điệp', 'Hoàng Liên Sơn', 'Trường Sơn', 'Bạch Mã'], correctAnswer: 0, explanation: 'Dãy Tam Điệp là ranh giới tự nhiên quen thuộc giữa Bắc Bộ và Bắc Trung Bộ.' },
+            { question: 'Đồng bằng lớn nhất Việt Nam là đồng bằng nào?', options: ['Đồng bằng sông Cửu Long', 'Đồng bằng sông Hồng', 'Đồng bằng Thanh Nghệ Tĩnh', 'Đồng bằng duyên hải miền Trung'], correctAnswer: 0, explanation: 'Đồng bằng sông Cửu Long là đồng bằng lớn nhất Việt Nam.' }
+        ].map((question, index) => ({ ...question, id: `offline-fallback-${index + 1}`, source: 'fallback' }));
+    }
+
     // Firestore source of truth for Island quizzes. The collection name is
     // intentionally case-sensitive because production data lives in Question.
     async function fetchHanoiQuestions() {
         try {
-            if (typeof db === 'undefined') throw new Error('Firestore chưa sẵn sàng.');
-            const snapshot = await db.collection('Question').get();
+            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+            if (!firestore) throw new Error('Firestore chưa sẵn sàng.');
+            const snapshot = await firestore.collection('Question').get();
             const questions = snapshot.docs.map((doc, index) => {
                 const data = doc.data() || {};
                 const options = optionsFromQuestionDocument(data);
@@ -241,11 +252,12 @@
                     theory: String(data.theory ?? data.theoryContent ?? data.lyThuyet ?? '').trim()
                 };
             }).filter(Boolean);
-            if (!questions.length) throw new Error('Collection Question chưa có câu hỏi hợp lệ.');
+            if (questions.length < 5) throw new Error('Collection Question cần tối thiểu 5 câu hỏi hợp lệ.');
+            console.log('Dữ liệu tải về:', questions);
             return questions;
         } catch (error) {
-            console.error('Không thể tải câu hỏi từ collection Question:', error);
-            throw error;
+            console.error('Lỗi Firebase:', error);
+            return createFallbackQuestions();
         }
     }
 
@@ -260,7 +272,7 @@
         const questions = randomFiveFirestoreQuestions(await fetchHanoiQuestions());
         const theory = String(questions.map(item => item.theory || item.theoryContent || '').find(Boolean)
             || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
-        return { theory, questions };
+        return { theory, questions, isFallback: questions.some(question => question.source === 'fallback') };
     }
 
     async function loadFirebaseIslandQuestions(lesson) {
@@ -273,6 +285,7 @@
         findLesson,
         loadQuestions: loadFirebaseIslandQuestions,
         loadIslandContent: loadFirebaseIslandContent,
-        fetchHanoiQuestions
+        fetchHanoiQuestions,
+        createFallbackQuestions
     };
 }());

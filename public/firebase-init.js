@@ -17,5 +17,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// Lấy tham chiếu đến Firestore Database
-const db = firebase.firestore();
+// Lấy tham chiếu Firestore và công khai nó cho các script tải sau (map.js,
+// learning-path.js). Điều này tránh lỗi scope ngầm khi trang được tải lại.
+const db = window.db || firebase.firestore();
+window.db = db;
