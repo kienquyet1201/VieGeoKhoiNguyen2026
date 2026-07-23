@@ -163,6 +163,35 @@ function rebuildTheoryModalWithInlineCss(theoryHtml) {
             </section>
         </div>`);
     console.log('Bước 2.1: Đã làm sạch DOM và chèn Modal Lý thuyết mới vào body');
+    // Bind directly to the elements just inserted. Querying from the modal root
+    // guarantees that a stale element with a duplicated ID cannot receive clicks.
+    const insertedTheoryModal = document.getElementById('theory-modal');
+    const theoryCloseButton = insertedTheoryModal?.querySelector('#btnCloseIslandTheory');
+    const theoryStartButton = insertedTheoryModal?.querySelector('#btnStartIslandQuiz');
+    if (insertedTheoryModal) {
+        insertedTheoryModal.dataset.viegeoBound = 'true';
+        insertedTheoryModal.addEventListener('click', (event) => {
+            if (event.target !== insertedTheoryModal) return;
+            activeIslandLearning = null;
+            insertedTheoryModal.remove();
+            refreshIslandModalReferences();
+        });
+    }
+    if (theoryCloseButton) {
+        theoryCloseButton.addEventListener('click', () => {
+            activeIslandLearning = null;
+            insertedTheoryModal?.remove();
+            refreshIslandModalReferences();
+        });
+    }
+    if (theoryStartButton) {
+        theoryStartButton.addEventListener('click', async () => {
+            if (theoryStartButton.disabled || !activeIslandLearning?.questions?.length) return;
+            insertedTheoryModal?.remove();
+            refreshIslandModalReferences();
+            await openIslandQuizPreview();
+        });
+    }
     refreshIslandModalReferences();
     bindIslandModalEvents();
     return islandTheoryModal;
@@ -183,6 +212,24 @@ function rebuildIslandQuizModalWithInlineCss() {
             </section>
         </div>`);
     console.log('Bước 2.2: Đã làm sạch DOM và chèn Modal Trắc nghiệm mới vào body');
+    const insertedQuizModal = document.getElementById('islandQuizModal');
+    const quizCloseButton = insertedQuizModal?.querySelector('#btnCloseIslandQuiz');
+    if (insertedQuizModal) {
+        insertedQuizModal.dataset.viegeoBound = 'true';
+        insertedQuizModal.addEventListener('click', (event) => {
+            if (event.target !== insertedQuizModal) return;
+            activeIslandLearning = null;
+            insertedQuizModal.remove();
+            refreshIslandModalReferences();
+        });
+    }
+    if (quizCloseButton) {
+        quizCloseButton.addEventListener('click', () => {
+            activeIslandLearning = null;
+            insertedQuizModal?.remove();
+            refreshIslandModalReferences();
+        });
+    }
     refreshIslandModalReferences();
     bindIslandModalEvents();
     return islandQuizModal;
