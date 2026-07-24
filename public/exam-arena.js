@@ -52,7 +52,8 @@
             'examQuestionNav', 'examSubmit', 'examArenaTitle', 'examArenaSubtitle',
             'examSetupForm',
             'examSetupDifficulty', 'examSetupTopic', 'examSetupStart',
-            'examWorkspace', 'examExit', 'arenaGlobalTopbar'
+            'examWorkspace', 'examExit', 'arenaGlobalTopbar',
+            'arenaMobileNavigationToggle', 'arenaGlobalNavigation'
         ].forEach((id) => { elements[id] = getElement(id); });
     }
 
@@ -387,6 +388,16 @@
         window.location.href = '/map';
     }
 
+    function setArenaNavigationOpen(isOpen) {
+        const navigation = elements.arenaGlobalNavigation;
+        const toggle = elements.arenaMobileNavigationToggle;
+        if (!navigation || !toggle) return;
+        navigation.classList.toggle('is-mobile-open', isOpen);
+        toggle.setAttribute('aria-expanded', String(isOpen));
+        toggle.setAttribute('aria-label', isOpen ? 'Đóng điều hướng' : 'Mở điều hướng');
+        toggle.innerHTML = `<i class="fa-solid ${isOpen ? 'fa-xmark' : 'fa-bars'}" aria-hidden="true"></i>`;
+    }
+
     function bindEvents() {
         elements.examPrevious.addEventListener('click', () => goToQuestion(currentIndex - 1));
         elements.examNext.addEventListener('click', () => goToQuestion(currentIndex + 1));
@@ -400,6 +411,18 @@
         });
         elements.examSubmit.addEventListener('click', () => submitExam(false));
         elements.examExit?.addEventListener('click', exitExamToSetup);
+        elements.arenaMobileNavigationToggle?.addEventListener('click', () => {
+            setArenaNavigationOpen(!elements.arenaGlobalNavigation?.classList.contains('is-mobile-open'));
+        });
+        elements.arenaGlobalNavigation?.addEventListener('click', () => setArenaNavigationOpen(false));
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') setArenaNavigationOpen(false);
+        });
+        document.addEventListener('click', (event) => {
+            if (!elements.arenaGlobalNavigation?.classList.contains('is-mobile-open')) return;
+            if (elements.arenaGlobalNavigation.contains(event.target) || elements.arenaMobileNavigationToggle?.contains(event.target)) return;
+            setArenaNavigationOpen(false);
+        });
     }
 
     document.addEventListener('DOMContentLoaded', () => {

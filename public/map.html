@@ -21,13 +21,16 @@
     <div class="app-container min-h-screen w-full overflow-y-auto pb-32">
         
         <!-- Student top navigation: the learning canvas stays full width below this bar. -->
-        <header class="user-top-navbar">
+        <header class="user-top-navbar" id="studentTopbar">
             <div class="user-topbar-brand">
             <div class="app-logo">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo
             </div>
             </div>
-            <div class="user-topbar-navigation">
+            <button id="mobileTopbarToggle" class="mobile-topbar-toggle" type="button" aria-label="Mở điều hướng học tập" aria-controls="studentNavigation" aria-expanded="false" title="Mở điều hướng">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            <div class="user-topbar-navigation" id="studentNavigation">
             
             <nav class="nav-items user-navigation-animated" id="navMenu" aria-label="Điều hướng học tập">
                 <a class="nav-button" href="/map?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="nav-label">Lộ trình học</span></a>
@@ -38,6 +41,11 @@
                 <a class="nav-button" href="/map?tab=arena" data-target="tabArena" data-tab-key="arena" title="Đấu trường PvP" aria-label="Đấu trường PvP"><div class="nav-icon-frame"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div><span class="nav-label">Đấu trường PvP</span></a>
                 <a class="nav-button" href="/map?tab=profile" data-target="tabProfile" data-tab-key="profile" title="Hồ sơ" aria-label="Hồ sơ"><div class="nav-icon-frame"><i class="fa-solid fa-user" aria-hidden="true"></i></div><span class="nav-label">Hồ sơ</span></a>
             </nav>
+            <div class="mobile-navigation-tools" aria-label="Tiện ích học tập">
+                <button type="button" data-mobile-topbar-action="theme" title="Chế độ sáng/tối"><i class="fa-solid fa-moon" aria-hidden="true"></i><span>Chế độ sáng/tối</span></button>
+                <button type="button" data-mobile-topbar-action="parent" title="Khu vực phụ huynh"><i class="fa-solid fa-children" aria-hidden="true"></i><span>Khu vực phụ huynh</span></button>
+                <button type="button" data-mobile-topbar-action="logout" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Đăng xuất</span></button>
+            </div>
             </div>
             <div class="topbar-stats" aria-label="Chỉ số học tập">
                 <div class="stat-pill" style="color: #ff4b4b;" title="Trái tim · hồi 1 tim mỗi 15 phút"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">3</span><span id="hdrHeartTimer" aria-live="polite" hidden style="margin-left: 4px; color: #ff9a9a; font-size: .7rem; font-variant-numeric: tabular-nums;">14:59</span></div>
@@ -78,7 +86,7 @@
                 </div>
                 
                 <!-- Khu vực chuẩn bị nhúng SVG Bản đồ Việt Nam tương tác trong giai đoạn tiếp theo. -->
-                <div id="interactive-map-container">
+                <div id="interactive-map-container" class="map-canvas-viewport">
                     <div id="mapViewContainer" class="island-container">
                         <!-- JS Renders Regions/Provinces/Lessons Here -->
                     </div>

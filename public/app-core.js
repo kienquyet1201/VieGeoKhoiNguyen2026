@@ -620,6 +620,42 @@ document.addEventListener('visibilitychange', () => {
 const tabNavControls = document.querySelectorAll('.nav-btn[data-target], .nav-button[data-target]');
 const tabPanes = document.querySelectorAll('.tab-pane');
 const animatedNavButtons = document.querySelectorAll('.nav-button');
+const mobileTopbarToggle = document.getElementById('mobileTopbarToggle');
+const studentNavigation = document.getElementById('studentNavigation');
+
+function setStudentNavigationOpen(isOpen) {
+    if (!mobileTopbarToggle || !studentNavigation) return;
+    studentNavigation.classList.toggle('is-mobile-open', isOpen);
+    mobileTopbarToggle.setAttribute('aria-expanded', String(isOpen));
+    mobileTopbarToggle.setAttribute('aria-label', isOpen ? 'Đóng điều hướng học tập' : 'Mở điều hướng học tập');
+    mobileTopbarToggle.innerHTML = `<i class="fa-solid ${isOpen ? 'fa-xmark' : 'fa-bars'}" aria-hidden="true"></i>`;
+}
+
+mobileTopbarToggle?.addEventListener('click', () => {
+    setStudentNavigationOpen(!studentNavigation?.classList.contains('is-mobile-open'));
+});
+
+document.querySelectorAll('[data-mobile-topbar-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+        const actionTarget = {
+            theme: 'btnThemeToggle',
+            parent: 'btnParentAccess',
+            logout: 'btnTaskbarLogout'
+        }[button.dataset.mobileTopbarAction];
+        document.getElementById(actionTarget)?.click();
+        setStudentNavigationOpen(false);
+    });
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setStudentNavigationOpen(false);
+});
+
+document.addEventListener('click', (event) => {
+    if (!studentNavigation?.classList.contains('is-mobile-open')) return;
+    if (studentNavigation.contains(event.target) || mobileTopbarToggle?.contains(event.target)) return;
+    setStudentNavigationOpen(false);
+});
 
 function activateTab(targetId) {
     const targetPane = targetId ? document.getElementById(targetId) : null;
@@ -655,6 +691,7 @@ animatedNavButtons.forEach((button) => {
         const href = button.getAttribute('href');
         if (!href) return;
         event.preventDefault();
+        setStudentNavigationOpen(false);
 
         animatedNavButtons.forEach((item) => item.removeAttribute('aria-current'));
         button.setAttribute('aria-current', 'page');
