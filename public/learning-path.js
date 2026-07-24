@@ -229,61 +229,6 @@
         window.alert(message);
     }
 
-    // Firestore source of truth for Hà Nội Island quizzes.
-    async function fetchHanoiQuestions(difficulty = 'easy') {
-        try {
-            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-            if (!firestore) throw new Error('Firestore chưa sẵn sàng.');
-            const selectedDifficulty = ['easy', 'medium', 'hard'].includes(String(difficulty).toLowerCase())
-                ? String(difficulty).toLowerCase()
-                : 'easy';
-            const snapshot = await firestore.collection('Questions')
-                .where('province', '==', 'ha-noi')
-                .where('difficulty', '==', selectedDifficulty)
-                .get();
-            const questions = snapshot.docs.map((doc, index) => {
-                const data = doc.data() || {};
-                const options = Array.isArray(data.options) ? data.options.map(String).map(value => value.trim()) : [];
-                const correctAnswer = Number(data.answer);
-                const question = String(data.question || '').trim();
-                if (!question || options.length < 4 || !Number.isInteger(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) {
-                    console.warn(`Bỏ qua Questions/${doc.id}: thiếu nội dung, đáp án hoặc đáp án đúng.`);
-                    return null;
-                }
-                return {
-                    id: doc.id || `question-${index}`,
-                    questionText: question,
-                    question,
-                    options: options.slice(0, 4),
-                    correctAnswer,
-                    explanation: String(data.explanation ?? data.solution ?? data.explain ?? '').trim(),
-                    theory: String(data.theory ?? data.theoryContent ?? data.lyThuyet ?? '').trim()
-                };
-            }).filter(Boolean);
-            if (!questions.length) {
-                window.VieGeoQuestionLoadState = 'empty';
-                console.info('Collection Questions không có câu hỏi phù hợp với bộ lọc hiện tại.');
-                notifyQuestionLoad('Hiện chưa có câu hỏi nào cho khu vực này, vui lòng quay lại sau!');
-                return [];
-            }
-            window.VieGeoQuestionLoadState = 'ready';
-            console.log('Dữ liệu tải về:', questions);
-            console.log('Bước 1: Bắt đầu xử lý UI');
-            // map.js guarantees a visible theory surface even if a layout edit
-            // removed the original modal markup from map.html.
-            window.ensureIslandTheoryModal?.();
-            window.dispatchEvent(new CustomEvent('viegeo:questions-loaded', { detail: { questions } }));
-            console.log('Bước 3: Đã chuyển dữ liệu sang Modal Lý thuyết');
-            return questions;
-        } catch (error) {
-            const message = error?.message || 'Không thể kết nối Firestore.';
-            console.error('Lỗi Firebase:', message, error);
-            window.VieGeoQuestionLoadState = 'network-error';
-            notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!', true);
-            return [];
-        }
-    }
-
     function firestoreProvinceSlug(value) {
         return String(value || 'ha-noi')
             .trim()
@@ -333,7 +278,6 @@
             const islandQuestions = mapFirestoreQuestions(islandSnapshot);
             if (islandQuestions.length) {
                 window.VieGeoQuestionLoadState = 'ready';
-                console.log('Questions loaded for island:', islandQuestions);
                 return islandQuestions;
             }
         }
@@ -349,7 +293,6 @@
             .get();
         const questions = mapFirestoreQuestions(snapshot);
         window.VieGeoQuestionLoadState = questions.length ? 'ready' : 'empty';
-        console.log('Questions loaded for province/difficulty:', questions);
         return questions;
     }
 
@@ -426,13 +369,11 @@
         return (await loadFirebaseIslandContent(lesson)).questions;
     }
 
-    window.fetchHanoiQuestions = fetchHanoiQuestions;
     window.VieGeoLearningPath = {
         getLessonsForProvince,
         findLesson,
         loadIslandTopics,
         loadQuestions: loadFirebaseIslandQuestions,
-        loadIslandContent: loadFirebaseIslandContent,
-        fetchHanoiQuestions
+        loadIslandContent: loadFirebaseIslandContent
     };
 }());

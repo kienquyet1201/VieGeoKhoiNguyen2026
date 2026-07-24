@@ -131,7 +131,6 @@ function bindIslandModalEvents() {
 
 function ensureIslandModalDom() {
     if (!document.body) return false;
-    console.log('Bước 2: Đang kiểm tra DOM của Modal');
     const theoryRoots = document.querySelectorAll('[id="theory-modal"], [id="islandTheoryModal"]');
     const activeTheoryRoot = theoryRoots.length === 1 ? theoryRoots[0] : null;
     if (!activeTheoryRoot || activeTheoryRoot.parentElement !== document.body) {
@@ -175,8 +174,6 @@ function forceHideIslandModal(modal) {
     if (modal.id === 'islandQuizModal') setIslandQuizScrollLocked(false);
 }
 
-window.ensureIslandTheoryModal = ensureIslandModalDom;
-
 function rebuildTheoryModalWithInlineCss(theoryHtml) {
     if (!document.body) return null;
     removeGhostIslandModals();
@@ -191,7 +188,6 @@ function rebuildTheoryModalWithInlineCss(theoryHtml) {
                 <button id="btnStartIslandQuiz" type="button" style="display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:9px;margin-top:22px;border:0;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:1rem;font-weight:800;cursor:pointer;">Đã hiểu &amp; Bắt đầu làm bài</button>
             </section>
         </div>`);
-    console.log('Bước 2.1: Đã làm sạch DOM và chèn Modal Lý thuyết mới vào body');
     // Bind directly to the elements just inserted. Querying from the modal root
     // guarantees that a stale element with a duplicated ID cannot receive clicks.
     const insertedTheoryModal = document.getElementById('theory-modal');
@@ -240,7 +236,6 @@ function rebuildIslandQuizModalWithInlineCss() {
                 <button id="btnLaunchIslandQuiz" type="button" style="display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:9px;margin-top:22px;border:0;border-radius:14px;background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;font-size:1rem;font-weight:800;cursor:pointer;">Vào bài trắc nghiệm</button>
             </section>
         </div>`);
-    console.log('Bước 2.2: Đã làm sạch DOM và chèn Modal Trắc nghiệm mới vào body');
     const insertedQuizModal = document.getElementById('islandQuizModal');
     const quizCloseButton = insertedQuizModal?.querySelector('#btnCloseIslandQuiz');
     const quizDialog = insertedQuizModal?.querySelector('section');
@@ -272,28 +267,6 @@ function rebuildIslandQuizModalWithInlineCss() {
     refreshIslandModalReferences();
     bindIslandModalEvents();
     return islandQuizModal;
-}
-
-function presentTheoryAfterFirebaseLoad(questions) {
-    console.log('Bước 1: Bắt đầu xử lý UI sau khi Firebase trả dữ liệu');
-    if (!activeIslandLearning?.lesson || !document.body) return;
-
-    const loadedQuestions = Array.isArray(questions) ? questions.slice(0, 5) : [];
-    activeIslandLearning = {
-        ...activeIslandLearning,
-        theory: theoryHtmlFromLoadedContent(activeIslandLearning.lesson, { questions: loadedQuestions }),
-        questions: loadedQuestions
-    };
-    const modal = rebuildTheoryModalWithInlineCss(activeIslandLearning.theory);
-    if (!modal) return;
-    islandTheoryTitle.textContent = 'Lý thuyết trước khi thực chiến';
-    islandTheoryMeta.textContent = `${activeIslandLearning.lesson.title || 'Đảo tri thức'} · ${loadedQuestions.length} câu hỏi đã tải xong`;
-    islandTheoryContent.classList.remove('is-loading');
-    islandTheoryContent.setAttribute('aria-busy', 'false');
-    islandTheoryContent.innerHTML = activeIslandLearning.theory;
-    btnStartIslandQuiz.disabled = !loadedQuestions.length;
-    forceShowIslandModal(modal);
-    console.log('Bước 3: Đã hiển thị Modal Lý thuyết');
 }
 
 function fallbackTheoryFor(lesson) {
@@ -702,7 +675,6 @@ async function handleDelegatedIslandClick(event) {
     const clickedIsland = event.target.closest('.island');
     if (!clickedIsland || !mapContainer?.contains(clickedIsland)) return;
 
-    console.log('✅ Đã nhận sự kiện click vào đảo:', clickedIsland);
     if (!showIslandLoadingFeedback(clickedIsland)) return;
 
     const lesson = findRenderedIslandLesson(clickedIsland.dataset.lessonId);
@@ -832,9 +804,6 @@ async function beginIslandQuiz() {
 }
 
 ensureIslandModalDom();
-window.addEventListener('viegeo:questions-loaded', (event) => {
-    presentTheoryAfterFirebaseLoad(event.detail?.questions);
-});
 document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
     if (islandQuizModal && !islandQuizModal.hidden) closeIslandQuiz();

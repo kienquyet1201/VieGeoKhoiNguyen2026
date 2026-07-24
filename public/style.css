@@ -1745,7 +1745,8 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .user-top-navbar .app-logo { margin: 0; white-space: nowrap; font-size: 1.35rem; }
 .user-top-navbar .topbar-stats { display: flex; align-items: center; gap: 7px; }
 .user-top-navbar .stat-pill { min-width: 42px; margin: 0; padding: 8px 10px; font-size: .78rem; }
-.user-topbar-navigation { flex: 1 1 auto; justify-content: flex-end; gap: 8px; min-width: 0; }
+.user-topbar-navigation { flex: 1 1 auto; justify-content: flex-start; gap: 8px; min-width: 0; }
+.user-top-navbar > .topbar-stats { flex: 0 0 auto; order: 3; }
 
 /* Navigation animation: the base grid is reusable; the student topbar keeps its icons on one row. */
 .nav-items {
@@ -1793,7 +1794,7 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .user-role-switcher select { width: 122px; min-height: 38px; border: 0; outline: 0; background: transparent; color: #e7eef9; font: inherit; font-size: .8rem; cursor: pointer; }
 .user-role-switcher select:disabled { cursor: not-allowed; opacity: .55; }
 .user-role-switcher option { background: #0f1d31; color: #e7eef9; }
-.user-top-navbar .taskbar-actions { flex: 0 0 auto; gap: 5px; margin: 0; }
+.user-top-navbar .taskbar-actions { flex: 0 0 auto; order: 4; gap: 5px; margin: 0; }
 .user-top-navbar .taskbar-difficulty { margin: 0; text-align: center; }.user-top-navbar .taskbar-difficulty select { text-align: center; }
 .student-app .bento-main { display: block !important; width: 100% !important; min-height: 100dvh; margin: 0 !important; padding: 100px 24px 8rem !important; border: 0 !important; border-radius: 0 !important; overflow: visible !important; }
 /* bento.css was written for an absolute-positioned sidebar layout.  The student

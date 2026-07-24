@@ -23,6 +23,7 @@
             <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Quản lý người dùng</span></button>
             <button type="button" data-admin-tab="upload" title="Upload câu hỏi" aria-label="Upload câu hỏi"><i class="fa-solid fa-cloud-arrow-up"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Upload câu hỏi</span></button>
             <button type="button" data-admin-tab="monitoring" title="Giám sát học tập (Live Session)" aria-label="Giám sát học tập"><i class="fa-solid fa-tower-broadcast"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Giám sát học tập</span></button>
+            <button type="button" data-admin-tab="feedback" title="Góp ý người dùng" aria-label="Góp ý người dùng"><i class="fa-solid fa-lightbulb"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Góp ý người dùng</span></button>
             <button class="rail-bottom" type="button" id="adminRoleButton" title="Đổi vai trò" aria-label="Đổi vai trò"><i class="fa-solid fa-users-gear"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đổi vai trò</span></button>
             <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đăng xuất</span></button>
         </aside>
@@ -38,7 +39,7 @@
                     <article class="ops-stat"><span><i class="fa-solid fa-signal"></i> Người đang online</span><strong id="metricOnline">—</strong></article>
                     <article class="ops-stat"><span><i class="fa-solid fa-file-circle-check"></i> Bài nộp hôm nay</span><strong id="metricSubmissions">—</strong></article>
                     <article class="ops-stat"><span><i class="fa-solid fa-server"></i> Server load</span><strong id="metricLoad">34%</strong></article>
-                    <article class="ops-stat"><span><i class="fa-solid fa-shield-heart"></i> Báo cáo lỗi</span><strong id="metricErrors">—</strong></article>
+                    <article class="ops-stat" id="operationsInfoCard" role="button" tabindex="0" title="Mở thông tin vận hành" style="cursor:pointer"><span><i class="fa-solid fa-shield-heart"></i> Thông tin vận hành</span><strong id="metricErrors">—</strong></article>
                 </div>
                 <div class="ops-grid">
                     <article class="ops-card"><h2>Hiệu năng hệ thống</h2><p class="ops-muted">Mức tải phiên hiện tại; sẵn sàng thay bằng telemetry từ hạ tầng production.</p><div class="ops-load-bar" aria-label="Server load 34 phần trăm"><span id="serverLoadBar"></span></div><div class="ops-list" style="margin-top:16px"><div class="ops-list-item"><span>Firestore</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Auth</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Storage</span><strong style="color:#4ade80">Ổn định</strong></div></div></article>
@@ -125,18 +126,26 @@
             <section class="operations-tab hidden" data-admin-panel="monitoring">
                 <article class="ops-card"><h2>Giám sát học tập (Live Session)</h2><p class="ops-muted">Danh sách học viên hoạt động gần đây. Nút Replay là điểm tích hợp sẵn cho luồng session replay bằng rrweb; dữ liệu mô phỏng không ghi nhận màn hình thật.</p><div class="ops-table-wrap"><table class="ops-table"><thead><tr><th>Học viên</th><th>Hoạt động gần nhất</th><th>Trạng thái</th><th>Session replay</th></tr></thead><tbody id="liveSessionList"><tr><td colspan="4" class="ops-muted">Đang tải phiên học tập…</td></tr></tbody></table></div></article>
             </section>
+
+            <section class="operations-tab hidden" data-admin-panel="feedback">
+                <article class="ops-card">
+                    <div class="operations-heading" style="margin-bottom:16px"><div><h2 style="margin-bottom:4px">Góp ý người dùng</h2><p class="ops-muted">Các ý kiến gửi từ học sinh được lưu riêng để đội ngũ VieGeo theo dõi và dọn dẹp sau khi đọc.</p></div><button class="ops-button is-muted" id="btnReloadFeedbacks" type="button"><i class="fa-solid fa-rotate"></i> Làm mới</button></div>
+                    <div class="ops-list" id="userFeedbackList"><p class="ops-muted">Đang tải góp ý…</p></div>
+                </article>
+            </section>
         </main>
     </div>
 
     <script>
     (() => {
         'use strict';
-        const state = { activeTab: 'overview', users: [] };
+        const state = { activeTab: 'overview', users: [], errorReports: [], feedbacks: [] };
         const tabMetadata = {
             overview: ['Trung tâm điều hành', 'Theo dõi hoạt động và vận hành VieGeo trong một nơi.'],
             users: ['Quản lý người dùng', 'Phân quyền, duyệt Premium và kiểm soát phiên người dùng.'],
             upload: ['Upload câu hỏi', 'Nhập và chuẩn hóa kho câu hỏi cho lộ trình học.'],
-            monitoring: ['Giám sát học tập', 'Theo dõi phiên học đang hoạt động và chuẩn bị tích hợp rrweb.']
+            monitoring: ['Giám sát học tập', 'Theo dõi phiên học đang hoạt động và chuẩn bị tích hợp rrweb.'],
+            feedback: ['Góp ý người dùng', 'Đọc, xử lý và dọn dẹp các góp ý được gửi từ giao diện học tập.']
         };
         const roles = [['user','Học sinh'], ['parent','Phụ huynh'], ['cs','CSKH'], ['admin','Admin']];
         const roleLabels = Object.fromEntries(roles);
@@ -232,6 +241,132 @@
             } catch (error) { console.error(error); showToast('Không thể cập nhật yêu cầu.', 'error'); }
         }
 
+        const ERROR_REPORT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+
+        function reportTime(report) {
+            return timestampToMs(report.createdAt) || Number(report.createdAtClient) || 0;
+        }
+
+        function isExpiredResolvedReport(report) {
+            const resolvedAt = timestampToMs(report.resolvedAt) || Number(report.resolvedAtClient) || 0;
+            return Boolean(resolvedAt && (Date.now() - resolvedAt > ERROR_REPORT_RETENTION_MS));
+        }
+
+        function visibleErrorReports() {
+            return state.errorReports
+                .filter(report => !isExpiredResolvedReport(report))
+                .sort((left, right) => reportTime(right) - reportTime(left));
+        }
+
+        function reportStatusLabel(status) {
+            if (status === 'resolved') return '<span style="color:#4ade80">Đã xử lý</span>';
+            if (status === 'rejected') return '<span style="color:#fca5a5">Từ chối xử lý</span>';
+            return '<span style="color:#fbbf24">Chờ xử lý</span>';
+        }
+
+        function renderErrorReportItem(report, compact = false) {
+            const subject = escapeHtml(report.subject || 'Báo cáo lỗi chưa có tiêu đề');
+            const message = escapeHtml(report.message || 'Không có mô tả chi tiết.');
+            const sender = escapeHtml(report.senderName || report.senderId || 'Người dùng VieGeo');
+            const when = reportTime(report) ? new Date(reportTime(report)).toLocaleString('vi-VN') : 'Chưa xác định thời gian';
+            const actions = report.status === 'resolved' || report.status === 'rejected' ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="ops-button" type="button" data-resolve-error="${escapeHtml(report.id)}" style="background:#15803d"><i class="fa-solid fa-check"></i> Đã xử lý</button><button class="ops-button is-danger" type="button" data-reject-error="${escapeHtml(report.id)}"><i class="fa-solid fa-xmark"></i> Từ chối xử lý</button></div>`;
+            if (compact) return `<button type="button" class="ops-list-item" data-open-error-modal style="width:100%;border:0;text-align:left;cursor:pointer"><span><strong>${subject}</strong><br><small class="ops-muted">${sender} · ${when}</small></span>${reportStatusLabel(report.status)}</button>`;
+            return `<article class="ops-list-item" style="display:block"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div><strong>${subject}</strong><br><small class="ops-muted">${sender} · ${when}</small></div>${reportStatusLabel(report.status)}</div><p style="margin:10px 0 0;white-space:pre-wrap;line-height:1.55">${message}</p>${actions}</article>`;
+        }
+
+        function renderErrorReportViews() {
+            const reports = visibleErrorReports();
+            if (el('metricErrors')) el('metricErrors').textContent = state.errorReports.length;
+            if (el('operationsErrorTotal')) el('operationsErrorTotal').textContent = state.errorReports.length;
+            const overviewList = el('systemErrorList');
+            if (overviewList) overviewList.innerHTML = reports.length
+                ? reports.slice(0, 3).map(report => renderErrorReportItem(report, true)).join('')
+                : '<p class="ops-muted">Không có báo cáo lỗi cần theo dõi.</p>';
+            const modalList = el('operationsErrorList');
+            if (modalList) modalList.innerHTML = reports.length
+                ? reports.map(report => renderErrorReportItem(report)).join('')
+                : '<p class="ops-muted">Không còn báo cáo lỗi hiển thị. Các lỗi đã chốt sau 7 ngày sẽ tự ẩn.</p>';
+        }
+
+        function setOperationsErrorModalOpen(open) {
+            const modal = el('operationsErrorModal');
+            if (!modal) return;
+            modal.hidden = !open;
+            modal.style.display = open ? 'flex' : 'none';
+            document.body.style.overflow = open ? 'hidden' : '';
+            if (open) renderErrorReportViews();
+        }
+
+        async function loadErrorReports() {
+            if (typeof db === 'undefined') return;
+            try {
+                const snapshot = await db.collection('ErrorReports').get();
+                state.errorReports = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+                renderErrorReportViews();
+            } catch (error) {
+                console.error('Không thể tải báo cáo lỗi:', error);
+                if (el('metricErrors')) el('metricErrors').textContent = '—';
+                if (el('systemErrorList')) el('systemErrorList').innerHTML = '<p class="ops-muted">Không thể tải báo cáo lỗi.</p>';
+            }
+        }
+
+        async function updateErrorReport(reportId, status) {
+            if (!reportId || !['resolved', 'rejected'].includes(status)) return;
+            try {
+                const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+                await db.collection('ErrorReports').doc(reportId).set({
+                    status,
+                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    resolvedAtClient: Date.now(),
+                    resolvedBy: session.email || 'admin'
+                }, { merge: true });
+                showToast(status === 'resolved' ? 'Đã đánh dấu lỗi là đã xử lý.' : 'Đã từ chối xử lý báo cáo lỗi.');
+                await loadErrorReports();
+            } catch (error) {
+                console.error('Không thể cập nhật báo cáo lỗi:', error);
+                showToast('Không thể cập nhật trạng thái báo cáo lỗi.', 'error');
+            }
+        }
+
+        function renderFeedbacks() {
+            const list = el('userFeedbackList');
+            if (!list) return;
+            if (!state.feedbacks.length) { list.innerHTML = '<p class="ops-muted">Chưa có góp ý nào từ người dùng.</p>'; return; }
+            list.innerHTML = state.feedbacks.map(feedback => {
+                const when = reportTime(feedback) ? new Date(reportTime(feedback)).toLocaleString('vi-VN') : 'Chưa xác định thời gian';
+                return `<article class="ops-list-item" style="display:block"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div><strong>${escapeHtml(feedback.subject || 'Góp ý chưa có tiêu đề')}</strong><br><small class="ops-muted">${escapeHtml(feedback.senderName || feedback.senderId || 'Người dùng VieGeo')} · ${when}</small></div><button class="ops-button is-danger" type="button" data-delete-feedback="${escapeHtml(feedback.id)}"><i class="fa-solid fa-trash"></i> Xóa</button></div><p style="margin:10px 0 0;white-space:pre-wrap;line-height:1.55">${escapeHtml(feedback.message || '')}</p></article>`;
+            }).join('');
+        }
+
+        async function loadUserFeedbacks() {
+            if (typeof db === 'undefined') return;
+            const list = el('userFeedbackList');
+            try {
+                const snapshot = await db.collection('UserFeedbacks').get();
+                state.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) })).sort((left, right) => reportTime(right) - reportTime(left));
+                renderFeedbacks();
+            } catch (error) {
+                console.error('Không thể tải góp ý người dùng:', error);
+                if (list) list.innerHTML = '<p class="ops-muted">Không thể tải góp ý người dùng.</p>';
+            }
+        }
+
+        async function deleteUserFeedback(feedbackId) {
+            if (!feedbackId) return;
+            const confirmed = window.Swal
+                ? await Swal.fire({ icon:'warning', title:'Xóa góp ý?', text:'Thao tác này không thể hoàn tác.', showCancelButton:true, confirmButtonText:'Xóa', cancelButtonText:'Hủy' }).then(result => result.isConfirmed)
+                : window.confirm('Xóa góp ý này?');
+            if (!confirmed) return;
+            try {
+                await db.collection('UserFeedbacks').doc(feedbackId).delete();
+                showToast('Đã xóa góp ý.');
+                await loadUserFeedbacks();
+            } catch (error) {
+                console.error('Không thể xóa góp ý:', error);
+                showToast('Không thể xóa góp ý.', 'error');
+            }
+        }
+
         async function loadOverview() {
             if (typeof db === 'undefined') return;
             try {
@@ -240,14 +375,11 @@
                 el('metricOnline').textContent = users.filter(user => Date.now() - timestampToMs(user.lastActive) <= 90000).length;
                 const submissions = await db.collection('submissions').limit(500).get();
                 el('metricSubmissions').textContent = submissions.size;
-                const errors = await db.collection('system_errors').limit(5).get();
-                el('metricErrors').textContent = errors.size;
-                const errorList = el('systemErrorList');
-                errorList.innerHTML = errors.empty ? '<p class="ops-muted">Không có lỗi hệ thống mới.</p>' : errors.docs.map(doc => `<div class="ops-list-item"><span>${escapeHtml((doc.data() || {}).message || 'Lỗi chưa phân loại')}</span><small class="ops-muted">${escapeHtml(doc.id)}</small></div>`).join('');
+                await loadErrorReports();
             } catch (error) {
                 console.warn('Không thể nạp đủ chỉ số vận hành:', error);
                 el('metricOnline').textContent = '—'; el('metricSubmissions').textContent = '—'; el('metricErrors').textContent = '—';
-                el('systemErrorList').innerHTML = '<p class="ops-muted">Telemetry sẽ hiển thị khi collection đã sẵn sàng.</p>';
+                el('systemErrorList').innerHTML = '<p class="ops-muted">Thông tin vận hành sẽ hiển thị khi collection đã sẵn sàng.</p>';
             }
         }
 
@@ -628,9 +760,17 @@
             });
             switchQuestionEntryMode('bulk');
             el('btnReloadAdminQuestions')?.addEventListener('click', loadAdminQuestions);
+            el('btnReloadFeedbacks')?.addEventListener('click', loadUserFeedbacks);
             el('btnDeleteSelectedQuestions')?.addEventListener('click', deleteSelectedAdminQuestions);
+            el('operationsInfoCard')?.addEventListener('click', () => setOperationsErrorModalOpen(true));
+            el('operationsInfoCard')?.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setOperationsErrorModalOpen(true); }
+            });
             el('adminQuestionEditModal')?.addEventListener('click', (event) => {
                 if (event.target === event.currentTarget) setQuestionEditorOpen(false);
+            });
+            el('operationsErrorModal')?.addEventListener('click', (event) => {
+                if (event.target === event.currentTarget) setOperationsErrorModalOpen(false);
             });
             el('adminQuestionSelectAll')?.addEventListener('change', (event) => {
                 const masterCheckbox = event.currentTarget;
@@ -664,6 +804,11 @@
                 if (target.dataset.replayUser) showToast('Điểm tích hợp rrweb đã sẵn sàng; chưa có bản ghi replay cho phiên này.', 'info');
                 if (target.dataset.editQuestion) openQuestionEditor(target.dataset.editQuestion);
                 if (target.dataset.deleteQuestion) deleteAdminQuestion(target.dataset.deleteQuestion);
+                if (target.hasAttribute('data-open-error-modal')) setOperationsErrorModalOpen(true);
+                if (target.dataset.resolveError) updateErrorReport(target.dataset.resolveError, 'resolved');
+                if (target.dataset.rejectError) updateErrorReport(target.dataset.rejectError, 'rejected');
+                if (target.dataset.deleteFeedback) deleteUserFeedback(target.dataset.deleteFeedback);
+                if (target.hasAttribute('data-close-error-modal')) setOperationsErrorModalOpen(false);
                 if (target.hasAttribute('data-close-question-editor')) setQuestionEditorOpen(false);
             });
             if (permittedRoles().length < 2) el('adminRoleButton').hidden = true;
@@ -675,7 +820,7 @@
             el('adminLogout').addEventListener('click', () => { try { localStorage.removeItem('lm_session'); } finally { window.location.href = '/loginout'; } });
             if (typeof db === 'undefined') { el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Firebase chưa sẵn sàng'; return; }
             el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80"></i> Firebase đã kết nối';
-            Promise.all([loadOverview(), loadUsers(), loadRequests(), loadAdminQuestions()]).catch(error => console.error(error));
+            Promise.all([loadOverview(), loadUsers(), loadRequests(), loadAdminQuestions(), loadUserFeedbacks()]).catch(error => console.error(error));
         });
     })();
     </script>
@@ -700,6 +845,12 @@
             <label class="ops-muted" style="display:block;margin-top:14px">Giải thích<textarea class="ops-input" id="editQuestionExplanation" rows="3" style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
             <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px"><button class="ops-button is-muted" type="button" data-close-question-editor>Hủy</button><button class="ops-button" id="btnUpdateAdminQuestion" type="submit" style="background:#16a34a"><i class="fa-solid fa-floppy-disk"></i> Lưu thay đổi</button></div>
         </form>
+    </div>
+    <div id="operationsErrorModal" hidden role="dialog" aria-modal="true" aria-labelledby="operationsErrorTitle" style="position:fixed;inset:0;z-index:2147483647;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(2,6,23,.78);backdrop-filter:blur(6px)">
+        <section class="ops-card" style="width:min(840px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.45)">
+            <div class="operations-heading" style="margin-bottom:18px"><div><h2 id="operationsErrorTitle" style="margin:0"><i class="fa-solid fa-shield-heart" style="color:#fbbf24"></i> Thông tin vận hành</h2><p class="ops-muted" style="margin:6px 0 0">Tổng số báo cáo lỗi: <strong id="operationsErrorTotal">0</strong> · Báo cáo đã chốt sẽ tự ẩn sau 7 ngày.</p></div><button class="ops-button is-muted" type="button" data-close-error-modal title="Đóng"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="ops-list" id="operationsErrorList"><p class="ops-muted">Đang tải báo cáo lỗi…</p></div>
+        </section>
     </div>
 </body>
 </html>

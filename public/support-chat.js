@@ -290,13 +290,14 @@
         }
         if (submit) submit.disabled = true;
         try {
-            await db.collection('support_requests').add({
-                type,
+            const collectionName = type === 'report' ? 'ErrorReports' : 'UserFeedbacks';
+            await db.collection(collectionName).add({
+                type: type === 'report' ? 'error-report' : 'user-feedback',
                 subject,
                 message,
                 senderId: user.email || 'anonymous',
                 senderName: user.name || user.displayName || user.email || 'Khách',
-                status: 'open',
+                status: 'pending',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 createdAtClient: Date.now()
             });
