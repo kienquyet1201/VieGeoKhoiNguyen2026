@@ -30,7 +30,7 @@
             <button id="mobileTopbarToggle" class="mobile-topbar-toggle" type="button" aria-label="Mở điều hướng học tập" aria-controls="studentNavigation" aria-expanded="false" title="Mở điều hướng">
                 <i class="fa-solid fa-bars" aria-hidden="true"></i>
             </button>
-            <div class="user-topbar-navigation" id="studentNavigation">
+            <div class="user-topbar-navigation fixed inset-y-0 left-0 z-[100] w-64 bg-slate-900 shadow-2xl -translate-x-full transition-transform duration-300" id="studentNavigation">
             
             <nav class="nav-items user-navigation-animated" id="navMenu" aria-label="Điều hướng học tập">
                 <a class="nav-button" href="/map?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="nav-label">Lộ trình học</span></a>
@@ -64,6 +64,8 @@
                 <button id="btnTaskbarLogout" class="taskbar-icon-btn taskbar-logout" type="button" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
             </div>
         </header>
+
+        <button id="mobileNavigationOverlay" class="mobile-navigation-overlay fixed inset-0 z-[100] bg-black/50" type="button" aria-label="Đóng điều hướng" hidden></button>
 
         <div id="roleSwitcherWrap" class="user-role-switcher" hidden>
             <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
@@ -146,10 +148,10 @@
             <div id="tabProfile" class="tab-pane">
                 <h2 style="font-size: 2rem; margin-bottom: 40px;"><i class="fa-solid fa-id-badge" style="color: #ff6b6b;"></i> Hồ Sơ Phi Hành Gia</h2>
                 
-                <div style="display: flex; gap: 40px; align-items: flex-start;">
+                <div class="profile-mobile-layout flex flex-col md:flex-row" style="display: flex; gap: 40px; align-items: flex-start;">
                     <!-- Avatar Area -->
-                    <div style="text-align: center; width: 250px;">
-                        <div style="width: 150px; height: 150px; border-radius: 40px; background: var(--holo-2); display: flex; align-items: center; justify-content: center; font-size: 4rem; box-shadow: 0 10px 30px rgba(28,176,246,0.3); margin: 0 auto; overflow: hidden; position: relative;">
+                    <div class="profile-avatar-panel w-full flex justify-center items-center" style="text-align: center; width: 250px;">
+                        <div class="profile-avatar-frame" style="width: 150px; height: 150px; border-radius: 40px; background: var(--holo-2); display: flex; align-items: center; justify-content: center; font-size: 4rem; box-shadow: 0 10px 30px rgba(28,176,246,0.3); margin: 0 auto; overflow: hidden; position: relative;">
                             <div id="profAvatarIconContainer" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                                 <i id="profAvatarIcon" class="fa-solid fa-user-astronaut"></i>
                             </div>
@@ -185,8 +187,8 @@
                     </div>
 
                     <!-- Stats & Form Area -->
-                    <div style="flex: 1;">
-                        <div class="bento-grid" style="margin-bottom: 40px; grid-template-columns: repeat(3, 1fr);">
+                    <div class="profile-details-panel w-full" style="flex: 1;">
+                        <div class="bento-grid profile-stat-grid grid grid-cols-2 gap-4 w-full" style="margin-bottom: 40px;">
                             <div class="bento-card">
                                 <div class="bento-card-title" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> Chuỗi ngày</div>
                                 <h1 style="font-size: 2.5rem;" id="profStreak">0</h1>

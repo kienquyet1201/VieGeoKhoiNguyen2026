@@ -14,19 +14,19 @@
     <script src="firebase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body>
-    <main class="operations-main" style="max-width:1540px;margin:0 auto">
-        <header class="operations-heading">
+<body class="cs-dashboard-page">
+    <main class="cs-dashboard-shell h-[calc(100vh-60px)] flex overflow-hidden" style="max-width:1540px;margin:0 auto">
+        <header class="operations-heading cs-dashboard-heading">
             <div><h1><i class="fa-solid fa-headset" style="color:#38bdf8"></i> CS Portal</h1><p>Tiếp nhận và giải đáp yêu cầu học sinh theo thời gian thực.</p></div>
             <div style="display:flex;gap:8px"><button class="ops-button is-muted" id="csRoleSwitch" type="button"><i class="fa-solid fa-users-gear"></i> Đổi vai trò</button><button class="ops-button is-muted" id="csBackToMap" type="button" title="Về không gian học tập"><i class="fa-solid fa-graduation-cap"></i> Không gian học tập</button></div>
         </header>
-        <section class="cs-portal" aria-label="Không gian chăm sóc khách hàng">
+        <section class="cs-portal" id="csPortal" aria-label="Không gian chăm sóc khách hàng">
             <aside class="cs-queues">
                 <div class="cs-queue-head"><h2>Hàng đợi hỗ trợ</h2><label><span class="sr-only">Tìm hội thoại</span><input class="ops-search" id="csSearchInput" type="search" placeholder="Tìm học sinh hoặc tin nhắn" autocomplete="off"></label></div>
                 <div class="cs-queue-list" id="csQueueList"><p class="ops-muted" style="padding:12px">Đang tải hàng đợi…</p></div>
             </aside>
             <section class="cs-thread">
-                <header class="cs-thread-head"><div><h2 id="csThreadTitle">Chọn một cuộc hội thoại</h2><p id="csThreadMeta">Hàng đợi chat sẽ hiển thị ở cột bên trái.</p></div><span class="ops-muted" id="csPresence">CSKH online</span></header>
+                <header class="cs-thread-head"><button class="cs-thread-back" id="csBackToQueue" type="button" hidden><i class="fa-solid fa-arrow-left"></i><span>Quay lại</span></button><div><h2 id="csThreadTitle">Chọn một cuộc hội thoại</h2><p id="csThreadMeta">Hàng đợi chat sẽ hiển thị ở cột bên trái.</p></div><span class="ops-muted" id="csPresence">CSKH online</span></header>
                 <div class="cs-thread-messages" id="csMessages"><div class="cs-empty"><div><i class="fa-solid fa-comments" style="font-size:2rem"></i><p>Chọn một học sinh để bắt đầu hỗ trợ.</p></div></div></div>
                 <form class="cs-composer" id="csComposer"><input id="csMessageInput" type="text" maxlength="1000" placeholder="Nhập phản hồi cho học sinh…" disabled><button class="ops-button" type="submit" id="csSendButton" disabled><i class="fa-solid fa-paper-plane"></i> Gửi</button></form>
             </section>
@@ -73,6 +73,8 @@
         function selectConversation(id) {
             const item = conversations.find(conversation => conversation.id === id); if (!item || typeof db === 'undefined') return;
             currentConversation = id; renderQueue();
+            el('csPortal')?.classList.add('is-conversation-open');
+            el('csBackToQueue').hidden = false;
             el('csThreadTitle').textContent = nameFor(item); el('csThreadMeta').textContent = item.email || id; el('csMessageInput').disabled = false; el('csSendButton').disabled = false;
             if (unsubscribeMessages) unsubscribeMessages();
             unsubscribeMessages = db.collection('support_conversations').doc(id).collection('messages').onSnapshot(snapshot => { renderMessages(snapshot); void markStudentMessagesRead(snapshot); }, error => { console.error(error); show('Không thể tải tin nhắn.', 'error'); });
@@ -110,6 +112,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             el('csSearchInput').addEventListener('input', renderQueue); el('csComposer').addEventListener('submit', sendMessage); el('csQueueList').addEventListener('click', event => { const row = event.target.closest('[data-conversation-id]'); if (row) selectConversation(row.dataset.conversationId); });
+            el('csBackToQueue').addEventListener('click', () => { el('csPortal')?.classList.remove('is-conversation-open'); el('csBackToQueue').hidden = true; });
             el('csBackToMap').addEventListener('click', () => navigateRole('user'));
             if (allowedRoles().length < 2) el('csRoleSwitch').hidden = true;
             el('csRoleSwitch').addEventListener('click', async () => { const roles = allowedRoles(); if (roles.length < 2) return; const result = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(roles.map(role => [role, roleLabels[role]])),inputValue:roles.includes('cs') ? 'cs' : roles[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if(result.isConfirmed) navigateRole(result.value); });

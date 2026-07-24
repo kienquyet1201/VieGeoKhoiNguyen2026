@@ -70,11 +70,11 @@
             <p class="exam-setup-note"><i class="fa-solid fa-database"></i> Quản trị viên cần khai báo <code>difficulty</code> và <code>topic</code> cho mọi tài liệu trong collection <code>questions</code>.</p>
         </section>
 
-        <div id="examWorkspace" class="exam-workspace" hidden>
+        <div id="examWorkspace" class="exam-workspace exam-workspace-clean" hidden>
             <div class="exam-session-bar"><span><i class="fa-solid fa-graduation-cap"></i> Đang làm đề luyện thi</span><div class="exam-timer" aria-live="polite"><i class="fa-solid fa-stopwatch"></i><span id="examTimer">50:00</span></div></div>
             <button id="examExit" class="exam-exit-btn" type="button" title="Thoát và hủy bài làm"><i class="fa-solid fa-xmark"></i> Thoát / Hủy làm bài</button>
             <section class="exam-question-card" aria-live="polite">
-                <div class="exam-question-meta">
+                <div class="exam-question-meta" hidden>
                     <span id="examQuestionCounter">Câu 1 / 40</span>
                     <span id="examQuestionTag">Atlat & kỹ năng địa lí</span>
                 </div>
@@ -87,7 +87,7 @@
                 </div>
             </section>
 
-            <aside class="exam-navigator-card">
+            <aside class="exam-navigator-card" hidden>
                 <div class="exam-nav-heading">
                     <div>
                         <h2>Danh sách câu hỏi</h2>

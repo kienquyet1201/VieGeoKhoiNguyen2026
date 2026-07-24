@@ -828,6 +828,7 @@ function updateStatsUI() {
 function renderMap() {
     mapContainer.innerHTML = '';
     mapContainer.classList.remove('map-learning-route');
+    mapContainer.classList.remove('region-grid');
     routeResizeObserver?.disconnect();
     routeResizeObserver = null;
     
@@ -857,13 +858,14 @@ btnMapBack.addEventListener('click', () => {
 });
 
 function renderRegions() {
+    mapContainer.classList.add('region-grid');
     mapContainer.style.display = 'grid';
     mapContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
     mapContainer.style.gap = '20px';
     
     LEARNING_REGIONS.forEach(region => {
         const card = document.createElement('div');
-        card.className = 'bento-card';
+        card.className = 'bento-card region-card';
         card.style.cursor = 'pointer';
         card.style.borderTop = `4px solid ${region.color}`;
         card.innerHTML = `

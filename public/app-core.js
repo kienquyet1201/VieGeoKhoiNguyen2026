@@ -622,10 +622,17 @@ const tabPanes = document.querySelectorAll('.tab-pane');
 const animatedNavButtons = document.querySelectorAll('.nav-button');
 const mobileTopbarToggle = document.getElementById('mobileTopbarToggle');
 const studentNavigation = document.getElementById('studentNavigation');
+const mobileNavigationOverlay = document.getElementById('mobileNavigationOverlay');
 
 function setStudentNavigationOpen(isOpen) {
     if (!mobileTopbarToggle || !studentNavigation) return;
     studentNavigation.classList.toggle('is-mobile-open', isOpen);
+    studentNavigation.classList.toggle('-translate-x-full', !isOpen);
+    studentNavigation.classList.toggle('translate-x-0', isOpen);
+    if (mobileNavigationOverlay) {
+        mobileNavigationOverlay.hidden = !isOpen;
+        mobileNavigationOverlay.classList.toggle('is-visible', isOpen);
+    }
     mobileTopbarToggle.setAttribute('aria-expanded', String(isOpen));
     mobileTopbarToggle.setAttribute('aria-label', isOpen ? 'Đóng điều hướng học tập' : 'Mở điều hướng học tập');
     mobileTopbarToggle.innerHTML = `<i class="fa-solid ${isOpen ? 'fa-xmark' : 'fa-bars'}" aria-hidden="true"></i>`;
@@ -634,6 +641,7 @@ function setStudentNavigationOpen(isOpen) {
 mobileTopbarToggle?.addEventListener('click', () => {
     setStudentNavigationOpen(!studentNavigation?.classList.contains('is-mobile-open'));
 });
+mobileNavigationOverlay?.addEventListener('click', () => setStudentNavigationOpen(false));
 
 document.querySelectorAll('[data-mobile-topbar-action]').forEach((button) => {
     button.addEventListener('click', () => {
