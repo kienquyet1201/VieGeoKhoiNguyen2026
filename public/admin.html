@@ -114,10 +114,16 @@
                             <button class="ops-button is-danger" id="btnDeleteSelectedQuestions" type="button" disabled aria-disabled="true"><i class="fa-solid fa-trash-can"></i> Xóa các câu đã chọn</button>
                         </div>
                     </div>
+                    <section aria-label="Công cụ lọc câu hỏi" style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:14px;border:1px solid rgba(148,163,184,.16);border-radius:14px;background:rgba(15,23,42,.3)">
+                        <strong style="color:#e2e8f0"><i class="fa-solid fa-filter" style="color:#7dd3fc"></i> Công cụ lọc</strong>
+                        <label class="ops-muted" style="display:grid;gap:6px;min-width:160px">Độ khó<select class="ops-input" id="filterQuestionDifficulty"><option value="">Tất cả</option><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
+                        <label class="ops-muted" style="display:grid;gap:6px;min-width:190px">Tỉnh / Thành phố<select class="ops-input" id="filterQuestionProvince"><option value="">Tất cả</option></select></label>
+                        <label class="ops-muted" style="display:grid;gap:6px;min-width:200px">Đảo / Chủ đề<select class="ops-input" id="filterQuestionIsland"><option value="">Tất cả</option></select></label>
+                    </section>
                     <div class="ops-table-wrap">
                         <table class="ops-table">
                             <thead><tr><th scope="col">Chọn</th><th scope="col">Câu hỏi</th><th scope="col">Tỉnh / Chủ đề</th><th scope="col">Mức độ</th><th scope="col">ID</th></tr></thead>
-                            <tbody id="adminQuestionsList"><tr><td colspan="5" class="ops-muted">Đang tải câu hỏi…</td></tr></tbody>
+                            <tbody id="adminQuestionsList"><tr><td colspan="6" class="ops-muted">Đang tải câu hỏi…</td></tr></tbody>
                         </table>
                     </div>
                 </article>
@@ -512,6 +518,7 @@
 
         const selectedAdminQuestionIds = new Set();
         const adminQuestionDocuments = new Map();
+        let allAdminQuestionDocuments = [];
 
         function switchQuestionEntryMode(mode) {
             const showBulk = mode !== 'single';
@@ -655,14 +662,55 @@
             }
         }
 
-        function renderAdminQuestionList(questionDocs) {
+        function questionIslandValue(data) {
+            return String(data?.island || data?.topic || data?.lessonTitle || data?.lessonId || '').trim();
+        }
+
+        function questionProvinceLabel(value) {
+            const province = String(value || '').trim();
+            const labels = { 'ha-noi': 'Hà Nội', 'hai-phong': 'Hải Phòng', 'da-nang': 'Đà Nẵng', 'ho-chi-minh': 'Hồ Chí Minh' };
+            return labels[province] || province.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+        }
+
+        function setQuestionFilterOptions(selectId, values, labelForValue) {
+            const select = el(selectId);
+            if (!select) return;
+            const currentValue = select.value;
+            const uniqueValues = [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))].sort((left, right) => labelForValue(left).localeCompare(labelForValue(right), 'vi'));
+            select.innerHTML = `<option value="">Tất cả</option>${uniqueValues.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(labelForValue(value))}</option>`).join('')}`;
+            select.value = uniqueValues.includes(currentValue) ? currentValue : '';
+        }
+
+        function refreshQuestionFilterOptions() {
+            const data = allAdminQuestionDocuments.map(doc => doc.data() || {});
+            setQuestionFilterOptions('filterQuestionProvince', data.map(item => item.province), questionProvinceLabel);
+            setQuestionFilterOptions('filterQuestionIsland', data.map(questionIslandValue), value => value);
+        }
+
+        function applyQuestionFilters() {
+            const difficulty = el('filterQuestionDifficulty')?.value || '';
+            const province = el('filterQuestionProvince')?.value || '';
+            const island = el('filterQuestionIsland')?.value || '';
+            const filteredDocuments = allAdminQuestionDocuments.filter(doc => {
+                const data = doc.data() || {};
+                return (!difficulty || String(data.difficulty || '') === difficulty)
+                    && (!province || String(data.province || '') === province)
+                    && (!island || questionIslandValue(data) === island);
+            });
+            renderAdminQuestionList(filteredDocuments, allAdminQuestionDocuments.length
+                ? 'Không tìm thấy câu hỏi nào phù hợp với bộ lọc này.'
+                : 'Chưa có câu hỏi trong kho dữ liệu.');
+            updateSelectedQuestionDeleteButton();
+        }
+
+        function renderAdminQuestionList(questionDocs, emptyMessage = 'Chưa có câu hỏi trong kho dữ liệu.') {
             const body = el('adminQuestionsList');
             if (!body) return;
             adminQuestionDocuments.clear();
             questionDocs.forEach((doc) => adminQuestionDocuments.set(doc.id, doc));
             ensureAdminQuestionActionColumn();
             if (!questionDocs.length) {
-                body.innerHTML = '<tr><td colspan="5" class="ops-muted">Chưa có câu hỏi trong kho dữ liệu.</td></tr>';
+                body.innerHTML = `<tr><td colspan="6" class="ops-muted">${escapeHtml(emptyMessage)}</td></tr>`;
                 return;
             }
             body.innerHTML = questionDocs.map(doc => {
@@ -685,15 +733,16 @@
             const body = el('adminQuestionsList');
             const firestore = window.db || (typeof db !== 'undefined' ? db : null);
             if (!body || !firestore) return;
-            body.innerHTML = '<tr><td colspan="5" class="ops-muted">Đang tải câu hỏi…</td></tr>';
+            body.innerHTML = '<tr><td colspan="6" class="ops-muted">Đang tải câu hỏi…</td></tr>';
             try {
                 const snapshot = await firestore.collection('Questions').limit(200).get();
                 const existingIds = new Set(snapshot.docs.map(doc => doc.id));
                 selectedAdminQuestionIds.forEach(id => {
                     if (!existingIds.has(id)) selectedAdminQuestionIds.delete(id);
                 });
-                renderAdminQuestionList(snapshot.docs);
-                updateSelectedQuestionDeleteButton();
+                allAdminQuestionDocuments = snapshot.docs;
+                refreshQuestionFilterOptions();
+                applyQuestionFilters();
             } catch (error) {
                 console.error('Lỗi tải danh sách câu hỏi:', error);
                 body.innerHTML = '<tr><td colspan="5" class="ops-muted">Không thể tải danh sách câu hỏi.</td></tr>';
@@ -760,6 +809,9 @@
             });
             switchQuestionEntryMode('bulk');
             el('btnReloadAdminQuestions')?.addEventListener('click', loadAdminQuestions);
+            ['filterQuestionDifficulty', 'filterQuestionProvince', 'filterQuestionIsland'].forEach((filterId) => {
+                el(filterId)?.addEventListener('change', applyQuestionFilters);
+            });
             el('btnReloadFeedbacks')?.addEventListener('click', loadUserFeedbacks);
             el('btnDeleteSelectedQuestions')?.addEventListener('click', deleteSelectedAdminQuestions);
             el('operationsInfoCard')?.addEventListener('click', () => setOperationsErrorModalOpen(true));
