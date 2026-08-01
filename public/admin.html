@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="operations-shell" id="adminDashboard">
-        <aside id="adminSidebar" class="operations-rail admin-mobile-drawer fixed top-0 left-0 w-64 h-screen z-[100] bg-slate-900 transition-transform duration-300 -translate-x-full md:translate-x-0 overflow-y-auto" aria-label="Điều hướng quản trị">
+        <aside id="admin-sidebar" class="operations-rail admin-mobile-drawer fixed top-0 left-0 h-screen w-64 bg-slate-900 z-50 transition-transform duration-300 overflow-y-auto" aria-label="Điều hướng quản trị">
             <a class="operations-logo" href="/map" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">VieGeo</span></a>
             <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Tổng quan</span></button>
             <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Quản lý người dùng</span></button>
@@ -28,9 +28,9 @@
             <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đăng xuất</span></button>
         </aside>
 
-        <main class="operations-main w-full min-h-screen transition-all duration-300 md:pl-64 overflow-x-hidden">
+        <main id="main-content" class="operations-main w-full min-h-screen transition-all duration-300 overflow-x-hidden">
             <header class="operations-heading">
-                <button id="adminMobileMenuToggle" class="admin-mobile-menu-toggle" type="button" aria-controls="adminSidebar" aria-expanded="false" aria-label="Mở menu quản trị"><i class="fa-solid fa-bars"></i></button>
+                <button id="menu-toggle-btn" class="admin-mobile-menu-toggle" type="button" aria-controls="admin-sidebar" aria-expanded="true" aria-label="Đóng menu quản trị"><i class="fa-solid fa-bars"></i></button>
                 <div><h1 id="adminPageTitle">Trung tâm điều hành</h1><p id="adminPageSubtitle">Theo dõi hoạt động và vận hành VieGeo trong một nơi.</p></div>
                 <span class="ops-muted" id="adminConnectionStatus"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang kết nối dữ liệu</span>
             </header>
@@ -827,43 +827,29 @@
             window.location.href = roleRoutes[role];
         }
 
-        function setAdminMobileMenuOpen(open) {
-            const sidebar = el('adminSidebar');
-            const toggle = el('adminMobileMenuToggle');
-            const isMobile = window.matchMedia('(max-width: 767px)').matches;
-            if (!sidebar) return;
+        let isSidebarOpen = true;
 
-            if (!isMobile) open = false;
-            sidebar.classList.toggle('is-mobile-open', open);
-            sidebar.classList.toggle('-translate-x-full', !open);
-            if (toggle) toggle.setAttribute('aria-expanded', String(open));
+        function updateSidebarUI() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const mainContent = document.getElementById('main-content');
+            const menuToggleButton = document.getElementById('menu-toggle-btn');
+            if (!sidebar || !mainContent || !menuToggleButton) return;
 
-            let overlay = el('adminMobileMenuOverlay');
-            if (!overlay && open) {
-                overlay = document.createElement('button');
-                overlay.id = 'adminMobileMenuOverlay';
-                overlay.type = 'button';
-                overlay.className = 'admin-mobile-menu-overlay fixed inset-0 z-40 bg-black/50';
-                overlay.setAttribute('aria-label', 'Đóng menu quản trị');
-                overlay.addEventListener('click', () => setAdminMobileMenuOpen(false));
-                document.body.appendChild(overlay);
-            }
-            if (!overlay) return;
-            overlay.hidden = !open;
-            overlay.classList.toggle('is-visible', open);
+            sidebar.classList.toggle('-translate-x-full', !isSidebarOpen);
+            mainContent.classList.toggle('md:pl-64', isSidebarOpen);
+            menuToggleButton.setAttribute('aria-expanded', String(isSidebarOpen));
+            menuToggleButton.setAttribute('aria-label', isSidebarOpen ? 'Đóng menu quản trị' : 'Mở menu quản trị');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => {
                 switchTab(button.dataset.adminTab);
-                setAdminMobileMenuOpen(false);
             }));
-            el('adminMobileMenuToggle')?.addEventListener('click', () => {
-                const sidebar = el('adminSidebar');
-                setAdminMobileMenuOpen(!sidebar?.classList.contains('is-mobile-open'));
-            });
-            window.addEventListener('resize', () => {
-                if (!window.matchMedia('(max-width: 767px)').matches) setAdminMobileMenuOpen(false);
+            if (window.innerWidth < 768) isSidebarOpen = false;
+            updateSidebarUI();
+            document.getElementById('menu-toggle-btn')?.addEventListener('click', () => {
+                isSidebarOpen = !isSidebarOpen;
+                updateSidebarUI();
             });
             el('searchUser')?.addEventListener('input', renderUsers);
             el('btnProcessUpload')?.addEventListener('click', processBulkTextImport);

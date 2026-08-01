@@ -2620,3 +2620,59 @@ button, input, select, textarea { font: inherit; }
     }
     #adminDashboard .operations-main { padding-left: 256px; }
 }
+
+/* JS owns the open/closed state; the fixed rail never squeezes the canvas. */
+#admin-sidebar.operations-rail.admin-mobile-drawer,
+#admin-sidebar.operations-rail.admin-mobile-drawer:hover,
+#admin-sidebar.operations-rail.admin-mobile-drawer:focus-within {
+    position: fixed !important;
+    top: 0;
+    right: auto;
+    bottom: auto;
+    left: 0;
+    z-index: 100;
+    width: 256px !important;
+    height: 100dvh;
+    align-items: stretch;
+    padding: 14px 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-top: 0;
+    border-right: 1px solid rgba(148, 163, 184, .16);
+    background: #0f172a;
+    box-shadow: 18px 0 38px rgba(2, 6, 23, .34);
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition: transform .3s ease, visibility 0s linear .3s;
+}
+#admin-sidebar.operations-rail.admin-mobile-drawer.-translate-x-full {
+    transform: translateX(-100%);
+    visibility: hidden;
+    pointer-events: none;
+}
+#admin-sidebar.operations-rail.admin-mobile-drawer .operations-logo,
+#admin-sidebar.operations-rail.admin-mobile-drawer button {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    justify-content: flex-start;
+}
+#admin-sidebar.operations-rail.admin-mobile-drawer .operations-logo { display: flex; }
+#admin-sidebar.operations-rail.admin-mobile-drawer .admin-rail-label {
+    display: block !important;
+    opacity: 1;
+}
+#main-content.operations-main {
+    width: 100%;
+    min-width: 0;
+    min-height: 100dvh;
+    padding-left: 28px !important;
+    overflow-x: hidden;
+}
+@media (max-width: 767px) {
+    #main-content.operations-main { padding: 78px 16px 28px !important; }
+}
+@media (min-width: 768px) {
+    #main-content.operations-main.md\:pl-64 { padding-left: 256px !important; }
+}
