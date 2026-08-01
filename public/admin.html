@@ -76,8 +76,8 @@
                         <div>
                             <aside class="bulk-template-guide" aria-label="Mẫu định dạng chuẩn">
                                 <strong><i class="fa-solid fa-clipboard-list"></i> Mẫu định dạng chuẩn</strong>
-                                <code>Câu hỏi | Đáp án 0 | Đáp án 1 | Đáp án 2 | Đáp án 3 | Index đúng (0-3) | Độ khó (easy/medium/hard) | Lý thuyết | Gợi ý 1 | Gợi ý 2</code>
-                                <small>Các trường Lý thuyết, Gợi ý 1 và Gợi ý 2 có thể để trống, nhưng vẫn phải giữ đúng dấu <code>|</code>.</small>
+                                <code>Câu hỏi | Đáp án 0 | Đáp án 1 | Đáp án 2 | Đáp án 3 | Index đúng (0-3) | Độ khó (easy/medium/hard) | Lý thuyết</code>
+                                <small>Trường Lý thuyết có thể để trống, nhưng vẫn phải giữ đúng dấu <code>|</code> ở cuối dòng.</small>
                             </aside>
                             <label class="ops-muted" for="bulkQuestionText">Nội dung văn bản</label>
                             <textarea class="ops-input" id="bulkQuestionText" rows="16" spellcheck="false" placeholder="Hà Nội là thủ đô của nước nào? | Việt Nam | Lào | Thái Lan | Campuchia | 0 | Easy | Hà Nội là Thủ đô Việt Nam. | Nhớ lại kiến thức về Thủ đô. | Xem lại phần Lý thuyết.&#10;..." style="display:block;width:100%;min-height:320px;margin-top:7px;resize:vertical;line-height:1.6"></textarea>
@@ -116,10 +116,6 @@
                         <fieldset class="admin-question-section">
                             <legend><i class="fa-solid fa-book-open"></i> Học liệu hỗ trợ <small>(tùy chọn)</small></legend>
                             <label class="ops-muted">Nội dung lý thuyết<textarea class="ops-input" id="adminQuestionTheory" rows="5" placeholder="Nhập lý thuyết liên quan để học sinh đọc trước khi làm bài..." style="display:block;width:100%;resize:vertical"></textarea></label>
-                            <div class="ops-grid admin-question-grid" style="margin-top:14px">
-                                <label class="ops-muted">Gợi ý khi sai lần 1<textarea class="ops-input" id="adminQuestionHint1" rows="3" placeholder="Gợi ý nhẹ để học sinh thử lại..." style="display:block;width:100%;resize:vertical"></textarea></label>
-                                <label class="ops-muted">Gợi ý khi sai lần 2<textarea class="ops-input" id="adminQuestionHint2" rows="3" placeholder="Gợi ý cụ thể hơn cho học sinh..." style="display:block;width:100%;resize:vertical"></textarea></label>
-                            </div>
                         </fieldset>
                         <button class="ops-button" id="btnSaveAdminQuestion" type="submit" style="margin-top:6px;background:#16a34a"><i class="fa-solid fa-floppy-disk"></i> Lưu câu hỏi</button>
                     </form>
@@ -424,11 +420,11 @@
             return lines.map((line, index) => {
                 const lineNumber = index + 1;
                 const fields = line.split('|').map(field => field.trim());
-                if (fields.length !== 10) {
-                    throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: cần đúng 10 trường, ngăn cách bằng dấu |.`);
+                if (fields.length !== 8) {
+                    throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: cần đúng 8 trường, ngăn cách bằng dấu |.`);
                 }
 
-                const [question, option0, option1, option2, option3, answerIndexRaw, difficultyRaw, theory, hint1, hint2] = fields;
+                const [question, option0, option1, option2, option3, answerIndexRaw, difficultyRaw, theory] = fields;
                 const options = [option0, option1, option2, option3];
                 const answer = Number(answerIndexRaw);
                 const difficulty = difficultyRaw.toLowerCase();
@@ -443,7 +439,7 @@
                     throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: Độ khó chỉ nhận easy, medium hoặc hard.`);
                 }
 
-                return { question, options, answer, difficulty, theory, hint1, hint2 };
+                return { question, options, answer, difficulty, theory };
             });
         }
 
@@ -506,8 +502,6 @@
             const island = trimValue('adminQuestionIsland');
             const difficulty = trimValue('adminQuestionDifficulty');
             const theory = trimValue('adminQuestionTheory');
-            const hint1 = trimValue('adminQuestionHint1');
-            const hint2 = trimValue('adminQuestionHint2');
 
             if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !island || !difficulty) {
                 showToast('Hãy nhập đủ câu hỏi, 4 đáp án, đáp án đúng, tỉnh, đảo và độ khó.', 'warning');
@@ -523,8 +517,6 @@
                 topic: island,
                 difficulty,
                 theory,
-                hint1,
-                hint2,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };

@@ -48,8 +48,6 @@ let islandQuizAnswers = {};
 let islandQuizSubmitted = false;
 let islandQuizSummaryPenaltyPending = false;
 let islandTheoryConfirmed = false;
-let islandQuizCurrentWrongAttempts = 0;
-let islandQuizTrackedQuestionIndex = -1;
 let islandQuizScrollLock = null;
 
 function setIslandQuizScrollLocked(locked) {
@@ -388,21 +386,6 @@ function islandQuizWarning(message) {
     window.alert(message);
 }
 
-function showIslandQuizProgressiveHint(question) {
-    const hintBox = document.getElementById('islandQuizHintBox');
-    if (!hintBox) return;
-    const firstAttempt = islandQuizCurrentWrongAttempts === 1;
-    const preferredHint = firstAttempt ? question?.hint1 : question?.hint2;
-    const fallbackHint = firstAttempt ? question?.hint2 : question?.hint1;
-    const hint = String(preferredHint || fallbackHint || '').trim();
-    const label = firstAttempt ? 'Gợi ý 1' : 'Gợi ý 2';
-    hintBox.hidden = false;
-    hintBox.style.display = 'block';
-    hintBox.textContent = hint
-        ? `${label}: ${hint}`
-        : `${label}: Chưa có gợi ý cho câu này. Hãy xem lại phần lý thuyết và chọn một đáp án khác.`;
-}
-
 function islandQuizCorrectAnswerIndex(question) {
     const rawAnswer = question?.correctAnswer ?? question?.answerIndex ?? question?.answer;
     const normalized = String(rawAnswer ?? '').trim();
@@ -608,10 +591,6 @@ function renderIslandQuizQuestion(index) {
         return;
     }
     const nextIndex = Math.max(0, Math.min(index, questions.length - 1));
-    if (nextIndex !== islandQuizTrackedQuestionIndex) {
-        islandQuizTrackedQuestionIndex = nextIndex;
-        islandQuizCurrentWrongAttempts = 0;
-    }
     islandQuizCurrentIndex = nextIndex;
     const question = questions[islandQuizCurrentIndex];
     const header = document.getElementById('islandQuizStepHeader');
@@ -624,8 +603,7 @@ function renderIslandQuizQuestion(index) {
     const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
     const options = Array.isArray(question.options) ? question.options : [];
     body.innerHTML = `<h3 style="margin: 0 0 22px; color: #f8fafc; font-size: clamp(1.15rem, 2.5vw, 1.45rem); line-height: 1.5;">${escapeQuizHtml(question.question || question.questionText)}</h3>
-        <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>
-        <aside id="islandQuizHintBox" hidden aria-live="polite" style="display:none;margin-top:16px;padding:14px 16px;border:1px solid rgba(250,204,21,.42);border-radius:12px;background:rgba(250,204,21,.1);color:#fef3c7;line-height:1.55;text-align:left;"></aside>`;
+        <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>`;
     const optionsContainer = document.getElementById('islandQuizOptions');
     options.forEach((option, optionIndex) => {
         const isSelected = selectedAnswer === optionIndex;
@@ -671,13 +649,6 @@ function mountIslandQuizStepper() {
             islandQuizWarning('Hãy chọn một đáp án trước khi tiếp tục.');
             return;
         }
-        const question = activeIslandQuizQuestions()[islandQuizCurrentIndex];
-        const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
-        if (selectedAnswer !== islandQuizCorrectAnswerIndex(question)) {
-            islandQuizCurrentWrongAttempts += 1;
-            showIslandQuizProgressiveHint(question);
-            return;
-        }
         if (islandQuizCurrentIndex === activeIslandQuizQuestions().length - 1) {
             await renderIslandQuizResult();
             return;
@@ -704,8 +675,6 @@ async function openIslandQuizPreview() {
     islandQuizAnswers = {};
     islandQuizSubmitted = false;
     islandQuizSummaryPenaltyPending = false;
-    islandQuizCurrentWrongAttempts = 0;
-    islandQuizTrackedQuestionIndex = -1;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
     islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';
