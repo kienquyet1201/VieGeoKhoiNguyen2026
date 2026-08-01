@@ -16,8 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-    <div class="operations-shell" id="adminDashboard">
-        <aside id="admin-sidebar" class="operations-rail admin-mobile-drawer fixed top-0 left-0 h-screen w-64 bg-slate-900 z-50 transition-transform duration-300 overflow-y-auto" aria-label="Điều hướng quản trị">
+    <div class="relative w-full min-h-screen bg-slate-950" id="adminDashboard">
+        <aside id="admin-sidebar" class="fixed top-0 left-0 h-screen w-64 bg-slate-900 z-[9999] transition-transform duration-300 -translate-x-full md:translate-x-0 overflow-y-auto" aria-label="Điều hướng quản trị">
             <a class="operations-logo" href="/map" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">VieGeo</span></a>
             <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Tổng quan</span></button>
             <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Quản lý người dùng</span></button>
@@ -28,7 +28,7 @@
             <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đăng xuất</span></button>
         </aside>
 
-        <main id="main-content" class="operations-main w-full min-h-screen transition-all duration-300 overflow-x-hidden">
+        <main id="main-content" class="w-full min-h-screen transition-all duration-300 md:pl-64 pt-16 md:pt-4 overflow-x-hidden">
             <header class="operations-heading">
                 <button id="menu-toggle-btn" class="admin-mobile-menu-toggle" type="button" aria-controls="admin-sidebar" aria-expanded="true" aria-label="Đóng menu quản trị"><i class="fa-solid fa-bars"></i></button>
                 <div><h1 id="adminPageTitle">Trung tâm điều hành</h1><p id="adminPageSubtitle">Theo dõi hoạt động và vận hành VieGeo trong một nơi.</p></div>
@@ -827,30 +827,36 @@
             window.location.href = roleRoutes[role];
         }
 
-        let isSidebarOpen = true;
-
-        function updateSidebarUI() {
+        setTimeout(() => {
             const sidebar = document.getElementById('admin-sidebar');
             const mainContent = document.getElementById('main-content');
-            const menuToggleButton = document.getElementById('menu-toggle-btn');
-            if (!sidebar || !mainContent || !menuToggleButton) return;
+            const toggleBtn = document.getElementById('menu-toggle-btn');
 
-            sidebar.classList.toggle('-translate-x-full', !isSidebarOpen);
-            mainContent.classList.toggle('md:pl-64', isSidebarOpen);
-            menuToggleButton.setAttribute('aria-expanded', String(isSidebarOpen));
-            menuToggleButton.setAttribute('aria-label', isSidebarOpen ? 'Đóng menu quản trị' : 'Mở menu quản trị');
-        }
+            if (sidebar && mainContent && toggleBtn) {
+                let isOpen = window.innerWidth >= 768;
+                toggleBtn.setAttribute('aria-expanded', String(isOpen));
+                toggleBtn.setAttribute('aria-label', isOpen ? 'Đóng menu quản trị' : 'Mở menu quản trị');
+
+                toggleBtn.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    isOpen = !isOpen;
+                    if (isOpen) {
+                        sidebar.classList.remove('-translate-x-full');
+                        mainContent.classList.add('md:pl-64');
+                    } else {
+                        sidebar.classList.add('-translate-x-full');
+                        mainContent.classList.remove('md:pl-64');
+                    }
+                    toggleBtn.setAttribute('aria-expanded', String(isOpen));
+                    toggleBtn.setAttribute('aria-label', isOpen ? 'Đóng menu quản trị' : 'Mở menu quản trị');
+                });
+            }
+        }, 500);
 
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => {
                 switchTab(button.dataset.adminTab);
             }));
-            if (window.innerWidth < 768) isSidebarOpen = false;
-            updateSidebarUI();
-            document.getElementById('menu-toggle-btn')?.addEventListener('click', () => {
-                isSidebarOpen = !isSidebarOpen;
-                updateSidebarUI();
-            });
             el('searchUser')?.addEventListener('input', renderUsers);
             el('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
             el('adminQuestionForm')?.addEventListener('submit', submitAdminQuestion);

@@ -2676,3 +2676,73 @@ button, input, select, textarea { font: inherit; }
 @media (min-width: 768px) {
     #main-content.operations-main.md\:pl-64 { padding-left: 256px !important; }
 }
+
+/* Final Admin shell: the sidebar is a fixed layer, never a grid/flex column. */
+#adminDashboard {
+    position: relative;
+    width: 100%;
+    min-height: 100dvh;
+    background: #081525;
+    color: #e7eef9;
+}
+#admin-sidebar {
+    position: fixed !important;
+    top: 0;
+    right: auto;
+    bottom: auto;
+    left: 0;
+    z-index: 9999;
+    display: flex;
+    width: 256px;
+    height: 100dvh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-right: 1px solid rgba(148,163,184,.16);
+    background: #0f172a;
+    box-shadow: 18px 0 38px rgba(2,6,23,.34);
+    transform: translateX(-100%);
+    transition: transform .3s ease;
+}
+#admin-sidebar .operations-logo,
+#admin-sidebar button {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 13px;
+    background: transparent;
+    color: #9fb0c8;
+    cursor: pointer;
+    font: inherit;
+    text-decoration: none;
+}
+#admin-sidebar .operations-logo { color: #38bdf8; background: rgba(14,165,233,.1); }
+#admin-sidebar button:hover,
+#admin-sidebar button.is-active { border-color: rgba(56,189,248,.38); background: rgba(14,165,233,.13); color: #e0f2fe; }
+#admin-sidebar .rail-bottom { margin-top: auto; }
+#admin-sidebar .admin-rail-label { display: block !important; opacity: 1; color: inherit; font-size: .82rem; font-weight: 800; }
+#main-content {
+    width: 100%;
+    min-width: 0;
+    min-height: 100dvh;
+    padding: 64px 16px 28px;
+    overflow-x: hidden;
+    transition: padding-left .3s ease;
+}
+@media (max-width: 767px) {
+    #admin-sidebar:not(.-translate-x-full) { transform: translateX(0); }
+}
+@media (min-width: 768px) {
+    #admin-sidebar { transform: translateX(0); }
+    #adminDashboard:has(#main-content:not(.md\:pl-64)) #admin-sidebar { transform: translateX(-100%); }
+    #main-content { padding: 16px 28px 28px; }
+    #main-content.md\:pl-64 { padding-left: 256px; }
+}
