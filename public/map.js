@@ -47,6 +47,9 @@ let islandQuizCurrentIndex = 0;
 let islandQuizAnswers = {};
 let islandQuizSubmitted = false;
 let islandQuizSummaryPenaltyPending = false;
+let islandTheoryConfirmed = false;
+let islandQuizCurrentWrongAttempts = 0;
+let islandQuizTrackedQuestionIndex = -1;
 let islandQuizScrollLock = null;
 
 function setIslandQuizScrollLocked(locked) {
@@ -75,6 +78,24 @@ function setIslandQuizScrollLocked(locked) {
 
 function hasTheoryModalDom() {
     return Boolean(islandTheoryModal && islandTheoryTitle && islandTheoryMeta && islandTheoryContent && btnStartIslandQuiz);
+}
+
+function updateIslandTheoryStartButton() {
+    if (!btnStartIslandQuiz) return;
+    const ready = Boolean(activeIslandLearning?.questions?.length);
+    const enabled = ready && islandTheoryConfirmed;
+    btnStartIslandQuiz.disabled = !enabled;
+    btnStartIslandQuiz.setAttribute('aria-disabled', String(!enabled));
+    btnStartIslandQuiz.style.opacity = enabled ? '1' : '.5';
+    btnStartIslandQuiz.style.cursor = enabled ? 'pointer' : 'not-allowed';
+    btnStartIslandQuiz.title = enabled ? 'Bắt đầu làm bài' : 'Hãy xác nhận đã đọc lý thuyết trước khi bắt đầu.';
+}
+
+function resetIslandTheoryConfirmation() {
+    islandTheoryConfirmed = false;
+    const checkbox = islandTheoryModal?.querySelector('#islandTheoryConfirm');
+    if (checkbox) checkbox.checked = false;
+    updateIslandTheoryStartButton();
 }
 
 const ISLAND_MODAL_ROOT_IDS = Object.freeze(['theory-modal', 'islandTheoryModal', 'quiz-modal', 'islandQuizModal']);
@@ -184,8 +205,12 @@ function rebuildTheoryModalWithInlineCss(theoryHtml) {
                 <p style="margin:0 0 8px;color:#7dd3fc;font-weight:800;">HÀNH TRANG TRƯỚC THỬ THÁCH</p>
                 <h2 id="islandTheoryTitle" style="margin:0;padding-right:44px;font-size:clamp(1.5rem,3vw,2rem);line-height:1.25;">Lý thuyết trước khi thực chiến</h2>
                 <p id="islandTheoryMeta" style="margin:10px 0 20px;color:#94a3b8;">Hà Nội · Kiến thức nền tảng</p>
-                <article id="islandTheoryContent" aria-live="polite" style="color:#dbeafe;line-height:1.75;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:20px;background:rgba(2,12,27,.45);">${theoryHtml || ''}</article>
-                <button id="btnStartIslandQuiz" type="button" style="display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:9px;margin-top:22px;border:0;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:1rem;font-weight:800;cursor:pointer;">Đã hiểu &amp; Bắt đầu làm bài</button>
+                <article id="islandTheoryContent" aria-live="polite" style="max-height:42vh;overflow-y:auto;color:#dbeafe;line-height:1.75;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:20px;background:rgba(2,12,27,.45);">${theoryHtml || ''}</article>
+                <label for="islandTheoryConfirm" style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;color:#dbeafe;line-height:1.45;cursor:pointer;">
+                    <input id="islandTheoryConfirm" type="checkbox" style="width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:#22c55e;cursor:pointer;">
+                    <span>Tôi đã đọc và hiểu nội dung trên.</span>
+                </label>
+                <button id="btnStartIslandQuiz" type="button" disabled aria-disabled="true" style="display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:9px;margin-top:18px;border:0;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:1rem;font-weight:800;cursor:not-allowed;opacity:.5;">Đã hiểu &amp; Bắt đầu làm bài</button>
             </section>
         </div>`);
     // Bind directly to the elements just inserted. Querying from the modal root
@@ -193,6 +218,8 @@ function rebuildTheoryModalWithInlineCss(theoryHtml) {
     const insertedTheoryModal = document.getElementById('theory-modal');
     const theoryCloseButton = insertedTheoryModal?.querySelector('#btnCloseIslandTheory');
     const theoryStartButton = insertedTheoryModal?.querySelector('#btnStartIslandQuiz');
+    const theoryContent = insertedTheoryModal?.querySelector('#islandTheoryContent');
+    const theoryConfirmCheckbox = insertedTheoryModal?.querySelector('#islandTheoryConfirm');
     if (insertedTheoryModal) {
         insertedTheoryModal.dataset.viegeoBound = 'true';
         insertedTheoryModal.addEventListener('click', (event) => {
@@ -209,15 +236,29 @@ function rebuildTheoryModalWithInlineCss(theoryHtml) {
             refreshIslandModalReferences();
         });
     }
+    const confirmTheoryRead = () => {
+        islandTheoryConfirmed = true;
+        if (theoryConfirmCheckbox) theoryConfirmCheckbox.checked = true;
+        updateIslandTheoryStartButton();
+    };
+    theoryConfirmCheckbox?.addEventListener('change', () => {
+        islandTheoryConfirmed = Boolean(theoryConfirmCheckbox.checked);
+        updateIslandTheoryStartButton();
+    });
+    theoryContent?.addEventListener('scroll', () => {
+        const reachedBottom = theoryContent.scrollTop + theoryContent.clientHeight >= theoryContent.scrollHeight - 4;
+        if (reachedBottom) confirmTheoryRead();
+    }, { passive: true });
     if (theoryStartButton) {
         theoryStartButton.addEventListener('click', async () => {
-            if (theoryStartButton.disabled || !activeIslandLearning?.questions?.length) return;
+            if (theoryStartButton.disabled || !islandTheoryConfirmed || !activeIslandLearning?.questions?.length) return;
             insertedTheoryModal?.remove();
             refreshIslandModalReferences();
             await openIslandQuizPreview();
         });
     }
     refreshIslandModalReferences();
+    resetIslandTheoryConfirmation();
     bindIslandModalEvents();
     return islandTheoryModal;
 }
@@ -345,6 +386,21 @@ function islandQuizWarning(message) {
         return;
     }
     window.alert(message);
+}
+
+function showIslandQuizProgressiveHint(question) {
+    const hintBox = document.getElementById('islandQuizHintBox');
+    if (!hintBox) return;
+    const firstAttempt = islandQuizCurrentWrongAttempts === 1;
+    const preferredHint = firstAttempt ? question?.hint1 : question?.hint2;
+    const fallbackHint = firstAttempt ? question?.hint2 : question?.hint1;
+    const hint = String(preferredHint || fallbackHint || '').trim();
+    const label = firstAttempt ? 'Gợi ý 1' : 'Gợi ý 2';
+    hintBox.hidden = false;
+    hintBox.style.display = 'block';
+    hintBox.textContent = hint
+        ? `${label}: ${hint}`
+        : `${label}: Chưa có gợi ý cho câu này. Hãy xem lại phần lý thuyết và chọn một đáp án khác.`;
 }
 
 function islandQuizCorrectAnswerIndex(question) {
@@ -551,7 +607,12 @@ function renderIslandQuizQuestion(index) {
         if (islandQuizSubmitted) void renderIslandQuizResult();
         return;
     }
-    islandQuizCurrentIndex = Math.max(0, Math.min(index, questions.length - 1));
+    const nextIndex = Math.max(0, Math.min(index, questions.length - 1));
+    if (nextIndex !== islandQuizTrackedQuestionIndex) {
+        islandQuizTrackedQuestionIndex = nextIndex;
+        islandQuizCurrentWrongAttempts = 0;
+    }
+    islandQuizCurrentIndex = nextIndex;
     const question = questions[islandQuizCurrentIndex];
     const header = document.getElementById('islandQuizStepHeader');
     const body = document.getElementById('islandQuizStepBody');
@@ -563,7 +624,8 @@ function renderIslandQuizQuestion(index) {
     const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
     const options = Array.isArray(question.options) ? question.options : [];
     body.innerHTML = `<h3 style="margin: 0 0 22px; color: #f8fafc; font-size: clamp(1.15rem, 2.5vw, 1.45rem); line-height: 1.5;">${escapeQuizHtml(question.question || question.questionText)}</h3>
-        <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>`;
+        <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>
+        <aside id="islandQuizHintBox" hidden aria-live="polite" style="display:none;margin-top:16px;padding:14px 16px;border:1px solid rgba(250,204,21,.42);border-radius:12px;background:rgba(250,204,21,.1);color:#fef3c7;line-height:1.55;text-align:left;"></aside>`;
     const optionsContainer = document.getElementById('islandQuizOptions');
     options.forEach((option, optionIndex) => {
         const isSelected = selectedAnswer === optionIndex;
@@ -581,7 +643,7 @@ function renderIslandQuizQuestion(index) {
     });
     backButton.disabled = islandQuizCurrentIndex === 0;
     backButton.style.visibility = islandQuizCurrentIndex === 0 ? 'hidden' : 'visible';
-    nextButton.textContent = islandQuizCurrentIndex === questions.length - 1 ? 'Nộp bài' : 'Tiếp tục';
+    nextButton.textContent = islandQuizCurrentIndex === questions.length - 1 ? 'Kiểm tra & nộp bài' : 'Kiểm tra & tiếp tục';
 }
 
 function mountIslandQuizStepper() {
@@ -607,6 +669,13 @@ function mountIslandQuizStepper() {
         }
         if (!Number.isInteger(islandQuizAnswers[islandQuizCurrentIndex])) {
             islandQuizWarning('Hãy chọn một đáp án trước khi tiếp tục.');
+            return;
+        }
+        const question = activeIslandQuizQuestions()[islandQuizCurrentIndex];
+        const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
+        if (selectedAnswer !== islandQuizCorrectAnswerIndex(question)) {
+            islandQuizCurrentWrongAttempts += 1;
+            showIslandQuizProgressiveHint(question);
             return;
         }
         if (islandQuizCurrentIndex === activeIslandQuizQuestions().length - 1) {
@@ -635,6 +704,8 @@ async function openIslandQuizPreview() {
     islandQuizAnswers = {};
     islandQuizSubmitted = false;
     islandQuizSummaryPenaltyPending = false;
+    islandQuizCurrentWrongAttempts = 0;
+    islandQuizTrackedQuestionIndex = -1;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
     islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';
@@ -734,7 +805,7 @@ async function openIslandTheory(lesson) {
     islandTheoryContent.classList.remove('is-loading');
     islandTheoryContent.setAttribute('aria-busy', 'true');
     islandTheoryContent.innerHTML = theoryHtml;
-    btnStartIslandQuiz.disabled = true;
+    resetIslandTheoryConfirmation();
 
     try {
         const loadIslandContent = window.VieGeoLearningPath?.loadIslandContent;
@@ -768,7 +839,7 @@ async function openIslandTheory(lesson) {
         if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!');
     } finally {
         if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
-            btnStartIslandQuiz.disabled = !activeIslandLearning?.questions?.length;
+            updateIslandTheoryStartButton();
         }
     }
 }

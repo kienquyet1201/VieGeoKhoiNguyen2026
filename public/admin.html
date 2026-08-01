@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="operations-shell" id="adminDashboard">
-        <aside class="operations-rail w-16 hover:w-64 transition-all duration-300 group overflow-hidden z-50" aria-label="Điều hướng quản trị">
+        <aside id="adminSidebar" class="operations-rail admin-mobile-drawer fixed inset-y-0 left-0 z-40 w-64 -translate-x-full transition-transform duration-300 md:translate-x-0 md:static md:block" aria-label="Điều hướng quản trị">
             <a class="operations-logo" href="/map" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">VieGeo</span></a>
             <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Tổng quan</span></button>
             <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Quản lý người dùng</span></button>
@@ -28,8 +28,9 @@
             <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đăng xuất</span></button>
         </aside>
 
-        <main class="operations-main flex-1 w-full p-8 pt-20">
+        <main class="operations-main flex-1 w-full overflow-x-hidden p-8 pt-20">
             <header class="operations-heading">
+                <button id="adminMobileMenuToggle" class="admin-mobile-menu-toggle" type="button" aria-controls="adminSidebar" aria-expanded="false" aria-label="Mở menu quản trị"><i class="fa-solid fa-bars"></i></button>
                 <div><h1 id="adminPageTitle">Trung tâm điều hành</h1><p id="adminPageSubtitle">Theo dõi hoạt động và vận hành VieGeo trong một nơi.</p></div>
                 <span class="ops-muted" id="adminConnectionStatus"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang kết nối dữ liệu</span>
             </header>
@@ -62,19 +63,22 @@
                 </div>
                 <article class="ops-card" id="bulkQuestionUploadPane">
                     <h2>Nhập bộ câu hỏi bằng văn bản</h2>
-                    <p class="ops-muted">Dán nội dung Lý thuyết và nhiều khối câu hỏi vào một ô duy nhất. Hệ thống sẽ kiểm tra định dạng, xem trước và lưu từng câu vào collection <code>Questions</code>.</p>
+                    <p class="ops-muted">Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Hệ thống kiểm tra định dạng trước khi lưu vào collection <code>Questions</code>.</p>
                     <div class="ops-grid">
                         <div class="ops-list">
-                            <label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="importProvince" type="text" placeholder="Ví dụ: Hà Nội" style="display:block;margin-top:7px"></label>
-                            <label class="ops-muted">Chủ đề Đảo nhỏ<input class="ops-input" id="importIsland" type="text" placeholder="Ví dụ: Hồ Gươm" style="display:block;margin-top:7px"></label>
-                            <label class="ops-muted">Mức độ<select class="ops-input" id="importDifficulty" style="display:block;margin-top:7px"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
-                            <label class="ops-muted">Mã đảo trên lộ trình<input class="ops-input" id="importLessonId" type="text" placeholder="Ví dụ: path-ha-noi-deasy-i1" style="display:block;margin-top:7px"></label>
-                            <p class="ops-muted" style="font-size:.78rem;line-height:1.5">Mã đảo phải trùng với đảo trên bản đồ để học sinh nhận đúng Lý thuyết và 5 câu hỏi.</p>
+                            <label class="ops-muted">Tỉnh / Thành phố <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportProvince" required style="display:block;margin-top:7px"><option value="">-- Chọn Tỉnh/Thành --</option><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
+                            <label class="ops-muted">Đảo tri thức <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportIsland" required style="display:block;margin-top:7px"><option value="">-- Chọn Đảo --</option><option value="dao-tri-thuc-1">Đảo tri thức 1</option><option value="dao-tri-thuc-2">Đảo tri thức 2</option><option value="dao-tri-thuc-3">Đảo tri thức 3</option><option value="dao-tri-thuc-4">Đảo tri thức 4</option><option value="dao-tri-thuc-5">Đảo tri thức 5</option></select></label>
+                            <p class="ops-muted" style="font-size:.78rem;line-height:1.5">Tỉnh/Thành và Đảo sẽ được tự động ghép vào tất cả câu hỏi hợp lệ trong lô này.</p>
                             <button class="ops-button" id="btnProcessUpload" type="button" style="margin-top:6px"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích và lưu câu hỏi</button>
                         </div>
                         <div>
+                            <aside class="bulk-template-guide" aria-label="Mẫu định dạng chuẩn">
+                                <strong><i class="fa-solid fa-clipboard-list"></i> Mẫu định dạng chuẩn</strong>
+                                <code>Câu hỏi | Đáp án 0 | Đáp án 1 | Đáp án 2 | Đáp án 3 | Index đúng (0-3) | Độ khó (easy/medium/hard) | Lý thuyết | Gợi ý 1 | Gợi ý 2</code>
+                                <small>Các trường Lý thuyết, Gợi ý 1 và Gợi ý 2 có thể để trống, nhưng vẫn phải giữ đúng dấu <code>|</code>.</small>
+                            </aside>
                             <label class="ops-muted" for="bulkQuestionText">Nội dung văn bản</label>
-                            <textarea class="ops-input" id="bulkQuestionText" rows="16" spellcheck="false" placeholder="Lý Thuyết: Nội dung lý thuyết...&#10;[Câu hỏi]&#10;Câu hỏi của bạn?&#10;A. Đáp án A&#10;B. Đáp án B&#10;C. Đáp án C&#10;D. Đáp án D&#10;ĐÁP ÁN: A&#10;Giải thích: Nội dung giải thích" style="display:block;width:100%;min-height:320px;margin-top:7px;resize:vertical;line-height:1.6"></textarea>
+                            <textarea class="ops-input" id="bulkQuestionText" rows="16" spellcheck="false" placeholder="Hà Nội là thủ đô của nước nào? | Việt Nam | Lào | Thái Lan | Campuchia | 0 | Easy | Hà Nội là Thủ đô Việt Nam. | Nhớ lại kiến thức về Thủ đô. | Xem lại phần Lý thuyết.&#10;..." style="display:block;width:100%;min-height:320px;margin-top:7px;resize:vertical;line-height:1.6"></textarea>
                             <h3 style="margin:18px 0 8px">Xem trước dữ liệu</h3>
                             <pre id="uploadPreview" class="ops-muted" style="min-height:160px;max-height:300px;overflow:auto;white-space:pre-wrap;border:1px solid rgba(148,163,184,.15);border-radius:12px;padding:14px;background:#091525">Kết quả xử lý sẽ hiển thị tại đây.</pre>
                         </div>
@@ -84,20 +88,37 @@
                 <article class="ops-card hidden" id="singleQuestionUploadPane" style="margin-top:18px">
                     <h2>Thêm câu hỏi</h2>
                     <p class="ops-muted">Tạo nhanh một câu hỏi theo đúng schema collection <code>Questions</code>.</p>
-                    <form id="adminQuestionForm" class="ops-list" novalidate>
-                        <label class="ops-muted">Nội dung câu hỏi<textarea class="ops-input" id="adminQuestionText" rows="3" required placeholder="Nhập nội dung câu hỏi..." style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
-                        <div class="ops-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
-                            <label class="ops-muted">Đáp án 0<input class="ops-input" id="adminOption0" type="text" required style="display:block;margin-top:7px"></label>
-                            <label class="ops-muted">Đáp án 1<input class="ops-input" id="adminOption1" type="text" required style="display:block;margin-top:7px"></label>
-                            <label class="ops-muted">Đáp án 2<input class="ops-input" id="adminOption2" type="text" required style="display:block;margin-top:7px"></label>
-                            <label class="ops-muted">Đáp án 3<input class="ops-input" id="adminOption3" type="text" required style="display:block;margin-top:7px"></label>
-                        </div>
-                        <div class="ops-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">
-                            <label class="ops-muted">Đáp án đúng<select class="ops-input" id="adminCorrectAnswer" required style="display:block;margin-top:7px"><option value="0">Đáp án 0</option><option value="1">Đáp án 1</option><option value="2">Đáp án 2</option><option value="3">Đáp án 3</option></select></label>
-                            <label class="ops-muted">Tỉnh / Thành phố<select class="ops-input" id="adminQuestionProvince" required style="display:block;margin-top:7px"><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
-                            <label class="ops-muted">Độ khó<select class="ops-input" id="adminQuestionDifficulty" required style="display:block;margin-top:7px"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
-                            <label class="ops-muted">Khối lớp<select class="ops-input" id="adminQuestionGrade" required style="display:block;margin-top:7px"><option value="5">Khối 5</option><option value="9">Khối 9</option><option value="12">Khối 12</option></select></label>
-                        </div>
+                    <form id="adminQuestionForm" class="ops-list admin-question-form" novalidate>
+                        <fieldset class="admin-question-section">
+                            <legend><i class="fa-solid fa-location-dot"></i> Vị trí kiến thức</legend>
+                            <div class="ops-grid admin-question-grid">
+                                <label class="ops-muted">Tỉnh / Thành phố<select class="ops-input" id="adminQuestionProvince" required><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
+                                <label class="ops-muted">Đảo tri thức<select class="ops-input" id="adminQuestionIsland" required><option value="dao-tri-thuc-1">Đảo tri thức 1</option><option value="dao-tri-thuc-2">Đảo tri thức 2</option><option value="dao-tri-thuc-3">Đảo tri thức 3</option><option value="dao-tri-thuc-4">Đảo tri thức 4</option><option value="dao-tri-thuc-5">Đảo tri thức 5</option></select></label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="admin-question-section">
+                            <legend><i class="fa-solid fa-circle-question"></i> Nội dung câu hỏi</legend>
+                            <label class="ops-muted">Nội dung câu hỏi <span aria-hidden="true">*</span><textarea class="ops-input" id="adminQuestionText" rows="4" required placeholder="Nhập nội dung câu hỏi..." style="display:block;width:100%;resize:vertical"></textarea></label>
+                        </fieldset>
+                        <fieldset class="admin-question-section">
+                            <legend><i class="fa-solid fa-list-ol"></i> Đáp án và mức độ</legend>
+                            <div class="ops-grid admin-question-grid">
+                                <label class="ops-muted">Đáp án 0 <span aria-hidden="true">*</span><input class="ops-input" id="adminOption0" type="text" required></label>
+                                <label class="ops-muted">Đáp án 1 <span aria-hidden="true">*</span><input class="ops-input" id="adminOption1" type="text" required></label>
+                                <label class="ops-muted">Đáp án 2 <span aria-hidden="true">*</span><input class="ops-input" id="adminOption2" type="text" required></label>
+                                <label class="ops-muted">Đáp án 3 <span aria-hidden="true">*</span><input class="ops-input" id="adminOption3" type="text" required></label>
+                                <label class="ops-muted">Đáp án đúng <span aria-hidden="true">*</span><select class="ops-input" id="adminCorrectAnswer" required><option value="0">Đáp án 0</option><option value="1">Đáp án 1</option><option value="2">Đáp án 2</option><option value="3">Đáp án 3</option></select></label>
+                                <label class="ops-muted">Độ khó<select class="ops-input" id="adminQuestionDifficulty" required><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
+                            </div>
+                        </fieldset>
+                        <fieldset class="admin-question-section">
+                            <legend><i class="fa-solid fa-book-open"></i> Học liệu hỗ trợ <small>(tùy chọn)</small></legend>
+                            <label class="ops-muted">Nội dung lý thuyết<textarea class="ops-input" id="adminQuestionTheory" rows="5" placeholder="Nhập lý thuyết liên quan để học sinh đọc trước khi làm bài..." style="display:block;width:100%;resize:vertical"></textarea></label>
+                            <div class="ops-grid admin-question-grid" style="margin-top:14px">
+                                <label class="ops-muted">Gợi ý khi sai lần 1<textarea class="ops-input" id="adminQuestionHint1" rows="3" placeholder="Gợi ý nhẹ để học sinh thử lại..." style="display:block;width:100%;resize:vertical"></textarea></label>
+                                <label class="ops-muted">Gợi ý khi sai lần 2<textarea class="ops-input" id="adminQuestionHint2" rows="3" placeholder="Gợi ý cụ thể hơn cho học sinh..." style="display:block;width:100%;resize:vertical"></textarea></label>
+                            </div>
+                        </fieldset>
                         <button class="ops-button" id="btnSaveAdminQuestion" type="submit" style="margin-top:6px;background:#16a34a"><i class="fa-solid fa-floppy-disk"></i> Lưu câu hỏi</button>
                     </form>
                 </article>
@@ -390,49 +411,51 @@
         }
 
         function parseBulkQuestionText(rawText) {
-            const text = String(rawText || '').replace(/\r\n?/g, '\n').trim();
-            if (!text) throw new Error('Hãy dán nội dung Lý Thuyết và câu hỏi vào ô văn bản.');
+            const lines = String(rawText || '')
+                .replace(/\r\n?/g, '\n')
+                .split('\n')
+                .map(line => line.trim())
+                .filter(Boolean);
 
-            const theoryMatch = text.match(/^\s*Lý\s*Thuyết\s*:\s*([\s\S]*?)(?=\s*\[\s*Câu\s*hỏi\s*\])/i);
-            if (!theoryMatch || !theoryMatch[1].trim()) {
-                throw new Error('Không tìm thấy phần “Lý Thuyết:” đứng trước [Câu hỏi].');
-            }
-            const theory = theoryMatch[1].trim();
-            const questionBlocks = text.split(/\[\s*Câu\s*hỏi\s*\]/i).slice(1);
-            if (!questionBlocks.length) throw new Error('Cần ít nhất một khối [Câu hỏi].');
+            if (!lines.length) throw new Error('Hãy dán ít nhất một dòng câu hỏi theo mẫu định dạng chuẩn.');
 
-            return questionBlocks.map((block, index) => {
-                const match = block.match(/^\s*([\s\S]*?)\s*(?:\n)?A\.\s*([\s\S]*?)\s*(?:\n)?B\.\s*([\s\S]*?)\s*(?:\n)?C\.\s*([\s\S]*?)\s*(?:\n)?D\.\s*([\s\S]*?)\s*(?:\n)?ĐÁP\s*ÁN\s*:\s*([A-D])\s*(?:\n)?Giải\s*thích\s*:\s*([\s\S]*?)\s*$/i);
-                if (!match) {
-                    throw new Error(`Câu hỏi thứ ${index + 1} không đúng định dạng A/B/C/D, ĐÁP ÁN hoặc Giải thích.`);
+            return lines.map((line, index) => {
+                const lineNumber = index + 1;
+                const fields = line.split('|').map(field => field.trim());
+                if (fields.length !== 10) {
+                    throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: cần đúng 10 trường, ngăn cách bằng dấu |.`);
                 }
-                const [, question, optionA, optionB, optionC, optionD, answer, explanation] = match;
-                const options = [optionA, optionB, optionC, optionD].map(value => value.trim());
-                if (!question.trim() || options.some(option => !option) || !explanation.trim()) {
-                    throw new Error(`Câu hỏi thứ ${index + 1} đang thiếu nội dung bắt buộc.`);
+
+                const [question, option0, option1, option2, option3, answerIndexRaw, difficultyRaw, theory, hint1, hint2] = fields;
+                const options = [option0, option1, option2, option3];
+                const answer = Number(answerIndexRaw);
+                const difficulty = difficultyRaw.toLowerCase();
+
+                if (!question || options.some(option => !option)) {
+                    throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: câu hỏi và đủ 4 đáp án là bắt buộc.`);
                 }
-                return {
-                    theory,
-                    question: question.trim(),
-                    options,
-                    correctAnswer: 'ABCD'.indexOf(answer.toUpperCase()),
-                    explanation: explanation.trim()
-                };
+                if (!Number.isInteger(answer) || answer < 0 || answer > 3) {
+                    throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: Index đúng phải là số nguyên từ 0 đến 3.`);
+                }
+                if (!['easy', 'medium', 'hard'].includes(difficulty)) {
+                    throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: Độ khó chỉ nhận easy, medium hoặc hard.`);
+                }
+
+                return { question, options, answer, difficulty, theory, hint1, hint2 };
             });
         }
 
         async function processBulkTextImport() {
-            const province = el('importProvince')?.value.trim();
-            const island = el('importIsland')?.value.trim();
-            const lessonId = el('importLessonId')?.value.trim();
-            const difficulty = el('importDifficulty')?.value || 'easy';
+            const province = String(el('bulkImportProvince')?.value || '').trim();
+            const island = String(el('bulkImportIsland')?.value || '').trim();
             const button = el('btnProcessUpload');
 
-            if (!province || !island || !lessonId) {
-                showToast('Hãy điền Tỉnh/Thành, Chủ đề Đảo nhỏ và Mã đảo trên lộ trình.', 'warning');
+            if (!province || !island) {
+                showToast('Hãy chọn Tỉnh/Thành phố và Đảo trước khi upload hàng loạt.', 'warning');
                 return;
             }
-            if (typeof db === 'undefined') {
+            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
+            if (!firestore) {
                 showToast('Firebase chưa sẵn sàng để lưu câu hỏi.', 'error');
                 return;
             }
@@ -442,17 +465,14 @@
             try {
                 const questions = parseBulkQuestionText(el('bulkQuestionText')?.value);
                 for (let start = 0; start < questions.length; start += 450) {
-                    const batch = db.batch();
+                    const batch = firestore.batch();
                     questions.slice(start, start + 450).forEach((question, offset) => {
-                        const doc = db.collection('Questions').doc();
+                        const doc = firestore.collection('Questions').doc();
                         batch.set(doc, {
                             ...question,
-                            answer: question.correctAnswer,
                             province,
                             island,
                             topic: island,
-                            lessonId,
-                            difficulty,
                             importOrder: start + offset + 1,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -460,7 +480,7 @@
                     });
                     await batch.commit();
                 }
-                el('uploadPreview').textContent = JSON.stringify({ province, island, lessonId, difficulty, questions }, null, 2);
+                el('uploadPreview').textContent = JSON.stringify({ province, island, count: questions.length, questions }, null, 2);
                 showToast(`Đã lưu ${questions.length} câu hỏi vào kho dữ liệu.`);
                 el('bulkQuestionText').value = '';
             } catch (error) {
@@ -476,15 +496,19 @@
             event.preventDefault();
             const form = event.currentTarget;
             const button = el('btnSaveAdminQuestion');
-            const question = el('adminQuestionText')?.value.trim();
-            const options = [0, 1, 2, 3].map(index => el(`adminOption${index}`)?.value.trim() || '');
+            const trimValue = (id) => String(el(id)?.value || '').trim();
+            const question = trimValue('adminQuestionText');
+            const options = [0, 1, 2, 3].map(index => trimValue(`adminOption${index}`));
             const answer = Number(el('adminCorrectAnswer')?.value);
-            const province = el('adminQuestionProvince')?.value;
-            const difficulty = el('adminQuestionDifficulty')?.value;
-            const grade = el('adminQuestionGrade')?.value;
+            const province = trimValue('adminQuestionProvince');
+            const island = trimValue('adminQuestionIsland');
+            const difficulty = trimValue('adminQuestionDifficulty');
+            const theory = trimValue('adminQuestionTheory');
+            const hint1 = trimValue('adminQuestionHint1');
+            const hint2 = trimValue('adminQuestionHint2');
 
-            if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !difficulty || !grade) {
-                showToast('Hãy nhập đầy đủ nội dung và chọn đáp án đúng.', 'warning');
+            if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !island || !difficulty) {
+                showToast('Hãy nhập đủ câu hỏi, 4 đáp án, đáp án đúng, tỉnh, đảo và độ khó.', 'warning');
                 return;
             }
 
@@ -493,9 +517,14 @@
                 options,
                 answer,
                 province,
+                island,
+                topic: island,
                 difficulty,
-                grade,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                theory,
+                hint1,
+                hint2,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             button.disabled = true;
@@ -798,8 +827,44 @@
             window.location.href = roleRoutes[role];
         }
 
+        function setAdminMobileMenuOpen(open) {
+            const sidebar = el('adminSidebar');
+            const toggle = el('adminMobileMenuToggle');
+            const isMobile = window.matchMedia('(max-width: 767px)').matches;
+            if (!sidebar) return;
+
+            if (!isMobile) open = false;
+            sidebar.classList.toggle('is-mobile-open', open);
+            sidebar.classList.toggle('-translate-x-full', !open);
+            if (toggle) toggle.setAttribute('aria-expanded', String(open));
+
+            let overlay = el('adminMobileMenuOverlay');
+            if (!overlay && open) {
+                overlay = document.createElement('button');
+                overlay.id = 'adminMobileMenuOverlay';
+                overlay.type = 'button';
+                overlay.className = 'admin-mobile-menu-overlay fixed inset-0 z-30 bg-black/50';
+                overlay.setAttribute('aria-label', 'Đóng menu quản trị');
+                overlay.addEventListener('click', () => setAdminMobileMenuOpen(false));
+                document.body.appendChild(overlay);
+            }
+            if (!overlay) return;
+            overlay.hidden = !open;
+            overlay.classList.toggle('is-visible', open);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.adminTab)));
+            document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => {
+                switchTab(button.dataset.adminTab);
+                setAdminMobileMenuOpen(false);
+            }));
+            el('adminMobileMenuToggle')?.addEventListener('click', () => {
+                const sidebar = el('adminSidebar');
+                setAdminMobileMenuOpen(!sidebar?.classList.contains('is-mobile-open'));
+            });
+            window.addEventListener('resize', () => {
+                if (!window.matchMedia('(max-width: 767px)').matches) setAdminMobileMenuOpen(false);
+            });
             el('searchUser')?.addEventListener('input', renderUsers);
             el('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
             el('adminQuestionForm')?.addEventListener('submit', submitAdminQuestion);

@@ -258,6 +258,8 @@
                 correctAnswer,
                 explanation: String(data.explanation ?? data.solution ?? data.explain ?? '').trim(),
                 theory: String(data.theory ?? data.theoryContent ?? data.lyThuyet ?? '').trim(),
+                hint1: String(data.hint1 ?? data.hintOne ?? data.goiy1 ?? '').trim(),
+                hint2: String(data.hint2 ?? data.hintTwo ?? data.goiy2 ?? '').trim(),
                 lessonId: String(data.lessonId ?? '').trim()
             };
         }).filter(Boolean);
