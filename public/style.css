@@ -2551,3 +2551,72 @@ button, input, select, textarea { font: inherit; }
         pointer-events: auto !important;
     }
 }
+
+/* Admin layout: a fixed rail never participates in the main-content width. */
+#adminDashboard.operations-shell {
+    display: block !important;
+    min-height: 100dvh;
+    grid-template-columns: none !important;
+}
+#adminSidebar.operations-rail.admin-mobile-drawer,
+#adminSidebar.operations-rail.admin-mobile-drawer:hover,
+#adminSidebar.operations-rail.admin-mobile-drawer:focus-within {
+    position: fixed !important;
+    top: 0;
+    right: auto;
+    bottom: auto;
+    left: 0;
+    z-index: 100;
+    width: 256px !important;
+    height: 100dvh;
+    align-items: stretch;
+    padding: 14px 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-right: 1px solid rgba(148, 163, 184, .16);
+    border-top: 0;
+    background: #0f172a;
+    box-shadow: 18px 0 38px rgba(2, 6, 23, .34);
+    transition: transform .3s ease, visibility 0s linear .3s;
+}
+#adminSidebar.operations-rail.admin-mobile-drawer .operations-logo,
+#adminSidebar.operations-rail.admin-mobile-drawer button {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 12px;
+    justify-content: flex-start;
+}
+#adminSidebar.operations-rail.admin-mobile-drawer .operations-logo { display: flex; }
+#adminSidebar.operations-rail.admin-mobile-drawer .admin-rail-label {
+    display: block !important;
+    opacity: 1;
+}
+#adminDashboard .operations-main {
+    width: 100%;
+    min-width: 0;
+    min-height: 100dvh;
+    padding: 28px;
+    overflow-x: hidden;
+}
+@media (max-width: 767px) {
+    #adminSidebar.operations-rail.admin-mobile-drawer {
+        transform: translateX(-100%);
+        visibility: hidden;
+        pointer-events: none;
+    }
+    #adminSidebar.operations-rail.admin-mobile-drawer.is-mobile-open {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+        transition: transform .3s ease;
+    }
+    #adminDashboard .operations-main { padding: 78px 16px 28px; }
+}
+@media (min-width: 768px) {
+    #adminSidebar.operations-rail.admin-mobile-drawer {
+        transform: translateX(0) !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+    #adminDashboard .operations-main { padding-left: 256px; }
+}
