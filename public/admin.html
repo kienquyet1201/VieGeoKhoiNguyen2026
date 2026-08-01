@@ -827,32 +827,6 @@
             window.location.href = roleRoutes[role];
         }
 
-        setTimeout(() => {
-            const sidebar = document.getElementById('admin-sidebar');
-            const mainContent = document.getElementById('main-content');
-            const toggleBtn = document.getElementById('menu-toggle-btn');
-
-            if (sidebar && mainContent && toggleBtn) {
-                let isOpen = window.innerWidth >= 768;
-                toggleBtn.setAttribute('aria-expanded', String(isOpen));
-                toggleBtn.setAttribute('aria-label', isOpen ? 'Đóng menu quản trị' : 'Mở menu quản trị');
-
-                toggleBtn.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    isOpen = !isOpen;
-                    if (isOpen) {
-                        sidebar.classList.remove('-translate-x-full');
-                        mainContent.classList.add('md:pl-64');
-                    } else {
-                        sidebar.classList.add('-translate-x-full');
-                        mainContent.classList.remove('md:pl-64');
-                    }
-                    toggleBtn.setAttribute('aria-expanded', String(isOpen));
-                    toggleBtn.setAttribute('aria-label', isOpen ? 'Đóng menu quản trị' : 'Mở menu quản trị');
-                });
-            }
-        }, 500);
-
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => {
                 switchTab(button.dataset.adminTab);
@@ -932,6 +906,43 @@
             Promise.all([loadOverview(), loadUsers(), loadRequests(), loadAdminQuestions(), loadUserFeedbacks()]).catch(error => console.error(error));
         });
     })();
+    </script>
+    <script>
+        /* Isolated from the dashboard script: this control still starts even when a data request fails. */
+        (() => {
+            const initialiseAdminSidebarToggle = () => {
+                const sidebar = document.getElementById('admin-sidebar');
+                const mainContent = document.getElementById('main-content');
+                const toggleButton = document.getElementById('menu-toggle-btn');
+                if (!sidebar || !mainContent || !toggleButton || toggleButton.dataset.sidebarToggleBound === 'true') return;
+
+                const setSidebarState = (open) => {
+                    sidebar.classList.toggle('admin-sidebar-open', open);
+                    sidebar.classList.toggle('admin-sidebar-closed', !open);
+                    sidebar.style.setProperty('transform', open ? 'translateX(0)' : 'translateX(-100%)', 'important');
+                    mainContent.classList.toggle('md:pl-64', open && window.innerWidth >= 768);
+                    mainContent.classList.toggle('admin-content-with-sidebar', open && window.innerWidth >= 768);
+                    toggleButton.setAttribute('aria-expanded', String(open));
+                    toggleButton.setAttribute('aria-label', open ? 'Đóng menu quản trị' : 'Mở menu quản trị');
+                };
+
+                let isOpen = window.innerWidth >= 768;
+                setSidebarState(isOpen);
+                toggleButton.dataset.sidebarToggleBound = 'true';
+                toggleButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    isOpen = !isOpen;
+                    setSidebarState(isOpen);
+                });
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth < 768 && isOpen) setSidebarState(true);
+                    if (window.innerWidth >= 768) setSidebarState(isOpen);
+                });
+            };
+
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialiseAdminSidebarToggle, { once: true });
+            else initialiseAdminSidebarToggle();
+        })();
     </script>
     <div id="adminQuestionEditModal" hidden role="dialog" aria-modal="true" aria-labelledby="adminQuestionEditTitle" style="position:fixed;inset:0;z-index:2147483647;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(2,6,23,.78);backdrop-filter:blur(6px)">
         <form id="adminQuestionEditForm" class="ops-card" style="width:min(820px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.45)" novalidate>

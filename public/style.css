@@ -2746,3 +2746,12 @@ button, input, select, textarea { font: inherit; }
     #main-content { padding: 16px 28px 28px; }
     #main-content.md\:pl-64 { padding-left: 256px; }
 }
+
+/* Explicit Toggle state: avoids Tailwind utility classes being overridden by legacy styles. */
+#menu-toggle-btn.admin-mobile-menu-toggle { display: grid !important; }
+#admin-sidebar.admin-sidebar-open { transform: translateX(0) !important; }
+#admin-sidebar.admin-sidebar-closed { transform: translateX(-100%) !important; }
+#main-content.admin-content-with-sidebar { padding-left: 16px; }
+@media (min-width: 768px) {
+    #main-content.admin-content-with-sidebar { padding-left: 256px !important; }
+}
