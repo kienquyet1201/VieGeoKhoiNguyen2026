@@ -186,7 +186,7 @@
             explanation: 'Hãy xem lại kiến thức nền tảng trước khi tiếp tục.'
         };
         const documents = await fetchIslandDocuments(lesson);
-        const theory = String(documents.map(item => item.theory || item.theoryContent || item.lyThuyet || '').find(Boolean)
+        const theory = String(documents.map(item => item.islandTheory || item.islandTheoryContent || item.islandTheoryText || '').find(Boolean)
             || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
         const questions = randomFive(documents, fallback);
         return {
@@ -256,8 +256,8 @@
                 question,
                 options,
                 correctAnswer,
-                explanation: String(data.explanation ?? data.solution ?? data.explain ?? '').trim(),
-                theory: String(data.theory ?? data.theoryContent ?? data.lyThuyet ?? '').trim(),
+                explanation: String(data.explanation ?? data.solution ?? data.explain ?? data.theory ?? '').trim(),
+                islandTheory: String(data.islandTheory ?? data.islandTheoryContent ?? data.islandTheoryText ?? '').trim(),
                 lessonId: String(data.lessonId ?? '').trim()
             };
         }).filter(Boolean);
@@ -286,6 +286,24 @@
             ? String(lesson.difficulty).toLowerCase()
             : 'easy';
         const province = firestoreProvinceSlug(lesson.province || 'ha-noi');
+        const islandMatch = /-i(\d+)$/i.exec(lessonId);
+        const island = islandMatch ? `dao-tri-thuc-${islandMatch[1]}` : '';
+        if (island) {
+            try {
+                const islandSnapshot = await firestore.collection('Questions')
+                    .where('province', '==', province)
+                    .where('island', '==', island)
+                    .limit(100)
+                    .get();
+                const islandQuestions = mapFirestoreQuestions(islandSnapshot);
+                if (islandQuestions.length) {
+                    window.VieGeoQuestionLoadState = 'ready';
+                    return islandQuestions;
+                }
+            } catch (error) {
+                console.warn('Unable to load questions by island:', error);
+            }
+        }
         const snapshot = await firestore.collection('Questions')
             .where('province', '==', province)
             .where('difficulty', '==', difficulty)
@@ -359,8 +377,8 @@
         if (!questions.length && window.VieGeoQuestionLoadState !== 'network-error') {
             notifyQuestionLoad('Hiện chưa có câu hỏi nào cho đảo này, vui lòng quay lại sau!');
         }
-        const theory = String(questions.map(item => item.theory || item.theoryContent || '').find(Boolean)
-            || sourceQuestions.map(item => item.theory || item.theoryContent || '').find(Boolean)
+        const theory = String(questions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
+            || sourceQuestions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
             || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
         return { theory, questions, status: window.VieGeoQuestionLoadState || (questions.length ? 'ready' : 'empty') };
     }

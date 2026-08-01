@@ -45,6 +45,7 @@ let activeIslandLearning = null;
 let islandTheoryRequest = 0;
 let islandQuizCurrentIndex = 0;
 let islandQuizAnswers = {};
+let islandQuizExplanationShown = {};
 let islandQuizSubmitted = false;
 let islandQuizSummaryPenaltyPending = false;
 let islandTheoryConfirmed = false;
@@ -339,7 +340,7 @@ function theoryHtmlFromLoadedContent(lesson, loadedContent) {
     const fallback = theoryHtmlFor(lesson);
     const rawTheory = String(
         loadedContent?.theory
-        || loadedContent?.questions?.map((question) => question?.theory || question?.theoryContent || question?.lyThuyet || '').find(Boolean)
+        || loadedContent?.questions?.map((question) => question?.islandTheory || question?.islandTheoryContent || question?.islandTheoryText || '').find(Boolean)
         || ''
     ).trim();
     if (!rawTheory) return fallback;
@@ -601,9 +602,12 @@ function renderIslandQuizQuestion(index) {
 
     header.textContent = `Câu ${islandQuizCurrentIndex + 1} / ${questions.length}`;
     const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
+    const explanationShown = Boolean(islandQuizExplanationShown[islandQuizCurrentIndex]);
+    const explanation = String(question.explanation || question.theory || '').trim();
     const options = Array.isArray(question.options) ? question.options : [];
     body.innerHTML = `<h3 style="margin: 0 0 22px; color: #f8fafc; font-size: clamp(1.15rem, 2.5vw, 1.45rem); line-height: 1.5;">${escapeQuizHtml(question.question || question.questionText)}</h3>
-        <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>`;
+        <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>
+        ${explanationShown && explanation ? `<aside style="margin-top:18px;padding:16px;border:1px solid rgba(74,222,128,.42);border-radius:14px;background:rgba(22,163,74,.12);color:#dcfce7;line-height:1.6;text-align:left;"><strong style="display:block;margin-bottom:6px;color:#86efac">Giải thích</strong>${escapeQuizHtml(explanation)}</aside>` : ''}`;
     const optionsContainer = document.getElementById('islandQuizOptions');
     options.forEach((option, optionIndex) => {
         const isSelected = selectedAnswer === optionIndex;
@@ -615,13 +619,16 @@ function renderIslandQuizQuestion(index) {
         optionButton.innerHTML = `<strong style="display: inline-grid; width: 28px; height: 28px; place-items: center; margin-right: 10px; border-radius: 50%; background: ${isSelected ? '#0284c7' : 'rgba(148, 163, 184, 0.2)'};">${String.fromCharCode(65 + optionIndex)}</strong>${escapeQuizHtml(option)}`;
         optionButton.addEventListener('click', () => {
             islandQuizAnswers[islandQuizCurrentIndex] = optionIndex;
+            delete islandQuizExplanationShown[islandQuizCurrentIndex];
             renderIslandQuizQuestion(islandQuizCurrentIndex);
         });
         optionsContainer?.appendChild(optionButton);
     });
     backButton.disabled = islandQuizCurrentIndex === 0;
     backButton.style.visibility = islandQuizCurrentIndex === 0 ? 'hidden' : 'visible';
-    nextButton.textContent = islandQuizCurrentIndex === questions.length - 1 ? 'Kiểm tra & nộp bài' : 'Kiểm tra & tiếp tục';
+    nextButton.textContent = explanationShown
+        ? (islandQuizCurrentIndex === questions.length - 1 ? 'Nộp bài' : 'Tiếp tục')
+        : (islandQuizCurrentIndex === questions.length - 1 ? 'Kiểm tra & nộp bài' : 'Kiểm tra & tiếp tục');
 }
 
 function mountIslandQuizStepper() {
@@ -649,6 +656,14 @@ function mountIslandQuizStepper() {
             islandQuizWarning('Hãy chọn một đáp án trước khi tiếp tục.');
             return;
         }
+        const question = activeIslandQuizQuestions()[islandQuizCurrentIndex];
+        const isCorrect = islandQuizAnswers[islandQuizCurrentIndex] === islandQuizCorrectAnswerIndex(question);
+        const hasExplanation = Boolean(String(question?.explanation || question?.theory || '').trim());
+        if (isCorrect && hasExplanation && !islandQuizExplanationShown[islandQuizCurrentIndex]) {
+            islandQuizExplanationShown[islandQuizCurrentIndex] = true;
+            renderIslandQuizQuestion(islandQuizCurrentIndex);
+            return;
+        }
         if (islandQuizCurrentIndex === activeIslandQuizQuestions().length - 1) {
             await renderIslandQuizResult();
             return;
@@ -673,6 +688,7 @@ async function openIslandQuizPreview() {
     }
     islandQuizCurrentIndex = 0;
     islandQuizAnswers = {};
+    islandQuizExplanationShown = {};
     islandQuizSubmitted = false;
     islandQuizSummaryPenaltyPending = false;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
