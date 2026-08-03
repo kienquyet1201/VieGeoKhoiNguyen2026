@@ -540,9 +540,8 @@ async function consumeHeart() {
 }
 
 // Island summaries are deliberately separate from lesson-entry gating. This
-// charge is called once, only after a non-Premium learner finishes an island
-// without a perfect score.
-async function deductHeartForIslandSummary() {
+// Called immediately after a learner locks an incorrect answer in an island quiz.
+async function deductHeartForIncorrectAnswer() {
     if (lessonEntryInProgress) return { applied: false, gameOver: false };
     syncHearts();
 
@@ -601,7 +600,8 @@ window.syncHearts = syncHearts;
 window.startHeartTimer = startHeartTimer;
 window.checkHasEnoughHearts = checkHasEnoughHearts;
 window.consumeHeart = consumeHeart;
-window.deductHeartForIslandSummary = deductHeartForIslandSummary;
+window.deductHeartForIncorrectAnswer = deductHeartForIncorrectAnswer;
+window.deductHeartForIslandSummary = deductHeartForIncorrectAnswer;
 window.isPremiumUser = isPremiumAccount;
 
 syncHearts();

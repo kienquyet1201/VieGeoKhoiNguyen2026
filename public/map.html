@@ -95,15 +95,17 @@
                 </div>
             </div>
 
-            <div id="islandTheoryModal" class="island-theory-modal fixed inset-0 z-[999999] hidden" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" hidden>
-                <section class="island-theory-dialog w-full max-w-3xl rounded-3xl">
+            <div id="islandTheoryModal" class="island-theory-modal island-theory-fullscreen fixed inset-0 w-screen h-screen z-[999999] hidden bg-slate-900 text-white overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" hidden>
+                <section class="island-theory-dialog island-theory-fullscreen-content w-full min-h-screen">
                     <button id="btnCloseIslandTheory" class="island-theory-close" type="button" aria-label="Đóng lý thuyết"><i class="fa-solid fa-xmark"></i></button>
-                    <p class="island-theory-eyebrow"><i class="fa-solid fa-book-open"></i> Hành trang trước thử thách</p>
-                    <h2 id="islandTheoryTitle">Lý thuyết trước khi thực chiến</h2>
-                    <p id="islandTheoryMeta" class="island-theory-meta"></p>
-                    <article id="islandTheoryContent" class="island-theory-content max-h-[55vh] overflow-y-auto" aria-live="polite">Đang tải lý thuyết phù hợp với đảo này...</article>
-                    <label class="island-theory-confirm" for="islandTheoryConfirm"><input id="islandTheoryConfirm" type="checkbox"> Tôi đã đọc và hiểu nội dung trên.</label>
-                    <button id="btnStartIslandQuiz" class="island-theory-start w-full" type="button" disabled aria-disabled="true"><i class="fa-solid fa-play"></i> Đã hiểu &amp; Bắt đầu làm bài</button>
+                    <div class="island-theory-reading-column max-w-4xl mx-auto p-8 md:p-16">
+                        <p class="island-theory-eyebrow"><i class="fa-solid fa-book-open"></i> Hành trang trước thử thách</p>
+                        <h2 id="islandTheoryTitle">Lý thuyết trước khi thực chiến</h2>
+                        <p id="islandTheoryMeta" class="island-theory-meta"></p>
+                        <article id="islandTheoryContent" class="island-theory-content" aria-live="polite">Đang tải lý thuyết phù hợp với đảo này...</article>
+                        <label class="island-theory-confirm" for="islandTheoryConfirm"><input id="islandTheoryConfirm" type="checkbox"> Tôi đã đọc và hiểu nội dung trên.</label>
+                        <div class="island-theory-sticky-action"><button id="btnStartIslandQuiz" class="island-theory-start w-full" type="button" disabled aria-disabled="true"><i class="fa-solid fa-play"></i> Đã hiểu &amp; Bắt đầu làm bài</button></div>
+                    </div>
                 </section>
             </div>
 

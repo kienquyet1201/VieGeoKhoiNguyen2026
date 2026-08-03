@@ -2756,6 +2756,72 @@ button, input, select, textarea { font: inherit; }
     #main-content.admin-content-with-sidebar { padding-left: 256px !important; }
 }
 
+/* Island theory is a focused full-screen reading experience. */
+#theory-modal,
+#islandTheoryModal.island-theory-fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483647 !important;
+    display: flex;
+    width: 100vw !important;
+    min-height: 100dvh !important;
+    overflow-y: auto !important;
+    background: #0f172a !important;
+    color: #f8fafc;
+}
+#theory-modal[hidden],
+#islandTheoryModal.island-theory-fullscreen[hidden] { display: none !important; }
+#theory-modal > section,
+#islandTheoryModal.island-theory-fullscreen > .island-theory-fullscreen-content {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: clamp(32px, 8vw, 96px) !important;
+    background: radial-gradient(circle at 78% 0%, rgba(14,165,233,.15), transparent 35%), #0f172a !important;
+    box-shadow: none !important;
+}
+#islandTheoryModal .island-theory-reading-column {
+    width: min(100%, 960px);
+    margin: 0 auto;
+    padding-bottom: 118px !important;
+}
+#islandTheoryModal .island-theory-content {
+    max-height: none !important;
+    overflow: visible !important;
+    border-radius: 20px;
+    padding: clamp(22px,4vw,40px);
+    line-height: 1.85;
+}
+#islandTheoryModal .island-theory-close {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+}
+#islandTheoryModal .island-theory-sticky-action {
+    position: sticky;
+    bottom: 16px;
+    padding-top: 16px;
+    background: linear-gradient(180deg, transparent, #0f172a 34%);
+}
+#islandTheoryModal .island-theory-start {
+    min-height: 58px;
+    border-radius: 16px;
+    box-shadow: 0 16px 30px rgba(22,163,74,.24);
+}
+@media (max-width: 767px) {
+    #theory-modal > section,
+    #islandTheoryModal.island-theory-fullscreen > .island-theory-fullscreen-content { padding: 28px 20px !important; }
+    #islandTheoryModal .island-theory-reading-column { padding: 24px 0 106px !important; }
+    #islandTheoryModal .island-theory-close { top: 14px; right: 14px; }
+}
+
 /* Polished Admin dashboard hierarchy. */
 #adminDashboard { background: radial-gradient(circle at 72% -18%, rgba(14,165,233,.12), transparent 35%), #081525; }
 #main-content.admin-content-with-sidebar { padding: 18px 30px 48px 286px !important; }

@@ -45,9 +45,9 @@ let activeIslandLearning = null;
 let islandTheoryRequest = 0;
 let islandQuizCurrentIndex = 0;
 let islandQuizAnswers = {};
-let islandQuizExplanationShown = {};
+let islandQuizAnswerLocked = {};
+let islandQuizPenaltyPending = false;
 let islandQuizSubmitted = false;
-let islandQuizSummaryPenaltyPending = false;
 let islandTheoryConfirmed = false;
 let islandQuizScrollLock = null;
 
@@ -198,18 +198,22 @@ function rebuildTheoryModalWithInlineCss(theoryHtml) {
     if (!document.body) return null;
     removeGhostIslandModals();
     document.body.insertAdjacentHTML('beforeend', `
-        <div id="theory-modal" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" style="position:fixed !important;inset:0 !important;z-index:2147483647 !important;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);overflow:auto;box-sizing:border-box;">
-            <section style="position:relative;width:min(760px,100%);max-height:80vh;overflow-y:auto;box-sizing:border-box;border:1px solid rgba(96,165,250,.48);border-radius:24px;padding:clamp(24px,5vw,42px);background:#102238;color:#f8fafc;box-shadow:0 30px 80px rgba(0,0,0,.62);">
-                <button id="btnCloseIslandTheory" type="button" aria-label="Đóng lý thuyết" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(148,163,184,.2);color:#fff;font-size:20px;cursor:pointer;">×</button>
-                <p style="margin:0 0 8px;color:#7dd3fc;font-weight:800;">HÀNH TRANG TRƯỚC THỬ THÁCH</p>
-                <h2 id="islandTheoryTitle" style="margin:0;padding-right:44px;font-size:clamp(1.5rem,3vw,2rem);line-height:1.25;">Lý thuyết trước khi thực chiến</h2>
-                <p id="islandTheoryMeta" style="margin:10px 0 20px;color:#94a3b8;">Hà Nội · Kiến thức nền tảng</p>
-                <article id="islandTheoryContent" aria-live="polite" style="max-height:42vh;overflow-y:auto;color:#dbeafe;line-height:1.75;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:20px;background:rgba(2,12,27,.45);">${theoryHtml || ''}</article>
-                <label for="islandTheoryConfirm" style="display:flex;align-items:flex-start;gap:10px;margin-top:16px;color:#dbeafe;line-height:1.45;cursor:pointer;">
-                    <input id="islandTheoryConfirm" type="checkbox" style="width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:#22c55e;cursor:pointer;">
-                    <span>Tôi đã đọc và hiểu nội dung trên.</span>
-                </label>
-                <button id="btnStartIslandQuiz" type="button" disabled aria-disabled="true" style="display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:9px;margin-top:18px;border:0;border-radius:14px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:1rem;font-weight:800;cursor:not-allowed;opacity:.5;">Đã hiểu &amp; Bắt đầu làm bài</button>
+        <div id="theory-modal" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" style="position:fixed !important;inset:0 !important;z-index:2147483647 !important;display:none;width:100vw;height:100dvh;overflow-y:auto;background:#0f172a;color:#f8fafc;box-sizing:border-box;">
+            <section style="position:relative;box-sizing:border-box;min-height:100dvh;width:100%;padding:clamp(32px,8vw,96px);background:radial-gradient(circle at 78% 0%,rgba(14,165,233,.15),transparent 35%),#0f172a;color:#f8fafc;">
+                <button id="btnCloseIslandTheory" type="button" aria-label="Đóng lý thuyết" style="position:fixed;top:24px;right:24px;z-index:2;width:44px;height:44px;border:1px solid rgba(148,163,184,.3);border-radius:50%;background:rgba(30,41,59,.92);color:#fff;font-size:22px;cursor:pointer;">×</button>
+                <div style="width:min(100%,960px);margin:0 auto;padding-bottom:118px;">
+                    <p style="margin:0 0 8px;color:#7dd3fc;font-weight:800;letter-spacing:.04em;">HÀNH TRANG TRƯỚC THỬ THÁCH</p>
+                    <h2 id="islandTheoryTitle" style="margin:0;padding-right:54px;font-size:clamp(2rem,4vw,3.2rem);line-height:1.18;">Lý thuyết trước khi thực chiến</h2>
+                    <p id="islandTheoryMeta" style="margin:14px 0 30px;color:#94a3b8;font-size:1rem;">Hà Nội · Kiến thức nền tảng</p>
+                    <article id="islandTheoryContent" aria-live="polite" style="color:#dbeafe;line-height:1.85;border:1px solid rgba(125,211,252,.2);border-radius:20px;padding:clamp(22px,4vw,40px);background:rgba(2,12,27,.42);">${theoryHtml || ''}</article>
+                    <label for="islandTheoryConfirm" style="display:flex;align-items:flex-start;gap:12px;margin-top:24px;color:#dbeafe;line-height:1.5;cursor:pointer;">
+                        <input id="islandTheoryConfirm" type="checkbox" style="width:22px;height:22px;flex:0 0 auto;margin-top:1px;accent-color:#22c55e;cursor:pointer;">
+                        <span>Tôi đã đọc và hiểu nội dung trên.</span>
+                    </label>
+                    <div style="position:sticky;bottom:16px;padding-top:16px;background:linear-gradient(180deg,transparent,#0f172a 34%);">
+                        <button id="btnStartIslandQuiz" type="button" disabled aria-disabled="true" style="display:flex;width:100%;min-height:58px;align-items:center;justify-content:center;gap:9px;border:0;border-radius:16px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:1rem;font-weight:800;cursor:not-allowed;box-shadow:0 16px 30px rgba(22,163,74,.24);opacity:.5;">Đã hiểu &amp; Bắt đầu làm bài</button>
+                    </div>
+                </div>
             </section>
         </div>`);
     // Bind directly to the elements just inserted. Querying from the modal root
@@ -387,6 +391,30 @@ function islandQuizWarning(message) {
     window.alert(message);
 }
 
+function showFloatingHeartPenalty() {
+    if (!document.body) return;
+    const heartCounter = document.getElementById('hdrHearts') || document.getElementById('statHearts');
+    const heartBounds = heartCounter?.getBoundingClientRect();
+    const fromHeader = Boolean(heartBounds && heartBounds.width && heartBounds.height);
+    const penalty = document.createElement('div');
+    penalty.className = 'fixed z-[999999] text-red-500 font-bold text-3xl md:text-5xl pointer-events-none';
+    penalty.textContent = '-1 ❤️';
+    penalty.setAttribute('aria-hidden', 'true');
+    penalty.style.cssText = `position:fixed;z-index:2147483647;left:${fromHeader ? heartBounds.left + (heartBounds.width / 2) : window.innerWidth / 2}px;top:${fromHeader ? heartBounds.top + heartBounds.height : window.innerHeight / 2}px;color:#fb7185;font-family:'Be Vietnam Pro',sans-serif;font-size:clamp(1.875rem,5vw,3rem);font-weight:800;line-height:1;white-space:nowrap;pointer-events:none;text-shadow:0 6px 20px rgba(127,29,29,.5);will-change:transform,opacity;`;
+    document.body.appendChild(penalty);
+
+    const horizontalOffset = fromHeader ? '-50%' : '-50%';
+    penalty.animate([
+        { transform: `translate(${horizontalOffset}, 0) scale(1)`, opacity: 1 },
+        { transform: `translate(${horizontalOffset}, -100px) scale(1.5)`, opacity: 0 }
+    ], {
+        duration: 3000,
+        easing: 'ease-out',
+        fill: 'forwards'
+    });
+    window.setTimeout(() => penalty.remove(), 3000);
+}
+
 function islandQuizCorrectAnswerIndex(question) {
     const rawAnswer = question?.correctAnswer ?? question?.answerIndex ?? question?.answer;
     const normalized = String(rawAnswer ?? '').trim();
@@ -407,24 +435,6 @@ function isPremiumIslandLearner() {
     }
 }
 
-function showIslandSummaryPenaltyNotice() {
-    const message = 'Bạn chưa đạt 5/5! Đã bị trừ 1 sinh mệnh 💔';
-    if (window.Swal && typeof window.Swal.fire === 'function') {
-        window.Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'warning',
-            title: message,
-            showConfirmButton: false,
-            timer: 3000,
-            background: '#13253a',
-            color: '#f8fafc'
-        });
-        return;
-    }
-    if (window.VieGeoUI?.warning) window.VieGeoUI.warning(message);
-}
-
 async function endIslandQuizForGameOver() {
     const modal = islandQuizModal;
     modal?.remove();
@@ -435,7 +445,7 @@ async function endIslandQuizForGameOver() {
 
     const options = {
         title: 'Hết sinh mệnh!',
-        text: 'Bạn đã hết trái tim vì chưa đạt 5/5. Hãy hồi phục trái tim rồi làm lại bài từ đầu.',
+        text: 'Bạn đã hết trái tim sau khi trả lời sai. Hãy hồi phục trái tim rồi quay lại hành trình học tập.',
         icon: 'error',
         confirmButtonText: 'Làm lại sau',
         confirmButtonColor: '#0284c7',
@@ -448,24 +458,17 @@ async function endIslandQuizForGameOver() {
     renderMap();
 }
 
-async function applyIslandSummaryPenalty(correctAnswers) {
-    const isPremium = isPremiumIslandLearner();
-    if (isPremium || correctAnswers >= 5) return { continueQuiz: true, isPremium };
-
-    const penalty = typeof window.deductHeartForIslandSummary === 'function'
-        ? await window.deductHeartForIslandSummary()
+async function applyIslandIncorrectAnswerPenalty() {
+    const penalty = typeof window.deductHeartForIncorrectAnswer === 'function'
+        ? await window.deductHeartForIncorrectAnswer()
         : { applied: false, gameOver: false };
-
     if (penalty.applied) {
         state = window.gameState || state;
         updateStatsUI();
-        showIslandSummaryPenaltyNotice();
+        showFloatingHeartPenalty();
     }
-    if (penalty.gameOver) {
-        await endIslandQuizForGameOver();
-        return { continueQuiz: false, isPremium: false };
-    }
-    return { continueQuiz: Boolean(penalty.applied || penalty.protected), isPremium: false };
+    if (penalty.gameOver) await endIslandQuizForGameOver();
+    return penalty;
 }
 
 function islandQuizStars(correctAnswers, questionCount) {
@@ -556,17 +559,7 @@ async function renderIslandQuizResult() {
     const correctAnswers = questions.reduce((total, question, index) => total + (islandQuizAnswers[index] === islandQuizCorrectAnswerIndex(question) ? 1 : 0), 0);
     const stars = islandQuizStars(correctAnswers, questions.length);
 
-    if (!islandQuizSubmitted) {
-        if (islandQuizSummaryPenaltyPending) return;
-        islandQuizSummaryPenaltyPending = true;
-        try {
-            const summary = await applyIslandSummaryPenalty(correctAnswers);
-            if (!summary.continueQuiz) return;
-            persistIslandQuizResult(correctAnswers, questions.length);
-        } finally {
-            islandQuizSummaryPenaltyPending = false;
-        }
-    }
+    if (!islandQuizSubmitted) persistIslandQuizResult(correctAnswers, questions.length);
 
     const header = document.getElementById('islandQuizStepHeader');
     const body = document.getElementById('islandQuizStepBody');
@@ -602,33 +595,51 @@ function renderIslandQuizQuestion(index) {
 
     header.textContent = `Câu ${islandQuizCurrentIndex + 1} / ${questions.length}`;
     const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
-    const explanationShown = Boolean(islandQuizExplanationShown[islandQuizCurrentIndex]);
+    const answerLocked = Boolean(islandQuizAnswerLocked[islandQuizCurrentIndex]);
+    const correctAnswer = islandQuizCorrectAnswerIndex(question);
+    const isCorrect = answerLocked && selectedAnswer === correctAnswer;
     const explanation = String(question.explanation || question.theory || '').trim();
     const options = Array.isArray(question.options) ? question.options : [];
     body.innerHTML = `<h3 style="margin: 0 0 22px; color: #f8fafc; font-size: clamp(1.15rem, 2.5vw, 1.45rem); line-height: 1.5;">${escapeQuizHtml(question.question || question.questionText)}</h3>
         <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>
-        ${explanationShown && explanation ? `<aside style="margin-top:18px;padding:16px;border:1px solid rgba(74,222,128,.42);border-radius:14px;background:rgba(22,163,74,.12);color:#dcfce7;line-height:1.6;text-align:left;"><strong style="display:block;margin-bottom:6px;color:#86efac">Giải thích</strong>${escapeQuizHtml(explanation)}</aside>` : ''}`;
+        ${answerLocked ? `<aside aria-live="polite" style="margin-top:18px;padding:16px;border:1px solid ${isCorrect ? 'rgba(74,222,128,.5)' : 'rgba(248,113,113,.5)'};border-radius:14px;background:${isCorrect ? 'rgba(22,163,74,.12)' : 'rgba(127,29,29,.16)'};color:${isCorrect ? '#dcfce7' : '#fee2e2'};line-height:1.6;text-align:left;"><strong style="display:block;margin-bottom:6px;color:${isCorrect ? '#86efac' : '#fca5a5'}">${isCorrect ? '✓ Trả lời chính xác' : '✕ Đáp án chưa chính xác'}</strong><strong style="display:block;margin-bottom:5px;color:#e0f2fe">Giải thích</strong>${escapeQuizHtml(explanation || 'Chưa có nội dung giải thích cho câu hỏi này.')}</aside>` : ''}`;
     const optionsContainer = document.getElementById('islandQuizOptions');
     options.forEach((option, optionIndex) => {
         const isSelected = selectedAnswer === optionIndex;
+        const isCorrectOption = answerLocked && optionIndex === correctAnswer;
+        const isWrongSelected = answerLocked && isSelected && !isCorrect;
+        const borderColor = isCorrectOption ? '#22c55e' : (isWrongSelected ? '#f87171' : (isSelected ? '#38bdf8' : 'rgba(148, 163, 184, 0.35)'));
+        const background = isCorrectOption ? 'rgba(22, 163, 74, 0.2)' : (isWrongSelected ? 'rgba(220, 38, 38, 0.2)' : (isSelected ? 'rgba(14, 165, 233, 0.22)' : 'rgba(15, 23, 42, 0.5)'));
         const optionButton = document.createElement('button');
         optionButton.type = 'button';
         optionButton.dataset.optionIndex = String(optionIndex);
         optionButton.setAttribute('aria-pressed', String(isSelected));
-        optionButton.style.cssText = `width: 100%; border: 2px solid ${isSelected ? '#38bdf8' : 'rgba(148, 163, 184, 0.35)'}; border-radius: 14px; padding: 15px 16px; background: ${isSelected ? 'rgba(14, 165, 233, 0.22)' : 'rgba(15, 23, 42, 0.5)'}; color: #f8fafc; text-align: left; font: inherit; cursor: pointer; transition: .16s ease;`;
-        optionButton.innerHTML = `<strong style="display: inline-grid; width: 28px; height: 28px; place-items: center; margin-right: 10px; border-radius: 50%; background: ${isSelected ? '#0284c7' : 'rgba(148, 163, 184, 0.2)'};">${String.fromCharCode(65 + optionIndex)}</strong>${escapeQuizHtml(option)}`;
-        optionButton.addEventListener('click', () => {
+        optionButton.disabled = answerLocked;
+        optionButton.style.cssText = `width: 100%; border: 2px solid ${borderColor}; border-radius: 14px; padding: 15px 16px; background: ${background}; color: #f8fafc; text-align: left; font: inherit; cursor: ${answerLocked ? 'default' : 'pointer'}; opacity:${answerLocked && !isSelected && !isCorrectOption ? '.72' : '1'}; transition: .16s ease;`;
+        optionButton.innerHTML = `<strong style="display: inline-grid; width: 28px; height: 28px; place-items: center; margin-right: 10px; border-radius: 50%; background: ${isCorrectOption ? '#16a34a' : (isWrongSelected ? '#dc2626' : (isSelected ? '#0284c7' : 'rgba(148, 163, 184, 0.2)'))};">${String.fromCharCode(65 + optionIndex)}</strong>${escapeQuizHtml(option)}`;
+        optionButton.addEventListener('click', async () => {
+            if (islandQuizAnswerLocked[islandQuizCurrentIndex]) return;
             islandQuizAnswers[islandQuizCurrentIndex] = optionIndex;
-            delete islandQuizExplanationShown[islandQuizCurrentIndex];
+            islandQuizAnswerLocked[islandQuizCurrentIndex] = true;
+            const isWrong = optionIndex !== islandQuizCorrectAnswerIndex(question);
+            islandQuizPenaltyPending = isWrong;
             renderIslandQuizQuestion(islandQuizCurrentIndex);
+            if (!isWrong) return;
+            try {
+                await applyIslandIncorrectAnswerPenalty();
+            } finally {
+                islandQuizPenaltyPending = false;
+                if (islandQuizModal?.isConnected && !islandQuizSubmitted) renderIslandQuizQuestion(islandQuizCurrentIndex);
+            }
         });
         optionsContainer?.appendChild(optionButton);
     });
     backButton.disabled = islandQuizCurrentIndex === 0;
     backButton.style.visibility = islandQuizCurrentIndex === 0 ? 'hidden' : 'visible';
-    nextButton.textContent = explanationShown
-        ? (islandQuizCurrentIndex === questions.length - 1 ? 'Nộp bài' : 'Tiếp tục')
-        : (islandQuizCurrentIndex === questions.length - 1 ? 'Kiểm tra & nộp bài' : 'Kiểm tra & tiếp tục');
+    nextButton.disabled = !answerLocked || islandQuizPenaltyPending;
+    nextButton.style.opacity = nextButton.disabled ? '.5' : '1';
+    nextButton.style.cursor = nextButton.disabled ? 'not-allowed' : 'pointer';
+    nextButton.textContent = islandQuizCurrentIndex === questions.length - 1 ? 'Xem kết quả' : 'Câu tiếp theo';
 }
 
 function mountIslandQuizStepper() {
@@ -652,16 +663,8 @@ function mountIslandQuizStepper() {
             renderMap();
             return;
         }
-        if (!Number.isInteger(islandQuizAnswers[islandQuizCurrentIndex])) {
-            islandQuizWarning('Hãy chọn một đáp án trước khi tiếp tục.');
-            return;
-        }
-        const question = activeIslandQuizQuestions()[islandQuizCurrentIndex];
-        const isCorrect = islandQuizAnswers[islandQuizCurrentIndex] === islandQuizCorrectAnswerIndex(question);
-        const hasExplanation = Boolean(String(question?.explanation || question?.theory || '').trim());
-        if (isCorrect && hasExplanation && !islandQuizExplanationShown[islandQuizCurrentIndex]) {
-            islandQuizExplanationShown[islandQuizCurrentIndex] = true;
-            renderIslandQuizQuestion(islandQuizCurrentIndex);
+        if (!islandQuizAnswerLocked[islandQuizCurrentIndex] || islandQuizPenaltyPending) {
+            islandQuizWarning('Hãy chốt đáp án và đọc giải thích trước khi tiếp tục.');
             return;
         }
         if (islandQuizCurrentIndex === activeIslandQuizQuestions().length - 1) {
@@ -688,9 +691,9 @@ async function openIslandQuizPreview() {
     }
     islandQuizCurrentIndex = 0;
     islandQuizAnswers = {};
-    islandQuizExplanationShown = {};
+    islandQuizAnswerLocked = {};
+    islandQuizPenaltyPending = false;
     islandQuizSubmitted = false;
-    islandQuizSummaryPenaltyPending = false;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
     islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';
