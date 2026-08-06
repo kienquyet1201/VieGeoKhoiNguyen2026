@@ -87,7 +87,7 @@
 </div>
 <div class="flex flex-col space-y-2 w-full mt-4">
     <label class="text-sm font-medium text-slate-300 ops-muted">Chủ đề bài học <span class="text-red-400" aria-hidden="true">*</span></label>
-    <input type="text" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-md text-white ops-input" id="bulkImportTopic" placeholder="Nhập tên chủ đề bài học..." required style="display:block;width:100%;margin-top:7px">
+    <input type="text" name="topic" id="bulkImportTopic" class="w-full bg-slate-800 border border-slate-700 rounded-md p-2.5 text-white ops-input" placeholder="Nhập tên chủ đề bài học... (VD: Lịch sử hình thành)" required style="display:block;width:100%;margin-top:7px">
 </div>
 
                             <label class="ops-muted">Lý thuyết của đảo <small>(hiển thị một lần trước bài)</small><textarea class="ops-input" id="bulkImportIslandTheory" rows="7" placeholder="Nhập nội dung lý thuyết chung của đảo để học sinh đọc trước khi làm bài..." style="display:block;width:100%;margin-top:7px;resize:vertical;line-height:1.6"></textarea></label>
@@ -196,7 +196,7 @@
 </div>
 <div class="flex flex-col space-y-2 w-full mt-4">
     <label class="text-sm font-medium text-slate-300 ops-muted">Chủ đề bài học <span class="text-red-400" aria-hidden="true">*</span></label>
-    <input type="text" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-md text-white ops-input" id="adminQuestionTopic" placeholder="Nhập tên chủ đề bài học..." required style="display:block;width:100%;margin-top:7px">
+    <input type="text" name="topic" id="adminQuestionTopic" class="w-full bg-slate-800 border border-slate-700 rounded-md p-2.5 text-white ops-input" placeholder="Nhập tên chủ đề bài học... (VD: Lịch sử hình thành)" required style="display:block;width:100%;margin-top:7px">
 </div>
 
                             </div>
@@ -551,7 +551,7 @@
             const province = String(el('bulkImportProvince')?.value || '').trim();
             const subIslandVal = String(el('bulkImportSubIsland')?.value || '').trim();
             const subIsland = Number(subIslandVal) || 0;
-            const topic = String(el('bulkImportTopic')?.value || '').trim();
+            const topic = String(el('bulkImportTopic')?.value || el('lesson-topic')?.value || '').trim();
             const islandTheory = String(el('bulkImportIslandTheory')?.value || '').trim();
             const button = el('btnProcessUpload');
 
@@ -611,7 +611,7 @@
             const province = trimValue('adminQuestionProvince');
             const subIslandVal = String(el('adminQuestionSubIsland')?.value || '').trim();
             const subIsland = Number(subIslandVal) || 0;
-            const topic = trimValue('adminQuestionTopic');
+            const topic = String(el('adminQuestionTopic')?.value || el('lesson-topic')?.value || '').trim();
             const difficulty = trimValue('adminQuestionDifficulty');
             const islandTheory = trimValue('adminIslandTheory');
             const explanation = trimValue('adminQuestionExplanation');
@@ -1095,7 +1095,7 @@
 </div>
 <div class="flex flex-col space-y-2 w-full mt-2">
     <label class="text-sm font-medium text-slate-300 ops-muted">Chủ đề bài học</label>
-    <input type="text" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-md text-white ops-input" id="editQuestionTopic" placeholder="Nhập tên chủ đề bài học..." style="display:block;margin-top:7px">
+    <input type="text" name="topic" id="editQuestionTopic" class="w-full bg-slate-800 border border-slate-700 rounded-md p-2.5 text-white ops-input" placeholder="Nhập tên chủ đề bài học... (VD: Lịch sử hình thành)" style="display:block;margin-top:7px">
 </div>
                 <label class="ops-muted">Mã đảo<input class="ops-input" id="editQuestionLessonId" style="display:block;margin-top:7px"></label>
             </div>
