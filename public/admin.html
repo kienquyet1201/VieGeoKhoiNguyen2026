@@ -512,7 +512,7 @@
             }
         }
 
-        function parseBulkQuestionText(rawText) {
+                function parseBulkQuestionText(rawText) {
             const lines = String(rawText || '')
                 .replace(/\r\n?/g, '\n')
                 .split('\n')
@@ -576,7 +576,9 @@
                         batch.set(doc, {
                             ...question,
                             province,
-                            subIsland: subIslandNum, islandIndex: subIslandNum, island: `Đảo nhỏ ${subIslandNum}`,
+                            subIsland: subIslandNum,
+                            islandIndex: subIslandNum,
+                            island: `Đảo nhỏ ${subIslandNum}`,
                             topic,
                             islandTheory,
                             importOrder: start + offset + 1,
@@ -586,7 +588,7 @@
                     });
                     await batch.commit();
                 }
-                el('uploadPreview').textContent = JSON.stringify({ province, subIsland, topic, count: questions.length, questions }, null, 2);
+                el('uploadPreview').textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions }, null, 2);
                 showToast(`Đã lưu ${questions.length} câu hỏi vào kho dữ liệu.`);
                 el('bulkQuestionText').value = '';
             } catch (error) {
@@ -609,7 +611,7 @@
             const province = trimValue('adminQuestionProvince');
             const subIslandVal = String(el('adminQuestionSubIsland')?.value || '').trim();
             const subIslandNum = Number(subIslandVal.replace(/\D+/g, '')) || Number(subIslandVal) || 0;
-            const topic = String(el('lesson-topic')?.value || el('adminQuestionTopic')?.value || '').trim();
+            const topic = String(el('adminQuestionTopic')?.value || el('lesson-topic')?.value || '').trim();
             const difficulty = trimValue('adminQuestionDifficulty');
             const islandTheory = trimValue('adminIslandTheory');
             const explanation = trimValue('adminQuestionExplanation');
@@ -624,7 +626,9 @@
                 options,
                 answer,
                 province,
-                subIsland: subIslandNum, islandIndex: subIslandNum, island: `Đảo nhỏ ${subIslandNum}`,
+                subIsland: subIslandNum,
+                islandIndex: subIslandNum,
+                island: `Đảo nhỏ ${subIslandNum}`,
                 topic,
                 difficulty,
                 islandTheory,
@@ -691,7 +695,7 @@
             el('editQuestionDifficulty').value = ['easy', 'medium', 'hard'].includes(data.difficulty) ? data.difficulty : 'easy';
             el('editQuestionGrade').value = data.grade || '';
             const docSubIsland = data.subIsland || data.islandIndex || (typeof data.island === 'number' ? data.island : (String(data.island || '').match(/\d+/)?.[0] || ''));
-            if (el('editQuestionSubIsland')) el('editQuestionSubIsland').value = docSubIsland ? String(docSubIsland) : '';
+            if (el('editQuestionSubIsland')) el('editQuestionSubIsland').value = docSubIsland ? `Đảo nhỏ ${docSubIsland}` : (data.island || '');
             el('editQuestionTopic').value = data.topic || data.lessonTitle || '';
             el('editQuestionLessonId').value = data.lessonId || '';
             el('editIslandTheory').value = data.islandTheory || data.islandTheoryContent || data.islandTheoryText || '';
@@ -734,9 +738,9 @@
                     province,
                     difficulty,
                     grade,
-                    subIsland,
-                    islandIndex: subIsland,
-                    island: subIsland ? `Đảo nhỏ ${subIsland}` : topic,
+                    subIsland: subIslandNum,
+                    islandIndex: subIslandNum,
+                    island: subIslandNum ? `Đảo nhỏ ${subIslandNum}` : topic,
                     topic,
                     lessonId,
                     islandTheory,
