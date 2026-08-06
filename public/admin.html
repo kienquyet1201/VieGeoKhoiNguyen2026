@@ -68,8 +68,19 @@
                     <p class="ops-muted">Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Hệ thống kiểm tra định dạng trước khi lưu vào collection <code>Questions</code>.</p>
                     <div class="ops-grid">
                         <div class="ops-list">
-                            <label class="ops-muted">Tỉnh / Thành phố <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportProvince" required style="display:block;margin-top:7px"><option value="">-- Chọn Tỉnh/Thành --</option><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
-                            <label class="ops-muted">Đảo tri thức <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportIsland" required style="display:block;margin-top:7px"><option value="">-- Chọn Đảo --</option><option value="dao-tri-thuc-1">Đảo tri thức 1</option><option value="dao-tri-thuc-2">Đảo tri thức 2</option><option value="dao-tri-thuc-3">Đảo tri thức 3</option><option value="dao-tri-thuc-4">Đảo tri thức 4</option><option value="dao-tri-thuc-5">Đảo tri thức 5</option></select></label>
+                            <label class="ops-muted">Tỉnh / Thành phố <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportProvince" required style="display:block;margin-top:7px"><option value="">-- Chọn Tỉnh/Thành --</option>
+                                <optgroup label="── Miền Bắc (25) ──">
+                                    <option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="quang-ninh">Quảng Ninh</option><option value="ha-giang">Hà Giang</option><option value="lao-cai">Lào Cai</option><option value="lai-chau">Lai Châu</option><option value="dien-bien">Điện Biên</option><option value="son-la">Sơn La</option><option value="yen-bai">Yên Bái</option><option value="hoa-binh">Hòa Bình</option><option value="phu-tho">Phú Thọ</option><option value="tuyen-quang">Tuyên Quang</option><option value="cao-bang">Cao Bằng</option><option value="bac-kan">Bắc Kạn</option><option value="thai-nguyen">Thái Nguyên</option><option value="lang-son">Lạng Sơn</option><option value="bac-giang">Bắc Giang</option><option value="bac-ninh">Bắc Ninh</option><option value="hai-duong">Hải Dương</option><option value="hung-yen">Hưng Yên</option><option value="vinh-phuc">Vĩnh Phúc</option><option value="ha-nam">Hà Nam</option><option value="nam-dinh">Nam Định</option><option value="ninh-binh">Ninh Bình</option><option value="thai-binh">Thái Bình</option>
+                                </optgroup>
+                                <optgroup label="── Miền Trung (19) ──">
+                                    <option value="thanh-hoa">Thanh Hóa</option><option value="nghe-an">Nghệ An</option><option value="ha-tinh">Hà Tĩnh</option><option value="quang-binh">Quảng Bình</option><option value="quang-tri">Quảng Trị</option><option value="thua-thien-hue">Thừa Thiên Huế</option><option value="da-nang">Đà Nẵng</option><option value="quang-nam">Quảng Nam</option><option value="quang-ngai">Quảng Ngãi</option><option value="binh-dinh">Bình Định</option><option value="phu-yen">Phú Yên</option><option value="khanh-hoa">Khánh Hòa</option><option value="ninh-thuan">Ninh Thuận</option><option value="binh-thuan">Bình Thuận</option><option value="kon-tum">Kon Tum</option><option value="gia-lai">Gia Lai</option><option value="dak-lak">Đắk Lắk</option><option value="dak-nong">Đắk Nông</option><option value="lam-dong">Lâm Đồng</option>
+                                </optgroup>
+                                <optgroup label="── Miền Nam (19) ──">
+                                    <option value="ho-chi-minh">Hồ Chí Minh</option><option value="can-tho">Cần Thơ</option><option value="binh-phuoc">Bình Phước</option><option value="tay-ninh">Tây Ninh</option><option value="binh-duong">Bình Dương</option><option value="dong-nai">Đồng Nai</option><option value="ba-ria-vung-tau">Bà Rịa - Vũng Tàu</option><option value="long-an">Long An</option><option value="tien-giang">Tiền Giang</option><option value="ben-tre">Bến Tre</option><option value="tra-vinh">Trà Vinh</option><option value="vinh-long">Vĩnh Long</option><option value="dong-thap">Đồng Tháp</option><option value="an-giang">An Giang</option><option value="kien-giang">Kiên Giang</option><option value="hau-giang">Hậu Giang</option><option value="soc-trang">Sóc Trăng</option><option value="bac-lieu">Bạc Liêu</option><option value="ca-mau">Cà Mau</option>
+                                </optgroup>
+                            </select></label>
+                            <label class="ops-muted">Chọn Đảo nhỏ (1-34) <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportSubIsland" required style="display:block;margin-top:7px"><option value="">-- Chọn Đảo nhỏ --</option><option value="1">Đảo nhỏ 1</option><option value="2">Đảo nhỏ 2</option><option value="3">Đảo nhỏ 3</option><option value="4">Đảo nhỏ 4</option><option value="5">Đảo nhỏ 5</option><option value="6">Đảo nhỏ 6</option><option value="7">Đảo nhỏ 7</option><option value="8">Đảo nhỏ 8</option><option value="9">Đảo nhỏ 9</option><option value="10">Đảo nhỏ 10</option><option value="11">Đảo nhỏ 11</option><option value="12">Đảo nhỏ 12</option><option value="13">Đảo nhỏ 13</option><option value="14">Đảo nhỏ 14</option><option value="15">Đảo nhỏ 15</option><option value="16">Đảo nhỏ 16</option><option value="17">Đảo nhỏ 17</option><option value="18">Đảo nhỏ 18</option><option value="19">Đảo nhỏ 19</option><option value="20">Đảo nhỏ 20</option><option value="21">Đảo nhỏ 21</option><option value="22">Đảo nhỏ 22</option><option value="23">Đảo nhỏ 23</option><option value="24">Đảo nhỏ 24</option><option value="25">Đảo nhỏ 25</option><option value="26">Đảo nhỏ 26</option><option value="27">Đảo nhỏ 27</option><option value="28">Đảo nhỏ 28</option><option value="29">Đảo nhỏ 29</option><option value="30">Đảo nhỏ 30</option><option value="31">Đảo nhỏ 31</option><option value="32">Đảo nhỏ 32</option><option value="33">Đảo nhỏ 33</option><option value="34">Đảo nhỏ 34</option></select></label>
+                            <label class="ops-muted">Chủ đề bài học <span aria-hidden="true">*</span><input type="text" class="ops-input" id="bulkImportTopic" placeholder="Nhập tên chủ đề bài học..." required style="display:block;width:100%;margin-top:7px"></label>
                             <label class="ops-muted">Lý thuyết của đảo <small>(hiển thị một lần trước bài)</small><textarea class="ops-input" id="bulkImportIslandTheory" rows="7" placeholder="Nhập nội dung lý thuyết chung của đảo để học sinh đọc trước khi làm bài..." style="display:block;width:100%;margin-top:7px;resize:vertical;line-height:1.6"></textarea></label>
                             <p class="ops-muted" style="font-size:.78rem;line-height:1.5">Tỉnh/Thành và Đảo sẽ được tự động ghép vào tất cả câu hỏi hợp lệ trong lô này.</p>
                             <button class="ops-button" id="btnProcessUpload" type="button" style="margin-top:6px"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích và lưu câu hỏi</button>
@@ -95,8 +106,79 @@
                         <fieldset class="admin-question-section">
                             <legend><i class="fa-solid fa-location-dot"></i> Vị trí kiến thức</legend>
                             <div class="ops-grid admin-question-grid">
-                                <label class="ops-muted">Tỉnh / Thành phố<select class="ops-input" id="adminQuestionProvince" required><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
-                                <label class="ops-muted">Đảo tri thức<select class="ops-input" id="adminQuestionIsland" required><option value="dao-tri-thuc-1">Đảo tri thức 1</option><option value="dao-tri-thuc-2">Đảo tri thức 2</option><option value="dao-tri-thuc-3">Đảo tri thức 3</option><option value="dao-tri-thuc-4">Đảo tri thức 4</option><option value="dao-tri-thuc-5">Đảo tri thức 5</option></select></label>
+                                <label class="ops-muted">Tỉnh / Thành phố<select class="ops-input" id="adminQuestionProvince" required>
+                                    <optgroup label="── Miền Bắc (25) ──">
+                                        <option value="ha-noi">Hà Nội</option>
+                                        <option value="hai-phong">Hải Phòng</option>
+                                        <option value="quang-ninh">Quảng Ninh</option>
+                                        <option value="ha-giang">Hà Giang</option>
+                                        <option value="lao-cai">Lào Cai</option>
+                                        <option value="lai-chau">Lai Châu</option>
+                                        <option value="dien-bien">Điện Biên</option>
+                                        <option value="son-la">Sơn La</option>
+                                        <option value="yen-bai">Yên Bái</option>
+                                        <option value="hoa-binh">Hòa Bình</option>
+                                        <option value="phu-tho">Phú Thọ</option>
+                                        <option value="tuyen-quang">Tuyên Quang</option>
+                                        <option value="cao-bang">Cao Bằng</option>
+                                        <option value="bac-kan">Bắc Kạn</option>
+                                        <option value="thai-nguyen">Thái Nguyên</option>
+                                        <option value="lang-son">Lạng Sơn</option>
+                                        <option value="bac-giang">Bắc Giang</option>
+                                        <option value="bac-ninh">Bắc Ninh</option>
+                                        <option value="hai-duong">Hải Dương</option>
+                                        <option value="hung-yen">Hưng Yên</option>
+                                        <option value="vinh-phuc">Vĩnh Phúc</option>
+                                        <option value="ha-nam">Hà Nam</option>
+                                        <option value="nam-dinh">Nam Định</option>
+                                        <option value="ninh-binh">Ninh Bình</option>
+                                        <option value="thai-binh">Thái Bình</option>
+                                    </optgroup>
+                                    <optgroup label="── Miền Trung (19) ──">
+                                        <option value="thanh-hoa">Thanh Hóa</option>
+                                        <option value="nghe-an">Nghệ An</option>
+                                        <option value="ha-tinh">Hà Tĩnh</option>
+                                        <option value="quang-binh">Quảng Bình</option>
+                                        <option value="quang-tri">Quảng Trị</option>
+                                        <option value="thua-thien-hue">Thừa Thiên Huế</option>
+                                        <option value="da-nang">Đà Nẵng</option>
+                                        <option value="quang-nam">Quảng Nam</option>
+                                        <option value="quang-ngai">Quảng Ngãi</option>
+                                        <option value="binh-dinh">Bình Định</option>
+                                        <option value="phu-yen">Phú Yên</option>
+                                        <option value="khanh-hoa">Khánh Hòa</option>
+                                        <option value="ninh-thuan">Ninh Thuận</option>
+                                        <option value="binh-thuan">Bình Thuận</option>
+                                        <option value="kon-tum">Kon Tum</option>
+                                        <option value="gia-lai">Gia Lai</option>
+                                        <option value="dak-lak">Đắk Lắk</option>
+                                        <option value="dak-nong">Đắk Nông</option>
+                                        <option value="lam-dong">Lâm Đồng</option>
+                                    </optgroup>
+                                    <optgroup label="── Miền Nam (19) ──">
+                                        <option value="ho-chi-minh">Hồ Chí Minh</option>
+                                        <option value="can-tho">Cần Thơ</option>
+                                        <option value="binh-phuoc">Bình Phước</option>
+                                        <option value="tay-ninh">Tây Ninh</option>
+                                        <option value="binh-duong">Bình Dương</option>
+                                        <option value="dong-nai">Đồng Nai</option>
+                                        <option value="ba-ria-vung-tau">Bà Rịa - Vũng Tàu</option>
+                                        <option value="long-an">Long An</option>
+                                        <option value="tien-giang">Tiền Giang</option>
+                                        <option value="ben-tre">Bến Tre</option>
+                                        <option value="tra-vinh">Trà Vinh</option>
+                                        <option value="vinh-long">Vĩnh Long</option>
+                                        <option value="dong-thap">Đồng Tháp</option>
+                                        <option value="an-giang">An Giang</option>
+                                        <option value="kien-giang">Kiên Giang</option>
+                                        <option value="hau-giang">Hậu Giang</option>
+                                        <option value="soc-trang">Sóc Trăng</option>
+                                        <option value="bac-lieu">Bạc Liêu</option>
+                                        <option value="ca-mau">Cà Mau</option>
+                                    </optgroup>
+                                </select></label>
+                                <label class="ops-muted">Chọn Đảo nhỏ (1-34) <span aria-hidden="true">*</span><select class="ops-input" id="adminQuestionSubIsland" required style="display:block;margin-top:7px"><option value="">-- Chọn Đảo nhỏ --</option><option value="1">Đảo nhỏ 1</option><option value="2">Đảo nhỏ 2</option><option value="3">Đảo nhỏ 3</option><option value="4">Đảo nhỏ 4</option><option value="5">Đảo nhỏ 5</option><option value="6">Đảo nhỏ 6</option><option value="7">Đảo nhỏ 7</option><option value="8">Đảo nhỏ 8</option><option value="9">Đảo nhỏ 9</option><option value="10">Đảo nhỏ 10</option><option value="11">Đảo nhỏ 11</option><option value="12">Đảo nhỏ 12</option><option value="13">Đảo nhỏ 13</option><option value="14">Đảo nhỏ 14</option><option value="15">Đảo nhỏ 15</option><option value="16">Đảo nhỏ 16</option><option value="17">Đảo nhỏ 17</option><option value="18">Đảo nhỏ 18</option><option value="19">Đảo nhỏ 19</option><option value="20">Đảo nhỏ 20</option><option value="21">Đảo nhỏ 21</option><option value="22">Đảo nhỏ 22</option><option value="23">Đảo nhỏ 23</option><option value="24">Đảo nhỏ 24</option><option value="25">Đảo nhỏ 25</option><option value="26">Đảo nhỏ 26</option><option value="27">Đảo nhỏ 27</option><option value="28">Đảo nhỏ 28</option><option value="29">Đảo nhỏ 29</option><option value="30">Đảo nhỏ 30</option><option value="31">Đảo nhỏ 31</option><option value="32">Đảo nhỏ 32</option><option value="33">Đảo nhỏ 33</option><option value="34">Đảo nhỏ 34</option></select></label>
+                                <label class="ops-muted">Chủ đề bài học <span aria-hidden="true">*</span><input type="text" class="ops-input" id="adminQuestionTopic" placeholder="Nhập tên chủ đề bài học..." required style="display:block;width:100%;margin-top:7px"></label>
                             </div>
                         </fieldset>
                         <fieldset class="admin-question-section">
@@ -139,7 +221,7 @@
                         <strong style="color:#e2e8f0"><i class="fa-solid fa-filter" style="color:#7dd3fc"></i> Công cụ lọc</strong>
                         <label class="ops-muted" style="display:grid;gap:6px;min-width:160px">Độ khó<select class="ops-input" id="filterQuestionDifficulty"><option value="">Tất cả</option><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
                         <label class="ops-muted" style="display:grid;gap:6px;min-width:190px">Tỉnh / Thành phố<select class="ops-input" id="filterQuestionProvince"><option value="">Tất cả</option></select></label>
-                        <label class="ops-muted" style="display:grid;gap:6px;min-width:200px">Đảo / Chủ đề<select class="ops-input" id="filterQuestionIsland"><option value="">Tất cả</option></select></label>
+                        <label class="ops-muted" style="display:grid;gap:6px;min-width:200px">Đảo nhỏ (1-34)<select class="ops-input" id="filterQuestionIsland"><option value="">Tất cả Đảo</option><option value="1">Đảo nhỏ 1</option><option value="2">Đảo nhỏ 2</option><option value="3">Đảo nhỏ 3</option><option value="4">Đảo nhỏ 4</option><option value="5">Đảo nhỏ 5</option><option value="6">Đảo nhỏ 6</option><option value="7">Đảo nhỏ 7</option><option value="8">Đảo nhỏ 8</option><option value="9">Đảo nhỏ 9</option><option value="10">Đảo nhỏ 10</option><option value="11">Đảo nhỏ 11</option><option value="12">Đảo nhỏ 12</option><option value="13">Đảo nhỏ 13</option><option value="14">Đảo nhỏ 14</option><option value="15">Đảo nhỏ 15</option><option value="16">Đảo nhỏ 16</option><option value="17">Đảo nhỏ 17</option><option value="18">Đảo nhỏ 18</option><option value="19">Đảo nhỏ 19</option><option value="20">Đảo nhỏ 20</option><option value="21">Đảo nhỏ 21</option><option value="22">Đảo nhỏ 22</option><option value="23">Đảo nhỏ 23</option><option value="24">Đảo nhỏ 24</option><option value="25">Đảo nhỏ 25</option><option value="26">Đảo nhỏ 26</option><option value="27">Đảo nhỏ 27</option><option value="28">Đảo nhỏ 28</option><option value="29">Đảo nhỏ 29</option><option value="30">Đảo nhỏ 30</option><option value="31">Đảo nhỏ 31</option><option value="32">Đảo nhỏ 32</option><option value="33">Đảo nhỏ 33</option><option value="34">Đảo nhỏ 34</option></select></label>
                     </section>
                     <div class="ops-table-wrap">
                         <table class="ops-table">
@@ -447,12 +529,14 @@
 
         async function processBulkTextImport() {
             const province = String(el('bulkImportProvince')?.value || '').trim();
-            const island = String(el('bulkImportIsland')?.value || '').trim();
+            const subIslandVal = el('bulkImportSubIsland')?.value || '';
+            const subIsland = Number(subIslandVal) || 0;
+            const topic = String(el('bulkImportTopic')?.value || '').trim();
             const islandTheory = String(el('bulkImportIslandTheory')?.value || '').trim();
             const button = el('btnProcessUpload');
 
-            if (!province || !island) {
-                showToast('Hãy chọn Tỉnh/Thành phố và Đảo trước khi upload hàng loạt.', 'warning');
+            if (!province || !subIsland || !topic) {
+                showToast('Hãy chọn Tỉnh/Thành phố, Đảo nhỏ và nhập Chủ đề bài học.', 'warning');
                 return;
             }
             const firestore = window.db || (typeof db !== 'undefined' ? db : null);
@@ -472,8 +556,10 @@
                         batch.set(doc, {
                             ...question,
                             province,
-                            island,
-                            topic: island,
+                            subIsland,
+                            islandIndex: subIsland,
+                            island: `Đảo nhỏ ${subIsland}`,
+                            topic,
                             islandTheory,
                             importOrder: start + offset + 1,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -482,7 +568,7 @@
                     });
                     await batch.commit();
                 }
-                el('uploadPreview').textContent = JSON.stringify({ province, island, count: questions.length, questions }, null, 2);
+                el('uploadPreview').textContent = JSON.stringify({ province, subIsland, topic, count: questions.length, questions }, null, 2);
                 showToast(`Đã lưu ${questions.length} câu hỏi vào kho dữ liệu.`);
                 el('bulkQuestionText').value = '';
             } catch (error) {
@@ -503,13 +589,15 @@
             const options = [0, 1, 2, 3].map(index => trimValue(`adminOption${index}`));
             const answer = Number(el('adminCorrectAnswer')?.value);
             const province = trimValue('adminQuestionProvince');
-            const island = trimValue('adminQuestionIsland');
+            const subIslandVal = el('adminQuestionSubIsland')?.value || '';
+            const subIsland = Number(subIslandVal) || 0;
+            const topic = trimValue('adminQuestionTopic');
             const difficulty = trimValue('adminQuestionDifficulty');
             const islandTheory = trimValue('adminIslandTheory');
             const explanation = trimValue('adminQuestionExplanation');
 
-            if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !island || !difficulty) {
-                showToast('Hãy nhập đủ câu hỏi, 4 đáp án, đáp án đúng, tỉnh, đảo và độ khó.', 'warning');
+            if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !subIsland || !topic || !difficulty) {
+                showToast('Hãy nhập đủ câu hỏi, 4 đáp án, đáp án đúng, tỉnh, Đảo nhỏ, chủ đề và độ khó.', 'warning');
                 return;
             }
 
@@ -518,8 +606,10 @@
                 options,
                 answer,
                 province,
-                island,
-                topic: island,
+                subIsland,
+                islandIndex: subIsland,
+                island: `Đảo nhỏ ${subIsland}`,
+                topic,
                 difficulty,
                 islandTheory,
                 explanation,
@@ -584,7 +674,9 @@
             el('editQuestionProvince').value = data.province || '';
             el('editQuestionDifficulty').value = ['easy', 'medium', 'hard'].includes(data.difficulty) ? data.difficulty : 'easy';
             el('editQuestionGrade').value = data.grade || '';
-            el('editQuestionTopic').value = data.topic || data.island || '';
+            const docSubIsland = data.subIsland || data.islandIndex || (typeof data.island === 'number' ? data.island : (String(data.island || '').match(/\d+/)?.[0] || ''));
+            if (el('editQuestionSubIsland')) el('editQuestionSubIsland').value = docSubIsland ? String(docSubIsland) : '';
+            el('editQuestionTopic').value = data.topic || data.lessonTitle || '';
             el('editQuestionLessonId').value = data.lessonId || '';
             el('editIslandTheory').value = data.islandTheory || data.islandTheoryContent || data.islandTheoryText || '';
             el('editQuestionExplanation').value = data.explanation || data.solution || data.explain || data.theory || '';
@@ -601,6 +693,8 @@
             const province = el('editQuestionProvince')?.value.trim();
             const difficulty = el('editQuestionDifficulty')?.value;
             const grade = el('editQuestionGrade')?.value.trim();
+            const subIslandVal = el('editQuestionSubIsland')?.value || '';
+            const subIsland = Number(subIslandVal) || 0;
             const topic = el('editQuestionTopic')?.value.trim();
             const lessonId = el('editQuestionLessonId')?.value.trim();
             const islandTheory = el('editIslandTheory')?.value.trim();
@@ -624,8 +718,10 @@
                     province,
                     difficulty,
                     grade,
+                    subIsland,
+                    islandIndex: subIsland,
+                    island: subIsland ? `Đảo nhỏ ${subIsland}` : topic,
                     topic,
-                    island: topic,
                     lessonId,
                     islandTheory,
                     explanation,
@@ -691,8 +787,12 @@
             }
         }
 
-        function questionIslandValue(data) {
-            return String(data?.island || data?.topic || data?.lessonTitle || data?.lessonId || '').trim();
+        function questionIslandDisplay(data) {
+            const subIsland = data?.subIsland || data?.islandIndex || (typeof data?.island === 'number' ? data?.island : (String(data?.island || '').match(/\d+/)?.[0] || ''));
+            const subIslandText = subIsland ? `[Đảo ${subIsland}]` : '';
+            const topicText = String(data?.topic || data?.lessonTitle || (typeof data?.island === 'string' && !data?.island.startsWith('Đảo nhỏ') ? data?.island : '')).trim();
+            if (subIslandText && topicText) return `${subIslandText} - ${topicText}`;
+            return subIslandText || topicText || '—';
         }
 
         function questionProvinceLabel(value) {
@@ -713,7 +813,6 @@
         function refreshQuestionFilterOptions() {
             const data = allAdminQuestionDocuments.map(doc => doc.data() || {});
             setQuestionFilterOptions('filterQuestionProvince', data.map(item => item.province), questionProvinceLabel);
-            setQuestionFilterOptions('filterQuestionIsland', data.map(questionIslandValue), value => value);
         }
 
         function applyQuestionFilters() {
@@ -722,9 +821,10 @@
             const island = el('filterQuestionIsland')?.value || '';
             const filteredDocuments = allAdminQuestionDocuments.filter(doc => {
                 const data = doc.data() || {};
+                const docSubIsland = String(data.subIsland || data.islandIndex || (typeof data.island === 'number' ? data.island : (String(data.island || '').match(/\d+/)?.[0] || '')));
                 return (!difficulty || String(data.difficulty || '') === difficulty)
                     && (!province || String(data.province || '') === province)
-                    && (!island || questionIslandValue(data) === island);
+                    && (!island || docSubIsland === island);
             });
             renderAdminQuestionList(filteredDocuments, allAdminQuestionDocuments.length
                 ? 'Không tìm thấy câu hỏi nào phù hợp với bộ lọc này.'
@@ -744,7 +844,8 @@
             }
             body.innerHTML = questionDocs.map(doc => {
                 const data = doc.data() || {};
-                const details = [data.province, data.topic || data.island].filter(Boolean).join(' · ') || '—';
+                const islandTopic = questionIslandDisplay(data);
+                const details = [data.province ? questionProvinceLabel(data.province) : '', islandTopic].filter(Boolean).join(' · ') || '—';
                 const question = String(data.question || 'Câu hỏi chưa có nội dung').trim();
                 const isSelected = selectedAdminQuestionIds.has(doc.id);
                 return `<tr data-question-row="${escapeHtml(doc.id)}">
@@ -958,7 +1059,8 @@
                 <label class="ops-muted">Tỉnh / Thành phố<input class="ops-input" id="editQuestionProvince" required style="display:block;margin-top:7px"></label>
                 <label class="ops-muted">Mức độ<select class="ops-input" id="editQuestionDifficulty" required style="display:block;margin-top:7px"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
                 <label class="ops-muted">Khối lớp<input class="ops-input" id="editQuestionGrade" style="display:block;margin-top:7px"></label>
-                <label class="ops-muted">Chủ đề đảo<input class="ops-input" id="editQuestionTopic" style="display:block;margin-top:7px"></label>
+                <label class="ops-muted">Chọn Đảo nhỏ (1-34)<select class="ops-input" id="editQuestionSubIsland" style="display:block;margin-top:7px"><option value="">-- Chọn Đảo nhỏ --</option><option value="1">Đảo nhỏ 1</option><option value="2">Đảo nhỏ 2</option><option value="3">Đảo nhỏ 3</option><option value="4">Đảo nhỏ 4</option><option value="5">Đảo nhỏ 5</option><option value="6">Đảo nhỏ 6</option><option value="7">Đảo nhỏ 7</option><option value="8">Đảo nhỏ 8</option><option value="9">Đảo nhỏ 9</option><option value="10">Đảo nhỏ 10</option><option value="11">Đảo nhỏ 11</option><option value="12">Đảo nhỏ 12</option><option value="13">Đảo nhỏ 13</option><option value="14">Đảo nhỏ 14</option><option value="15">Đảo nhỏ 15</option><option value="16">Đảo nhỏ 16</option><option value="17">Đảo nhỏ 17</option><option value="18">Đảo nhỏ 18</option><option value="19">Đảo nhỏ 19</option><option value="20">Đảo nhỏ 20</option><option value="21">Đảo nhỏ 21</option><option value="22">Đảo nhỏ 22</option><option value="23">Đảo nhỏ 23</option><option value="24">Đảo nhỏ 24</option><option value="25">Đảo nhỏ 25</option><option value="26">Đảo nhỏ 26</option><option value="27">Đảo nhỏ 27</option><option value="28">Đảo nhỏ 28</option><option value="29">Đảo nhỏ 29</option><option value="30">Đảo nhỏ 30</option><option value="31">Đảo nhỏ 31</option><option value="32">Đảo nhỏ 32</option><option value="33">Đảo nhỏ 33</option><option value="34">Đảo nhỏ 34</option></select></label>
+                <label class="ops-muted">Chủ đề bài học<input type="text" class="ops-input" id="editQuestionTopic" placeholder="Nhập tên chủ đề bài học..." style="display:block;margin-top:7px"></label>
                 <label class="ops-muted">Mã đảo<input class="ops-input" id="editQuestionLessonId" style="display:block;margin-top:7px"></label>
             </div>
             <label class="ops-muted" style="display:block;margin-top:14px">Lý thuyết của đảo <small>(hiển thị một lần trước bài)</small><textarea class="ops-input" id="editIslandTheory" rows="5" style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
