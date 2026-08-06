@@ -68,8 +68,18 @@
                     <p class="ops-muted">Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Hệ thống kiểm tra định dạng trước khi lưu vào collection <code>Questions</code>.</p>
                     <div class="ops-grid">
                         <div class="ops-list">
-                            <label class="ops-muted">Tỉnh / Thành phố <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportProvince" required style="display:block;margin-top:7px"><option value="">-- Chọn Tỉnh/Thành --</option><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
-                            <label class="ops-muted">Đảo tri thức <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportIsland" required style="display:block;margin-top:7px"><option value="">-- Chọn Đảo --</option><option value="dao-tri-thuc-1">Đảo tri thức 1</option><option value="dao-tri-thuc-2">Đảo tri thức 2</option><option value="dao-tri-thuc-3">Đảo tri thức 3</option><option value="dao-tri-thuc-4">Đảo tri thức 4</option><option value="dao-tri-thuc-5">Đảo tri thức 5</option></select></label>
+                            <label class="ops-muted">Tỉnh / Thành phố <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportProvince" required style="display:block;margin-top:7px"><option value="">-- Chọn Tỉnh/Thành --</option>
+                                <optgroup label="── Miền Bắc (25) ──">
+                                    <option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="quang-ninh">Quảng Ninh</option><option value="ha-giang">Hà Giang</option><option value="lao-cai">Lào Cai</option><option value="lai-chau">Lai Châu</option><option value="dien-bien">Điện Biên</option><option value="son-la">Sơn La</option><option value="yen-bai">Yên Bái</option><option value="hoa-binh">Hòa Bình</option><option value="phu-tho">Phú Thọ</option><option value="tuyen-quang">Tuyên Quang</option><option value="cao-bang">Cao Bằng</option><option value="bac-kan">Bắc Kạn</option><option value="thai-nguyen">Thái Nguyên</option><option value="lang-son">Lạng Sơn</option><option value="bac-giang">Bắc Giang</option><option value="bac-ninh">Bắc Ninh</option><option value="hai-duong">Hải Dương</option><option value="hung-yen">Hưng Yên</option><option value="vinh-phuc">Vĩnh Phúc</option><option value="ha-nam">Hà Nam</option><option value="nam-dinh">Nam Định</option><option value="ninh-binh">Ninh Bình</option><option value="thai-binh">Thái Bình</option>
+                                </optgroup>
+                                <optgroup label="── Miền Trung (19) ──">
+                                    <option value="thanh-hoa">Thanh Hóa</option><option value="nghe-an">Nghệ An</option><option value="ha-tinh">Hà Tĩnh</option><option value="quang-binh">Quảng Bình</option><option value="quang-tri">Quảng Trị</option><option value="thua-thien-hue">Thừa Thiên Huế</option><option value="da-nang">Đà Nẵng</option><option value="quang-nam">Quảng Nam</option><option value="quang-ngai">Quảng Ngãi</option><option value="binh-dinh">Bình Định</option><option value="phu-yen">Phú Yên</option><option value="khanh-hoa">Khánh Hòa</option><option value="ninh-thuan">Ninh Thuận</option><option value="binh-thuan">Bình Thuận</option><option value="kon-tum">Kon Tum</option><option value="gia-lai">Gia Lai</option><option value="dak-lak">Đắk Lắk</option><option value="dak-nong">Đắk Nông</option><option value="lam-dong">Lâm Đồng</option>
+                                </optgroup>
+                                <optgroup label="── Miền Nam (19) ──">
+                                    <option value="ho-chi-minh">Hồ Chí Minh</option><option value="can-tho">Cần Thơ</option><option value="binh-phuoc">Bình Phước</option><option value="tay-ninh">Tây Ninh</option><option value="binh-duong">Bình Dương</option><option value="dong-nai">Đồng Nai</option><option value="ba-ria-vung-tau">Bà Rịa - Vũng Tàu</option><option value="long-an">Long An</option><option value="tien-giang">Tiền Giang</option><option value="ben-tre">Bến Tre</option><option value="tra-vinh">Trà Vinh</option><option value="vinh-long">Vĩnh Long</option><option value="dong-thap">Đồng Tháp</option><option value="an-giang">An Giang</option><option value="kien-giang">Kiên Giang</option><option value="hau-giang">Hậu Giang</option><option value="soc-trang">Sóc Trăng</option><option value="bac-lieu">Bạc Liêu</option><option value="ca-mau">Cà Mau</option>
+                                </optgroup>
+                            </select></label>
+                            <label class="ops-muted">Đảo tri thức (Chủ đề bài học) <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportIsland" required style="display:block;margin-top:7px"><option value="">-- Chọn Đảo --</option><option value="vt">Vị trí địa lý</option><option value="tn">Điều kiện tự nhiên</option><option value="dc">Dân cư</option><option value="vh">Văn hóa</option><option value="kt">Kinh tế</option><option value="dl">Du lịch</option></select></label>
                             <label class="ops-muted">Lý thuyết của đảo <small>(hiển thị một lần trước bài)</small><textarea class="ops-input" id="bulkImportIslandTheory" rows="7" placeholder="Nhập nội dung lý thuyết chung của đảo để học sinh đọc trước khi làm bài..." style="display:block;width:100%;margin-top:7px;resize:vertical;line-height:1.6"></textarea></label>
                             <p class="ops-muted" style="font-size:.78rem;line-height:1.5">Tỉnh/Thành và Đảo sẽ được tự động ghép vào tất cả câu hỏi hợp lệ trong lô này.</p>
                             <button class="ops-button" id="btnProcessUpload" type="button" style="margin-top:6px"><i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích và lưu câu hỏi</button>
@@ -95,8 +105,85 @@
                         <fieldset class="admin-question-section">
                             <legend><i class="fa-solid fa-location-dot"></i> Vị trí kiến thức</legend>
                             <div class="ops-grid admin-question-grid">
-                                <label class="ops-muted">Tỉnh / Thành phố<select class="ops-input" id="adminQuestionProvince" required><option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="da-nang">Đà Nẵng</option><option value="ho-chi-minh">Hồ Chí Minh</option></select></label>
-                                <label class="ops-muted">Đảo tri thức<select class="ops-input" id="adminQuestionIsland" required><option value="dao-tri-thuc-1">Đảo tri thức 1</option><option value="dao-tri-thuc-2">Đảo tri thức 2</option><option value="dao-tri-thuc-3">Đảo tri thức 3</option><option value="dao-tri-thuc-4">Đảo tri thức 4</option><option value="dao-tri-thuc-5">Đảo tri thức 5</option></select></label>
+                                <label class="ops-muted">Tỉnh / Thành phố<select class="ops-input" id="adminQuestionProvince" required>
+                                    <optgroup label="── Miền Bắc (25) ──">
+                                        <option value="ha-noi">Hà Nội</option>
+                                        <option value="hai-phong">Hải Phòng</option>
+                                        <option value="quang-ninh">Quảng Ninh</option>
+                                        <option value="ha-giang">Hà Giang</option>
+                                        <option value="lao-cai">Lào Cai</option>
+                                        <option value="lai-chau">Lai Châu</option>
+                                        <option value="dien-bien">Điện Biên</option>
+                                        <option value="son-la">Sơn La</option>
+                                        <option value="yen-bai">Yên Bái</option>
+                                        <option value="hoa-binh">Hòa Bình</option>
+                                        <option value="phu-tho">Phú Thọ</option>
+                                        <option value="tuyen-quang">Tuyên Quang</option>
+                                        <option value="cao-bang">Cao Bằng</option>
+                                        <option value="bac-kan">Bắc Kạn</option>
+                                        <option value="thai-nguyen">Thái Nguyên</option>
+                                        <option value="lang-son">Lạng Sơn</option>
+                                        <option value="bac-giang">Bắc Giang</option>
+                                        <option value="bac-ninh">Bắc Ninh</option>
+                                        <option value="hai-duong">Hải Dương</option>
+                                        <option value="hung-yen">Hưng Yên</option>
+                                        <option value="vinh-phuc">Vĩnh Phúc</option>
+                                        <option value="ha-nam">Hà Nam</option>
+                                        <option value="nam-dinh">Nam Định</option>
+                                        <option value="ninh-binh">Ninh Bình</option>
+                                        <option value="thai-binh">Thái Bình</option>
+                                    </optgroup>
+                                    <optgroup label="── Miền Trung (19) ──">
+                                        <option value="thanh-hoa">Thanh Hóa</option>
+                                        <option value="nghe-an">Nghệ An</option>
+                                        <option value="ha-tinh">Hà Tĩnh</option>
+                                        <option value="quang-binh">Quảng Bình</option>
+                                        <option value="quang-tri">Quảng Trị</option>
+                                        <option value="thua-thien-hue">Thừa Thiên Huế</option>
+                                        <option value="da-nang">Đà Nẵng</option>
+                                        <option value="quang-nam">Quảng Nam</option>
+                                        <option value="quang-ngai">Quảng Ngãi</option>
+                                        <option value="binh-dinh">Bình Định</option>
+                                        <option value="phu-yen">Phú Yên</option>
+                                        <option value="khanh-hoa">Khánh Hòa</option>
+                                        <option value="ninh-thuan">Ninh Thuận</option>
+                                        <option value="binh-thuan">Bình Thuận</option>
+                                        <option value="kon-tum">Kon Tum</option>
+                                        <option value="gia-lai">Gia Lai</option>
+                                        <option value="dak-lak">Đắk Lắk</option>
+                                        <option value="dak-nong">Đắk Nông</option>
+                                        <option value="lam-dong">Lâm Đồng</option>
+                                    </optgroup>
+                                    <optgroup label="── Miền Nam (19) ──">
+                                        <option value="ho-chi-minh">Hồ Chí Minh</option>
+                                        <option value="can-tho">Cần Thơ</option>
+                                        <option value="binh-phuoc">Bình Phước</option>
+                                        <option value="tay-ninh">Tây Ninh</option>
+                                        <option value="binh-duong">Bình Dương</option>
+                                        <option value="dong-nai">Đồng Nai</option>
+                                        <option value="ba-ria-vung-tau">Bà Rịa - Vũng Tàu</option>
+                                        <option value="long-an">Long An</option>
+                                        <option value="tien-giang">Tiền Giang</option>
+                                        <option value="ben-tre">Bến Tre</option>
+                                        <option value="tra-vinh">Trà Vinh</option>
+                                        <option value="vinh-long">Vĩnh Long</option>
+                                        <option value="dong-thap">Đồng Tháp</option>
+                                        <option value="an-giang">An Giang</option>
+                                        <option value="kien-giang">Kiên Giang</option>
+                                        <option value="hau-giang">Hậu Giang</option>
+                                        <option value="soc-trang">Sóc Trăng</option>
+                                        <option value="bac-lieu">Bạc Liêu</option>
+                                        <option value="ca-mau">Cà Mau</option>
+                                    </optgroup>
+                                </select></label>
+                                <label class="ops-muted">Đảo tri thức (Chủ đề bài học)<select class="ops-input" id="adminQuestionIsland" required>
+                                    <option value="vt">Vị trí địa lý</option>
+                                    <option value="tn">Điều kiện tự nhiên</option>
+                                    <option value="dc">Dân cư</option>
+                                    <option value="vh">Văn hóa</option>
+                                    <option value="kt">Kinh tế</option>
+                                    <option value="dl">Du lịch</option>
+                                </select></label>
                             </div>
                         </fieldset>
                         <fieldset class="admin-question-section">
