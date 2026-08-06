@@ -1,0 +1,618 @@
+[33mcommit b7e803cbe57961731b5ede1737e116e66b2b95e6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 22:42:24 2026 +0700
+
+    update UI UX
+
+[33mcommit 590671542eeaaf4826ddc366a67fe781630bae6e[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 22:16:57 2026 +0700
+
+    update
+
+[33mcommit f4a4b437ec9b061e30f549ab55e1586e4f566804[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 22:10:12 2026 +0700
+
+    update
+
+[33mcommit a1158ae395ec6913e7a6d9f662371ed2137b047a[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 21:58:11 2026 +0700
+
+    update
+
+[33mcommit 805737067b4986f41e668373cffc1c42e6a22f3a[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 21:53:48 2026 +0700
+
+    update
+
+[33mcommit 63b72bf4579d7853493107a81d62200420f8afb9[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 21:47:32 2026 +0700
+
+    mini update
+
+[33mcommit 4f7534151e1f39c414c93f70bbdce736f327b88a[m
+Merge: 4349854 1edecce
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 21:42:00 2026 +0700
+
+    update mini
+
+[33mcommit 43498548b893c93c30833319a600571da8898f93[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 21:20:56 2026 +0700
+
+    update new admin
+
+[33mcommit 1edecced85c2b7c3d1b2b682a8b9af22ccd0759c[m
+Author: kienquyet1201 <kienquyet1201@gmail.com>
+Date:   Thu Aug 6 20:52:39 2026 +0700
+
+    Update admin.html
+
+[33mcommit 556ab35b1349d5852ba247b3b726701673115600[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Mon Aug 3 19:19:37 2026 +0700
+
+    mini update
+
+[33mcommit 852d8e2b25f49939698aca37e5079fea4fadb582[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 01:43:28 2026 +0700
+
+    update 2.8.2
+
+[33mcommit ceff2866717180b9fe97a1111d5b7c0ef8066759[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 01:23:36 2026 +0700
+
+    fix
+
+[33mcommit 195ea75211ee43e5294bf9cd8a634c6558efb0c2[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 01:09:34 2026 +0700
+
+    fix eror
+
+[33mcommit ab4c4fb1b50eecaef95a3992b909d25beece1cea[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 01:05:14 2026 +0700
+
+    mini fix
+
+[33mcommit 60c84b34e1287dd02e63e6eaee66b7c3d80f30f6[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 00:59:19 2026 +0700
+
+    mini fix
+
+[33mcommit e514344614f8f33c98c210cbbf23ebe1c227cabb[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 00:51:31 2026 +0700
+
+    mini fix
+
+[33mcommit 5162fc26aee0edc68152027b544a8fd89c64d9a3[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 00:42:12 2026 +0700
+
+    update 2.8.1
+
+[33mcommit 3c24ec54b7d4ff31dc4c244dc36f2fb9aa0b674c[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 00:36:34 2026 +0700
+
+    update 2.8.1
+
+[33mcommit 951c8d15564f29d661e0b8e40c9fffb29f130d4f[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sun Aug 2 00:20:55 2026 +0700
+
+    update 2.8
+
+[33mcommit afca7c84860e6ffbd1ee3d6a054f506085d0a033[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Sat Jul 25 01:27:59 2026 +0700
+
+    update 2.7.2
+
+[33mcommit c3a9e66120d5b7c61f7a55b22ebe82abcac97d06[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 22:13:22 2026 +0700
+
+    update mobile reponsive
+
+[33mcommit dcc58a84fe5c829d3d7562a274d1c70b7781dd11[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 20:06:28 2026 +0700
+
+    update 2.7.1
+
+[33mcommit 4086a79a709b2bdd0d98aaa00a01222269b964fc[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 12:31:49 2026 +0700
+
+    update 2.7.1
+
+[33mcommit 007a92614c6e7b77620fe8431f528506fc5a853f[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 04:48:35 2026 +0700
+
+    update 2.7
+
+[33mcommit bd929eab99a2ee5e2280373384d7d498d74fc5cb[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 02:48:07 2026 +0700
+
+    update 2.6.8
+
+[33mcommit 31d09962ceb13c41b0c464dc7f8cd50ba5e28265[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 02:30:10 2026 +0700
+
+    update 2.6.7
+
+[33mcommit 7a05244f0b9e7dfcf4c3a4c3f5fa762844143c7c[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 02:16:09 2026 +0700
+
+    update 2.6.6
+
+[33mcommit 68227ab451c306803fe4c68c8785c71756198a12[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 02:06:20 2026 +0700
+
+    mini fix
+
+[33mcommit 1dca241e517e22ad077a3ad0644b1652fcc172ce[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 01:58:38 2026 +0700
+
+    mini fixx
+
+[33mcommit 36d130c99cea30d46649283f279bb45fd2c068e2[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 01:49:24 2026 +0700
+
+    update 2.6.5
+
+[33mcommit 88244fe0a2f7c4643f63837dc1a774068d9bbd35[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 01:36:55 2026 +0700
+
+    mini fix
+
+[33mcommit 8f45a3a00120520f15ad31639fb40fea299fce6a[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 01:31:30 2026 +0700
+
+    mini fix
+
+[33mcommit 678cb651d9cec87958de86bb15ba3c10a8e6cd4b[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 01:24:44 2026 +0700
+
+    mini fix
+
+[33mcommit 3267e88968f8d58f1be36a5e6c27c04d44a25118[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 01:10:57 2026 +0700
+
+    mini fix
+
+[33mcommit ef912d913d53f990485452c12b2a202aa7162643[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 01:02:19 2026 +0700
+
+    mini fix
+
+[33mcommit 4a4884a147482789d796d07400b2d6c1b8ff3143[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 00:52:13 2026 +0700
+
+    mini fix
+
+[33mcommit 78aed3a17885c7f1a2a710404990e5058a8374a5[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 00:43:01 2026 +0700
+
+    mini fix
+
+[33mcommit 6c3fe1a1745e53fa346e265da364e2ed168ec86b[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 24 00:11:37 2026 +0700
+
+    update 2.6.4
+
+[33mcommit 3b9d65868f0848883d9187d308b350d22b74857a[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Jul 23 23:51:14 2026 +0700
+
+    update 2.6.3
+
+[33mcommit 6c8a793e02e0066bd3483bc4527e493057c6eb93[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Jul 23 23:19:34 2026 +0700
+
+    update 2.6.2
+
+[33mcommit 1cabdcb907965e8168b48bc73b62e25c30cf3b33[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Thu Jul 23 23:08:29 2026 +0700
+
+    update 2.6.1
+
+[33mcommit 0cf5ac5ea81a63a8f059b1bfc13a92245b942ca7[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Wed Jul 22 04:44:02 2026 +0700
+
+    update 2.6
+
+[33mcommit c17770a7a6cf994ee5a537e5ab48032d3ee4b73b[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Wed Jul 22 04:36:31 2026 +0700
+
+    update 2.6
+
+[33mcommit 52faf096b5e2d143acd666e506fde65dd6bbe491[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Wed Jul 22 04:27:56 2026 +0700
+
+    update 2.6
+
+[33mcommit ace11b6c756325b817478605ca23f964c7875f8f[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Wed Jul 22 03:29:24 2026 +0700
+
+    update 2.5.12
+
+[33mcommit 71827384bbadac713be5ee3acfaeaf0ead46435f[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Wed Jul 22 02:30:12 2026 +0700
+
+    update 2.5.12
+
+[33mcommit 96944efdbe4a7f1cd03879c16471d84b43cf3187[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Wed Jul 22 02:17:32 2026 +0700
+
+    update 2.5.11
+
+[33mcommit 2acee41a476c4d5e5158879c217000c1196d1032[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 22:28:11 2026 +0700
+
+    update 2.5.11
+
+[33mcommit d5f51c436f6635e1e1723c799cca4bf25873c566[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 22:12:07 2026 +0700
+
+    update 2.5.10
+
+[33mcommit 522b31c3bf92431ec431fa48c580def610fec627[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 21:48:29 2026 +0700
+
+    update 2.5.9
+
+[33mcommit 8697d9942e716e373ab23e371c03d108a72f93f1[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 21:42:38 2026 +0700
+
+    update 2.5.9
+
+[33mcommit 63fdfe3e2698fdf47ceb88455abb0009695cb18c[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 17:15:19 2026 +0700
+
+    update 2.5.8
+
+[33mcommit b11222d4e9696b7fb568fd9c5247dab283da18ae[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 17:06:56 2026 +0700
+
+    update 2.5.7
+
+[33mcommit 11e5e5aef65fa9ea3065bbcf4b8e5ee73e60e69b[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 16:53:23 2026 +0700
+
+    update 2.5.7
+
+[33mcommit 9f10d69c500f74efa9344c9fad197d334e12ead6[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 13:11:55 2026 +0700
+
+    update 2.5.6
+
+[33mcommit 43500cef88478d779d5a18f7d80c39096a810724[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 13:06:51 2026 +0700
+
+    update 2.5.5
+
+[33mcommit d493c7a8c57ece2f6917338a62adb9b40dcc2ab3[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 12:43:07 2026 +0700
+
+    update 2.5.4
+
+[33mcommit a2f3439f6331caedbb660447144413aa0cf8d97b[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 12:28:23 2026 +0700
+
+    update 2.5.3
+
+[33mcommit a9da8fa05414d94a7d0cc34ab63fc42a2d51734e[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 11:20:46 2026 +0700
+
+    update 2.5.2
+
+[33mcommit 22d0ae39745afbfbe99326714bae0993bd8b7c27[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 11:07:20 2026 +0700
+
+    update 2.5.1
+
+[33mcommit daa918077d7691f68cf39e2c2350d90fb658223a[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 10:53:35 2026 +0700
+
+    update 2.5
+
+[33mcommit db4648a47bfe486c504c19f79b3a4d0d133a285f[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 10:48:05 2026 +0700
+
+    update 2.5
+
+[33mcommit 58f084565ab0d12911c76883b308d6aac7c3d168[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 09:29:47 2026 +0700
+
+    update 2.4.1
+
+[33mcommit 28c2f4029687336ba3ed6b4c06f008532fbc723c[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 02:24:45 2026 +0700
+
+    update 2.4
+
+[33mcommit a261ce54b948cd7d7ff27982044e95726ecf0043[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 01:49:56 2026 +0700
+
+    update 2.3.3
+
+[33mcommit ad95f1adb778f3c6a875c6388521082a9308d24b[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 01:42:27 2026 +0700
+
+    update 2.3.2
+
+[33mcommit a526fe7c380632c5e6ec7200a2437b9e243554f9[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 01:29:18 2026 +0700
+
+    update 2.3.1
+
+[33mcommit 6a101b6e7fa8908f47a82b73fdfb9f1a35e16ee2[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Tue Jul 21 00:48:21 2026 +0700
+
+    update 2.3.1
+
+[33mcommit e611384e356ac9e2b6095a7b70de4d901c0500dd[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 23:29:32 2026 +0700
+
+    update 2.3
+
+[33mcommit 527a59e41dbee78c464013dc6cf80b0b92531fbc[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 23:22:06 2026 +0700
+
+    update 2.3
+
+[33mcommit 1b6037db2c4af29479cac41b6d288fee497b18ea[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 23:11:35 2026 +0700
+
+    update v2.2.4
+
+[33mcommit 31daa9439dc2f2a184d74b8157bab343e7eab14d[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 22:46:56 2026 +0700
+
+    update v2.2.3
+
+[33mcommit 900a941f8acb6cff0cea7ac892c53827619f6e66[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 22:38:51 2026 +0700
+
+    update v2.2.2
+
+[33mcommit 3c6817c7e00f5ef3d3627e280a08fa8639cb610a[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 22:28:35 2026 +0700
+
+    clean server
+
+[33mcommit a90f8dd398c3b63c2372829000fe25a386d9b37a[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 22:21:15 2026 +0700
+
+    update v2.2.1
+
+[33mcommit ebfafe62642ed0aae17aaaf8506ec85d5ab3fdb2[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 22:12:59 2026 +0700
+
+    update v2.2
+
+[33mcommit 20e7943633ebd13f09b90fa36521c7eb3d542d17[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 22:03:56 2026 +0700
+
+    update v2.1.1
+
+[33mcommit 1686fa7ce8d03dce7b67a48749fae2737b4b6c49[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 21:58:55 2026 +0700
+
+    update v2.1
+
+[33mcommit 12d6190b38f06c8f119932c6197d4a361ce67b66[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 21:55:53 2026 +0700
+
+    Update v2
+
+[33mcommit 68e44c2c96a83f7df49f55dbe0b2bc0d901818f9[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 21:49:41 2026 +0700
+
+    update
+
+[33mcommit d66e392d623467a6614353d5d3c381eb18c5f80e[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 21:32:57 2026 +0700
+
+    update
+
+[33mcommit 5fe1ef30339b40bebf77aa44a5300879983c0593[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 21:26:51 2026 +0700
+
+    update
+
+[33mcommit 0276a570d9d90bae30c6482ceaee81555e361808[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 21:01:47 2026 +0700
+
+    update
+
+[33mcommit a2e9ad34ca60b34b20d15097c7e86b17ad474f19[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 20:57:18 2026 +0700
+
+    update
+
+[33mcommit b48f7dc2ed04e0ab938c696aede023855cc0f127[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 20:36:27 2026 +0700
+
+    update
+
+[33mcommit 8d7d7da4be495075d99ea43b0a4c892924f8dc4e[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 20:31:16 2026 +0700
+
+    update
+
+[33mcommit 83e1f6e927be2e7cedadfd8e2a477dece702ddee[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 18:46:35 2026 +0700
+
+    update
+
+[33mcommit 1bd895ed6943eafc70c66a23ca9d959019ef7146[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 18:35:47 2026 +0700
+
+    update
+
+[33mcommit 8e436df9c65c5d8b97dac634b75367616fc71437[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 18:25:19 2026 +0700
+
+    update
+
+[33mcommit 518fbeb9266062fcb81827c27018974b8a513097[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 18:11:38 2026 +0700
+
+    update
+
+[33mcommit 16127417d3d5745d3f07b41e0527b8a8b8273dc1[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 17:51:22 2026 +0700
+
+    update
+
+[33mcommit 86558323c3d9abc8cc263caddb567991957f7d87[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 17:17:45 2026 +0700
+
+    fix eror v4
+
+[33mcommit 1788d0977e1d840cc5c5090038b2965cb9a130e0[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 17:14:57 2026 +0700
+
+    update eror v3
+
+[33mcommit 205fe70109db15b8649447c92db795a9b4981191[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 17:07:57 2026 +0700
+
+    update v2
+
+[33mcommit 6625db3573f370fbcdb20f9127ad7eff1214a9ea[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 17:06:00 2026 +0700
+
+    update
+
+[33mcommit 346da10650c125df0434456c30b6914738c4ca5f[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 02:25:31 2026 +0700
+
+    Update build script to skip checks
+
+[33mcommit 98e5309b1c85c83be663cc1af6c1cbcbda3e7b15[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 02:22:51 2026 +0700
+
+    Fix: Bypassing build checks
+
+[33mcommit 792a638b02db6626ec92eda99ea25aa93cd80389[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 02:17:29 2026 +0700
+
+    Remove typescript config
+
+[33mcommit a9371c5673c882f9319c097f9f5c23c1914d960c[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 02:13:30 2026 +0700
+
+    Fix: Them typescript va types
+
+[33mcommit f3c60b246d944241606f288bd8eaa3a18765a28b[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 02:05:38 2026 +0700
+
+    Fix: Them framer-motion vao dependencies
+
+[33mcommit 9f40dce43e99041b17cb15ba86f7502eaa47de86[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 02:03:10 2026 +0700
+
+    Fix: Them thu vien framer-motion vao package.json
+
+[33mcommit b369b103532fc3d3ad42192dec2289b22e86f653[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 01:55:56 2026 +0700
+
+    Bo sung thu vien framer-motion
+
+[33mcommit 1a5d0d75467d976a06db7fb485d72a5499fbf5c8[m
+Author: Kien Quyet <kienquyet1201@gmail.com>
+Date:   Fri Jul 17 01:46:05 2026 +0700
+
+    Ban cap nhat Big Update Nextjs

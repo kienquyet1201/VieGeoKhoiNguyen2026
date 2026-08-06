@@ -335,7 +335,7 @@
             const user = state.users.find(item => item.id === userId);
             const activeRole = validRoles.includes(user?.activeRole) ? user.activeRole : validRoles[0];
             try {
-                await db.collection('users').doc(userId).set({ roles: validRoles, role: activeRole, activeRole, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                await db.collection('users').doc(userId).set({ roles: validRoles, role: activeRole, activeRole, updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date() }, { merge: true });
                 if (user) { user.roles = validRoles; user.activeRole = activeRole; }
                 showToast('Đã lưu các quyền người dùng.');
             } catch (error) { console.error(error); showToast('Không thể cập nhật quyền người dùng.', 'error'); }
@@ -365,7 +365,7 @@
         async function updateRequest(requestId, email, status) {
             try {
                 if (status === 'approved' && email) await db.collection('users').doc(email).set({ accountStatus: 'premium' }, { merge: true });
-                await db.collection('premium_requests').doc(requestId).set({ status, reviewedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                await db.collection('premium_requests').doc(requestId).set({ status, reviewedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date() }, { merge: true });
                 showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu.'); loadRequests();
             } catch (error) { console.error(error); showToast('Không thể cập nhật yêu cầu.', 'error'); }
         }
@@ -445,7 +445,7 @@
                 const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
                 await db.collection('ErrorReports').doc(reportId).set({
                     status,
-                    resolvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    resolvedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
                     resolvedAtClient: Date.now(),
                     resolvedBy: session.email || 'admin'
                 }, { merge: true });
@@ -550,12 +550,12 @@
         async function processBulkTextImport() {
             const province = String(el('bulkImportProvince')?.value || '').trim();
             const subIslandVal = String(el('bulkImportSubIsland')?.value || '').trim();
-            const subIsland = Number(subIslandVal) || 0;
+            const subIslandNum = Number(subIslandVal.replace(/\D+/g, '')) || Number(subIslandVal) || 0;
             const topic = String(el('bulkImportTopic')?.value || el('lesson-topic')?.value || '').trim();
             const islandTheory = String(el('bulkImportIslandTheory')?.value || '').trim();
             const button = el('btnProcessUpload');
 
-            if (!province || !subIsland || !topic) {
+            if (!province || !subIslandNum || !topic) {
                 showToast('Hãy chọn Tỉnh/Thành phố, Đảo nhỏ và nhập Chủ đề bài học.', 'warning');
                 return;
             }
@@ -576,14 +576,12 @@
                         batch.set(doc, {
                             ...question,
                             province,
-                            subIsland,
-                            islandIndex: subIsland,
-                            island: `Đảo nhỏ ${subIsland}`,
+                            subIsland: subIslandNum, islandIndex: subIslandNum, island: `Đảo nhỏ ${subIslandNum}`,
                             topic,
                             islandTheory,
                             importOrder: start + offset + 1,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
+                            updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
                         });
                     });
                     await batch.commit();
@@ -610,13 +608,13 @@
             const answer = Number(el('adminCorrectAnswer')?.value);
             const province = trimValue('adminQuestionProvince');
             const subIslandVal = String(el('adminQuestionSubIsland')?.value || '').trim();
-            const subIsland = Number(subIslandVal) || 0;
+            const subIslandNum = Number(subIslandVal.replace(/\D+/g, '')) || Number(subIslandVal) || 0;
             const topic = String(el('lesson-topic')?.value || el('adminQuestionTopic')?.value || '').trim();
             const difficulty = trimValue('adminQuestionDifficulty');
             const islandTheory = trimValue('adminIslandTheory');
             const explanation = trimValue('adminQuestionExplanation');
 
-            if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !subIsland || !topic || !difficulty) {
+            if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !subIslandNum || !topic || !difficulty) {
                 showToast('Hãy nhập đủ câu hỏi, 4 đáp án, đáp án đúng, tỉnh, Đảo nhỏ, chủ đề và độ khó.', 'warning');
                 return;
             }
@@ -626,15 +624,13 @@
                 options,
                 answer,
                 province,
-                subIsland,
-                islandIndex: subIsland,
-                island: `Đảo nhỏ ${subIsland}`,
+                subIsland: subIslandNum, islandIndex: subIslandNum, island: `Đảo nhỏ ${subIslandNum}`,
                 topic,
                 difficulty,
                 islandTheory,
                 explanation,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
+                updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
             };
 
             button.disabled = true;
@@ -714,7 +710,7 @@
             const difficulty = el('editQuestionDifficulty')?.value;
             const grade = el('editQuestionGrade')?.value.trim();
             const subIslandVal = String(el('editQuestionSubIsland')?.value || '').trim();
-            const subIsland = Number(subIslandVal) || 0;
+            const subIslandNum = Number(subIslandVal.replace(/\D+/g, '')) || Number(subIslandVal) || 0;
             const topic = el('editQuestionTopic')?.value.trim();
             const lessonId = el('editQuestionLessonId')?.value.trim();
             const islandTheory = el('editIslandTheory')?.value.trim();
@@ -745,7 +741,7 @@
                     lessonId,
                     islandTheory,
                     explanation,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
                 });
                 setQuestionEditorOpen(false);
                 showToast('Đã cập nhật câu hỏi!');
