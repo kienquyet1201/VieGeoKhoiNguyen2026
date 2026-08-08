@@ -1,4 +1,4 @@
-﻿/* Dynamic learning path: every province has a 34-island progression. */
+/* Dynamic learning path: every province has a 34-island progression. */
 (function () {
     'use strict';
 
@@ -18,12 +18,12 @@
     }
 
     function difficultyLabel(difficulty) {
-        return ({ easy: 'Dá»…', medium: 'Trung bÃ¬nh', hard: 'KhÃ³' })[difficulty] || 'Dá»…';
+        return ({ easy: 'Dễ', medium: 'Trung bình', hard: 'Khó' })[difficulty] || 'Dễ';
     }
 
     function provinceKey(province) {
         return String(province.id || province.name || 'province')
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/Ä‘/g, 'd').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase();
     }
 
     function buildProvincePath(province, selectedTier) {
@@ -36,10 +36,10 @@
             const nodeKind = islandIndex === 34 ? 'boss' : ([11, 22, 33].includes(islandIndex) ? 'checkpoint' : 'small');
             const isBoss = nodeKind !== 'small';
             const title = nodeKind === 'boss'
-                ? 'BOSS CUá»I Â· Chinh phá»¥c tá»‰nh thÃ nh'
+                ? 'BOSS CUỐI · Chinh phục tỉnh thành'
                 : nodeKind === 'checkpoint'
-                    ? `Tráº¡m kiá»ƒm tra ${difficultyLabel(difficulty)}`
-                    : `Äáº£o tri thá»©c ${islandIndex}`;
+                    ? `Trạm kiểm tra ${difficultyLabel(difficulty)}`
+                    : `Đảo tri thức ${islandIndex}`;
             return {
                 id: `path-${provinceKey(province)}-d${difficulty}-i${islandIndex}`,
                 title,
@@ -130,7 +130,7 @@
                 );
                 if (questions.length) return questions;
             } catch (error) {
-                console.warn(`KhÃ´ng thá»ƒ táº£i cÃ¢u há»i tá»« ${collectionName}:`, error);
+                console.warn(`Không thể tải câu hỏi từ ${collectionName}:`, error);
             }
         }
         return [];
@@ -138,10 +138,10 @@
 
     async function loadQuestions(lesson) {
         const fallback = {
-            question: `Kiáº¿n thá»©c Ä‘á»‹a lÃ­ nÃ o phÃ¹ há»£p vá»›i ${lesson.title}?`,
-            options: ['PhÆ°Æ¡ng Ã¡n A', 'PhÆ°Æ¡ng Ã¡n B', 'PhÆ°Æ¡ng Ã¡n C', 'PhÆ°Æ¡ng Ã¡n D'],
+            question: `Kiến thức địa lí nào phù hợp với ${lesson.title}?`,
+            options: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
             correctAnswer: 0,
-            explanation: 'HÃ£y xem láº¡i kiáº¿n thá»©c ná»n táº£ng trÆ°á»›c khi tiáº¿p tá»¥c hÃ nh trÃ¬nh.'
+            explanation: 'Hãy xem lại kiến thức nền tảng trước khi tiếp tục hành trình.'
         };
         const remoteQuestions = await fetchQuestionsFromDataStore(lesson, fallback);
         if (remoteQuestions.length) return remoteQuestions;
@@ -149,7 +149,7 @@
         try {
             const banks = await Promise.all(QUESTION_SOURCES.map(async (source) => {
                 const response = await fetch(source, { cache: 'force-cache' });
-                if (!response.ok) throw new Error('KhÃ´ng táº£i Ä‘Æ°á»£c ngÃ¢n hÃ ng cÃ¢u há»i.');
+                if (!response.ok) throw new Error('Không tải được ngân hàng câu hỏi.');
                 return response.json();
             }));
             const tier = banks.flatMap((bank) => Array.isArray(bank?.tiers?.[lesson.difficulty])
@@ -158,7 +158,7 @@
             const localQuestions = randomFive(tier, fallback);
             return localQuestions;
         } catch (error) {
-            console.warn('KhÃ´ng thá»ƒ táº£i ngÃ¢n hÃ ng dá»± phÃ²ng:', error);
+            console.warn('Không thể tải ngân hàng dự phòng:', error);
             return [];
         }
     }
@@ -182,14 +182,14 @@
 
     async function loadIslandContent(lesson) {
         const fallback = {
-            question: `Kiáº¿n thá»©c nÃ o phÃ¹ há»£p vá»›i ${lesson.title}?`,
-            options: ['PhÆ°Æ¡ng Ã¡n A', 'PhÆ°Æ¡ng Ã¡n B', 'PhÆ°Æ¡ng Ã¡n C', 'PhÆ°Æ¡ng Ã¡n D'],
+            question: `Kiến thức nào phù hợp với ${lesson.title}?`,
+            options: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
             correctAnswer: 0,
-            explanation: 'HÃ£y xem láº¡i kiáº¿n thá»©c ná»n táº£ng trÆ°á»›c khi tiáº¿p tá»¥c.'
+            explanation: 'Hãy xem lại kiến thức nền tảng trước khi tiếp tục.'
         };
         const documents = await fetchIslandDocuments(lesson);
         const theory = String(documents.map(item => item.islandTheory || item.islandTheoryContent || item.islandTheoryText || '').find(Boolean)
-            || `Ná»™i dung trá»ng tÃ¢m cá»§a ${lesson.title}: ghi nhá»› cÃ¡c Ã½ chÃ­nh, tá»« khÃ³a Ä‘á»‹a lÃ­ vÃ  liÃªn há»‡ vá»›i Ä‘á»‹a phÆ°Æ¡ng Ä‘ang khÃ¡m phÃ¡.`).trim();
+            || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
         const questions = randomFive(documents, fallback);
         return {
             theory,
@@ -242,14 +242,14 @@
             .toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
-            .replace(/Ä‘/g, 'd')
+            .replace(/đ/g, 'd')
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '') || 'ha-noi';
     }
 
     function lessonIslandLabel(lesson = {}) {
         const index = Number(lesson.islandIndex || String(lesson.island || lesson.title || '').match(/\d+/)?.[0]) || 1;
-        return `Äáº£o nhá» ${index}`;
+        return `Đảo nhỏ ${index}`;
     }
 
     function mapDataStoreQuestions(snapshot) {
@@ -305,7 +305,7 @@
                     }
                 }
             } catch (err) {
-                console.warn('Lá»—i Ä‘á»c cÃ¢u há»i tá»« Supabase:', err, { lessonId, provinceSlug, islandLabel });
+                console.warn('Lỗi đọc câu hỏi từ Supabase:', err, { lessonId, provinceSlug, islandLabel });
             }
         }
         window.VieGeoQuestionLoadState = 'empty';
@@ -340,7 +340,7 @@
         } catch (error) {
             // A missing permission/index must never prevent the learning route
             // from rendering with its default island labels.
-            console.warn('KhÃ´ng thá»ƒ táº£i tÃªn chá»§ Ä‘á» Ä‘áº£o tá»« Supabase:', error);
+            console.warn('Không thể tải tên chủ đề đảo từ Supabase:', error);
         }
         return topicsByLessonId;
     }
@@ -368,15 +368,15 @@
         } catch (error) {
             console.error('Supabase island content load failed:', error);
             window.VieGeoQuestionLoadState = 'network-error';
-            notifyQuestionLoad('Lá»—i Ä‘Æ°á»ng truyá»n hoáº·c mÃ¡y chá»§ Supabase. Vui lÃ²ng kiá»ƒm tra láº¡i máº¡ng!', true);
+            notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!', true);
         }
         const questions = randomFiveQuestions(sourceQuestions);
         if (!questions.length && window.VieGeoQuestionLoadState !== 'network-error') {
-            notifyQuestionLoad('Hiá»‡n chÆ°a cÃ³ cÃ¢u há»i nÃ o cho Ä‘áº£o nÃ y, vui lÃ²ng quay láº¡i sau!');
+            notifyQuestionLoad('Hiện chưa có câu hỏi nào cho đảo này, vui lòng quay lại sau!');
         }
         const theory = String(questions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
             || sourceQuestions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
-            || `Ná»™i dung trá»ng tÃ¢m cá»§a ${lesson.title}: ghi nhá»› cÃ¡c Ã½ chÃ­nh, tá»« khÃ³a Ä‘á»‹a lÃ­ vÃ  liÃªn há»‡ vá»›i Ä‘á»‹a phÆ°Æ¡ng Ä‘ang khÃ¡m phÃ¡.`).trim();
+            || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
         return { theory, questions, status: window.VieGeoQuestionLoadState || (questions.length ? 'ready' : 'empty') };
     }
 
@@ -392,4 +392,5 @@
         loadIslandContent: loadSupabaseIslandContent
     };
 }());
+
 

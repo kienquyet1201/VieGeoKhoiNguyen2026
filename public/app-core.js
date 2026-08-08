@@ -765,7 +765,7 @@ if (difficultyChips.length > 0) {
 
 
 
-// ── RENDER LEADERBOARD (FIREBASE) ──
+// ── RENDER LEADERBOARD (SUPABASE + SAFE FALLBACK) ──
 async function renderLeaderboard() {
     const lbList = document.getElementById('lbList');
     if (!lbList) return;
@@ -773,14 +773,85 @@ async function renderLeaderboard() {
     lbList.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-dim);">Đang tải dữ liệu...</div>';
     
     try {
-        const snapshot = await db.collection('users').orderBy('xp', 'desc').limit(10).get();
+        const normalizeRow = (row = {}, index = 0) => {
+            const rawXp = row.xp ?? row.exp ?? row.score ?? row.total_xp ?? row.points ?? 0;
+            const xp = Number(rawXp) || 0;
+            return {
+                id: row.id ?? row.email ?? `leaderboard-${index}`,
+                email: row.email ?? row.user_email ?? '',
+                name: cleanText(row.name || row.full_name || row.display_name || row.email || 'Thám hiểm gia', 120),
+                avatar: cleanText(row.avatar || row.avatar_icon || row.icon || 'fa-user', 80),
+                avatarIsBase64: Boolean(row.avatarIsBase64 || row.avatar_is_base64),
+                xp
+            };
+        };
+
+        const localFallbackRows = () => {
+            const fallbackRows = [];
+            try {
+                const localUsers = JSON.parse(localStorage.getItem('VieGeo_local_users') || '[]');
+                if (Array.isArray(localUsers)) fallbackRows.push(...localUsers);
+            } catch (error) {
+                console.warn('[VieGeo Leaderboard] Không đọc được local users:', error);
+            }
+            fallbackRows.push({
+                email: sessionUser.email || 'local-player@viegeo.local',
+                name: sessionUser.name || sessionUser.email || 'Bạn',
+                avatar: sessionUser.avatar || 'fa-user',
+                avatarIsBase64: sessionUser.avatarIsBase64,
+                xp: gameState?.xp || sessionUser.xp || sessionUser.exp || 0
+            });
+            return fallbackRows;
+        };
+
+        const fetchLeaderboardRows = async () => {
+            const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+            if (!client || typeof client.from !== 'function') {
+                console.warn('[VieGeo Leaderboard] Supabase client chưa sẵn sàng, dùng fallback cục bộ.');
+                return localFallbackRows();
+            }
+
+            const attempts = [
+                { table: 'leaderboard', limit: 100 },
+                { table: 'users', limit: 100 }
+            ];
+
+            for (const attempt of attempts) {
+                const { data, error } = await client
+                    .from(attempt.table)
+                    .select('*')
+                    .limit(attempt.limit);
+
+                if (error) {
+                    console.warn(`[VieGeo Leaderboard] Không tải được bảng ${attempt.table}:`, {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint
+                    });
+                    continue;
+                }
+
+                if (Array.isArray(data) && data.length > 0) {
+                    console.log(`[VieGeo Leaderboard] Đã tải ${data.length} dòng từ Supabase.${attempt.table}`, data[0]);
+                    return data;
+                }
+            }
+
+            console.warn('[VieGeo Leaderboard] Chưa có dữ liệu leaderboard/users trên Supabase, dùng fallback cục bộ.');
+            return localFallbackRows();
+        };
+
+        const users = (await fetchLeaderboardRows())
+            .map(normalizeRow)
+            .sort((a, b) => b.xp - a.xp)
+            .slice(0, 10);
         
         lbList.innerHTML = ''; // Xóa loading
         
         let index = 0;
-        snapshot.forEach(doc => {
-            const user = doc.data();
-            const isMe = (user.email === sessionUser.email);
+        users.forEach(user => {
+            const isMe = Boolean(sessionUser.email && user.email === sessionUser.email);
             
             const item = document.createElement('div');
             const isTop3 = index < 3;
@@ -828,8 +899,33 @@ async function renderLeaderboard() {
             index++;
         });
     } catch (error) {
-        console.error("Lỗi lấy Bảng xếp hạng:", error);
-        lbList.innerHTML = '<div style="text-align:center; padding: 20px; color: #ff4b4b;">Lỗi kết nối máy chủ</div>';
+        console.error('[VieGeo Leaderboard] Lỗi lấy Bảng xếp hạng:', error);
+        const fallbackUsers = [{
+            email: sessionUser.email || '',
+            name: sessionUser.name || sessionUser.email || 'Bạn',
+            avatar: sessionUser.avatar || 'fa-user',
+            avatarIsBase64: sessionUser.avatarIsBase64,
+            xp: gameState?.xp || sessionUser.xp || sessionUser.exp || 0
+        }];
+        lbList.innerHTML = '';
+        fallbackUsers.forEach((user) => {
+            const item = document.createElement('div');
+            const userLevel = getLevel(user.xp);
+            item.className = 'lb-item is-me';
+            item.innerHTML = `
+                <div class="lb-rank" style="width: 40px; text-align: center;"><i class="fa-solid fa-user" style="color: #1cb0f6;"></i></div>
+                <div class="lb-avatar" style="background: #1cb0f633; color: #1cb0f6; position: relative;">
+                    <i class="fa-solid ${cleanText(user.avatar || 'fa-user', 80)}"></i>
+                    <div style="position: absolute; bottom: -8px; background: var(--bg-dark); border: 1px solid #1cb0f6; font-size: 0.7rem; border-radius: 10px; padding: 2px 6px;">Lv.${userLevel}</div>
+                </div>
+                <div class="lb-info">
+                    <div class="lb-name">${cleanText(user.name || 'Bạn', 120)}</div>
+                    <div style="color: var(--text-dim); font-size: .85rem;">Dữ liệu dự phòng cục bộ</div>
+                </div>
+                <div class="lb-xp">${Number(user.xp) || 0} XP</div>
+            `;
+            lbList.appendChild(item);
+        });
     }
 }
 
@@ -1414,7 +1510,7 @@ if (btnSaveProfileElem) {
                 if (!authClient) {
                     showToast("Supabase Auth chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.", false);
                     btn.disabled = false;
-                    btn.textContent = "LÆ°u Thay Äá»•i";
+                    btn.textContent = "Lưu Thay Đổi";
                     return;
                 }
                 const { error } = await authClient.auth.updateUser({ password: newPass });

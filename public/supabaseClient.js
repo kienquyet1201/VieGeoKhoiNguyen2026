@@ -120,7 +120,9 @@
         const rawAnswer = row.correct_option ?? row.correctAnswer ?? row.answerIndex ?? row.correct_answer ?? row.answer ?? 0;
         const answerIndex = Number(rawAnswer);
         const normalizedAnswer = Number.isInteger(answerIndex) ? answerIndex : 0;
-        const subIsland = row.sub_island ?? row.subIsland ?? row.islandIndex ?? row.island_index ?? Number(String(row.island || '').match(/\d+/)?.[0] || 0) || '';
+        const islandMatch = String(row.island || '').match(/\d+/);
+        const islandNumberFromLabel = islandMatch && islandMatch[0] ? Number(islandMatch[0]) : 0;
+        const subIsland = row.sub_island ?? row.subIsland ?? row.islandIndex ?? row.island_index ?? (islandNumberFromLabel || '');
         return {
             ...row,
             question: row.question ?? row.questionText ?? row.question_text ?? '',

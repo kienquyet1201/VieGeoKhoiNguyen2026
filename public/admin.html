@@ -287,6 +287,64 @@
         const cleanText = (value, max = 2000) => security.sanitizeText(value, max);
         const cleanHtml = (value, max = 12000) => (security.sanitizeHtml ? security.sanitizeHtml(value, max) : cleanText(value, max));
         const safeDifficulty = value => ['easy', 'medium', 'hard'].includes(String(value || '').toLowerCase()) ? String(value).toLowerCase() : '';
+        const QUESTION_INSERT_COLUMNS = [
+            'question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option',
+            'province', 'island', 'topic', 'theory', 'hint1', 'hint2', 'difficulty',
+            'sub_island', 'island_theory', 'import_order', 'created_at'
+        ];
+        function describeSupabaseQuestionError(error) {
+            const text = `${error?.code || ''} ${error?.status || ''} ${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`.toLowerCase();
+            if (text.includes('pgrst204') || text.includes('column') || text.includes('schema cache')) {
+                return 'Bảng questions đang thiếu cột hoặc Supabase schema cache chưa nhận cột mới. Hãy chạy lại file supabase-questions-setup.sql rồi Refresh schema cache/Reload trang.';
+            }
+            if (text.includes('42501') || text.includes('permission') || text.includes('row-level security')) {
+                return 'Supabase đang chặn quyền insert/update. Hãy kiểm tra RLS hoặc grant quyền insert cho anon/authenticated trong supabase-questions-setup.sql.';
+            }
+            if (text.includes('23505') || text.includes('duplicate')) {
+                return 'Có câu hỏi bị trùng khóa unique. Hãy sửa nội dung câu hỏi hoặc dùng luồng cập nhật.';
+            }
+            return error?.message || 'Không thể lưu câu hỏi lên Supabase.';
+        }
+        function missingSupabaseQuestionColumn(error) {
+            const source = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+            const quoted = source.match(/'([^']+)'\s+column/i);
+            if (quoted?.[1]) return quoted[1];
+            const named = source.match(/column\s+["']?([a-zA-Z0-9_]+)["']?/i);
+            return named?.[1] || '';
+        }
+        async function insertQuestionsWithSchemaFallback(client, rows) {
+            const requiredColumns = new Set(['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option']);
+            let payload = rows.map(row => ({ ...row }));
+            const droppedColumns = [];
+            for (let attempt = 1; attempt <= QUESTION_INSERT_COLUMNS.length; attempt += 1) {
+                const { data, error } = await client.from('questions').insert(payload);
+                if (!error) return { data, droppedColumns };
+                const missingColumn = missingSupabaseQuestionColumn(error);
+                console.error('[VieGeo Admin] Supabase questions insert attempt failed', {
+                    attempt,
+                    missingColumn,
+                    droppedColumns,
+                    error,
+                    code: error.code,
+                    message: error.message,
+                    details: error.details,
+                    hint: error.hint,
+                    payloadColumns: Object.keys(payload[0] || {}),
+                    sampleRow: payload[0] || null
+                });
+                if (!missingColumn || requiredColumns.has(missingColumn) || !(missingColumn in (payload[0] || {}))) throw error;
+                droppedColumns.push(missingColumn);
+                payload = payload.map(row => {
+                    const { [missingColumn]: _dropped, ...rest } = row;
+                    return rest;
+                });
+                console.warn('[VieGeo Admin] Retry bulk insert without optional missing column', {
+                    missingColumn,
+                    nextColumns: Object.keys(payload[0] || {})
+                });
+            }
+            throw new Error('Không thể tự điều chỉnh payload để khớp schema bảng questions.');
+        }
         function assertAdminRate(action, limit = 8, windowMs = 60000) {
             const result = security.rateLimit(`admin_${action}`, { limit, windowMs });
             if (!result.allowed) throw new Error(`Bạn thao tác quá nhanh. Vui lòng thử lại sau ${Math.ceil(result.retryAfterMs / 1000)}s.`);
@@ -737,18 +795,49 @@
                     import_order: idx + 1,
                     created_at: new Date().toISOString()
                 }));
+                const payloadColumns = [...new Set(newQuestions.flatMap(question => Object.keys(question)))];
+                const missingColumns = QUESTION_INSERT_COLUMNS.filter(column => !payloadColumns.includes(column));
+                const extraColumns = payloadColumns.filter(column => !QUESTION_INSERT_COLUMNS.includes(column));
+                console.log('[VieGeo Admin] processBulkTextImport payload check', {
+                    expectedColumns: QUESTION_INSERT_COLUMNS,
+                    payloadColumns,
+                    missingColumns,
+                    extraColumns,
+                    rowCount: newQuestions.length,
+                    sampleRow: newQuestions[0] || null
+                });
+                if (missingColumns.length || extraColumns.length) {
+                    throw new Error(`Payload bulk upload bị lệch schema. Thiếu: ${missingColumns.join(', ') || 'không'}; thừa: ${extraColumns.join(', ') || 'không'}.`);
+                }
 
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
-                const { data, error } = await client.from('questions').insert(newQuestions);
-                if (error) { console.error('Supabase bulk insert error:', error); throw error; }
+                const { data, droppedColumns } = await insertQuestionsWithSchemaFallback(client, newQuestions);
+                if (droppedColumns.length) {
+                    console.warn('[VieGeo Admin] Bulk insert succeeded with optional columns dropped. Run supabase-questions-setup.sql to repair schema.', {
+                        droppedColumns,
+                        repairFile: 'supabase-questions-setup.sql'
+                    });
+                }
+                console.log('[VieGeo Admin] processBulkTextImport insert success', {
+                    insertedCount: newQuestions.length,
+                    response: data || null,
+                    droppedColumns
+                });
                 el('uploadPreview').textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions: newQuestions }, null, 2);
                 showToast(`Đã lưu ${questions.length} câu hỏi vào Supabase.`);
                 el('bulkQuestionText').value = '';
                 await loadAdminQuestions();
             } catch (error) {
-                console.error(error);
-                showToast(error.message || 'Không thể phân tích nội dung đã dán.', 'error');
+                console.error('[VieGeo Admin] processBulkTextImport failed', {
+                    error,
+                    message: error?.message,
+                    stack: error?.stack,
+                    selectedProvince: province,
+                    selectedSubIsland: subIslandNum,
+                    selectedTopic: topic
+                });
+                showToast(describeSupabaseQuestionError(error) || error.message || 'Không thể phân tích nội dung đã dán.', 'error');
             } finally {
                 button.disabled = false;
                 button.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Phân tích và lưu câu hỏi';

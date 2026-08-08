@@ -22,8 +22,35 @@ create table if not exists public.questions (
     updated_at timestamptz not null default now()
 );
 
+-- Repair/upgrade path for projects that created questions with an older schema.
+-- Safe to run repeatedly: existing columns are kept, missing columns are added.
+alter table public.questions add column if not exists id bigserial;
+alter table public.questions add column if not exists question text;
+alter table public.questions add column if not exists option_a text;
+alter table public.questions add column if not exists option_b text;
+alter table public.questions add column if not exists option_c text;
+alter table public.questions add column if not exists option_d text;
+alter table public.questions add column if not exists correct_option integer default 0;
+alter table public.questions add column if not exists province text default 'ha-noi';
+alter table public.questions add column if not exists island text default 'Đảo nhỏ 1';
+alter table public.questions add column if not exists topic text default 'Kiến thức địa lí';
+alter table public.questions add column if not exists theory text default '';
+alter table public.questions add column if not exists hint1 text default '';
+alter table public.questions add column if not exists hint2 text default '';
+alter table public.questions add column if not exists difficulty text default 'easy';
+alter table public.questions add column if not exists sub_island integer default 1;
+alter table public.questions add column if not exists island_theory text default '';
+alter table public.questions add column if not exists grade text default '';
+alter table public.questions add column if not exists lesson_id text default '';
+alter table public.questions add column if not exists import_order integer;
+alter table public.questions add column if not exists created_at timestamptz default now();
+alter table public.questions add column if not exists updated_at timestamptz default now();
+
 create unique index if not exists questions_question_unique_idx
     on public.questions (question);
+
+create unique index if not exists questions_id_unique_idx
+    on public.questions (id);
 
 alter table public.questions disable row level security;
 grant usage on schema public to anon, authenticated;
