@@ -451,7 +451,7 @@
                 const client = getSupabaseClient();
                 const user = state.users.find(item => item.id === userId);
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
-                const { error } = await client.from('users').update({ force_logout: true, forceLogout: true }).eq('id', supabaseId(user?.rawId ?? userId));
+                const { error } = await client.from('users').update({ force_logout: true, updated_at: new Date().toISOString() }).eq('id', supabaseId(user?.rawId ?? userId));
                 if (error) throw error;
                 showToast('Đã yêu cầu đăng xuất phiên người dùng.');
             }
@@ -474,7 +474,7 @@
                 if (error) throw error;
                 const rows = Array.isArray(data) ? data : [];
                 if (!rows.length) { list.innerHTML = '<p class="ops-muted">Không có yêu cầu Premium đang chờ duyệt.</p>'; return; }
-                list.innerHTML = rows.map(row => { const requestId = row.id ?? row.uuid ?? row.email; return `<div class="ops-list-item"><div><strong>${escapeHtml(row.name || 'Người dùng')}</strong><br><small class="ops-muted">${escapeHtml(row.email || requestId)}</small></div><div><button class="ops-button" data-premium-approve="${escapeHtml(requestId)}" data-premium-email="${escapeHtml(row.email || '')}" type="button">Duyệt</button> <button class="ops-button is-danger" data-premium-reject="${escapeHtml(requestId)}" type="button">Từ chối</button></div></div>`; }).join('');
+                list.innerHTML = rows.map(row => { const requestId = row.id ?? row.uuid ?? row.user_email ?? row.email; const email = row.user_email || row.email || ''; return `<div class="ops-list-item"><div><strong>${escapeHtml(row.name || email || 'Người dùng')}</strong><br><small class="ops-muted">${escapeHtml(email || requestId)}</small></div><div><button class="ops-button" data-premium-approve="${escapeHtml(requestId)}" data-premium-email="${escapeHtml(email)}" type="button">Duyệt</button> <button class="ops-button is-danger" data-premium-reject="${escapeHtml(requestId)}" type="button">Từ chối</button></div></div>`; }).join('');
             } catch (error) { list.innerHTML = '<p class="ops-muted">Không thể tải yêu cầu Premium.</p>'; console.error(error); }
         }
 
@@ -483,7 +483,7 @@
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
                 if (status === 'approved' && email) {
-                    const { error: userError } = await client.from('users').update({ account_status: 'premium', accountStatus: 'premium' }).eq('email', email);
+                    const { error: userError } = await client.from('users').update({ account_status: 'premium', updated_at: new Date().toISOString() }).eq('email', email);
                     if (userError) console.warn('Supabase premium user update error:', userError);
                 }
                 const { error } = await client.from('premium_requests').update({ status, reviewed_at: new Date().toISOString() }).eq('id', supabaseId(requestId));
@@ -516,9 +516,9 @@
         }
 
         function renderErrorReportItem(report, compact = false) {
-            const subject = escapeHtml(report.subject || 'Báo cáo lỗi chưa có tiêu đề');
-            const message = escapeHtml(report.message || 'Không có mô tả chi tiết.');
-            const sender = escapeHtml(report.senderName || report.senderId || 'Người dùng VieGeo');
+            const subject = escapeHtml(report.subject || report.page || 'Báo cáo lỗi chưa có tiêu đề');
+            const message = escapeHtml(report.message || report.error_message || report.content || 'Không có mô tả chi tiết.');
+            const sender = escapeHtml(report.senderName || report.senderId || report.user_email || 'Người dùng VieGeo');
             const when = reportTime(report) ? new Date(reportTime(report)).toLocaleString('vi-VN') : 'Chưa xác định thời gian';
             const actions = report.status === 'resolved' || report.status === 'rejected' ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="ops-button" type="button" data-resolve-error="${escapeHtml(report.id)}" style="background:#15803d"><i class="fa-solid fa-check"></i> Đã xử lý</button><button class="ops-button is-danger" type="button" data-reject-error="${escapeHtml(report.id)}"><i class="fa-solid fa-xmark"></i> Từ chối xử lý</button></div>`;
             if (compact) return `<button type="button" class="ops-list-item" data-open-error-modal style="width:100%;border:0;text-align:left;cursor:pointer"><span><strong>${subject}</strong><br><small class="ops-muted">${sender} · ${when}</small></span>${reportStatusLabel(report.status)}</button>`;
@@ -558,8 +558,10 @@
                     ...row,
                     id: String(row.id ?? row.uuid ?? `error-${index}`),
                     rawId: row.id ?? row.uuid ?? `error-${index}`,
-                    senderName: row.senderName ?? row.sender_name,
-                    senderId: row.senderId ?? row.sender_id,
+                    subject: row.subject ?? row.page ?? 'Báo cáo lỗi',
+                    message: row.message ?? row.error_message ?? row.content,
+                    senderName: row.senderName ?? row.sender_name ?? row.user_email,
+                    senderId: row.senderId ?? row.sender_id ?? row.user_email,
                     createdAtClient: row.createdAtClient ?? row.created_at_client
                 }));
                 renderErrorReportViews();
@@ -601,7 +603,7 @@
             if (!state.feedbacks.length) { list.innerHTML = '<p class="ops-muted">Chưa có góp ý nào từ người dùng.</p>'; return; }
             list.innerHTML = state.feedbacks.map(feedback => {
                 const when = reportTime(feedback) ? new Date(reportTime(feedback)).toLocaleString('vi-VN') : 'Chưa xác định thời gian';
-                return `<article class="ops-list-item" style="display:block"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div><strong>${escapeHtml(feedback.subject || 'Góp ý chưa có tiêu đề')}</strong><br><small class="ops-muted">${escapeHtml(feedback.senderName || feedback.senderId || 'Người dùng VieGeo')} · ${when}</small></div><button class="ops-button is-danger" type="button" data-delete-feedback="${escapeHtml(feedback.id)}"><i class="fa-solid fa-trash"></i> Xóa</button></div><p style="margin:10px 0 0;white-space:pre-wrap;line-height:1.55">${escapeHtml(feedback.message || '')}</p></article>`;
+                return `<article class="ops-list-item" style="display:block"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div><strong>${escapeHtml(feedback.subject || 'Góp ý chưa có tiêu đề')}</strong><br><small class="ops-muted">${escapeHtml(feedback.senderName || feedback.senderId || feedback.user_email || 'Người dùng VieGeo')} · ${when}</small></div><button class="ops-button is-danger" type="button" data-delete-feedback="${escapeHtml(feedback.id)}"><i class="fa-solid fa-trash"></i> Xóa</button></div><p style="margin:10px 0 0;white-space:pre-wrap;line-height:1.55">${escapeHtml(feedback.message || feedback.content || '')}</p></article>`;
             }).join('');
         }
 
@@ -619,8 +621,10 @@
                     ...row,
                     id: String(row.id ?? row.uuid ?? `feedback-${index}`),
                     rawId: row.id ?? row.uuid ?? `feedback-${index}`,
-                    senderName: row.senderName ?? row.sender_name,
-                    senderId: row.senderId ?? row.sender_id,
+                    subject: row.subject ?? 'Góp ý người dùng',
+                    message: row.message ?? row.content,
+                    senderName: row.senderName ?? row.sender_name ?? row.user_email,
+                    senderId: row.senderId ?? row.sender_id ?? row.user_email,
                     createdAtClient: row.createdAtClient ?? row.created_at_client
                 })).sort((left, right) => reportTime(right) - reportTime(left));
                 renderFeedbacks();

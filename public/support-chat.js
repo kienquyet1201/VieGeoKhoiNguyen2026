@@ -70,6 +70,11 @@
         window.alert(message);
     }
 
+    function getSupabaseClient() {
+        const client = window.supabaseClient || window.supabase;
+        return client && typeof client.from === 'function' ? client : null;
+    }
+
     async function activeAgentCount() {
         try {
             const threshold = Date.now() - STAFF_ONLINE_WINDOW;
@@ -284,23 +289,54 @@
             byId(!subject ? 'supportRequestSubject' : 'supportRequestMessage')?.focus();
             return;
         }
-        if (typeof db === 'undefined') {
-            notify('Chưa thể gửi yêu cầu khi Firebase chưa sẵn sàng.', 'warning');
-            return;
-        }
         if (submit) submit.disabled = true;
         try {
-            const collectionName = type === 'report' ? 'ErrorReports' : 'UserFeedbacks';
-            await db.collection(collectionName).add({
-                type: type === 'report' ? 'error-report' : 'user-feedback',
-                subject,
-                message,
-                senderId: user.email || 'anonymous',
-                senderName: user.name || user.displayName || user.email || 'Khách',
-                status: 'pending',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                createdAtClient: Date.now()
-            });
+            const supabase = getSupabaseClient();
+            const senderEmail = user.email || 'anonymous';
+            const senderName = user.name || user.displayName || user.email || 'Khách';
+            if (supabase) {
+                const tableName = type === 'report' ? 'error_reports' : 'user_feedbacks';
+                const payload = type === 'report'
+                    ? {
+                        user_email: senderEmail,
+                        error_message: message,
+                        page: subject,
+                        subject,
+                        message,
+                        sender_id: senderEmail,
+                        sender_name: senderName,
+                        status: 'pending',
+                        created_at_client: Date.now()
+                    }
+                    : {
+                        user_email: senderEmail,
+                        content: message,
+                        subject,
+                        message,
+                        sender_id: senderEmail,
+                        sender_name: senderName,
+                        status: 'pending',
+                        created_at_client: Date.now()
+                    };
+                const { error } = await supabase.from(tableName).insert([payload]);
+                if (error) throw error;
+            } else {
+                if (typeof db === 'undefined') {
+                    notify('Chưa thể gửi yêu cầu khi Supabase/Firebase chưa sẵn sàng.', 'warning');
+                    return;
+                }
+                const collectionName = type === 'report' ? 'ErrorReports' : 'UserFeedbacks';
+                await db.collection(collectionName).add({
+                    type: type === 'report' ? 'error-report' : 'user-feedback',
+                    subject,
+                    message,
+                    senderId: senderEmail,
+                    senderName,
+                    status: 'pending',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdAtClient: Date.now()
+                });
+            }
             setSupportRequestOpen(false);
             notify(type === 'report' ? 'Đã gửi báo cáo lỗi. Cảm ơn bạn!' : 'Đã gửi góp ý. Cảm ơn bạn!', 'success');
         } catch (error) {
