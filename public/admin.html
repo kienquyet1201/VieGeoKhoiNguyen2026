@@ -1087,13 +1087,23 @@
                     droppedColumns,
                     mode: 'insert-with-duplicate-skip'
                 });
-                cacheAdminQuestionRows(newQuestions);
-                el('uploadPreview').textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions: newQuestions }, null, 2);
+                // Persistence succeeded at this point. Cache and refresh are intentionally
+                // isolated so an optional UI/cache failure cannot be reported as a failed save.
+                try {
+                    cacheAdminQuestionRows(newQuestions);
+                    const preview = el('uploadPreview');
+                    if (preview) preview.textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions: newQuestions }, null, 2);
+                } catch (postSaveError) {
+                    console.warn('[VieGeo Admin] Saved questions but could not update the local preview/cache.', postSaveError);
+                }
                 showToast(skippedDuplicateCount
                     ? `Đã lưu ${insertedCount} câu hỏi; bỏ qua ${skippedDuplicateCount} câu trùng lặp.`
                     : `Đã lưu ${insertedCount} câu hỏi vào Supabase.`);
-                el('bulkQuestionText').value = '';
-                await loadAdminQuestions();
+                const bulkText = el('bulkQuestionText');
+                if (bulkText) bulkText.value = '';
+                loadAdminQuestions().catch(refreshError => {
+                    console.warn('[VieGeo Admin] Saved questions but could not refresh the visible list.', refreshError);
+                });
             } catch (error) {
                 console.error('[VieGeo Admin] processBulkTextImport failed', {
                     error,
@@ -1158,12 +1168,18 @@
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
                 const { insertedCount, skippedDuplicateCount } = await insertQuestionsWithSchemaFallback(client, [newQuestion]);
-                cacheAdminQuestionRows([newQuestion]);
-                form.reset();
+                try {
+                    cacheAdminQuestionRows([newQuestion]);
+                    form.reset();
+                } catch (postSaveError) {
+                    console.warn('[VieGeo Admin] Saved question but could not reset the local form/cache.', postSaveError);
+                }
                 showToast(skippedDuplicateCount
                     ? 'Câu hỏi trùng lặp nên đã được giữ nguyên, không ghi đè dữ liệu cũ.'
                     : `Thêm ${insertedCount} câu hỏi thành công vào Supabase!`);
-                await loadAdminQuestions();
+                loadAdminQuestions().catch(refreshError => {
+                    console.warn('[VieGeo Admin] Saved question but could not refresh the visible list.', refreshError);
+                });
             } catch (error) {
                 console.error('Lỗi thêm câu hỏi:', error);
                 showToast('Có lỗi xảy ra, vui lòng thử lại!', 'error');
