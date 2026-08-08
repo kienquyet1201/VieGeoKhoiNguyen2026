@@ -9,11 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="firebase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="module" src="supabaseClient.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
 </head>
 <body class="cs-dashboard-page">
     <main class="cs-dashboard-shell h-[calc(100vh-60px)] flex overflow-hidden" style="max-width:1540px;margin:0 auto">
@@ -93,10 +91,10 @@
                 const ref = db.collection('support_conversations').doc(currentConversation);
                 await ref.collection('messages').add({
                     sender: 'staff', senderId, staffEmail: senderId, staffName, text, status:'sent',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), timestampClient,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: timestampClient
+                    timestamp: new Date().toISOString(), timestampClient,
+                    createdAt: new Date().toISOString(), createdAtClient: timestampClient
                 });
-                await ref.set({ lastMessage:text, updatedAt:firebase.firestore.FieldValue.serverTimestamp(), updatedAtClient:timestampClient, unreadForStudent:true }, {merge:true});
+                await ref.set({ lastMessage:text, updatedAt:new Date().toISOString(), updatedAtClient:timestampClient, unreadForStudent:true }, {merge:true});
                 input.value = '';
                 const container = el('csMessages');
                 if (container) container.scrollTop = container.scrollHeight;
@@ -117,7 +115,7 @@
             el('csBackToMap').addEventListener('click', () => navigateRole('user'));
             if (allowedRoles().length < 2) el('csRoleSwitch').hidden = true;
             el('csRoleSwitch').addEventListener('click', async () => { const roles = allowedRoles(); if (roles.length < 2) return; const result = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(roles.map(role => [role, roleLabels[role]])),inputValue:roles.includes('cs') ? 'cs' : roles[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if(result.isConfirmed) navigateRole(result.value); });
-            if (typeof db === 'undefined') { el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Firebase chưa sẵn sàng.</p>'; return; }
+            if (typeof db === 'undefined') { el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Supabase/localStorage chưa sẵn sàng.</p>'; return; }
             startAgentPresence();
             db.collection('support_conversations').orderBy('updatedAtClient','desc').limit(100).onSnapshot(snapshot => { conversations=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})); renderQueue(); }, error => { console.error(error); el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Không thể tải hàng đợi hỗ trợ.</p>'; });
         });

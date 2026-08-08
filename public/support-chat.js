@@ -146,12 +146,12 @@
 
     async function uploadImage(file, email) {
         if (!file) return '';
-        if (!window.firebase || typeof window.firebase.storage !== 'function') throw new Error('Firebase Storage chưa sẵn sàng.');
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const path = `support_uploads/${encodeURIComponent(email)}/${Date.now()}-${safeName}`;
-        const reference = window.firebase.storage().ref().child(path);
-        await reference.put(file, { contentType: file.type });
-        return reference.getDownloadURL();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(reader.error || new Error('Không thể đọc ảnh đính kèm.'));
+            reader.readAsDataURL(file);
+        });
     }
 
     async function requestAiReply(text) {
@@ -186,8 +186,8 @@
                 await messagesRef.add({
                     sender: 'AI', senderId: 'ai-viegeo', senderName: 'CSKH tự động (AI)',
                     text: reply, status: 'received',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), timestampClient: now,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: now
+                    timestamp: new Date().toISOString(), timestampClient: now,
+                    createdAt: new Date().toISOString(), createdAtClient: now
                 });
             } catch (error) {
                 console.warn('Không thể gửi phản hồi AI tự động.', error);
@@ -238,15 +238,15 @@
                 email: user.email,
                 name: user.name || user.displayName || user.email,
                 lastMessage: text || 'Đã gửi một hình ảnh',
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: new Date().toISOString(),
                 updatedAtClient: timestampClient,
                 unreadForStaff: true
             }, { merge: true });
             const submittedMessage = await messagesRef.add({
                 sender: 'user', senderId: user.email, senderName: user.name || user.displayName || user.email,
                 text, imageUrl: imageUrl || null, status: 'sent',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(), timestampClient,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtClient: timestampClient
+                timestamp: new Date().toISOString(), timestampClient,
+                createdAt: new Date().toISOString(), createdAtClient: timestampClient
             });
             input.value = '';
             pendingImage = null;
@@ -322,7 +322,7 @@
                 if (error) throw error;
             } else {
                 if (typeof db === 'undefined') {
-                    notify('Chưa thể gửi yêu cầu khi Supabase/Firebase chưa sẵn sàng.', 'warning');
+                    notify('Chưa thể gửi yêu cầu khi Supabase/localStorage chưa sẵn sàng.', 'warning');
                     return;
                 }
                 const collectionName = type === 'report' ? 'ErrorReports' : 'UserFeedbacks';
@@ -333,7 +333,7 @@
                     senderId: senderEmail,
                     senderName,
                     status: 'pending',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdAt: new Date().toISOString(),
                     createdAtClient: Date.now()
                 });
             }

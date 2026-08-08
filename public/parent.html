@@ -14,10 +14,8 @@
     <link rel="stylesheet" href="bento.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="firebase-init.js"></script>
-    <script type="module" src="supabaseClient.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
 </head>
 <body style="padding: 40px; justify-content: flex-start; height: auto; min-height: 100vh;">
 
@@ -127,7 +125,7 @@
             if (typeof db === 'undefined' || !session.email) return;
             db.collection('users').doc(session.email).onSnapshot((doc) => {
                 if (doc.exists) renderParentMetrics(doc.data() || {});
-            }, (error) => console.warn('Không thể tải số liệu phụ huynh từ Firebase:', error));
+            }, (error) => console.warn('Không thể tải số liệu phụ huynh từ Supabase/localStorage:', error));
         });
     })();
     </script>

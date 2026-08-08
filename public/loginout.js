@@ -1,5 +1,5 @@
 // ============================================================================
-// VieGeo - loginout.js (Auth Logic with Firebase)
+// VieGeo - loginout.js (Auth Logic with Supabase/localStorage)
 // ============================================================================
 
 const ROLE_DESTINATIONS = Object.freeze({
@@ -334,7 +334,7 @@ if (btnConfirmOtp) {
                     email: tempRegData.email,
                     password: tempRegData.pass,
                     gender: tempRegData.gender,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdAt: new Date().toISOString(),
                     lastLoginDate: null,
                     xp: 0,
                     hearts: 3,

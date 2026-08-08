@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { selectRows, upsertRows } from '../lib/supabase-rest';
 
 type Difficulty = 'easy' | 'medium' | 'hard';
 type Session = { email: string; name?: string };
+type UserRow = { email: string; selected_difficulty?: Difficulty | null };
 
 const difficultyOptions: Array<{ value: Difficulty; label: string; description: string; accent: string }> = [
   { value: 'easy', label: 'Dễ', description: 'Khởi động với kiến thức địa lí nền tảng.', accent: '#22c55e' },
@@ -37,8 +37,8 @@ export default function LevelSelection() {
         if (!parsed.email) throw new Error('Phiên đăng nhập không có email.');
         if (!cancelled) setSession(parsed);
 
-        const userSnapshot = await getDoc(doc(db, 'users', parsed.email));
-        const savedDifficulty = userSnapshot.exists() ? userSnapshot.data().selectedDifficulty : null;
+        const rows = await selectRows<UserRow>('users', `email=eq.${encodeURIComponent(parsed.email)}&select=email,selected_difficulty&limit=1`);
+        const savedDifficulty = rows[0]?.selected_difficulty || null;
         if (savedDifficulty && !cancelled) {
           router.replace('/map');
           return;
@@ -61,14 +61,14 @@ export default function LevelSelection() {
 
     setSavingDifficulty(difficulty);
     try {
-      await setDoc(doc(db, 'users', session.email), {
+      await upsertRows('users', [{
         email: session.email,
         name: session.name || '',
         grade: null,
-        selectedGrade: null,
-        selectedDifficulty: difficulty,
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+        selected_grade: null,
+        selected_difficulty: difficulty,
+        updated_at: new Date().toISOString(),
+      }], 'email');
 
       try {
         const rawState = window.localStorage.getItem('VieGeo_state');

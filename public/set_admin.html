@@ -2,11 +2,10 @@
 <html>
 <head>
     <title>Set Admin</title>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
 </head>
 <body>
     <h2>Cấp quyền Admin cho kienquyet1201@gmail.com</h2>
@@ -17,10 +16,17 @@
         async function setAdmin() {
             try {
                 document.getElementById('status').innerText = "Đang xử lý...";
-                await db.collection('users').doc('kienquyet1201@gmail.com').update({
-                    accountStatus: 'premium',
-                    role: 'admin'
-                });
+                const client = window.supabaseClient || window.supabase;
+                if (!client || typeof client.from !== 'function') throw new Error('Supabase chưa sẵn sàng.');
+                const { error } = await client.from('users').upsert({
+                    email: 'kienquyet1201@gmail.com',
+                    account_status: 'premium',
+                    role: 'admin',
+                    roles: ['admin', 'cs', 'user'],
+                    active_role: 'admin',
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'email' });
+                if (error) throw error;
                 document.getElementById('status').innerText = "Thành công! kienquyet1201@gmail.com đã trở thành Admin.";
             } catch (error) {
                 document.getElementById('status').innerText = "Lỗi: " + error.message;

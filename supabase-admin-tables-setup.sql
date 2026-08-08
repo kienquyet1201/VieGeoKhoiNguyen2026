@@ -16,10 +16,22 @@ alter table public.users add column if not exists roles text[] not null default 
 alter table public.users add column if not exists active_role text not null default 'user';
 alter table public.users add column if not exists full_name text;
 alter table public.users add column if not exists name text;
+alter table public.users add column if not exists gender text;
+alter table public.users add column if not exists phone text;
+alter table public.users add column if not exists password text;
 alter table public.users add column if not exists last_active timestamptz;
 alter table public.users add column if not exists last_active_client bigint not null default 0;
 alter table public.users add column if not exists force_logout boolean not null default false;
 alter table public.users add column if not exists account_status text not null default 'free';
+alter table public.users add column if not exists xp integer not null default 0;
+alter table public.users add column if not exists gems integer not null default 500;
+alter table public.users add column if not exists hearts integer not null default 3;
+alter table public.users add column if not exists current_streak integer not null default 0;
+alter table public.users add column if not exists grade text;
+alter table public.users add column if not exists selected_grade text;
+alter table public.users add column if not exists selected_difficulty text default 'easy';
+alter table public.users add column if not exists game_state jsonb;
+alter table public.users add column if not exists legacy_data jsonb not null default '{}'::jsonb;
 alter table public.users add column if not exists updated_at timestamptz not null default now();
 
 create index if not exists idx_users_email on public.users (email);

@@ -185,7 +185,7 @@
                         return !source.topic || source.topic === config.topic;
                     });
             } catch (error) {
-                console.warn('Không thể tải đề Firebase, dùng đề minh họa an toàn.', error);
+                console.warn('Không thể tải đề từ Supabase, dùng đề minh họa an toàn.', error);
             }
         }
 

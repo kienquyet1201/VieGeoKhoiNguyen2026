@@ -1,5 +1,5 @@
 // ============================================================================
-// VieGeo - profile.js (Firebase Integration)
+// VieGeo - profile.js (Supabase/localStorage Integration)
 // ============================================================================
 
 const profileForm = document.getElementById('profileForm');
@@ -35,8 +35,8 @@ function getGameState() {
 }
 const gameState = getGameState();
 
-// 2. Tải thông tin từ Firebase
-async function loadFirebaseProfile() {
+// 2. Tải thông tin hồ sơ
+async function loadProfile() {
     try {
         const userDoc = await db.collection('users').doc(sessionUser.email).get();
         if (!userDoc.exists) {
@@ -72,7 +72,7 @@ async function loadFirebaseProfile() {
     }
 }
 
-loadFirebaseProfile();
+loadProfile();
 
 // 3. Cập nhật thông tin (Tên, SĐT, Mật khẩu)
 if (profileForm) {
@@ -143,7 +143,7 @@ if (btnPremium) {
                 email: sessionUser.email,
                 name: sessionUser.name,
                 status: 'pending',
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                created_at: new Date().toISOString()
             });
             Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã gửi yêu cầu Mua Premium đến quản trị viên. Vui lòng chờ hệ thống xác nhận!' });
             btnPremium.innerHTML = '<i class="fa-solid fa-check"></i> Đã gửi yêu cầu';

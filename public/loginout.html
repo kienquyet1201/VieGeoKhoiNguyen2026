@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="loginout.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="module" src="supabaseClient.js"></script>
 </head>
 <body>
 
@@ -227,10 +226,9 @@
     <div id="toastNotification" style="position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #22C55E; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transition: 0.3s; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>
 
     <!-- Scripts -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script src="firebase-init.js"></script>
+    <script src="supabaseClient.js"></script>
     <script src="loginout.js"></script>
 </body>
 </html>

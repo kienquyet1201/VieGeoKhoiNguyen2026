@@ -317,7 +317,7 @@ function saveGameState(state) {
     if (window.gameState && window.gameState !== state) Object.assign(window.gameState, persistedState);
     localStorage.setItem('VieGeo_state', JSON.stringify(persistedState));
     
-    // Đồng bộ lên Firebase (Fire and forget)
+    // Đồng bộ lên Supabase/localStorage (fire and forget)
     const sessionData = localStorage.getItem('lm_session');
     if (sessionData && typeof db !== 'undefined') {
         const sessionUser = JSON.parse(sessionData);
@@ -354,9 +354,9 @@ function saveGameState(state) {
             lessonResults: persistedState.lessonResults,
             inventory: persistedState.inventory,
             questsProgress: persistedState.questsProgress,
-            gameStateUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            gameStateUpdatedAt: new Date().toISOString()
         }, { merge: true }).then(() => true).catch(err => {
-            console.error("Lỗi đồng bộ Firebase:", err);
+            console.error("Lỗi đồng bộ dữ liệu:", err);
             return false;
         });
     }

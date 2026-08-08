@@ -455,7 +455,7 @@ function checkAnswer() {
             arenaScoreMe += (isDoubleXpActive ? 2 : 1);
             isDoubleXpActive = false;
             
-            // Push to Firebase
+            // Push to Supabase/localStorage compatibility layer
             const roomId = localStorage.getItem('VieGeo_pvp_room');
             const role = localStorage.getItem('VieGeo_pvp_role');
             if(roomId && typeof db !== 'undefined') {

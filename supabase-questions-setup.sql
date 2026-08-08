@@ -26,6 +26,9 @@ create unique index if not exists questions_question_unique_idx
     on public.questions (question);
 
 alter table public.questions disable row level security;
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table public.questions to anon, authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;
 
 insert into public.questions (
     question,

@@ -111,17 +111,19 @@
         return fisherYatesShuffle(pool).slice(0, 5);
     }
 
-    async function fetchQuestionsFromFirebase(lesson, fallback) {
+    async function fetchQuestionsFromDataStore(lesson, fallback) {
         const province = provinceForLesson(lesson);
-        if (typeof db === 'undefined' || !province) return [];
+        const provinceSlug = dataStoreProvinceSlug(province);
+        const islandLabel = lessonIslandLabel(lesson);
+        if (typeof db === 'undefined' || !provinceSlug) return [];
 
         for (const collectionName of ['questions', 'question']) {
             try {
-                const snapshot = await db.collection(collectionName)
-                    .where('province', '==', province)
-                    .where('difficulty', '==', lesson.difficulty || 'easy')
-                    .limit(50)
-                    .get();
+                let query = db.collection(collectionName)
+                    .where('province', '==', provinceSlug)
+                    .where('difficulty', '==', lesson.difficulty || 'easy');
+                if (islandLabel) query = query.where('island', '==', islandLabel);
+                const snapshot = await query.limit(50).get();
                 const questions = randomFive(
                     snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
                     fallback
@@ -141,7 +143,7 @@
             correctAnswer: 0,
             explanation: 'Hãy xem lại kiến thức nền tảng trước khi tiếp tục hành trình.'
         };
-        const remoteQuestions = await fetchQuestionsFromFirebase(lesson, fallback);
+        const remoteQuestions = await fetchQuestionsFromDataStore(lesson, fallback);
         if (remoteQuestions.length) return remoteQuestions;
 
         try {
@@ -234,7 +236,7 @@
         window.alert(message);
     }
 
-    function firestoreProvinceSlug(value) {
+    function dataStoreProvinceSlug(value) {
         return String(value || 'ha-noi')
             .trim()
             .toLowerCase()
@@ -250,7 +252,7 @@
         return `Đảo nhỏ ${index}`;
     }
 
-    function mapFirestoreQuestions(snapshot) {
+    function mapDataStoreQuestions(snapshot) {
         return snapshot.docs.map((doc, index) => {
             const data = doc.data() || {};
             const options = optionsFromQuestionDocument(data);
@@ -280,7 +282,7 @@
     async function fetchQuestionsForLesson(lesson = {}) {
         const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
         const lessonId = String(lesson.id || lesson.lessonId || '').trim();
-        const provinceSlug = firestoreProvinceSlug(lesson.province || '');
+        const provinceSlug = dataStoreProvinceSlug(lesson.province || '');
         const islandLabel = lessonIslandLabel(lesson);
 
         if (client && typeof client.from === 'function') {
@@ -292,14 +294,14 @@
                 const { data, error } = await query.limit(100);
                 if (!error && Array.isArray(data) && data.length) {
                     window.VieGeoQuestionLoadState = 'ready';
-                    return mapFirestoreQuestions({ docs: data.map(item => ({ id: item.id, data: () => item })) });
+                    return mapDataStoreQuestions({ docs: data.map(item => ({ id: item.id, data: () => item })) });
                 }
                 if (error && String(error.message || '').includes('difficulty')) {
                     const fallbackQuery = client.from('questions').select('*').eq('province', provinceSlug).eq('island', islandLabel);
                     const fallbackResult = await fallbackQuery.limit(100);
                     if (!fallbackResult.error && Array.isArray(fallbackResult.data) && fallbackResult.data.length) {
                         window.VieGeoQuestionLoadState = 'ready';
-                        return mapFirestoreQuestions({ docs: fallbackResult.data.map(item => ({ id: item.id, data: () => item })) });
+                        return mapDataStoreQuestions({ docs: fallbackResult.data.map(item => ({ id: item.id, data: () => item })) });
                     }
                 }
             } catch (err) {
@@ -317,7 +319,7 @@
 
         const topicsByLessonId = {};
         try {
-            const provinceSlug = firestoreProvinceSlug(routeLessons[0]?.province || '');
+            const provinceSlug = dataStoreProvinceSlug(routeLessons[0]?.province || '');
             const islandLabels = [...new Set(routeLessons.map(lessonIslandLabel))];
             const { data, error } = await client
                 .from('questions')
@@ -352,14 +354,14 @@
         return shuffled;
     }
 
-    function randomFiveFirestoreQuestions(questions) {
+    function randomFiveQuestions(questions) {
         if (!Array.isArray(questions) || !questions.length) return [];
         // Supabase provides the full available question pool for this island
         // (up to the query limit); draw a new unbiased set of five each time.
         return fisherYatesShuffle(questions).slice(0, 5);
     }
 
-    async function loadFirebaseIslandContent(lesson) {
+    async function loadSupabaseIslandContent(lesson) {
         let sourceQuestions = [];
         try {
             sourceQuestions = await fetchQuestionsForLesson(lesson || {});
@@ -368,7 +370,7 @@
             window.VieGeoQuestionLoadState = 'network-error';
             notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!', true);
         }
-        const questions = randomFiveFirestoreQuestions(sourceQuestions);
+        const questions = randomFiveQuestions(sourceQuestions);
         if (!questions.length && window.VieGeoQuestionLoadState !== 'network-error') {
             notifyQuestionLoad('Hiện chưa có câu hỏi nào cho đảo này, vui lòng quay lại sau!');
         }
@@ -378,15 +380,15 @@
         return { theory, questions, status: window.VieGeoQuestionLoadState || (questions.length ? 'ready' : 'empty') };
     }
 
-    async function loadFirebaseIslandQuestions(lesson) {
-        return (await loadFirebaseIslandContent(lesson)).questions;
+    async function loadSupabaseIslandQuestions(lesson) {
+        return (await loadSupabaseIslandContent(lesson)).questions;
     }
 
     window.VieGeoLearningPath = {
         getLessonsForProvince,
         findLesson,
         loadIslandTopics,
-        loadQuestions: loadFirebaseIslandQuestions,
-        loadIslandContent: loadFirebaseIslandContent
+        loadQuestions: loadSupabaseIslandQuestions,
+        loadIslandContent: loadSupabaseIslandContent
     };
 }());

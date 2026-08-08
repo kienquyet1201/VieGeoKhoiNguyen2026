@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="bento.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script type="module" src="supabaseClient.js"></script>
 </head>
 <body class="exam-arena-page min-h-screen w-full overflow-y-auto pb-32">
     <header id="arenaGlobalTopbar" class="arena-global-topbar" aria-label="Điều hướng VieGeo">
@@ -107,9 +106,8 @@
         </div>
     </main>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
     <script src="gamedata.js"></script>
     <script src="telemetry.js"></script>
     <script src="exam-arena.js"></script>

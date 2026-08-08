@@ -1167,7 +1167,7 @@ window.addEventListener('viegeo:state-hydrated', () => {
     renderMap();
 });
 
-// One-time learner survey. Firestore is the source of truth; localStorage only keeps the UI usable offline.
+// One-time learner survey. Supabase/localStorage keeps the UI usable online and offline.
 const surveyModal = document.getElementById('surveyModal');
 const surveyGoalInputs = [...document.querySelectorAll('input[name="surveyGoal"]')];
 const surveyInterestInputs = [...document.querySelectorAll('input[name="surveyInterest"]')];
@@ -1226,7 +1226,7 @@ async function initializeLearnerSurvey() {
                 localStorage.setItem('VieGeo_state', JSON.stringify(state));
             }
         } catch (error) {
-            console.warn('Không thể đọc trạng thái khảo sát từ Firebase, dùng bản lưu cục bộ.', error);
+            console.warn('Không thể đọc trạng thái khảo sát từ Supabase/localStorage, dùng bản lưu cục bộ.', error);
         }
     }
 
@@ -1257,7 +1257,7 @@ async function saveLearnerSurvey() {
             await db.collection('users').doc(session.email).set({
                 learningProfile: profile,
                 hasCompletedSurvey: true,
-                surveyCompletedAt: firebase.firestore.FieldValue.serverTimestamp()
+                surveyCompletedAt: new Date().toISOString()
             }, { merge: true });
         }
         saveGameState(state);

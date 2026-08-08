@@ -188,7 +188,7 @@ function hydratePersistedGameState(remoteState, legacyData = {}) {
     return true;
 }
 
-// ĐỒNG BỘ DATA TỪ FIREBASE KHI LOAD TRANG (REALTIME)
+// ĐỒNG BỘ DATA TỪ SUPABASE/LOCALSTORE KHI LOAD TRANG
 function setupRealtimeAuth() {
     if (typeof db === 'undefined' || !sessionUser || !sessionUser.email) return;
     db.collection('users').doc(sessionUser.email).onSnapshot(async (doc) => {
@@ -222,7 +222,7 @@ function setupRealtimeAuth() {
                 return;
             }
 
-            // Preserve the current UI state until Firebase explicitly supplies a value.
+            // Preserve the current UI state until remote/local data explicitly supplies a value.
             // A partial snapshot must never flash XP, hearts, gems or streak back to zero.
             if (data.xp !== undefined && data.xp !== null) gameState.xp = Number(data.xp) || 0;
             const hasRemoteHearts = data.hearts !== undefined && data.hearts !== null;
@@ -287,7 +287,7 @@ function setupRealtimeAuth() {
             }
         }
     }, (error) => {
-        console.error("Lỗi tải data Firebase:", error);
+        console.error("Lỗi tải dữ liệu người dùng:", error);
     });
 }
 setupRealtimeAuth();
@@ -1012,7 +1012,7 @@ window.startArena = async function(arenaId, fee) {
                     player1: sessionUser.email,
                     p1Name: sessionUser.name,
                     p1Score: 0,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: new Date().toISOString()
                 });
                 
                 document.getElementById('matchmakingStatus').textContent = "Đang chờ người chơi khác tham gia...";
@@ -1473,13 +1473,13 @@ window.confirmPremiumTransfer = async function() {
         const rawTransferMsg = `${safeName} ${rawEmail}`.toUpperCase();
         const approveLink = window.location.href.split('?')[0] + '?action=approve_premium&target=' + encodeURIComponent(sessionUser.email);
 
-        // Upload to Firebase first
+        // Upload to Supabase/localStorage first
         await db.collection('premium_requests').add({
             email: sessionUser.email,
             name: sessionUser.name,
             transferContent: rawTransferMsg,
             status: 'pending',
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: new Date().toISOString()
         });
 
         // Try to send email silently

@@ -1,4 +1,4 @@
-/* Shared taskbar controls. Works with the legacy Firebase Compat application. */
+/* Shared taskbar controls. Supabase/localStorage compatible. */
 (function () {
     'use strict';
 
@@ -37,7 +37,7 @@
                 grade: null,
                 selectedGrade: null,
                 selectedDifficulty: normalizedDifficulty,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: new Date().toISOString()
             }, { merge: true }).catch(error => console.warn('Không thể đồng bộ mức độ:', error));
         }
         if (typeof renderMap === 'function') renderMap();
@@ -103,16 +103,10 @@
     }
 
     async function signOutCurrentUser() {
-        try {
-            if (window.firebase && typeof window.firebase.auth === 'function') await window.firebase.auth().signOut();
-        } catch (error) {
-            console.warn('Firebase Auth signOut không khả dụng cho phiên đăng nhập cũ:', error);
-        } finally {
-            localStorage.removeItem('lm_session');
-            localStorage.removeItem('VieGeo_state');
-            localStorage.removeItem('pending_action');
-            window.location.href = '/loginout';
-        }
+        localStorage.removeItem('lm_session');
+        localStorage.removeItem('VieGeo_state');
+        localStorage.removeItem('pending_action');
+        window.location.href = '/loginout';
     }
 
     document.addEventListener('DOMContentLoaded', () => {

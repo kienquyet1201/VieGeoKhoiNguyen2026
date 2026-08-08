@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminServices } from '../../lib/firebase-admin';
+import { upsertRows } from '../../lib/supabase-rest';
 
 export const runtime = 'nodejs';
 
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     if (body?.email) requestedEmail = String(body.email).trim().toLowerCase();
   } catch {
-    // The safe default is the one approved administrator account.
+    // Safe default: only the approved administrator account.
   }
 
   if (requestedEmail !== ADMIN_EMAIL) {
@@ -26,27 +25,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { adminAuth, adminDb } = getAdminServices();
-    await adminDb.collection('users').doc(ADMIN_EMAIL).set({
+    await upsertRows('users', [{
       email: ADMIN_EMAIL,
       role: 'admin',
-      roles: FieldValue.arrayUnion('admin', 'cs', 'user'),
-      isAdmin: true,
-      isCustomerSupport: true,
-      updatedAt: FieldValue.serverTimestamp(),
-    }, { merge: true });
-
-    try {
-      const user = await adminAuth.getUserByEmail(ADMIN_EMAIL);
-      await adminAuth.setCustomUserClaims(user.uid, { admin: true, cs: true });
-    } catch (error) {
-      // The legacy app may not have Firebase Auth accounts yet. Firestore RBAC is still updated.
-      console.warn('Không thể gán Custom Claims cho tài khoản Firebase Auth:', error);
-    }
+      roles: ['admin', 'cs', 'user'],
+      active_role: 'admin',
+      account_status: 'premium',
+      updated_at: new Date().toISOString(),
+    }], 'email', true);
 
     return NextResponse.json({ ok: true, email: ADMIN_EMAIL, roles: ['admin', 'cs', 'user'] });
   } catch (error) {
-    console.error('Không thể cấp quyền quản trị:', error);
-    return NextResponse.json({ error: 'Không thể cấp quyền. Kiểm tra biến môi trường Firebase Admin.' }, { status: 500 });
+    console.error('Không thể cấp quyền quản trị qua Supabase:', error);
+    return NextResponse.json({ error: 'Không thể cấp quyền. Kiểm tra Supabase key hoặc bảng users.' }, { status: 500 });
   }
 }
