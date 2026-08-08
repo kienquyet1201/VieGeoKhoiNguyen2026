@@ -371,28 +371,83 @@
             const named = source.match(/column\s+["']?([a-zA-Z0-9_]+)["']?/i);
             return named?.[1] || '';
         }
-        async function upsertQuestionsByQuestion(client, payload) {
-            const { data, error } = await client
-                .from('questions')
-                .upsert(payload, { onConflict: 'question', ignoreDuplicates: false });
-            if (error) throw error;
-            return data;
+        async function existingQuestionTexts(client, rows) {
+            const texts = [...new Set((Array.isArray(rows) ? rows : [])
+                .map(row => cleanText(row?.question, 6000))
+                .filter(Boolean))];
+            const existing = new Set();
+
+            try {
+                for (let start = 0; start < texts.length; start += 100) {
+                    const chunk = texts.slice(start, start + 100);
+                    const { data, error } = await client
+                        .from('questions')
+                        .select('question')
+                        .in('question', chunk);
+                    if (error) {
+                        console.warn('[VieGeo Admin] Duplicate pre-check skipped; normal insert will decide.', error);
+                        return null;
+                    }
+                    (Array.isArray(data) ? data : []).forEach(item => {
+                        const text = cleanText(item?.question, 6000);
+                        if (text) existing.add(text);
+                    });
+                }
+                return existing;
+            } catch (error) {
+                console.warn('[VieGeo Admin] Duplicate pre-check crashed; normal insert will decide.', error);
+                return null;
+            }
         }
         async function insertQuestionsWithSchemaFallback(client, rows) {
             const requiredColumns = new Set(['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option']);
-            let payload = rows.map(row => ({ ...row }));
+            const sourceRows = Array.isArray(rows) ? rows : [];
+            const existingTexts = await existingQuestionTexts(client, sourceRows);
+            const seenInImport = new Set();
+            let skippedDuplicateCount = 0;
+            let payload = sourceRows.filter(row => {
+                const question = cleanText(row?.question, 6000);
+                const isDuplicate = !question || seenInImport.has(question) || existingTexts?.has(question);
+                if (question) seenInImport.add(question);
+                if (isDuplicate) skippedDuplicateCount += 1;
+                return !isDuplicate;
+            }).map(row => ({ ...row }));
             const droppedColumns = [];
+            if (!payload.length) {
+                return { data: [], droppedColumns, insertedCount: 0, skippedDuplicateCount };
+            }
             for (let attempt = 1; attempt <= QUESTION_INSERT_COLUMNS.length; attempt += 1) {
                 const { data, error } = await client.from('questions').insert(payload);
-                if (!error) return { data, droppedColumns };
+                if (!error) return { data, droppedColumns, insertedCount: payload.length, skippedDuplicateCount };
                 if (isDuplicateSupabaseError(error)) {
-                    console.warn('[VieGeo Admin] Duplicate questions detected. Retrying with Supabase upsert on question.', {
+                    // A batch may contain both new and duplicate questions. Retry each row
+                    // as a plain insert so valid new rows are never lost to one duplicate.
+                    console.info('[VieGeo Admin] Retrying the duplicate batch one row at a time.', {
                         attempt,
                         rowCount: payload.length,
                         sampleQuestion: payload[0]?.question || ''
                     });
-                    const upsertedData = await upsertQuestionsByQuestion(client, payload);
-                    return { data: upsertedData, droppedColumns, upserted: true };
+                    const insertedRows = [];
+                    for (const row of payload) {
+                        const { data: rowData, error: rowError } = await client.from('questions').insert(row);
+                        if (!rowError) {
+                            insertedRows.push(rowData);
+                            continue;
+                        }
+                        if (isDuplicateSupabaseError(rowError)) {
+                            skippedDuplicateCount += 1;
+                            continue;
+                        }
+                        console.error('[VieGeo Admin] Single-row retry failed.', {
+                            question: row.question,
+                            code: rowError.code,
+                            status: rowError.status,
+                            message: rowError.message,
+                            details: rowError.details
+                        });
+                        throw rowError;
+                    }
+                    return { data: insertedRows, droppedColumns, insertedCount: insertedRows.length, skippedDuplicateCount };
                 }
                 const missingColumn = missingSupabaseQuestionColumn(error);
                 console.error('[VieGeo Admin] Supabase questions insert attempt failed', {
@@ -1017,7 +1072,7 @@
 
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
-                const { data, droppedColumns, upserted } = await insertQuestionsWithSchemaFallback(client, newQuestions);
+                const { data, droppedColumns, insertedCount, skippedDuplicateCount } = await insertQuestionsWithSchemaFallback(client, newQuestions);
                 if (droppedColumns.length) {
                     console.warn('[VieGeo Admin] Bulk insert succeeded with optional columns dropped. Run supabase-questions-setup.sql to repair schema.', {
                         droppedColumns,
@@ -1025,14 +1080,18 @@
                     });
                 }
                 console.log('[VieGeo Admin] processBulkTextImport insert success', {
-                    insertedCount: newQuestions.length,
+                    requestedCount: newQuestions.length,
+                    insertedCount,
+                    skippedDuplicateCount,
                     response: data || null,
                     droppedColumns,
-                    mode: upserted ? 'upsert-on-duplicate' : 'insert'
+                    mode: 'insert-with-duplicate-skip'
                 });
                 cacheAdminQuestionRows(newQuestions);
                 el('uploadPreview').textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions: newQuestions }, null, 2);
-                showToast(upserted ? `Đã cập nhật/lưu ${questions.length} câu hỏi vào Supabase.` : `Đã lưu ${questions.length} câu hỏi vào Supabase.`);
+                showToast(skippedDuplicateCount
+                    ? `Đã lưu ${insertedCount} câu hỏi; bỏ qua ${skippedDuplicateCount} câu trùng lặp.`
+                    : `Đã lưu ${insertedCount} câu hỏi vào Supabase.`);
                 el('bulkQuestionText').value = '';
                 await loadAdminQuestions();
             } catch (error) {
@@ -1098,10 +1157,12 @@
                 assertAdminRate('single_upload', 10, 60000);
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
-                const { upserted } = await insertQuestionsWithSchemaFallback(client, [newQuestion]);
+                const { insertedCount, skippedDuplicateCount } = await insertQuestionsWithSchemaFallback(client, [newQuestion]);
                 cacheAdminQuestionRows([newQuestion]);
                 form.reset();
-                showToast(upserted ? 'Câu hỏi đã tồn tại, hệ thống đã cập nhật lại trên Supabase!' : 'Thêm câu hỏi thành công vào Supabase!');
+                showToast(skippedDuplicateCount
+                    ? 'Câu hỏi trùng lặp nên đã được giữ nguyên, không ghi đè dữ liệu cũ.'
+                    : `Thêm ${insertedCount} câu hỏi thành công vào Supabase!`);
                 await loadAdminQuestions();
             } catch (error) {
                 console.error('Lỗi thêm câu hỏi:', error);
@@ -1418,26 +1479,12 @@
                 }
             }
 
-            if (window.db && typeof window.db.collection === 'function') {
-                try {
-                    const snapshot = await window.db.collection('Questions').limit(5000).get();
-                    const rows = (snapshot?.docs || []).map(doc => ({ id: doc.id, ...(doc.data ? doc.data() : {}) }));
-                    console.log('[VieGeo Admin] Legacy db adapter Questions fallback', {
-                        rowCount: rows.length,
-                        firstRow: rows[0] || null
-                    });
-                    if (rows.length > 0) return { rows, source: 'db.collection(Questions)', attemptLogs };
-                } catch (error) {
-                    console.error('[VieGeo Admin] Legacy db adapter Questions fallback failed', error);
-                }
-            }
-
             return firstEmptySuccess || { rows: [], source: '', attemptLogs };
         }
 
         async function loadAdminQuestions() {
             const body = el('adminQuestionsList');
-            if (!body) return;
+            if (!body) return [];
             body.innerHTML = '<tr><td colspan="6" class="ops-muted">Đang tải câu hỏi từ Supabase…</td></tr>';
             try {
                 const client = getSupabaseClient();
@@ -1447,7 +1494,7 @@
                 let effectiveSource = source;
                 if (!effectiveRows.length) {
                     const cachedRows = readCachedAdminQuestions();
-                    console.warn('[VieGeo Admin] Không nhận được dòng nào từ các nguồn câu hỏi.', {
+                    console.info('[VieGeo Admin] Questions table returned 0 rows; rendering a safe local fallback.', {
                         source,
                         attempts: attemptLogs,
                         cachedCount: cachedRows.length,
@@ -1476,11 +1523,13 @@
                 allAdminQuestionDocuments = questions;
                 refreshQuestionFilterOptions();
                 applyQuestionFilters();
+                return questions;
             } catch (error) {
                 console.warn('Supabase questions select error:', error);
                 body.innerHTML = isMissingSupabaseTableError(error)
                     ? `<tr><td colspan="6">${supabaseSetupMessage('questions', 'Danh sách câu hỏi')}</td></tr>`
                     : '<tr><td colspan="6" class="ops-muted">Không thể tải danh sách câu hỏi từ Supabase. Vui lòng kiểm tra mạng hoặc cấu hình RLS.</td></tr>';
+                return [];
             }
         }
 
