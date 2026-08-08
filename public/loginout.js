@@ -5,7 +5,7 @@
 const ROLE_DESTINATIONS = Object.freeze({
     user: '/map',
     parent: '/parent',
-    cs: '/cs-dashboard',
+    cs: '/cs',
     admin: '/admin'
 });
 const ROOT_ADMIN_EMAIL = 'kienquyet1201@gmail.com';
@@ -415,7 +415,7 @@ if (loginForm) {
                                 'user': { name: 'Người dùng (Học viên)', icon: 'fa-graduation-cap', color: '#1cb0f6', url: MAP_PAGE },
                                 'parent': { name: 'Phụ huynh', icon: 'fa-children', color: '#a78bfa', url: '/parent' },
                                 'admin': { name: 'Quản trị viên (Admin)', icon: 'fa-shield-halved', color: '#ff4b4b', url: '/admin' },
-                                'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs-dashboard' }
+                                'cs': { name: 'CSKH (Support)', icon: 'fa-headset', color: '#ffc800', url: '/cs' }
                             };
                             
                             userRoles.forEach(r => {

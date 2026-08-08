@@ -1,0 +1,327 @@
+/* =========================================================
+   VieGeo V62 — Cute, rõ chữ, tương phản tốt
+   Áp dụng: login role modal, lesson, exam arena
+   ========================================================= */
+:root{
+  --vg-ink:#16324a;
+  --vg-muted:#61758a;
+  --vg-paper:#fffdf8;
+  --vg-sky:#eaf8ff;
+  --vg-mint:#eafbf3;
+  --vg-blue:#25a9ee;
+  --vg-green:#35c983;
+  --vg-yellow:#ffbf3f;
+  --vg-pink:#ff6f91;
+  --vg-purple:#9568ef;
+  --vg-line:#d8e7ee;
+  --vg-shadow:0 18px 45px rgba(38,83,109,.14);
+}
+
+/* ---------- LOGIN: cổng chọn vai trò ---------- */
+#gatewayModalOverlay{
+  background:rgba(18,50,66,.54)!important;
+  backdrop-filter:blur(14px) saturate(.9)!important;
+}
+#gatewayModalOverlay>div{
+  position:relative;
+  max-width:440px!important;
+  padding:34px!important;
+  overflow:hidden;
+  border:2px solid rgba(255,255,255,.78)!important;
+  border-radius:32px!important;
+  color:var(--vg-ink)!important;
+  background:linear-gradient(155deg,#fffef9 0%,#f1fbf7 52%,#edf8ff 100%)!important;
+  box-shadow:0 28px 70px rgba(18,55,68,.3), inset 0 1px 0 #fff!important;
+}
+#gatewayModalOverlay>div::before,
+#gatewayModalOverlay>div::after{
+  content:"";position:absolute;border-radius:50%;pointer-events:none;opacity:.65
+}
+#gatewayModalOverlay>div::before{width:150px;height:150px;right:-55px;top:-60px;background:#d9f4ff}
+#gatewayModalOverlay>div::after{width:110px;height:110px;left:-45px;bottom:-48px;background:#ddf7df}
+#gatewayModalOverlay h2{position:relative;color:var(--vg-ink)!important;font-weight:900!important;letter-spacing:-.02em}
+#gatewayModalOverlay p{position:relative;color:var(--vg-muted)!important;line-height:1.6}
+#gatewayModalOverlay .fa-users-gear{
+  position:relative;width:74px;height:74px;display:grid;place-items:center;margin:0 auto 16px!important;
+  border-radius:24px;color:#fff!important;background:linear-gradient(145deg,#a678f4,#d276e7)!important;
+  box-shadow:0 9px 0 #7245b7,0 16px 28px rgba(126,74,188,.22)
+}
+#roleSelectionContainer{position:relative;gap:12px!important}
+#roleSelectionContainer button{
+  min-height:66px!important;padding:12px 16px!important;border-width:2px!important;border-radius:20px!important;
+  color:var(--vg-ink)!important;background:rgba(255,255,255,.86)!important;
+  box-shadow:0 7px 0 rgba(75,111,128,.12),0 12px 24px rgba(39,86,105,.08)!important;
+  font-weight:700!important;transform:none!important;transition:transform .2s ease,box-shadow .2s ease,background .2s ease!important
+}
+#roleSelectionContainer button:hover{
+  color:var(--vg-ink)!important;background:#fff!important;transform:translateY(-3px)!important;
+  box-shadow:0 10px 0 rgba(75,111,128,.12),0 18px 28px rgba(39,86,105,.12)!important
+}
+#gatewayModalOverlay>div>button:last-child{position:relative;color:#66798a!important;font-weight:700!important;padding:10px 18px!important;border-radius:999px!important}
+#gatewayModalOverlay>div>button:last-child:hover{color:#e6536f!important;background:#fff0f3!important}
+
+/* ---------- LESSON ---------- */
+body:has(.top-bar){
+  color:var(--vg-ink)!important;
+  background:
+    radial-gradient(circle at 12% 12%,rgba(255,210,105,.28),transparent 19%),
+    radial-gradient(circle at 88% 16%,rgba(72,191,238,.22),transparent 22%),
+    linear-gradient(180deg,#eaf8ff 0%,#f8fff8 56%,#fff9e9 100%)!important;
+}
+body:has(.top-bar)::before{
+  content:"";position:fixed;inset:0;pointer-events:none;opacity:.45;
+  background-image:radial-gradient(circle,#7fc9dd 1px,transparent 1.5px);background-size:42px 42px;
+}
+.top-bar{
+  position:relative;margin:14px 22px 0;padding:12px 16px!important;gap:12px!important;
+  border:1px solid rgba(255,255,255,.88);border-radius:24px;
+  background:rgba(255,255,255,.84)!important;backdrop-filter:blur(18px);
+  box-shadow:var(--vg-shadow)
+}
+.btn-close{
+  width:46px;height:46px;display:grid;place-items:center;border:2px solid #ffc2cf!important;border-radius:16px!important;
+  color:#fff!important;background:linear-gradient(145deg,#ff819b,#ff5875)!important;
+  box-shadow:0 6px 0 #d94361,0 10px 18px rgba(221,68,97,.2)!important
+}
+.btn-close:hover{transform:translateY(-2px) rotate(-5deg);color:#fff!important}
+.progress-container{height:13px!important;background:#e5eef2!important;box-shadow:inset 0 2px 4px rgba(34,65,82,.12)}
+.progress-fill{background:linear-gradient(90deg,#36c889,#2fb8ed,#9b7cf4)!important;animation:none!important}
+.hearts-container{padding:8px 12px;border-radius:15px;background:#fff0f3;color:#ef5572!important}
+#quizBoosters button{height:42px!important;border-radius:14px!important;background:#fff!important;box-shadow:0 5px 0 rgba(56,88,105,.1)!important;font-weight:800}
+.quiz-container{
+  flex:1!important;justify-content:center!important;max-width:980px!important;padding:30px 38px 34px!important;margin:22px auto!important;
+  border:1px solid rgba(255,255,255,.92);border-radius:36px;
+  background:rgba(255,255,255,.87)!important;backdrop-filter:blur(18px);
+  box-shadow:0 26px 65px rgba(53,101,124,.16)
+}
+.question-text{
+  margin-bottom:28px!important;color:var(--vg-ink)!important;background:none!important;-webkit-text-fill-color:var(--vg-ink)!important;
+  text-shadow:none!important;font-size:clamp(1.7rem,3vw,2.65rem)!important;line-height:1.35!important
+}
+.question-text::before{content:"🌍";display:block;font-size:2.6rem;margin-bottom:8px;animation:vgBob 2.8s ease-in-out infinite}
+.options-grid{counter-reset:answer;grid-template-columns:1fr!important;gap:13px!important;max-width:760px;width:100%;margin:auto}
+.option-btn{
+  counter-increment:answer;position:relative;min-height:68px;padding:14px 64px 14px 74px!important;text-align:left!important;
+  border:2px solid #dcebf0!important;border-radius:21px!important;color:#243b50!important;background:#fff!important;
+  box-shadow:0 7px 0 #dae7eb,0 13px 23px rgba(35,80,98,.08)!important;font-size:1rem!important;font-weight:750!important
+}
+.option-btn::before{
+  content:counter(answer,upper-alpha);position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  width:42px;height:42px;display:grid;place-items:center;border-radius:14px;color:#fff;font-weight:900;background:#43c98a;
+  box-shadow:0 4px 0 #269761
+}
+.option-btn:nth-child(2)::before{background:#ffb938;box-shadow:0 4px 0 #d89014}
+.option-btn:nth-child(3)::before{background:#34aef0;box-shadow:0 4px 0 #187bb3}
+.option-btn:nth-child(4)::before{background:#ff718f;box-shadow:0 4px 0 #ce4665}
+.option-btn::after{content:"☆";position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:1.5rem;color:#b6c9d0}
+.option-btn:hover{transform:translateY(-3px)!important;background:#fafffd!important;border-color:#8adcb6!important;box-shadow:0 10px 0 #d7e9e1,0 18px 28px rgba(35,80,98,.12)!important}
+.option-btn.selected{color:#173f54!important;background:#eaf8ff!important;border-color:#35aeee!important;box-shadow:0 7px 0 #a8dcef,0 15px 28px rgba(43,159,210,.18)!important}
+.option-btn.correct{color:#145b39!important;background:#eafbef!important;border-color:#42c878!important;box-shadow:0 7px 0 #9ed9b6!important}
+.option-btn.wrong{color:#8e2f46!important;background:#fff0f3!important;border-color:#ff7992!important;opacity:1!important}
+.bottom-bar{
+  position:relative;margin:0 22px 18px;padding:16px 22px!important;border:1px solid rgba(255,255,255,.88)!important;border-radius:25px;
+  color:var(--vg-ink);background:rgba(255,255,255,.88)!important;box-shadow:var(--vg-shadow)
+}
+.bottom-bar.state-correct{background:#e9faef!important;border-color:#70d99b!important}
+.bottom-bar.state-wrong{background:#fff0f3!important;border-color:#ff94aa!important}
+.feedback-text{color:var(--vg-ink)!important}.state-correct .feedback-text{color:#16844d!important}.state-wrong .feedback-text{color:#d73e5b!important}
+#feedbackExplanation{color:#29485c!important;background:rgba(255,255,255,.76)!important}
+.btn-check{
+  min-width:150px!important;padding:14px 24px!important;border:0!important;border-radius:18px!important;color:#fff!important;
+  background:#b9c7cf!important;box-shadow:0 6px 0 #8b9aa3!important;font-weight:900!important
+}
+.btn-check.active{background:linear-gradient(135deg,#2ecb83,#26b9a5)!important;box-shadow:0 7px 0 #16866f,0 13px 24px rgba(38,180,143,.23)!important}
+.state-wrong .btn-check.active{background:linear-gradient(135deg,#ff718d,#f45971)!important;box-shadow:0 7px 0 #c53c57!important}
+.theory-container{color:var(--vg-ink)!important;background:#fff!important;border-color:#dce9ee!important;box-shadow:var(--vg-shadow)!important}
+#theoryContent{color:#314d60!important}
+@keyframes vgBob{50%{transform:translateY(-7px) rotate(3deg)}}
+
+/* ---------- EXAM ARENA ---------- */
+.exam-arena-page{
+  color:var(--vg-ink)!important;
+  background:
+    radial-gradient(circle at 8% 12%,rgba(255,207,95,.25),transparent 18%),
+    radial-gradient(circle at 92% 16%,rgba(70,181,235,.22),transparent 20%),
+    linear-gradient(180deg,#eaf8ff 0%,#f6fff9 56%,#fff9e8 100%)!important
+}
+.arena-global-topbar{
+  background:rgba(255,255,255,.9)!important;border-color:#dbeaf0!important;box-shadow:0 10px 28px rgba(44,91,111,.12)!important
+}
+.arena-global-brand,.arena-global-navigation a{color:#3d5668!important}
+.arena-global-brand{color:#177f68!important}.arena-global-navigation a[aria-current="page"]{color:#fff!important;background:linear-gradient(135deg,#33bde8,#6c78ee)!important;box-shadow:0 6px 0 #3c63b7}
+.arena-topbar-back,.exam-back-link{color:#1d5c73!important;background:#fff!important;border-color:#cfe3eb!important}
+.exam-arena-shell{max-width:1180px!important}
+.exam-topbar,.exam-control-panel,.exam-question-card,.exam-navigator-card,.exam-session-bar{
+  color:var(--vg-ink)!important;border:1px solid rgba(255,255,255,.95)!important;
+  background:rgba(255,255,255,.9)!important;backdrop-filter:blur(18px);box-shadow:var(--vg-shadow)!important
+}
+.exam-topbar h1,.exam-control-panel h2,.exam-question-card h2,.exam-navigator-card h2{color:var(--vg-ink)!important}
+.exam-topbar p,.exam-control-panel p,.exam-question-meta,.exam-nav-heading p{color:var(--vg-muted)!important}
+.exam-eyebrow{color:#1598bd!important}
+.exam-timer{color:#c84062!important;background:#fff0f3!important;border-color:#ffc3cf!important}
+.exam-control-panel{border-radius:30px!important;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(238,250,247,.94))!important}
+.exam-setup-form label{color:#365366!important;font-weight:800!important}
+.exam-setup-form select{
+  color:#17384d!important;background:#fff!important;border:2px solid #d8e8ee!important;border-radius:16px!important;
+  box-shadow:0 5px 0 #d8e5e9!important
+}
+.exam-setup-form select option{color:#17384d!important;background:#fff!important}
+.exam-primary-btn,.exam-submit-btn{
+  color:#fff!important;border:0!important;border-radius:17px!important;background:linear-gradient(135deg,#2fc98a,#27b9ab)!important;
+  box-shadow:0 7px 0 #168675,0 13px 24px rgba(35,171,143,.2)!important;font-weight:900!important
+}
+.exam-setup-note{color:#6d5a2c!important;background:#fff9df!important;border:1px solid #f3df96!important;border-radius:15px!important}
+.exam-workspace.arena-fullscreen-workspace{
+  color:var(--vg-ink)!important;background:linear-gradient(180deg,#eaf8ff,#f7fff8)!important
+}
+.exam-session-bar{color:#27475a!important;border-radius:20px!important}
+.exam-exit-btn{color:#fff!important;background:linear-gradient(135deg,#ff718a,#ef526d)!important;border-color:#ff9eaf!important;box-shadow:0 7px 0 #bd3851!important}
+.exam-question-card{border-radius:30px!important}.exam-navigator-card{border-radius:27px!important}
+.exam-question-meta span{color:#1e718d!important}.exam-options{display:grid!important;gap:12px!important}
+.exam-option{
+  min-height:58px!important;color:#263f52!important;background:#fff!important;border:2px solid #dbe9ee!important;border-radius:17px!important;
+  box-shadow:0 5px 0 #d9e5e9!important;transition:.2s ease!important
+}
+.exam-option:hover{transform:translateY(-2px);border-color:#66c6e9!important;background:#f1fbff!important}
+.exam-option.is-selected,.exam-option[aria-checked="true"]{color:#13506b!important;background:#e9f8ff!important;border-color:#37ade4!important;box-shadow:0 6px 0 #acdced!important}
+.exam-secondary-btn,.exam-mark-btn{color:#285066!important;background:#fff!important;border:2px solid #dbe9ee!important;border-radius:16px!important;box-shadow:0 5px 0 #d6e3e7!important}
+.exam-question-nav button{color:#29495c!important;background:#fff!important;border-color:#d7e6ec!important;border-radius:12px!important}
+.exam-question-nav button.is-current{color:#fff!important;background:#35ace6!important;border-color:#228fc5!important}
+.exam-question-nav button.is-answered{color:#155c3e!important;background:#e6faee!important;border-color:#50ca83!important}
+.exam-question-nav button.is-marked{color:#7d5900!important;background:#fff6cf!important;border-color:#f2c344!important}
+.exam-legend{color:#536e7f!important}
+
+/* SweetAlert: nền trắng thì chữ tối, đọc rõ */
+.swal2-container{backdrop-filter:blur(8px)}
+.swal2-popup{
+  width:min(430px,calc(100vw - 30px))!important;padding:30px!important;border:2px solid #fff!important;border-radius:30px!important;
+  color:var(--vg-ink)!important;background:linear-gradient(150deg,#fffef9,#effbf7)!important;
+  box-shadow:0 30px 80px rgba(22,64,82,.28)!important
+}
+.swal2-title{color:var(--vg-ink)!important;font-weight:900!important}.swal2-html-container{color:#536b7b!important;line-height:1.6!important}
+.swal2-icon{border-width:3px!important}.swal2-confirm,.swal2-cancel{border:0!important;border-radius:15px!important;padding:12px 22px!important;font-weight:850!important;box-shadow:none!important}
+.swal2-confirm{color:#fff!important;background:linear-gradient(135deg,#8b71ed,#6d58d8)!important}.swal2-cancel{color:#3d5668!important;background:#e8eef1!important}
+
+@media(max-width:700px){
+  .top-bar{margin:8px 8px 0;padding:9px!important}.quiz-container{margin:12px 8px!important;padding:24px 14px!important;border-radius:25px}.bottom-bar{margin:0 8px 8px;gap:12px}.option-btn{padding-right:48px!important}.question-text{font-size:1.55rem!important}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* =========================================================
+   V63 — HỌC/LUYỆN THI SÁNG TỐI + CĂN NÚT + TIÊU ĐỀ RÕ
+   ========================================================= */
+.learning-theme-toggle{
+  position:relative;flex:0 0 auto;width:72px;height:40px;padding:4px;border:1px solid rgba(36,105,130,.18);
+  border-radius:999px;background:linear-gradient(135deg,#fff5b8,#dff6ff);box-shadow:0 6px 0 rgba(46,94,111,.12),0 12px 22px rgba(34,89,110,.12);
+  cursor:pointer;overflow:hidden;transition:.25s ease
+}
+.learning-theme-toggle::before{
+  content:"";position:absolute;top:4px;left:4px;width:30px;height:30px;border-radius:50%;background:#fff;
+  box-shadow:0 4px 10px rgba(39,77,94,.18);transition:transform .28s ease
+}
+.learning-theme-toggle span{position:absolute;top:50%;transform:translateY(-50%);z-index:1;font-size:16px;line-height:1}
+.learning-theme-sun{left:11px}.learning-theme-moon{right:10px}
+html[data-theme="dark"] .learning-theme-toggle{background:linear-gradient(135deg,#253a67,#161f46);border-color:#526894;box-shadow:0 6px 0 #0d1632,0 12px 24px rgba(0,0,0,.28)}
+html[data-theme="dark"] .learning-theme-toggle::before{transform:translateX(32px);background:#edf3ff}
+.arena-topbar-utilities{display:flex;align-items:center;gap:12px}
+
+/* Ảnh 1: nút Kiểm tra nằm giữa ở trạng thái chưa trả lời */
+body:not(.theory-mode) .bottom-bar{display:flex!important;align-items:center!important;justify-content:center!important;min-height:82px}
+body:not(.theory-mode) .bottom-bar .feedback-msg:not(.show){display:none!important}
+body:not(.theory-mode) .bottom-bar .btn-check{float:none!important;margin:0 auto!important;min-width:190px!important}
+body:not(.theory-mode) .bottom-bar.state-correct,
+body:not(.theory-mode) .bottom-bar.state-wrong{justify-content:space-between!important}
+body:not(.theory-mode) .bottom-bar.state-correct .btn-check,
+body:not(.theory-mode) .bottom-bar.state-wrong .btn-check{margin:0 0 0 auto!important}
+
+/* Bài học — giao diện tối */
+html[data-theme="dark"] body{
+  --vg-ink:#f5f8ff;--vg-muted:#afbdd0;
+  color:#eef5ff!important;
+  background:
+    radial-gradient(circle at 12% 12%,rgba(73,170,208,.13),transparent 22%),
+    radial-gradient(circle at 88% 18%,rgba(155,112,226,.12),transparent 24%),
+    linear-gradient(180deg,#091529 0%,#10223a 58%,#0a1729 100%)!important
+}
+html[data-theme="dark"] .top-bar,
+html[data-theme="dark"] .quiz-container,
+html[data-theme="dark"] .bottom-bar,
+html[data-theme="dark"] .theory-container{
+  color:#eef5ff!important;background:rgba(19,37,59,.92)!important;border-color:rgba(131,170,205,.2)!important;
+  box-shadow:0 24px 58px rgba(0,0,0,.34)!important
+}
+html[data-theme="dark"] .question-text{color:#f7f9ff!important;-webkit-text-fill-color:#f7f9ff!important}
+html[data-theme="dark"] .option-btn{color:#eaf1fb!important;background:#172b43!important;border-color:#34516c!important;box-shadow:0 6px 0 #0a1828!important}
+html[data-theme="dark"] .option-btn:hover{color:#fff!important;background:#1e3955!important;border-color:#51bde8!important}
+html[data-theme="dark"] .option-btn.selected{color:#fff!important;background:#173f5b!important;border-color:#49c2f2!important}
+html[data-theme="dark"] .bottom-bar.state-correct{background:#143d2b!important;border-color:#3fbd79!important}
+html[data-theme="dark"] .bottom-bar.state-wrong{background:#482433!important;border-color:#ee6986!important}
+html[data-theme="dark"] #feedbackExplanation{color:#e9f2fb!important;background:rgba(4,15,27,.55)!important}
+html[data-theme="dark"] .progress-container{background:#23364c!important}
+
+/* Ảnh 2: Exam sáng rõ chữ, tối cân bằng */
+.exam-arena-page .exam-topbar h1{color:#14374c!important;text-shadow:none!important;opacity:1!important;-webkit-text-fill-color:#14374c!important}
+.exam-arena-page .exam-topbar p,.exam-arena-page .exam-control-panel p{color:#536d7d!important}
+.exam-arena-page .exam-eyebrow{color:#177f9f!important}
+html[data-theme="dark"] .exam-arena-page{
+  --vg-ink:#f1f6ff;--vg-muted:#a9b9cc;
+  color:#eef5ff!important;
+  background:
+    radial-gradient(circle at 10% 13%,rgba(40,169,198,.13),transparent 20%),
+    radial-gradient(circle at 91% 16%,rgba(120,91,210,.14),transparent 23%),
+    linear-gradient(180deg,#071429 0%,#0d2037 56%,#08162a 100%)!important
+}
+html[data-theme="dark"] .arena-global-topbar{background:rgba(8,22,40,.94)!important;border-color:#243c58!important}
+html[data-theme="dark"] .arena-global-brand,
+html[data-theme="dark"] .arena-global-navigation a{color:#bac9d9!important}
+html[data-theme="dark"] .exam-topbar,
+html[data-theme="dark"] .exam-control-panel,
+html[data-theme="dark"] .exam-question-card,
+html[data-theme="dark"] .exam-navigator-card,
+html[data-theme="dark"] .exam-session-bar{
+  color:#eef5ff!important;background:rgba(20,39,62,.94)!important;border-color:#304b68!important;box-shadow:0 24px 58px rgba(0,0,0,.35)!important
+}
+html[data-theme="dark"] .exam-topbar h1,
+html[data-theme="dark"] .exam-control-panel h2,
+html[data-theme="dark"] .exam-question-card h2,
+html[data-theme="dark"] .exam-navigator-card h2{color:#f5f8ff!important;-webkit-text-fill-color:#f5f8ff!important}
+html[data-theme="dark"] .exam-topbar p,
+html[data-theme="dark"] .exam-control-panel p,
+html[data-theme="dark"] .exam-question-meta,
+html[data-theme="dark"] .exam-nav-heading p{color:#aebed0!important}
+html[data-theme="dark"] .exam-setup-form label{color:#d9e6f3!important}
+html[data-theme="dark"] .exam-setup-form select{color:#eef6ff!important;background:#10253d!important;border-color:#385570!important;box-shadow:0 5px 0 #09182a!important}
+html[data-theme="dark"] .exam-setup-form select option{color:#eef6ff!important;background:#10253d!important}
+html[data-theme="dark"] .exam-setup-note{color:#f3dda0!important;background:#3a321d!important;border-color:#6f5b27!important}
+html[data-theme="dark"] .exam-workspace.arena-fullscreen-workspace{color:#eef5ff!important;background:linear-gradient(180deg,#071429,#0d2037)!important}
+html[data-theme="dark"] .exam-option{color:#e9f1fb!important;background:#132942!important;border-color:#35516d!important;box-shadow:0 5px 0 #091728!important}
+html[data-theme="dark"] .exam-option:hover{color:#fff!important;background:#193653!important;border-color:#55bfe6!important}
+html[data-theme="dark"] .exam-secondary-btn,
+html[data-theme="dark"] .exam-mark-btn,
+html[data-theme="dark"] .exam-question-nav button,
+html[data-theme="dark"] .arena-topbar-back,
+html[data-theme="dark"] .exam-back-link{color:#deebf7!important;background:#142a43!important;border-color:#3a5875!important;box-shadow:0 5px 0 #081629!important}
+html[data-theme="dark"] .exam-question-nav button.is-current{color:#fff!important;background:#2c9fd5!important}
+html[data-theme="dark"] .exam-question-nav button.is-answered{color:#c7f7d8!important;background:#17422f!important;border-color:#3aa96b!important}
+html[data-theme="dark"] .exam-question-nav button.is-marked{color:#ffe8a1!important;background:#4b3b17!important;border-color:#b98b27!important}
+
+/* Ảnh 3: “Không gian học tập” gọn, rõ, không bị chìm */
+.student-page-heading .topbar-title{
+  display:inline-flex!important;align-items:center!important;gap:9px!important;padding:9px 15px!important;border-radius:14px!important;
+  font-size:clamp(1rem,1.5vw,1.25rem)!important;line-height:1.2!important;letter-spacing:.01em!important;font-weight:900!important
+}
+html[data-theme="light"] .student-page-heading .topbar-title{
+  color:#124d3b!important;background:rgba(235,250,244,.94)!important;border:1px solid rgba(56,150,111,.24)!important;
+  box-shadow:0 7px 18px rgba(35,104,77,.12)!important;text-shadow:none!important
+}
+html[data-theme="dark"] .student-page-heading .topbar-title{
+  color:#eaf8ff!important;background:rgba(18,43,63,.82)!important;border:1px solid rgba(103,180,215,.2)!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.18)!important;text-shadow:none!important
+}
+html[data-theme="light"] .student-page-heading .topbar-title::before{content:"🧭"!important}
+
+@media(max-width:700px){
+  .learning-theme-toggle{width:62px;height:36px}.learning-theme-toggle::before{width:26px;height:26px}html[data-theme="dark"] .learning-theme-toggle::before{transform:translateX(26px)}
+  .arena-topbar-utilities{gap:7px}
+}
+

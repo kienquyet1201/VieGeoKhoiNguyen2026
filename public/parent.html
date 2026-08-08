@@ -14,16 +14,19 @@
     <link rel="stylesheet" href="bento.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="legacy-ui-skin.css">
+    <link rel="stylesheet" href="source-global-theme.css">
+    <link rel="stylesheet" href="source-parent-dashboard-redesign.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
+    <script src="ui-effects.js" defer></script>
 </head>
 <body class="source-ui source-ui-parent" style="padding: 40px; justify-content: flex-start; height: auto; min-height: 100vh;">
     <div class="source-ui-ambient" aria-hidden="true"></div>
 
-    <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-            <div class="app-logo" style="margin-bottom: 0;">
+    <div class="parent-dashboard-shell" style="max-width: 1000px; margin: 0 auto; width: 100%;">
+        <div class="parent-dashboard-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <div class="app-logo parent-dashboard-brand" style="margin-bottom: 0;">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo <span style="font-size: 1.2rem; color: var(--gold);">| Phụ Huynh</span>
             </div>
             <button class="bento-btn" onclick="window.location.href='/map'" style="background: rgba(255,255,255,0.1);">Trở về Trang học</button>
@@ -32,34 +35,34 @@
                 <div id="parentRoleDrop" style="display: none; position: absolute; top: 100%; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
                     <a href="/map" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
                     <a href="/parent" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                    <a href="/cs-dashboard" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
+                    <a href="/cs" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
                     <a href="/admin" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
                 </div>
             </div>
         </div>
 
-        <div class="bento-card" style="border-top: 4px solid var(--blue); margin-bottom: 30px;">
+        <div class="bento-card parent-progress-strip" style="border-top: 4px solid var(--blue); margin-bottom: 30px;">
             <h2 style="font-size: 1.8rem; margin-bottom: 20px;"><i class="fa-solid fa-chart-line"></i> Báo Cáo Tiến Độ Học Tập</h2>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+            <div class="parent-stat-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div class="parent-stat-card" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
                     <i class="fa-solid fa-fire" style="font-size: 2.5rem; color: #ff9600; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Chuỗi học liên tiếp</p>
                     <h3 id="statStreak" style="font-size: 2rem;">0 Ngày</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div class="parent-stat-card" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
                     <i class="fa-solid fa-book-open-reader" style="font-size: 2.5rem; color: #1cb0f6; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Bài học hoàn thành</p>
                     <h3 id="statCompleted" style="font-size: 2rem;">0 Bài</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div class="parent-stat-card" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
                     <i class="fa-solid fa-stopwatch" style="font-size: 2.5rem; color: #ce82ff; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Hoạt động hôm nay</p>
                     <h3 id="statActivity" style="font-size: 1.5rem; color: var(--green);">Đã học</h3>
                 </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div class="parent-stat-card" style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
                     <i class="fa-solid fa-square-poll-vertical" style="font-size: 2.5rem; color: #58cc02; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Điểm trung bình hôm nay</p>
                     <h3 id="statAverageScore" style="font-size: 2rem;">0.0/10</h3>
@@ -67,9 +70,9 @@
             </div>
         </div>
         
-        <div class="bento-card" style="border-top: 4px solid var(--green);">
+        <div class="bento-card parent-report-card" style="border-top: 4px solid var(--green);">
             <h2 style="font-size: 1.5rem; margin-bottom: 20px;"><i class="fa-solid fa-bell"></i> Phân Tích & Cảnh Báo</h2>
-            <div id="parentReport" style="line-height: 1.8; color: var(--text-main); font-size: 1.1rem;">
+            <div id="parentReport" class="parent-report-content" style="line-height: 1.8; color: var(--text-main); font-size: 1.1rem;">
                 Đang tải dữ liệu...
             </div>
         </div>
@@ -133,7 +136,7 @@
     </script>
     <script>
     function parentAllowedRolesFromSession(session) {
-        const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
+        const roleLinks = { user: '/map', parent: '/parent', cs: '/cs', admin: '/admin' };
         const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
         const collected = [];
         const appendRoles = (value) => {
@@ -171,7 +174,7 @@
             var session = JSON.parse(localStorage.getItem('lm_session')) || {};
             const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
             const normalizedRole = aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase();
-            const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
+            const roleLinks = { user: '/map', parent: '/parent', cs: '/cs', admin: '/admin' };
             const allowedRoles = parentAllowedRolesFromSession(session);
             if (!allowedRoles.includes(normalizedRole)) { if (window.Swal) Swal.fire({icon:'warning',title:'Không có quyền truy cập',text:'Vai trò này chưa được cấp cho tài khoản của bạn.'}); return false; }
             session.roles = allowedRoles;

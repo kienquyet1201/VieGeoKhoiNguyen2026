@@ -7,6 +7,12 @@ const nextConfig = {
       { source: '/map-dashboard',     destination: '/map',               permanent: false },
       { source: '/admin-dashboard',   destination: '/admin',             permanent: false },
       { source: '/parent-dashboard',  destination: '/parent',            permanent: false },
+      { source: '/cs-dashboard',      destination: '/cs',                permanent: false },
+    ];
+  },
+  async rewrites() {
+    return [
+      { source: '/cs', destination: '/cs-dashboard.html' },
     ];
   },
 };

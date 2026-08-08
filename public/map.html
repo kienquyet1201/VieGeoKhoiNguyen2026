@@ -15,18 +15,27 @@
     <link rel="stylesheet" href="bento.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="legacy-ui-skin.css">
+    <link rel="stylesheet" href="source-global-theme.css">
+    <link rel="stylesheet" href="source-shared-topbar.css">
+    <link rel="stylesheet" href="source-map-discovery.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
+    <script src="ui-effects.js" defer></script>
 </head>
 <body class="student-app min-h-screen w-full overflow-y-auto pb-32 source-ui source-ui-map">
-    <div class="source-ui-ambient" aria-hidden="true"></div>
+    <div class="global-animated-background source-ui-ambient" aria-hidden="true">
+        <div class="global-sun"></div><div class="global-cloud global-cloud-one"></div><div class="global-cloud global-cloud-two"></div><div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div><div class="global-wind global-wind-two"></div><div class="global-wind global-wind-three"></div><div class="global-moon"></div>
+        <div class="global-star global-star-one"></div><div class="global-star global-star-two"></div><div class="global-star global-star-three"></div><div class="global-star global-star-four"></div><div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div><div class="global-star global-star-seven"></div><div class="global-star global-star-eight"></div><div class="global-star global-star-nine"></div><div class="global-star global-star-ten"></div>
+    </div>
 
     <div class="app-container min-h-screen w-full overflow-y-auto pb-32">
         
         <!-- Student top navigation: the learning canvas stays full width below this bar. -->
-        <header class="user-top-navbar" id="studentTopbar">
-            <div class="user-topbar-brand">
+        <header class="user-top-navbar shared-topbar" id="studentTopbar">
+            <div class="user-topbar-brand shared-left">
             <div class="app-logo">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo
             </div>
@@ -34,16 +43,16 @@
             <button id="mobileTopbarToggle" class="mobile-topbar-toggle" type="button" aria-label="Mở điều hướng học tập" aria-controls="studentNavigation" aria-expanded="false" title="Mở điều hướng">
                 <i class="fa-solid fa-bars" aria-hidden="true"></i>
             </button>
-            <div class="user-topbar-navigation fixed inset-y-0 left-0 z-[100] w-64 bg-slate-900 shadow-2xl -translate-x-full transition-transform duration-300" id="studentNavigation">
+            <div class="user-topbar-navigation shared-center fixed inset-y-0 left-0 z-[100] w-64 bg-slate-900 shadow-2xl -translate-x-full transition-transform duration-300" id="studentNavigation">
             
             <nav class="nav-items user-navigation-animated" id="navMenu" aria-label="Điều hướng học tập">
-                <a class="nav-button" href="/map?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="nav-label">Lộ trình học</span></a>
-                <a class="nav-button" href="/exam-arena" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><div class="nav-icon-frame"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div><span class="nav-label">Đấu trường Luyện thi</span></a>
-                <a class="nav-button" href="/map?tab=leaderboard" data-target="tabLeaderboard" data-tab-key="leaderboard" title="Xếp hạng" aria-label="Xếp hạng"><div class="nav-icon-frame"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div><span class="nav-label">Xếp hạng</span></a>
-                <a class="nav-button" href="/map?tab=quests" data-target="tabQuests" data-tab-key="quests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><div class="nav-icon-frame"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div><span class="nav-label">Nhiệm vụ</span></a>
-                <a class="nav-button" href="/map?tab=shop" data-target="tabShop" data-tab-key="shop" title="Cửa hàng" aria-label="Cửa hàng"><div class="nav-icon-frame"><i class="fa-solid fa-store" aria-hidden="true"></i></div><span class="nav-label">Cửa hàng</span></a>
-                <a class="nav-button" href="/map?tab=arena" data-target="tabArena" data-tab-key="arena" title="Đấu trường PvP" aria-label="Đấu trường PvP"><div class="nav-icon-frame"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div><span class="nav-label">Đấu trường PvP</span></a>
-                <a class="nav-button" href="/map?tab=profile" data-target="tabProfile" data-tab-key="profile" title="Hồ sơ" aria-label="Hồ sơ"><div class="nav-icon-frame"><i class="fa-solid fa-user" aria-hidden="true"></i></div><span class="nav-label">Hồ sơ</span></a>
+                <a class="nav-button shared-link" href="/map?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="nav-label shared-label">Lộ trình học</span></a>
+                <a class="nav-button shared-link" href="/exam-arena" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><div class="nav-icon-frame"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div><span class="nav-label shared-label">Đấu trường Luyện thi</span></a>
+                <a class="nav-button shared-link" href="/map?tab=leaderboard" data-target="tabLeaderboard" data-tab-key="leaderboard" title="Xếp hạng" aria-label="Xếp hạng"><div class="nav-icon-frame"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div><span class="nav-label shared-label">Xếp hạng</span></a>
+                <a class="nav-button shared-link" href="/map?tab=quests" data-target="tabQuests" data-tab-key="quests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><div class="nav-icon-frame"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div><span class="nav-label shared-label">Nhiệm vụ</span></a>
+                <a class="nav-button shared-link" href="/map?tab=shop" data-target="tabShop" data-tab-key="shop" title="Cửa hàng" aria-label="Cửa hàng"><div class="nav-icon-frame"><i class="fa-solid fa-store" aria-hidden="true"></i></div><span class="nav-label shared-label">Cửa hàng</span></a>
+                <a class="nav-button shared-link" href="/map?tab=arena" data-target="tabArena" data-tab-key="arena" title="Đấu trường PvP" aria-label="Đấu trường PvP"><div class="nav-icon-frame"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div><span class="nav-label shared-label">Đấu trường PvP</span></a>
+                <a class="nav-button shared-link" href="/map?tab=profile" data-target="tabProfile" data-tab-key="profile" title="Hồ sơ" aria-label="Hồ sơ"><div class="nav-icon-frame"><i class="fa-solid fa-user" aria-hidden="true"></i></div><span class="nav-label shared-label">Hồ sơ</span></a>
             </nav>
             <div class="mobile-navigation-tools" aria-label="Tiện ích học tập">
                 <button type="button" data-mobile-topbar-action="theme" title="Chế độ sáng/tối"><i class="fa-solid fa-moon" aria-hidden="true"></i><span>Chế độ sáng/tối</span></button>
@@ -51,7 +60,7 @@
                 <button type="button" data-mobile-topbar-action="logout" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Đăng xuất</span></button>
             </div>
             </div>
-            <div class="topbar-stats" aria-label="Chỉ số học tập">
+            <div class="topbar-stats shared-stats" aria-label="Chỉ số học tập">
                 <div class="stat-pill" style="color: #ff4b4b;" title="Trái tim · hồi 1 tim mỗi 15 phút"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">3</span><span id="hdrHeartTimer" aria-live="polite" hidden style="margin-left: 4px; color: #ff9a9a; font-size: .7rem; font-variant-numeric: tabular-nums;">14:59</span></div>
                 <div class="stat-pill" style="color: #ffc800;" title="Chuỗi ngày học"><i class="fa-solid fa-fire" aria-hidden="true"></i> <span id="hdrStreak">1</span></div>
                 <div class="stat-pill" style="color: #1cb0f6;" title="Kim cương"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
@@ -59,7 +68,7 @@
                 <div class="stat-pill" title="Cúp"><i class="fa-solid fa-trophy"></i> <span id="hdrTrophies">0</span></div>
                 <div class="stat-pill" title="Cấp độ"><i class="fa-solid fa-star"></i> <span id="hdrLevel">1</span></div>
             </div>
-            <div class="taskbar-actions" aria-label="Tiện ích học tập">
+            <div class="taskbar-actions shared-right" aria-label="Tiện ích học tập">
                 <label class="taskbar-difficulty" for="quickDifficultySelect" title="Đổi mức độ"><i class="fa-solid fa-gauge-high"></i><span class="sr-only">Chọn mức độ</span>
                     <select id="quickDifficultySelect" title="Đổi mức độ"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select>
                 </label>

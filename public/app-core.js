@@ -42,7 +42,7 @@ window.VieGeoUI = window.VieGeoUI || {
 const ROLE_META = Object.freeze({
     user: { label: 'Học sinh', route: '/map' },
     parent: { label: 'Phụ huynh', route: '/parent' },
-    cs: { label: 'Chăm sóc KH', route: '/cs-dashboard' },
+    cs: { label: 'Chăm sóc KH', route: '/cs' },
     admin: { label: 'Quản trị viên', route: '/admin' }
 });
 
