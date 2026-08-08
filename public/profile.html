@@ -72,37 +72,31 @@
 
     </style>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="legacy-ui-skin.css">
-    <link rel="stylesheet" href="source-global-theme.css">
-    <link rel="stylesheet" href="source-profile.css">
-    <link rel="stylesheet" href="source-shared-topbar.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
-    <script src="ui-effects.js" defer></script>
 </head>
-<body class="profile-page source-ui source-ui-profile">
-    <div class="global-animated-background source-ui-ambient" aria-hidden="true"><div class="global-sun"></div><div class="global-cloud global-cloud-one"></div><div class="global-cloud global-cloud-two"></div><div class="global-cloud global-cloud-three"></div><div class="global-wind global-wind-one"></div><div class="global-wind global-wind-two"></div><div class="global-wind global-wind-three"></div><div class="global-moon"></div><div class="global-star global-star-one"></div><div class="global-star global-star-two"></div><div class="global-star global-star-three"></div><div class="global-star global-star-four"></div><div class="global-star global-star-five"></div><div class="global-star global-star-six"></div><div class="global-star global-star-seven"></div><div class="global-star global-star-eight"></div><div class="global-star global-star-nine"></div><div class="global-star global-star-ten"></div></div>
-    <div class="profile-page-scroll profile-shell h-full min-h-screen w-full overflow-y-auto pb-40">
+<body class="profile-page">
+    <div class="profile-page-scroll h-full min-h-screen w-full overflow-y-auto pb-40">
 
     <!-- SIDEBAR -->
-    <aside class="sidebar profile-sidebar">
-        <div class="brand brand-block">
+    <aside class="sidebar">
+        <div class="brand">
             <i class="fa-solid fa-earth-asia"></i> VieGeo
         </div>
-        <nav class="nav-menu sidebar-menu">
-            <a href="/map" class="nav-item menu-item"><i class="fa-solid fa-house"></i> Lộ trình</a>
-            <a href="#" class="nav-item menu-item"><i class="fa-solid fa-shield-halved"></i> Xếp hạng</a>
-            <a href="#" class="nav-item menu-item"><i class="fa-solid fa-treasure-chest"></i> Nhiệm vụ</a>
-            <a href="#" class="nav-item menu-item"><i class="fa-solid fa-shop"></i> Cửa hàng</a>
-            <a href="/profile" class="nav-item menu-item active"><i class="fa-solid fa-user"></i> Hồ sơ</a>
+        <nav class="nav-menu">
+            <a href="/map" class="nav-item"><i class="fa-solid fa-house"></i> Lộ trình</a>
+            <a href="#" class="nav-item"><i class="fa-solid fa-shield-halved"></i> Xếp hạng</a>
+            <a href="#" class="nav-item"><i class="fa-solid fa-treasure-chest"></i> Nhiệm vụ</a>
+            <a href="#" class="nav-item"><i class="fa-solid fa-shop"></i> Cửa hàng</a>
+            <a href="/profile" class="nav-item active"><i class="fa-solid fa-user"></i> Hồ sơ</a>
         </nav>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="main-content profile-main w-full pb-40">
         
-        <div class="profile-container profile-hero">
+        <div class="profile-container">
             <div class="avatar-circle">
                 <i class="fa-solid fa-user-astronaut"></i>
             </div>

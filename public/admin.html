@@ -9,18 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="legacy-ui-skin.css">
-    <link rel="stylesheet" href="source-global-theme.css">
-    <link rel="stylesheet" href="source-admin-dashboard.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
-    <script src="ui-effects.js" defer></script>
 </head>
-<body class="source-ui source-ui-admin">
-    <div class="global-animated-background source-ui-ambient" aria-hidden="true"><div class="global-sun"></div><div class="global-cloud global-cloud-one"></div><div class="global-cloud global-cloud-two"></div><div class="global-cloud global-cloud-three"></div><div class="global-wind global-wind-one"></div><div class="global-wind global-wind-two"></div><div class="global-wind global-wind-three"></div><div class="global-moon"></div><div class="global-star global-star-one"></div><div class="global-star global-star-two"></div><div class="global-star global-star-three"></div><div class="global-star global-star-four"></div><div class="global-star global-star-five"></div><div class="global-star global-star-six"></div><div class="global-star global-star-seven"></div><div class="global-star global-star-eight"></div><div class="global-star global-star-nine"></div><div class="global-star global-star-ten"></div></div>
-    <div class="relative w-full min-h-screen bg-slate-950 admin-shell" id="adminDashboard">
-        <aside id="admin-sidebar" class="fixed top-0 left-0 h-screen w-64 bg-slate-900 z-[9999] transition-transform duration-300 -translate-x-full md:translate-x-0 overflow-y-auto admin-sidebar" aria-label="Điều hướng quản trị">
+<body>
+    <div class="relative w-full min-h-screen bg-slate-950" id="adminDashboard">
+        <aside id="admin-sidebar" class="fixed top-0 left-0 h-screen w-64 bg-slate-900 z-[9999] transition-transform duration-300 -translate-x-full md:translate-x-0 overflow-y-auto" aria-label="Điều hướng quản trị">
             <a class="operations-logo" href="/map" title="VieGeo · về không gian học tập" aria-label="VieGeo · về không gian học tập"><i class="fa-solid fa-earth-asia"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">VieGeo</span></a>
             <button class="is-active" type="button" data-admin-tab="overview" title="Tổng quan" aria-label="Tổng quan"><i class="fa-solid fa-chart-pie"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Tổng quan</span></button>
             <button type="button" data-admin-tab="users" title="Quản lý người dùng" aria-label="Quản lý người dùng"><i class="fa-solid fa-users"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Quản lý người dùng</span></button>
@@ -31,8 +26,8 @@
             <button type="button" id="adminLogout" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i><span class="admin-rail-label opacity-0 hidden group-hover:opacity-100 group-hover:block whitespace-nowrap transition-opacity">Đăng xuất</span></button>
         </aside>
 
-        <main id="main-content" class="w-full min-h-screen transition-all duration-300 md:pl-64 pt-16 md:pt-4 overflow-x-hidden admin-main">
-            <header class="operations-heading admin-dashboard-header admin-header">
+        <main id="main-content" class="w-full min-h-screen transition-all duration-300 md:pl-64 pt-16 md:pt-4 overflow-x-hidden">
+            <header class="operations-heading admin-dashboard-header">
                 <div class="admin-heading-main">
                     <button id="menu-toggle-btn" class="admin-mobile-menu-toggle" type="button" aria-controls="admin-sidebar" aria-expanded="true" aria-label="Đóng menu quản trị"><i class="fa-solid fa-bars"></i></button>
                     <div><h1 id="adminPageTitle">Trung tâm điều hành</h1><p id="adminPageSubtitle">Theo dõi hoạt động và vận hành VieGeo trong một nơi.</p></div>
@@ -281,7 +276,7 @@
         };
         const roles = [['user','Học sinh'], ['parent','Phụ huynh'], ['cs','CSKH'], ['admin','Admin']];
         const roleLabels = Object.fromEntries(roles);
-        const roleRoutes = { user: '/map', parent: '/parent', cs: '/cs', admin: '/admin' };
+        const roleRoutes = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
         const el = id => document.getElementById(id);
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
         const security = window.VieGeoSecurity || {
