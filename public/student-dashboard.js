@@ -11,6 +11,8 @@ var profileButton=document.getElementById("profileButton");
 var logoutButton=document.getElementById("logoutButton");
 var studentRoleSelect=document.getElementById("studentRoleSelect");
 var studentSupportButton=document.getElementById("studentSupportButton");
+var studentGreeting=document.getElementById("studentGreeting");
+var studentStreak=document.getElementById("studentStreak");
 
 function applyTheme(theme){
     applyGlobalTheme(theme);
@@ -39,6 +41,50 @@ function getStudentSession(){
     }catch(error){
         return {};
     }
+}
+
+function updateStudentIdentity(user){
+    var session=getStudentSession();
+    var name=String((user&& (user.name||user.full_name||user.display_name)) || session.name || session.displayName || "Bạn").trim();
+    var streak=Number(user&&(user.current_streak!==undefined?user.current_streak:user.streak));
+
+    if(!Number.isFinite(streak)){
+        try{
+            var state=JSON.parse(localStorage.getItem("VieGeo_state")||"{}");
+            streak=Number(state.streak)||0;
+        }catch(error){
+            streak=0;
+        }
+    }
+    if(studentGreeting){studentGreeting.textContent="Chào "+name+" 👋";}
+    if(studentStreak){studentStreak.textContent="🔥 "+streak+" ngày";}
+}
+
+async function syncStudentIdentity(){
+    var client=window.supabaseClient||window.supabase||window.VieGeoSupabase&&window.VieGeoSupabase.client;
+    var session=getStudentSession();
+    var authenticatedUser=null;
+    var email=String(session.email||"").trim().toLowerCase();
+
+    try{
+        if(client&&client.auth&&typeof client.auth.getUser==="function"){
+            var authResult=await client.auth.getUser();
+            authenticatedUser=authResult&&authResult.data&&authResult.data.user;
+            email=String((authenticatedUser&&authenticatedUser.email)||email).trim().toLowerCase();
+        }
+        if(client&&typeof client.from==="function"&&email){
+            var result=await client.from("users")
+                .select("name,full_name,display_name,email,current_streak")
+                .eq("email",email)
+                .maybeSingle();
+            if(result.error){throw result.error;}
+            updateStudentIdentity(result.data||authenticatedUser||session);
+            return;
+        }
+    }catch(error){
+        console.warn("Không thể đồng bộ thông tin học viên từ Supabase:",error.message||error);
+    }
+    updateStudentIdentity(authenticatedUser||session);
 }
 
 function changeStudentRole(){
@@ -102,6 +148,7 @@ function initializeStudent(){
     var index;
 
     applyTheme(getGlobalTheme());
+    syncStudentIdentity();
 
     if(studentRoleSelect){
         studentRoleSelect.value=session.activeRole||session.role||"user";

@@ -816,30 +816,10 @@ async function renderLeaderboard() {
             };
         };
 
-        const localFallbackRows = () => {
-            const fallbackRows = [];
-            try {
-                const localUsers = JSON.parse(localStorage.getItem('VieGeo_local_users') || '[]');
-                if (Array.isArray(localUsers)) fallbackRows.push(...localUsers);
-            } catch (error) {
-                console.warn('[VieGeo Leaderboard] Không đọc được local users:', error);
-            }
-            fallbackRows.push({
-                email: sessionUser.email || 'local-player@viegeo.local',
-                name: sessionUser.name || sessionUser.email || 'Bạn',
-                avatar: sessionUser.avatar || 'fa-user',
-                avatarIsBase64: sessionUser.avatarIsBase64,
-                xp: gameState?.xp || sessionUser.xp || sessionUser.exp || 0,
-                streak: gameState?.streak || sessionUser.current_streak || 0
-            });
-            return fallbackRows;
-        };
-
         const fetchLeaderboardRows = async () => {
             const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
             if (!client || typeof client.from !== 'function') {
-                console.warn('[VieGeo Leaderboard] Supabase client chưa sẵn sàng, dùng fallback cục bộ.');
-                return localFallbackRows();
+                throw new Error('Supabase client chưa sẵn sàng.');
             }
 
             const attempts = [
@@ -883,8 +863,7 @@ async function renderLeaderboard() {
                 }
             }
 
-            console.warn('[VieGeo Leaderboard] Chưa có dữ liệu leaderboard/users trên Supabase, dùng fallback cục bộ.');
-            return localFallbackRows();
+            return [];
         };
 
         const rows = await fetchLeaderboardRows();
@@ -950,32 +929,7 @@ async function renderLeaderboard() {
         });
     } catch (error) {
         console.error('[VieGeo Leaderboard] Lỗi lấy Bảng xếp hạng:', error);
-        const fallbackUsers = [{
-            email: sessionUser.email || '',
-            name: sessionUser.name || sessionUser.email || 'Bạn',
-            avatar: sessionUser.avatar || 'fa-user',
-            avatarIsBase64: sessionUser.avatarIsBase64,
-            xp: gameState?.xp || sessionUser.xp || sessionUser.exp || 0
-        }];
-        lbList.innerHTML = '';
-        fallbackUsers.forEach((user) => {
-            const item = document.createElement('div');
-            const userLevel = getLevel(user.xp);
-            item.className = 'lb-item is-me';
-            item.innerHTML = `
-                <div class="lb-rank" style="width: 40px; text-align: center;"><i class="fa-solid fa-user" style="color: #1cb0f6;"></i></div>
-                <div class="lb-avatar" style="background: #1cb0f633; color: #1cb0f6; position: relative;">
-                    <i class="fa-solid ${cleanText(user.avatar || 'fa-user', 80)}"></i>
-                    <div style="position: absolute; bottom: -8px; background: var(--bg-dark); border: 1px solid #1cb0f6; font-size: 0.7rem; border-radius: 10px; padding: 2px 6px;">Lv.${userLevel}</div>
-                </div>
-                <div class="lb-info">
-                    <div class="lb-name">${cleanText(user.name || 'Bạn', 120)}</div>
-                    <div style="color: var(--text-dim); font-size: .85rem;">Dữ liệu dự phòng cục bộ</div>
-                </div>
-                <div class="lb-xp">${Number(user.xp) || 0} XP</div>
-            `;
-            lbList.appendChild(item);
-        });
+        lbList.innerHTML = '<div class="empty-state">Không thể tải dữ liệu xếp hạng từ Supabase.</div>';
     }
 }
 

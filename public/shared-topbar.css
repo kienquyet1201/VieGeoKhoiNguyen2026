@@ -13,7 +13,7 @@ html[data-theme="light"]{--shared-nav-bg:rgba(255,255,255,.96);--shared-nav-bord
 .shared-grade,.shared-difficulty{width:100%;height:20px;border:0;padding:0 15px 0 0;color:var(--shared-nav-text);background:transparent;outline:none;font-size:8px;font-weight:800;cursor:pointer}
 .shared-grade option,.shared-difficulty option{color:#243847;background:#ffffff}
 html[data-theme="dark"] .shared-grade option,html[data-theme="dark"] .shared-difficulty option{color:#ffffff;background:#10283a}
-.support-button{position:fixed;right:20px;bottom:20px;z-index:10000;max-width:100%;min-width:196px;height:58px;padding:7px 10px 7px 8px;display:flex;align-items:center;gap:9px;border:1px solid rgba(93,190,226,.28);border-radius:20px;color:#ffffff;background:linear-gradient(135deg,rgba(12,53,76,.96),rgba(16,76,83,.96));box-shadow:0 14px 32px rgba(0,0,0,.26),0 0 22px rgba(66,194,220,.12);cursor:pointer;transition:transform .3s ease,box-shadow .3s ease}
+.support-button{position:fixed;right:20px;bottom:20px;z-index:10000;max-width:calc(100vw - 40px);min-width:196px;height:58px;padding:7px 10px 7px 8px;display:flex;align-items:center;gap:9px;border:1px solid rgba(93,190,226,.28);border-radius:20px;color:#ffffff;background:linear-gradient(135deg,rgba(12,53,76,.96),rgba(16,76,83,.96));box-shadow:0 14px 32px rgba(0,0,0,.26),0 0 22px rgba(66,194,220,.12);cursor:pointer;transition:transform .3s ease,box-shadow .3s ease}
 .support-button:hover{transform:scale(1.08);box-shadow:0 18px 38px rgba(0,0,0,.3),0 0 30px rgba(66,194,220,.22)}
 .support-avatar{width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:14px;color:#083848;background:linear-gradient(135deg,#86e3bd,#65cce7);font-size:10px;font-weight:900}
 .support-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left}
@@ -29,7 +29,7 @@ html[data-theme="light"] .support-arrow{color:#2994ad}
 @media(max-width:860px){.shared-select-control{display:none}.support-button{min-width:58px;width:58px;padding:8px;border-radius:18px}.support-copy,.support-arrow{display:none}.support-avatar{width:40px;height:40px}}
 
 /* The shared navigation remains visible while preserving clear space for page content. */
-body:has(.shared-topbar) main{padding-top:78px}
+body:has(.shared-topbar) main{padding-top:80px}
 @media(max-width:860px){body:has(.shared-topbar) main{padding-top:72px}}
 
 .shared-role-control{min-width:112px}

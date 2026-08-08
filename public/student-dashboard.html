@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo | Student Dashboard</title>
+    <title>VieGeo | Trang học viên</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -76,7 +76,7 @@
 
             <div class="sidebar-card">
                 <span>Chuỗi học hôm nay</span>
-                <strong>🔥 12 ngày</strong>
+                <strong id="studentStreak">🔥 — ngày</strong>
                 <p>Học thêm 1 bài để giữ chuỗi nhé!</p>
             </div>
 
@@ -98,7 +98,7 @@
             <header class="student-header">
                 <div>
                     <span class="eyebrow">Hành trình học tập hôm nay</span>
-                    <h1>Chào Minh Anh 👋</h1>
+                    <h1 id="studentGreeting">Chào bạn 👋</h1>
                     <p>Tiếp tục khám phá Việt Nam và hoàn thành mục tiêu học tập của bạn.</p>
                 </div>
                 <div class="header-actions">
@@ -200,7 +200,7 @@
                     </div>
                     <div class="leaderboard-list">
                         <div class="leaderboard-item first-place"><span class="rank">1</span><div class="leader-avatar">QT</div><div><strong>Quốc Thịnh</strong><small>4,620 XP</small></div><span>🥇</span></div>
-                        <div class="leaderboard-item current-place"><span class="rank">2</span><div class="leader-avatar current-avatar">MA</div><div><strong>Minh Anh</strong><small>4,280 XP</small></div><span>🥈</span></div>
+                        <div class="leaderboard-item current-place"><span class="rank">2</span><div class="leader-avatar current-avatar">--</div><div><strong>Đang tải</strong><small>— XP</small></div><span>🥈</span></div>
                         <div class="leaderboard-item"><span class="rank">3</span><div class="leader-avatar third-avatar">HL</div><div><strong>Hà Linh</strong><small>3,940 XP</small></div><span>🥉</span></div>
                     </div>
                     <button class="leaderboard-button" id="leaderboardButton">Xem bảng xếp hạng</button>

@@ -2,9 +2,6 @@
 (function () {
     'use strict';
 
-    // Existing question banks remain internal sources; learners select only a
-    // difficulty tier, never a school grade.
-    const QUESTION_SOURCES = ['questions/grade5.json', 'questions/grade9.json', 'questions/grade12.json'];
     const cache = new Map();
 
     function normalizeLearningDifficulty(value) {
@@ -137,30 +134,7 @@
     }
 
     async function loadQuestions(lesson) {
-        const fallback = {
-            question: `Kiến thức địa lí nào phù hợp với ${lesson.title}?`,
-            options: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
-            correctAnswer: 0,
-            explanation: 'Hãy xem lại kiến thức nền tảng trước khi tiếp tục hành trình.'
-        };
-        const remoteQuestions = await fetchQuestionsFromDataStore(lesson, fallback);
-        if (remoteQuestions.length) return remoteQuestions;
-
-        try {
-            const banks = await Promise.all(QUESTION_SOURCES.map(async (source) => {
-                const response = await fetch(source, { cache: 'force-cache' });
-                if (!response.ok) throw new Error('Không tải được ngân hàng câu hỏi.');
-                return response.json();
-            }));
-            const tier = banks.flatMap((bank) => Array.isArray(bank?.tiers?.[lesson.difficulty])
-                ? bank.tiers[lesson.difficulty]
-                : []);
-            const localQuestions = randomFive(tier, fallback);
-            return localQuestions;
-        } catch (error) {
-            console.warn('Không thể tải ngân hàng dự phòng:', error);
-            return [];
-        }
+        return loadSupabaseIslandQuestions(lesson);
     }
 
     async function fetchIslandDocuments(lesson) {
@@ -181,20 +155,7 @@
     }
 
     async function loadIslandContent(lesson) {
-        const fallback = {
-            question: `Kiến thức nào phù hợp với ${lesson.title}?`,
-            options: ['Phương án A', 'Phương án B', 'Phương án C', 'Phương án D'],
-            correctAnswer: 0,
-            explanation: 'Hãy xem lại kiến thức nền tảng trước khi tiếp tục.'
-        };
-        const documents = await fetchIslandDocuments(lesson);
-        const theory = String(documents.map(item => item.islandTheory || item.islandTheoryContent || item.islandTheoryText || '').find(Boolean)
-            || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
-        const questions = randomFive(documents, fallback);
-        return {
-            theory,
-            questions
-        };
+        return loadSupabaseIslandContent(lesson);
     }
 
     function optionsFromQuestionDocument(data) {
@@ -376,7 +337,7 @@
         }
         const theory = String(questions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
             || sourceQuestions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
-            || `Nội dung trọng tâm của ${lesson.title}: ghi nhớ các ý chính, từ khóa địa lí và liên hệ với địa phương đang khám phá.`).trim();
+            || '').trim();
         return { theory, questions, status: window.VieGeoQuestionLoadState || (questions.length ? 'ready' : 'empty') };
     }
 
@@ -394,17 +355,19 @@
             return { completed: 0, total: 0, percent: 0, currentNode: null };
         }
         try {
-            const { data, error } = await client
-                .from('users')
-                .select('game_state')
-                .eq('email', userEmail)
-                .maybeSingle();
-            if (error) throw error;
-            const state = data?.game_state && typeof data.game_state === 'object' ? data.game_state : {};
+            const [userResult, lessonResult] = await Promise.all([
+                client.from('users').select('game_state').eq('email', userEmail).maybeSingle(),
+                client.from('questions').select('province,island').limit(5000)
+            ]);
+            if (userResult.error) throw userResult.error;
+            const state = userResult.data?.game_state && typeof userResult.data.game_state === 'object' ? userResult.data.game_state : {};
             const completed = Array.isArray(state.completedNodes)
                 ? state.completedNodes.length
                 : (Array.isArray(state.completedLessons) ? state.completedLessons.length : Number(state.completedLessons || 0));
-            const total = Number(state.totalLessons ?? state.totalNodes ?? 0) || 0;
+            const lessonIds = new Set((Array.isArray(lessonResult.data) ? lessonResult.data : [])
+                .map(lesson => `${String(lesson.province || '').trim()}:${String(lesson.island || '').trim()}`)
+                .filter(key => key !== ':'));
+            const total = lessonIds.size || Number(state.totalLessons ?? state.totalNodes ?? 0) || 0;
             return {
                 completed,
                 total,
