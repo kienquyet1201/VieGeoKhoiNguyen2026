@@ -1,0 +1,324 @@
+/* VieGeo UI data bridge: keeps the restored UI responsive while Supabase loads. */
+(function () {
+    'use strict';
+
+    const TABLES = new Set(['questions', 'users', 'leaderboard', 'user_feedbacks', 'error_reports']);
+    const CACHE_PREFIX = 'VieGeo_supabase_cache_';
+    const MOCK = {
+        questions: [{ id: 'local-question-1', question: 'Việt Nam thuộc châu lục nào?', option_a: 'Châu Á', option_b: 'Châu Âu', option_c: 'Châu Phi', option_d: 'Châu Mỹ', correct_option: 0, province: 'ha-noi', island: 'Đảo nhỏ 1', topic: 'Khám phá Việt Nam', difficulty: 'easy' }],
+        users: [],
+        leaderboard: [],
+        user_feedbacks: [],
+        error_reports: []
+    };
+
+    function getClient() {
+        try {
+            const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+            return client && typeof client.from === 'function' ? client : null;
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể khởi tạo Supabase client:', error);
+            return null;
+        }
+    }
+
+    function readJson(key, fallback) {
+        try {
+            const value = JSON.parse(localStorage.getItem(key) || '');
+            return value === null || value === undefined ? fallback : value;
+        } catch (error) {
+            return fallback;
+        }
+    }
+
+    function readCache(table) {
+        const value = readJson(`${CACHE_PREFIX}${table}`, []);
+        return Array.isArray(value) ? value : [];
+    }
+
+    function cacheRows(table, rows) {
+        try {
+            if (Array.isArray(rows) && rows.length > 0) {
+                localStorage.setItem(`${CACHE_PREFIX}${table}`, JSON.stringify(rows));
+            }
+        } catch (error) {
+            console.warn(`[VieGeo UI] Không thể cache ${table}:`, error);
+        }
+    }
+
+    function normalizeQuestion(row, index) {
+        try {
+            const source = row || {};
+            const options = Array.isArray(source.options)
+                ? source.options
+                : [source.option_a, source.option_b, source.option_c, source.option_d];
+            return {
+                ...source,
+                id: source.id || `question-${index}`,
+                question: source.question || source.question_text || source.questionText || '',
+                options: options.map(value => String(value || '').trim()).filter(Boolean),
+                correctAnswer: Number(source.correct_option ?? source.answer ?? source.correctAnswer ?? 0) || 0,
+                answer: Number(source.correct_option ?? source.answer ?? source.correctAnswer ?? 0) || 0,
+                province: source.province || source.province_slug || '',
+                island: source.island || source.sub_island || 'Đảo nhỏ 1',
+                difficulty: String(source.difficulty || 'easy').toLowerCase(),
+                theory: source.theory || source.explanation || '',
+                islandTheory: source.island_theory || source.islandTheory || ''
+            };
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể chuẩn hóa câu hỏi:', error);
+            return null;
+        }
+    }
+
+    async function fetchRows(table, options) {
+        const safeTable = String(table || '').toLowerCase();
+        const settings = options || {};
+        if (!TABLES.has(safeTable)) return [];
+
+        try {
+            const client = getClient();
+            if (!client) throw new Error('Supabase client chưa sẵn sàng');
+            let request = client.from(safeTable).select(settings.columns || '*');
+            if (settings.email) request = request.eq('email', settings.email);
+            if (settings.limit) request = request.limit(settings.limit);
+            if (settings.orderBy) request = request.order(settings.orderBy, { ascending: settings.ascending !== false });
+            const { data, error } = await request;
+            if (error) throw error;
+            const rows = Array.isArray(data) ? data : [];
+            console.info(`[VieGeo UI] ${safeTable} loaded`, { count: rows.length });
+            if (rows.length > 0) cacheRows(safeTable, rows);
+            if (safeTable === 'questions') return rows.map(normalizeQuestion).filter(Boolean);
+            return rows;
+        } catch (error) {
+            console.warn(`[VieGeo UI] ${safeTable} dùng cache cục bộ:`, error?.message || error);
+            const cached = readCache(safeTable);
+            const rows = cached.length ? cached : (MOCK[safeTable] || []);
+            return safeTable === 'questions' ? rows.map(normalizeQuestion).filter(Boolean) : rows;
+        }
+    }
+
+    function readSession() {
+        const session = readJson('lm_session', {});
+        return session && typeof session === 'object' ? session : {};
+    }
+
+    function readState() {
+        const state = readJson('VieGeo_state', {});
+        return state && typeof state === 'object' ? state : {};
+    }
+
+    function roleList(value, fallbackRole) {
+        try {
+            const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs' };
+            let values = Array.isArray(value) ? value : [value || fallbackRole || 'user'];
+            if (typeof value === 'string' && value.trim().startsWith('[')) values = JSON.parse(value);
+            return [...new Set(values.map(role => aliases[String(role || '').trim().toLowerCase()] || String(role || '').trim().toLowerCase()).filter(role => ['user', 'parent', 'cs', 'admin'].includes(role)))];
+        } catch (error) {
+            return ['user'];
+        }
+    }
+
+    async function getCurrentUser() {
+        const session = readSession();
+        let email = String(session.email || session.user?.email || '').trim().toLowerCase();
+        try {
+            const client = getClient();
+            if (!email && client?.auth?.getUser) {
+                const result = await client.auth.getUser();
+                email = String(result?.data?.user?.email || '').trim().toLowerCase();
+            }
+            if (email && client) {
+                const { data, error } = await client.from('users').select('*').eq('email', email).maybeSingle();
+                if (!error && data) {
+                    cacheRows('users', [data]);
+                    return data;
+                }
+                if (error) console.warn('[VieGeo UI] Không tải được người dùng hiện tại:', error.message);
+            }
+        } catch (error) {
+            console.warn('[VieGeo UI] Dùng phiên cục bộ cho người dùng hiện tại:', error);
+        }
+        const cached = readCache('users').find(row => String(row.email || '').toLowerCase() === email);
+        return cached || { ...session, email, roles: session.roles || [session.role || 'user'] };
+    }
+
+    function writeLocalUser(user) {
+        try {
+            const state = { ...readState() };
+            state.hearts = Number(user.hearts ?? state.hearts ?? 3);
+            state.streak = Number(user.current_streak ?? user.streak ?? state.streak ?? 0);
+            state.gems = Number(user.gems ?? state.gems ?? 500);
+            state.xp = Number(user.xp ?? user.exp ?? state.xp ?? 0);
+            localStorage.setItem('VieGeo_state', JSON.stringify(state));
+
+            const session = { ...readSession(), email: user.email || readSession().email };
+            const roles = roleList(user.roles, user.active_role || user.role || session.role);
+            session.roles = roles.length ? roles : ['user'];
+            session.role = user.active_role || user.role || session.role || session.roles[0];
+            session.activeRole = session.role;
+            session.name = user.name || user.full_name || session.name || '';
+            localStorage.setItem('lm_session', JSON.stringify(session));
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể đồng bộ phiên cục bộ:', error);
+        }
+    }
+
+    function setText(id, value) {
+        try {
+            const node = document.getElementById(id);
+            if (node) node.textContent = value;
+        } catch (error) {
+            console.warn(`[VieGeo UI] Không thể cập nhật #${id}:`, error);
+        }
+    }
+
+    function hydrateTopbar(user) {
+        try {
+            const state = readState();
+            const premium = user.account_status === 'premium' || user.isPremium === true;
+            setText('sharedHeart', premium ? '∞' : String(user.hearts ?? state.hearts ?? 3));
+            setText('sharedStreak', String(user.current_streak ?? user.streak ?? state.streak ?? 0));
+            setText('sharedGem', String(user.gems ?? state.gems ?? 500));
+            setText('sharedXp', `${Number(user.xp ?? user.exp ?? state.xp ?? 0)} XP`);
+
+            const select = document.getElementById('sharedRole');
+            if (!select) return;
+            const labels = { user: 'Học sinh', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Quản trị viên' };
+            const roles = roleList(user.roles, user.active_role || user.role);
+            const active = user.active_role || user.role || roles[0] || 'user';
+            select.replaceChildren();
+            roles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role;
+                option.textContent = labels[role] || role;
+                option.selected = role === active;
+                select.appendChild(option);
+            });
+            const wrapper = select.closest('.shared-role-control');
+            if (wrapper) wrapper.hidden = roles.length < 2;
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể đồng bộ thanh điều hướng:', error);
+        }
+    }
+
+    function hydrateProfile(user) {
+        try {
+            const state = readState();
+            const xp = Number(user.xp ?? user.exp ?? state.xp ?? 0);
+            const completed = Array.isArray(state.completedNodes) ? state.completedNodes.length : Number(state.completedLessons || 0);
+            setText('dispName', user.name || user.full_name || 'Người chơi');
+            setText('dispEmail', user.email || '');
+            setText('profStreak', String(user.current_streak ?? user.streak ?? state.streak ?? 0));
+            setText('profXp', String(xp));
+            setText('profStyle', xp >= 500 ? 'Học tập bền vững' : (xp > 0 ? 'Đang khám phá' : 'Chưa có dữ liệu'));
+            setText('premiumStatus', user.account_status === 'premium' ? 'Tài khoản Premium' : 'Tài khoản Free');
+            const name = document.getElementById('profName');
+            const phone = document.getElementById('profPhone');
+            const gender = document.getElementById('profGender');
+            if (name && !name.value) name.value = user.name || user.full_name || '';
+            if (phone && !phone.value) phone.value = user.phone || '';
+            if (gender && user.gender) gender.value = user.gender;
+            const achievementValue = document.querySelector('.achievement-card strong');
+            if (achievementValue) achievementValue.textContent = String(Math.max(0, Math.floor(completed / 3) + (xp >= 100 ? 1 : 0)));
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể đồng bộ hồ sơ:', error);
+        }
+    }
+
+    function leaderboardModel(rows) {
+        return (Array.isArray(rows) ? rows : []).map((row, index) => ({
+            id: row.id || row.user_id || row.email || `rank-${index}`,
+            name: row.name || row.full_name || row.display_name || row.user_name || row.email || 'Thám hiểm gia',
+            email: row.email || row.user_email || '',
+            xp: Number(row.xp ?? row.exp ?? row.score ?? row.total_xp ?? row.points ?? 0),
+            streak: Number(row.current_streak ?? row.streak ?? 0)
+        })).sort((first, second) => second.xp - first.xp);
+    }
+
+    function hydrateLeaderboard(rows, user) {
+        try {
+            const list = document.getElementById('rankingList');
+            const ranks = leaderboardModel(rows.length ? rows : [user]);
+            if (!list || !ranks.length) return;
+            list.replaceChildren();
+            ranks.slice(0, 10).forEach((entry, index) => {
+                const row = document.createElement('div');
+                row.className = `ranking-row${String(entry.email).toLowerCase() === String(user.email || '').toLowerCase() ? ' current-user' : ''}`;
+                row.innerHTML = `<span class="rank-number">${index + 1}</span><div class="rank-avatar blue-avatar">${String(entry.name).slice(0, 2).toUpperCase()}</div><div class="rank-user"><strong></strong><span>Cấp ${Math.max(1, Math.floor(entry.xp / 250) + 1)}</span></div><div class="rank-streak">🔥 ${entry.streak}</div><div class="rank-xp">${entry.xp.toLocaleString('vi-VN')} XP</div><div class="rank-change neutral-change">—</div>`;
+                row.querySelector('.rank-user strong').textContent = entry.name;
+                list.appendChild(row);
+            });
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể đồng bộ bảng xếp hạng:', error);
+        }
+    }
+
+    function hydrateParent(user) {
+        try {
+            const state = readState();
+            const completed = Array.isArray(state.completedNodes) ? state.completedNodes.length : Number(state.completedLessons || 0);
+            const streak = Number(user.current_streak ?? user.streak ?? state.streak ?? 0);
+            const today = new Date().toISOString().slice(0, 10);
+            const hasLearnedToday = String(state.lastLessonDate || state.lastStudyDate || '') === today;
+            setText('statStreak', `${streak} Ngày`);
+            setText('statCompleted', `${completed} Bài`);
+            setText('statActivity', hasLearnedToday ? 'Đã học bài' : 'Chưa học bài');
+            const report = document.getElementById('parentReport');
+            if (report) report.textContent = hasLearnedToday
+                ? `Học sinh đã học bài hôm nay, hoàn thành ${completed} bài và duy trì chuỗi ${streak} ngày.`
+                : `Học sinh hiện đã hoàn thành ${completed} bài. Hôm nay chưa có bài học mới được ghi nhận.`;
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể đồng bộ trang phụ huynh:', error);
+        }
+    }
+
+    function hydrateMap(questions) {
+        try {
+            window.VieGeoRemoteQuestions = Array.isArray(questions) ? questions : [];
+            window.dispatchEvent(new CustomEvent('viegeo:questions-ready', { detail: window.VieGeoRemoteQuestions }));
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể cập nhật dữ liệu bản đồ:', error);
+        }
+    }
+
+    async function initializePageData() {
+        try {
+            const user = await getCurrentUser();
+            writeLocalUser(user);
+            hydrateTopbar(user);
+            hydrateProfile(user);
+            hydrateParent(user);
+            const [questions, boardRows] = await Promise.all([fetchRows('questions', { limit: 500 }), fetchRows('leaderboard', { limit: 100 })]);
+            hydrateMap(questions);
+            hydrateLeaderboard(boardRows, user);
+            document.documentElement.dataset.viegeoDataReady = 'true';
+        } catch (error) {
+            console.error('[VieGeo UI] Không thể đồng bộ trang:', error);
+            document.documentElement.dataset.viegeoDataReady = 'fallback';
+        }
+    }
+
+    async function withRequestState(button, task) {
+        const trigger = button instanceof HTMLElement ? button : null;
+        const originalLabel = trigger ? trigger.innerHTML : '';
+        try {
+            if (trigger) {
+                trigger.disabled = true;
+                trigger.classList.add('viegeo-request-loading');
+                trigger.setAttribute('aria-busy', 'true');
+            }
+            return await task();
+        } finally {
+            if (trigger) {
+                trigger.disabled = false;
+                trigger.classList.remove('viegeo-request-loading');
+                trigger.removeAttribute('aria-busy');
+                if (originalLabel) trigger.innerHTML = originalLabel;
+            }
+        }
+    }
+
+    window.VieGeoData = window.VieGeoData || { fetchRows, getCurrentUser, normalizeQuestion, withRequestState, readState, readSession };
+    document.addEventListener('DOMContentLoaded', initializePageData, { once: true });
+}());

@@ -31,3 +31,10 @@ body>*:not(.global-animated-background){position:relative;z-index:1}
 @keyframes globalWindMove{0%{transform:translateX(0);opacity:0}12%{opacity:.65}78%{opacity:.65}100%{transform:translateX(calc(100vw + 460px));opacity:0}}
 @keyframes globalStarTwinkle{0%,100%{opacity:.28;transform:scale(.7)}50%{opacity:1;transform:scale(1.55)}}
 @media(max-width:720px){.global-sun,.global-moon{width:76px;height:76px;right:6%;top:8%}.global-cloud{transform:scale(.65)}}
+
+/* Shared request state used by Supabase-backed screens. Appended so every
+   restored UI keeps its original composition while async data is loading. */
+.viegeo-request-loading{position:relative!important;cursor:wait!important;opacity:.72!important;pointer-events:none!important}
+.viegeo-request-loading::after{content:"";display:inline-block;width:13px;height:13px;margin-left:8px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;animation:viegeo-request-spin .7s linear infinite}
+button:disabled{cursor:not-allowed}
+@keyframes viegeo-request-spin{to{transform:rotate(360deg)}}

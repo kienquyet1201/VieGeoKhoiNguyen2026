@@ -48,12 +48,16 @@ const gameState = getGameState();
 async function loadProfile() {
     try {
         const userDoc = await db.collection('users').doc(sessionUser.email).get();
-        if (!userDoc.exists) {
-            localStorage.removeItem('lm_session');
-            window.location.href = '/loginout';
-            return;
-        }
-        const currentUser = userDoc.data();
+        // A newly created Supabase account may not have a profile row yet.
+        // Keep the complete profile UI usable from the authenticated local
+        // session while the synchronizer creates or reloads that row.
+        const currentUser = userDoc.exists ? userDoc.data() : {
+            email: sessionUser.email || '',
+            name: sessionUser.name || sessionUser.displayName || 'Người chơi',
+            phone: sessionUser.phone || '',
+            gender: sessionUser.gender || '',
+            role: sessionUser.role || 'user'
+        };
         
         dispName.textContent = currentUser.name;
         dispEmail.textContent = currentUser.email;

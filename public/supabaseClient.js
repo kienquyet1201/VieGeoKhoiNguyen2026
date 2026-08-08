@@ -8,6 +8,7 @@
         questions: 'questions',
         question: 'questions',
         users: 'users',
+        leaderboard: 'leaderboard',
         premium_requests: 'premium_requests',
         submissions: 'submissions',
         ErrorReports: 'error_reports',

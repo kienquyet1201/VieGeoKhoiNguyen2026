@@ -8,10 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin-dashboard.css">
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="firebase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js"></script>
+    <script src="supabase-ui-sync.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="global-theme.css">
@@ -99,7 +98,7 @@
                             <span class="live-badge">● Live</span>
                         </div>
                         <div class="activity-grid">
-                            <div class="activity-box"><span>Firestore</span><strong class="healthy-text">Ổn định</strong><small>Cơ sở dữ liệu</small></div>
+                            <div class="activity-box"><span>Supabase</span><strong class="healthy-text">Ổn định</strong><small>Cơ sở dữ liệu</small></div>
                             <div class="activity-box"><span>Authentication</span><strong class="healthy-text">Ổn định</strong><small>Đăng nhập</small></div>
                             <div class="activity-box"><span>Server load</span><strong>34%</strong><small>Mô phỏng</small></div>
                         </div>
