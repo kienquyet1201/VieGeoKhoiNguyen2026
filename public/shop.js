@@ -20,6 +20,12 @@ var backButton=document.getElementById("backButton");
 var supportButton=document.getElementById("supportButton");
 var toast=document.getElementById("toast");
 
+function setShopText(element,value){
+    if(element){
+        element.textContent=value;
+    }
+}
+
 function getShopState(){
     if(typeof getGameState==="function"){
         return getGameState();
@@ -53,6 +59,18 @@ function getShopItems(){
     ];
 }
 
+function shopIconSvg(iconName,className){
+    var paths={
+        "fa-heart":"M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.9-8.6a5.5 5.5 0 0 0-.1-7.8Z",
+        "fa-shield-halved":"M12 3 5 6v5c0 4.8 3 8.7 7 10 4-1.3 7-5.2 7-10V6l-7-3Zm0 3v12",
+        "fa-bolt":"m13 2-9 12h7l-1 8 10-12h-7V2Z",
+        "fa-wand-magic-sparkles":"m14 5 1-3 1 3 3 1-3 1-1 3-1-3-3-1 3-1ZM4 20 17 7l2 2L6 22l-2-2Zm1-9 1-3 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z",
+        "fa-gem":"m12 3 7 7-7 11L5 10l7-7Zm0 0v18M5 10h14"
+    };
+    var path=paths[iconName]||paths["fa-gem"];
+    return '<svg class="'+(className||'shop-svg-icon')+'" viewBox="0 0 24 24" aria-hidden="true"><path d="'+path+'"/></svg>';
+}
+
 function ensureInventory(){
     if(!shopState.inventory){
         shopState.inventory={};
@@ -84,14 +102,16 @@ function getLevelValue(){
 }
 
 function updateShopHeader(){
-    statHearts.textContent=shopState.hearts===undefined?3:shopState.hearts;
-    statStreak.textContent=shopState.streak||0;
-    statGems.textContent=shopState.gems||0;
-    statXp.textContent=(shopState.xp||0)+" XP";
-    statTrophies.textContent=shopState.trophies||shopState.pvpWins||0;
-    statLevel.textContent=getLevelValue();
-    inventoryGemBalance.textContent=shopState.gems||0;
-    difficultySelect.value=shopState.selectedDifficulty||"easy";
+    setShopText(statHearts,shopState.hearts===undefined?3:shopState.hearts);
+    setShopText(statStreak,shopState.streak||0);
+    setShopText(statGems,shopState.gems||0);
+    setShopText(statXp,(shopState.xp||0)+" XP");
+    setShopText(statTrophies,shopState.trophies||shopState.pvpWins||0);
+    setShopText(statLevel,getLevelValue());
+    setShopText(inventoryGemBalance,shopState.gems||0);
+    if(difficultySelect){
+        difficultySelect.value=shopState.selectedDifficulty||"easy";
+    }
 }
 
 function updateInventoryPanel(){
@@ -116,16 +136,20 @@ function renderShop(){
     var index;
     var item;
 
+    if(!shopGrid){
+        return;
+    }
+
     for(index=0;index<shopItems.length;index+=1){
         item=shopItems[index];
         html+='<article class="shop-card" style="--item-color:'+item.color+'">';
         html+='<div class="shop-card-badge">Vật phẩm hỗ trợ</div>';
-        html+='<div class="shop-card-icon"><i class="fa-solid '+item.icon+'"></i></div>';
+        html+='<div class="shop-card-icon">'+shopIconSvg(item.icon,'shop-svg-icon')+'</div>';
         html+='<h2>'+item.title+'</h2>';
         html+='<p>'+item.desc+'</p>';
         html+='<div class="shop-card-footer">';
-        html+='<span class="shop-price"><i class="fa-solid fa-gem"></i> '+item.price+'</span>';
-        html+='<button class="shop-buy-button" type="button" data-item-id="'+item.id+'" data-item-price="'+item.price+'">Mua ngay <i class="fa-solid fa-arrow-right"></i></button>';
+        html+='<span class="shop-price">'+shopIconSvg('fa-gem','shop-price-icon')+' '+item.price+'</span>';
+        html+='<button class="shop-buy-button" type="button" data-item-id="'+item.id+'" data-item-price="'+item.price+'">Mua ngay <span aria-hidden="true">→</span></button>';
         html+='</div>';
         html+='</article>';
     }
@@ -254,6 +278,10 @@ function applyTheme(theme){
     document.documentElement.setAttribute("data-theme",theme);
     localStorage.setItem("VieGeo_theme",theme);
 
+    if(!themeButton){
+        return;
+    }
+
     if(theme==="light"){
         themeButton.innerHTML='<i class="fa-solid fa-moon"></i>';
     }else{
@@ -272,6 +300,9 @@ function switchTheme(){
 }
 
 function changeDifficulty(){
+    if(!difficultySelect){
+        return;
+    }
     shopState.selectedDifficulty=difficultySelect.value;
     saveShopState();
     showToast("Đã đổi độ khó.",false);
@@ -311,13 +342,13 @@ function initializeShop(){
     updateShopHeader();
     updateInventoryPanel();
 
-    shopGrid.addEventListener("click",handleShopClick);
-    themeButton.addEventListener("click",switchTheme);
-    difficultySelect.addEventListener("change",changeDifficulty);
-    parentButton.addEventListener("click",openParent);
-    logoutButton.addEventListener("click",logoutUser);
-    backButton.addEventListener("click",goBack);
-    supportButton.addEventListener("click",openSupport);
+    if(shopGrid) shopGrid.addEventListener("click",handleShopClick);
+    if(themeButton) themeButton.addEventListener("click",switchTheme);
+    if(difficultySelect) difficultySelect.addEventListener("change",changeDifficulty);
+    if(parentButton) parentButton.addEventListener("click",openParent);
+    if(logoutButton) logoutButton.addEventListener("click",logoutUser);
+    if(backButton) backButton.addEventListener("click",goBack);
+    /* shared-topbar.js owns the support button on this page. */
 }
 
 document.addEventListener("DOMContentLoaded",initializeShop);

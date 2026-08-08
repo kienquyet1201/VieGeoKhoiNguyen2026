@@ -96,3 +96,23 @@ html[data-theme="light"] .back-to-home-btn{color:#ffffff;background:rgba(255,255
     .stat-card>div:last-child strong{font-size:26px}
     .support-ticket-panel .panel-heading{gap:10px}
 }
+
+/* Text-first question import, matching the previous bulk-import workflow. */
+#bulkTextQuestionUploader + .upload-grid{display:none}
+.bulk-text-upload{margin-top:4px}
+.bulk-upload-intro{margin-bottom:18px;padding:15px 17px;border:1px solid rgba(85,184,232,.28);border-radius:18px;background:linear-gradient(135deg,rgba(46,143,191,.11),rgba(141,114,216,.08))}
+.bulk-upload-intro strong{display:block;font-size:15px;color:var(--text-primary)}
+.bulk-upload-intro p{margin:6px 0 0;color:var(--text-secondary);font-size:12px;line-height:1.6}
+.bulk-upload-intro code,.bulk-template-guide code{padding:2px 5px;border-radius:6px;background:rgba(15,23,42,.22);color:var(--primary-dark);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.bulk-upload-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr);gap:20px;align-items:start}
+.bulk-upload-controls,.bulk-upload-content{display:grid;gap:13px;min-width:0}
+.bulk-upload-controls .field-input{min-height:44px}
+.bulk-upload-controls textarea.field-input,.bulk-upload-content textarea.field-input{height:auto;padding:12px 13px;resize:vertical;line-height:1.6}
+.bulk-island-theory{min-height:150px}
+.bulk-question-text{min-height:320px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+.bulk-upload-note{margin:0;padding:11px 13px;border-radius:13px;background:var(--surface-soft);border:1px solid var(--border-color);color:var(--text-secondary);font-size:11px;line-height:1.55}
+.bulk-template-guide{display:grid;gap:9px;padding:15px 16px;border:1px solid rgba(85,184,232,.30);border-radius:17px;background:rgba(46,143,191,.09)}
+.bulk-template-guide strong{color:var(--text-primary);font-size:13px}.bulk-template-guide code{display:block;white-space:normal;line-height:1.6;color:var(--text-primary);background:rgba(15,23,42,.22)}
+.bulk-template-guide small{color:var(--text-secondary);font-size:11px;line-height:1.55}
+.bulk-upload-preview{margin:0;min-height:160px;max-height:300px;overflow:auto;white-space:pre-wrap;border:1px solid var(--border-color);border-radius:17px;padding:15px;color:var(--text-primary);background:var(--surface-soft);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;line-height:1.55}
+@media(max-width:980px){.bulk-upload-grid{grid-template-columns:1fr}.bulk-question-text{min-height:250px}}

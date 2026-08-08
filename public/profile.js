@@ -28,6 +28,48 @@ function getAuthClient() {
     return client && client.auth && typeof client.auth.updateUser === 'function' ? client : null;
 }
 
+function normalizeAchievementIds(source) {
+    if (!Array.isArray(source)) return [];
+    return source.map(item => String((item?.achievement_id ?? item?.achievementId ?? item?.code ?? item?.id ?? item) || '').trim()).filter(Boolean);
+}
+
+async function syncAchievementBadges(currentUser) {
+    const client = window.supabaseClient || window.supabase;
+    const email = String(currentUser?.email || sessionUser?.email || '').trim();
+    const storedState = currentUser?.game_state || currentUser?.gameState || {};
+    let earnedIds = normalizeAchievementIds(currentUser?.unlocked_achievements || currentUser?.unlockedAchievements || storedState.unlockedAchievements);
+
+    if (client && email) {
+        try {
+            const { data, error } = await client
+                .from('user_achievements')
+                .select('*')
+                .eq('user_email', email);
+            if (error) throw error;
+            earnedIds = [...new Set([...earnedIds, ...normalizeAchievementIds(data)])];
+        } catch (error) {
+            // The users.game_state fallback keeps existing deployments working
+            // until the optional user_achievements table is enabled.
+            console.warn('Không thể tải user_achievements, dùng dữ liệu users:', error.message || error);
+        }
+    }
+
+    const badgeIds = ['explorer', 'streak_7', 'arena_top'];
+    const badges = document.querySelectorAll('.achievement-panel .achievement-badge');
+    badges.forEach((badge, index) => {
+        const key = badgeIds[index];
+        const earned = earnedIds.includes(key)
+            || (key === 'explorer' && earnedIds.some(id => /explor|kham-pha|th[aá]m-hiem/i.test(id)))
+            || (key === 'streak_7' && (Number(currentUser?.current_streak ?? gameState?.streak ?? 0) >= 7 || earnedIds.some(id => /streak|chuoi/i.test(id))))
+            || (key === 'arena_top' && earnedIds.some(id => /arena|top/i.test(id)));
+        badge.classList.toggle('is-earned', earned);
+        badge.setAttribute('aria-label', `${badge.textContent.trim()}${earned ? ' - đã đạt' : ' - chưa đạt'}`);
+    });
+    const total = earnedIds.length || Array.from(badges).filter(badge => badge.classList.contains('is-earned')).length;
+    const summary = document.querySelector('.achievement-card strong');
+    if (summary) summary.textContent = String(total);
+}
+
 // 1. Kiểm tra session
 const sessionData = localStorage.getItem('lm_session');
 if (!sessionData) {
@@ -79,6 +121,7 @@ async function loadProfile() {
         
         // Lưu data hiện tại
         window.currentUserData = currentUser;
+        await syncAchievementBadges(currentUser);
         
     } catch (err) {
         console.error("Lỗi tải profile:", err);

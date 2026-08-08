@@ -130,26 +130,72 @@
         }
     }
 
-    function renderPremiumRequests(users) {
+    function renderPremiumRequests(requests) {
         try {
             const container = byId('premiumRequestList');
             if (!container) return;
-            const premium = (Array.isArray(users) ? users : []).filter(user => user.account_status === 'premium');
+            const premium = Array.isArray(requests) ? requests : [];
             container.replaceChildren();
             if (!premium.length) {
                 container.innerHTML = '<div class="empty-state">Chưa có yêu cầu Premium cần xử lý.</div>';
                 return;
             }
-            premium.slice(0, 8).forEach(user => {
+            premium.slice(0, 20).forEach(request => {
                 const node = document.createElement('article');
                 node.className = 'notice-item';
-                node.innerHTML = '<div><strong></strong><span></span></div><span>Premium</span>';
-                node.querySelector('strong').textContent = displayName(user);
-                node.querySelector('span').textContent = user.email || 'Không có email';
+                node.innerHTML = '<div><strong></strong><span></span></div><div class="action-group"><button class="mini-button" type="button" data-premium-action="approved">Duyệt</button><button class="mini-button secondary" type="button" data-premium-action="rejected">Từ chối</button></div>';
+                node.querySelector('strong').textContent = request.name || displayName(request);
+                node.querySelector('span').textContent = `${request.user_email || request.email || 'Không có email'} · ${formatTime(request.created_at)}`;
+                node.querySelectorAll('[data-premium-action]').forEach(button => {
+                    button.addEventListener('click', () => reviewPremiumRequest(request, button.dataset.premiumAction));
+                });
                 container.appendChild(node);
             });
         } catch (error) {
             console.warn('[VieGeo Admin] Không thể render Premium:', error);
+        }
+    }
+
+    async function fetchPendingPremiumRequests() {
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        if (!client || typeof client.from !== 'function') return [];
+        const { data, error } = await client
+            .from('premium_requests')
+            .select('id,user_email,email,name,status,created_at')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        return Array.isArray(data) ? data : [];
+    }
+
+    async function reviewPremiumRequest(request, status) {
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        const email = String(request?.user_email || request?.email || '').trim();
+        if (!client || !email || !['approved', 'rejected'].includes(status)) {
+            showToast('Không đủ dữ liệu để xử lý yêu cầu Premium.', 'error');
+            return;
+        }
+        const buttons = document.querySelectorAll('[data-premium-action]');
+        buttons.forEach(button => { button.disabled = true; });
+        try {
+            if (status === 'approved') {
+                const { error: userError } = await client
+                    .from('users')
+                    .update({ role: 'premium', account_status: 'premium' })
+                    .eq('email', email);
+                if (userError) throw userError;
+            }
+            const { error: requestError } = await client
+                .from('premium_requests')
+                .update({ status, reviewed_at: new Date().toISOString() })
+                .eq('id', request.id);
+            if (requestError) throw requestError;
+            showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu Premium.', 'success');
+            await loadDashboard();
+        } catch (error) {
+            console.error('[VieGeo Admin] Không thể xử lý Premium:', error);
+            showToast('Không thể cập nhật yêu cầu Premium.', 'error');
+            buttons.forEach(button => { button.disabled = false; });
         }
     }
 
@@ -211,11 +257,12 @@
             if (!dataApi) throw new Error('Lớp dữ liệu Supabase chưa sẵn sàng');
             const connection = byId('connectionBadge');
             if (connection) connection.textContent = 'Đang tải Supabase…';
-            const [user, users, errors, feedbacks] = await Promise.all([
+            const [user, users, errors, feedbacks, premiumRequests] = await Promise.all([
                 dataApi.getCurrentUser(),
                 dataApi.fetchRows('users', { limit: 500 }),
                 dataApi.fetchRows('error_reports', { limit: 100, orderBy: 'created_at', ascending: false }),
-                dataApi.fetchRows('user_feedbacks', { limit: 100, orderBy: 'created_at', ascending: false })
+                dataApi.fetchRows('user_feedbacks', { limit: 100, orderBy: 'created_at', ascending: false }),
+                fetchPendingPremiumRequests()
             ]);
             allUsers = Array.isArray(users) && users.length ? users : [user].filter(Boolean);
             if (byId('adminEmail')) byId('adminEmail').textContent = user.email || 'Admin VieGeo';
@@ -230,7 +277,7 @@
             }
             renderUsers(allUsers);
             renderErrors(errors);
-            renderPremiumRequests(allUsers);
+            renderPremiumRequests(premiumRequests);
             renderMonitoring(allUsers);
             renderSupport(feedbacks);
             console.info('[VieGeo Admin] Đồng bộ giao diện hoàn tất', { users: allUsers.length, errors: errors.length, feedbacks: feedbacks.length });
@@ -242,7 +289,7 @@
             }
             renderUsers(allUsers);
             renderErrors([]);
-            renderPremiumRequests(allUsers);
+            renderPremiumRequests([]);
             renderMonitoring(allUsers);
             renderSupport([]);
         }
@@ -288,6 +335,118 @@
         }
     }
 
+    function sanitizeImportText(value, maxLength) {
+        try {
+            const fallback = String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, maxLength || 4000);
+            return window.VieGeoSecurity?.sanitizeText
+                ? window.VieGeoSecurity.sanitizeText(value, maxLength || 4000)
+                : fallback;
+        } catch (error) {
+            return String(value || '').trim().slice(0, maxLength || 4000);
+        }
+    }
+
+    function populateBulkIslandOptions() {
+        try {
+            const select = byId('bulkImportSubIsland');
+            if (!select || select.options.length > 1) return;
+            for (let index = 1; index <= 34; index += 1) {
+                const option = document.createElement('option');
+                option.value = `Đảo nhỏ ${index}`;
+                option.textContent = index === 11 ? 'Đảo nhỏ 11 · Trạm kiểm tra Dễ'
+                    : index === 22 ? 'Đảo nhỏ 22 · Trạm kiểm tra Trung bình'
+                        : index === 33 ? 'Đảo nhỏ 33 · Trạm kiểm tra Khó'
+                            : index === 34 ? 'Đảo nhỏ 34 · BOSS cuối'
+                                : `Đảo nhỏ ${index}`;
+                select.appendChild(option);
+            }
+        } catch (error) {
+            console.error('[VieGeo Admin] Không thể dựng danh sách đảo:', error);
+        }
+    }
+
+    function parseBulkQuestionText(rawText, shared) {
+        const lines = String(rawText || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        if (!lines.length) throw new Error('Hãy dán ít nhất một dòng câu hỏi.');
+        return lines.map((line, lineIndex) => {
+            const fields = line.split('|').map(field => field.trim());
+            if (fields.length < 7) throw new Error(`Lỗi định dạng ở dòng ${lineIndex + 1}: cần tối thiểu 7 cột, ngăn cách bằng dấu |.`);
+            const [question, optionA, optionB, optionC, optionD, correctRaw, difficultyRaw, theory = ''] = fields;
+            const correctOption = Number(correctRaw);
+            const difficulty = String(difficultyRaw || '').toLowerCase();
+            if (![question, optionA, optionB, optionC, optionD].every(Boolean)) throw new Error(`Lỗi định dạng ở dòng ${lineIndex + 1}: nội dung câu hỏi và 4 đáp án không được để trống.`);
+            if (!Number.isInteger(correctOption) || correctOption < 0 || correctOption > 3) throw new Error(`Lỗi định dạng ở dòng ${lineIndex + 1}: Index đúng phải là số từ 0 đến 3.`);
+            if (!['easy', 'medium', 'hard'].includes(difficulty)) throw new Error(`Lỗi định dạng ở dòng ${lineIndex + 1}: độ khó phải là easy, medium hoặc hard.`);
+            return {
+                question: sanitizeImportText(question, 1000), option_a: sanitizeImportText(optionA, 500), option_b: sanitizeImportText(optionB, 500),
+                option_c: sanitizeImportText(optionC, 500), option_d: sanitizeImportText(optionD, 500), correct_option: correctOption,
+                province: shared.province, island: shared.island, topic: shared.topic, theory: sanitizeImportText(theory, 6000),
+                island_theory: shared.islandTheory, difficulty
+            };
+        });
+    }
+
+    function bulkSharedFields() {
+        return {
+            province: String(byId('bulkImportProvince')?.value || '').trim(),
+            island: String(byId('bulkImportSubIsland')?.value || '').trim(),
+            topic: sanitizeImportText(byId('bulkImportTopic')?.value || '', 160),
+            islandTheory: sanitizeImportText(byId('bulkImportIslandTheory')?.value || '', 12000)
+        };
+    }
+
+    function previewBulkQuestionText() {
+        const preview = byId('bulkUploadPreview');
+        if (!preview) return;
+        try {
+            const text = byId('bulkQuestionText')?.value || '';
+            if (!text.trim()) { preview.textContent = 'Dán nội dung văn bản để xem trước dữ liệu hợp lệ.'; return; }
+            const shared = bulkSharedFields();
+            const items = parseBulkQuestionText(text, { ...shared, province: shared.province || 'chưa-chọn', island: shared.island || 'Đảo nhỏ', topic: shared.topic || 'Chủ đề' });
+            const sample = items.slice(0, 3).map((item, index) => `${index + 1}. ${item.question}\n   Đáp án đúng: ${item.correct_option} · ${item.difficulty}`).join('\n\n');
+            preview.textContent = `Sẵn sàng lưu ${items.length} câu hỏi.\n\n${sample}${items.length > 3 ? '\n\n…' : ''}`;
+        } catch (error) {
+            preview.textContent = error.message || 'Nội dung chưa đúng định dạng.';
+        }
+    }
+
+    async function insertBulkQuestions(rows) {
+        const client = window.supabaseClient || window.supabase;
+        if (!client?.from) throw new Error('Supabase chưa sẵn sàng. Vui lòng thử lại sau.');
+        const { error } = await client.from('questions').insert(rows);
+        if (!error) return rows.length;
+        if (/island_theory|column|schema/i.test(String(error.message || error.details || ''))) {
+            const compatibleRows = rows.map(({ island_theory, ...row }) => row);
+            const fallback = await client.from('questions').insert(compatibleRows);
+            if (!fallback.error) return compatibleRows.length;
+            throw fallback.error;
+        }
+        throw error;
+    }
+
+    async function processBulkTextImport() {
+        const button = byId('btnProcessUpload');
+        const preview = byId('bulkUploadPreview');
+        try {
+            const shared = bulkSharedFields();
+            if (!shared.province || !shared.island || !shared.topic) throw new Error('Hãy chọn Tỉnh/Thành, Đảo nhỏ và nhập Chủ đề bài học.');
+            const rows = parseBulkQuestionText(byId('bulkQuestionText')?.value || '', shared);
+            if (preview) preview.textContent = `Đang lưu ${rows.length} câu hỏi lên Supabase…`;
+            const execute = () => insertBulkQuestions(rows);
+            const count = window.VieGeoData?.withRequestState ? await window.VieGeoData.withRequestState(button, execute) : await execute();
+            if (byId('bulkQuestionText')) byId('bulkQuestionText').value = '';
+            if (preview) preview.textContent = `Đã thêm thành công ${count} câu hỏi vào Supabase. Bạn có thể dán lô mới ngay bây giờ.`;
+            showToast(`Đã thêm ${count} câu hỏi.`, 'success');
+            console.info('[VieGeo Admin] Bulk text import success', { count, province: shared.province, island: shared.island });
+        } catch (error) {
+            console.error('[VieGeo Admin] Bulk text import failed:', error);
+            if (preview) preview.textContent = `Không thể lưu: ${error.message || error}`;
+            showToast(error.message || 'Không thể lưu câu hỏi.', 'error');
+        }
+    }
+
+    window.processBulkTextImport = processBulkTextImport;
+
     function initializeInteractions() {
         try {
             document.querySelectorAll('.menu-item[data-section], [data-open-section]').forEach(button => button.addEventListener('click', () => selectPanel(button.dataset.section || button.dataset.openSection)));
@@ -295,7 +454,11 @@
             byId('roleFilter')?.addEventListener('change', () => renderUsers(allUsers));
             byId('refreshMonitoringButton')?.addEventListener('click', loadDashboard);
             byId('refreshSupportAdminButton')?.addEventListener('click', loadDashboard);
-            byId('processUploadButton')?.addEventListener('click', handleUpload);
+        populateBulkIslandOptions();
+        byId('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
+        byId('bulkQuestionText')?.addEventListener('input', previewBulkQuestionText);
+        ['bulkImportProvince', 'bulkImportSubIsland', 'bulkImportTopic', 'bulkImportIslandTheory']
+            .forEach((id) => byId(id)?.addEventListener('change', previewBulkQuestionText));
             byId('fileUpload')?.addEventListener('change', event => {
                 const name = event.target.files?.[0]?.name || 'Chưa có tệp được chọn.';
                 if (byId('fileNameDisplay')) byId('fileNameDisplay').textContent = name;

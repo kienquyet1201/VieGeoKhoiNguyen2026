@@ -47,7 +47,7 @@ const ROLE_META = Object.freeze({
 });
 
 function normalizeRole(role) {
-    const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
+    const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs', premium: 'user' };
     const value = String(role || '').trim().toLowerCase();
     return aliases[value] || value;
 }
@@ -811,7 +811,8 @@ async function renderLeaderboard() {
                 name: cleanText(row.name || row.full_name || row.display_name || row.email || 'Thám hiểm gia', 120),
                 avatar: cleanText(row.avatar || row.avatar_icon || row.icon || 'fa-user', 80),
                 avatarIsBase64: Boolean(row.avatarIsBase64 || row.avatar_is_base64),
-                xp
+                xp,
+                streak: Number(row.current_streak ?? row.streak ?? 0) || 0
             };
         };
 
@@ -828,7 +829,8 @@ async function renderLeaderboard() {
                 name: sessionUser.name || sessionUser.email || 'Bạn',
                 avatar: sessionUser.avatar || 'fa-user',
                 avatarIsBase64: sessionUser.avatarIsBase64,
-                xp: gameState?.xp || sessionUser.xp || sessionUser.exp || 0
+                xp: gameState?.xp || sessionUser.xp || sessionUser.exp || 0,
+                streak: gameState?.streak || sessionUser.current_streak || 0
             });
             return fallbackRows;
         };
@@ -846,10 +848,24 @@ async function renderLeaderboard() {
             ];
 
             for (const attempt of attempts) {
-                const { data, error } = await client
+                const columns = attempt.table === 'leaderboard'
+                    ? 'id,email,user_email,name,full_name,display_name,avatar,current_streak,score'
+                    : 'id,email,name,full_name,display_name,avatar,current_streak,score,xp';
+                let { data, error } = await client
                     .from(attempt.table)
-                    .select('*')
+                    .select(columns)
+                    .order('score', { ascending: false })
                     .limit(attempt.limit);
+
+                // Older users tables may not yet expose score; retain the
+                // same ranking flow with XP while leaderboard keeps score.
+                if (error && attempt.table === 'users') {
+                    ({ data, error } = await client
+                        .from('users')
+                        .select('id,email,name,full_name,display_name,avatar,current_streak,xp')
+                        .order('xp', { ascending: false })
+                        .limit(attempt.limit));
+                }
 
                 if (error) {
                     console.warn(`[VieGeo Leaderboard] Không tải được bảng ${attempt.table}:`, {
@@ -871,9 +887,14 @@ async function renderLeaderboard() {
             return localFallbackRows();
         };
 
-        const users = (await fetchLeaderboardRows())
+        const rows = await fetchLeaderboardRows();
+        if (!rows || rows.length === 0) {
+            lbList.innerHTML = '<div class="empty-state">Chưa có dữ liệu xếp hạng để hiển thị.</div>';
+            return;
+        }
+        const users = rows
             .map(normalizeRow)
-            .sort((a, b) => b.xp - a.xp)
+            .sort((a, b) => b.xp - a.xp || b.streak - a.streak)
             .slice(0, 10);
         
         lbList.innerHTML = ''; // Xóa loading

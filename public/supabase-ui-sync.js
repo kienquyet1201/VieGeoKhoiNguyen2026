@@ -110,7 +110,7 @@
 
     function roleList(value, fallbackRole) {
         try {
-            const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs' };
+            const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs', premium: 'user' };
             let values = Array.isArray(value) ? value : [value || fallbackRole || 'user'];
             if (typeof value === 'string' && value.trim().startsWith('[')) values = JSON.parse(value);
             return [...new Set(values.map(role => aliases[String(role || '').trim().toLowerCase()] || String(role || '').trim().toLowerCase()).filter(role => ['user', 'parent', 'cs', 'admin'].includes(role)))];
@@ -146,6 +146,14 @@
     function writeLocalUser(user) {
         try {
             const state = { ...readState() };
+            const remoteState = user.game_state && typeof user.game_state === 'object'
+                ? user.game_state
+                : (user.gameState && typeof user.gameState === 'object' ? user.gameState : {});
+            if (Array.isArray(remoteState.completedNodes)) state.completedNodes = [...new Set(remoteState.completedNodes.map(String))];
+            if (Array.isArray(remoteState.completedLessons)) state.completedLessons = [...new Set(remoteState.completedLessons.map(String))];
+            if (remoteState.currentNode) state.currentNode = remoteState.currentNode;
+            if (remoteState.totalLessons !== undefined) state.totalLessons = Number(remoteState.totalLessons) || 0;
+            if (remoteState.courseProgress && typeof remoteState.courseProgress === 'object') state.courseProgress = remoteState.courseProgress;
             state.hearts = Number(user.hearts ?? state.hearts ?? 3);
             state.streak = Number(user.current_streak ?? user.streak ?? state.streak ?? 0);
             state.gems = Number(user.gems ?? state.gems ?? 500);
@@ -239,8 +247,12 @@
     function hydrateLeaderboard(rows, user) {
         try {
             const list = document.getElementById('rankingList');
-            const ranks = leaderboardModel(rows.length ? rows : [user]);
-            if (!list || !ranks.length) return;
+            if (!list) return;
+            if (!rows || rows.length === 0) {
+                list.innerHTML = '<div class="empty-state">Chưa có dữ liệu xếp hạng.</div>';
+                return;
+            }
+            const ranks = leaderboardModel(rows);
             list.replaceChildren();
             ranks.slice(0, 10).forEach((entry, index) => {
                 const row = document.createElement('div');
@@ -251,6 +263,55 @@
             });
         } catch (error) {
             console.warn('[VieGeo UI] Không thể đồng bộ bảng xếp hạng:', error);
+        }
+    }
+
+    function completedLessonCount(state) {
+        if (Array.isArray(state.completedNodes)) return state.completedNodes.length;
+        if (Array.isArray(state.completedLessons)) return state.completedLessons.length;
+        return Number(state.completed_lessons ?? state.completedLessons ?? 0) || 0;
+    }
+
+    function hydrateStudentDashboard(rows, user) {
+        try {
+            const state = readState();
+            const completed = completedLessonCount(state);
+            const total = Number(user.total_lessons ?? user.totalLessons ?? state.totalLessons ?? state.totalNodes ?? 0) || 0;
+            const percent = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+            const heroLabel = document.querySelector('.hero-progress .progress-label strong');
+            const heroFill = document.querySelector('.hero-progress .progress-fill');
+            if (heroLabel) heroLabel.textContent = `${percent}%`;
+            if (heroFill) heroFill.style.width = `${percent}%`;
+
+            document.querySelectorAll('.course-card').forEach(card => {
+                const button = card.querySelector('[data-course]');
+                const course = String(button?.dataset.course || '').trim();
+                const progress = Number(state.courseProgress?.[course] ?? state.course_progress?.[course] ?? 0) || 0;
+                const label = card.querySelector('.course-topline strong');
+                const fill = card.querySelector('.course-progress-fill');
+                if (label) label.textContent = `${Math.min(100, Math.max(0, Math.round(progress)))}%`;
+                if (fill) fill.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+            });
+
+            const list = document.querySelector('.student-main .leaderboard-list');
+            if (!list) return;
+            list.replaceChildren();
+            if (!rows || rows.length === 0) {
+                list.innerHTML = '<div class="empty-state">Chưa có học viên trong bảng xếp hạng.</div>';
+                return;
+            }
+            const ranks = leaderboardModel(rows);
+            ranks.slice(0, 3).forEach((entry, index) => {
+                const item = document.createElement('div');
+                item.className = `leaderboard-item${String(entry.email).toLowerCase() === String(user.email || '').toLowerCase() ? ' current-place' : ''}`;
+                item.innerHTML = `<span class="rank">${index + 1}</span><div class="leader-avatar"></div><div><strong></strong><small></small></div><span>${['🥇', '🥈', '🥉'][index] || ''}</span>`;
+                item.querySelector('.leader-avatar').textContent = String(entry.name).slice(0, 2).toUpperCase();
+                item.querySelector('strong').textContent = entry.name;
+                item.querySelector('small').textContent = `${entry.xp.toLocaleString('vi-VN')} XP · 🔥 ${entry.streak}`;
+                list.appendChild(item);
+            });
+        } catch (error) {
+            console.warn('[VieGeo UI] Không thể đồng bộ dashboard học viên:', error);
         }
     }
 
@@ -289,9 +350,13 @@
             hydrateTopbar(user);
             hydrateProfile(user);
             hydrateParent(user);
-            const [questions, boardRows] = await Promise.all([fetchRows('questions', { limit: 500 }), fetchRows('leaderboard', { limit: 100 })]);
+            const [questions, boardRows] = await Promise.all([
+                fetchRows('questions', { limit: 500 }),
+                fetchRows('leaderboard', { columns: 'id,email,user_email,name,full_name,display_name,current_streak,score', limit: 100, orderBy: 'score', ascending: false })
+            ]);
             hydrateMap(questions);
             hydrateLeaderboard(boardRows, user);
+            hydrateStudentDashboard(boardRows, user);
             document.documentElement.dataset.viegeoDataReady = 'true';
         } catch (error) {
             console.error('[VieGeo UI] Không thể đồng bộ trang:', error);

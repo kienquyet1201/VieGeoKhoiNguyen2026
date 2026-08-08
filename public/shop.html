@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="shop.css">
     <link rel="stylesheet" href="shared-topbar.css">
     <link rel="stylesheet" href="global-theme.css">
@@ -16,7 +15,7 @@
     <script src="supabaseClient.js"></script>
     <script src="supabase-ui-sync.js"></script>
 </head>
-<body>
+<body class="shop-page">
     <div class="global-animated-background" aria-hidden="true">
         <div class="global-sun"></div>
         <div class="global-cloud global-cloud-one"></div>
@@ -96,7 +95,7 @@
         <div class="shop-heading-row">
             <div class="shop-heading">
                 <span class="shop-kicker">Không gian tiếp tế</span>
-                <h1><i class="fa-solid fa-store"></i> Cửa Hàng Không Gian</h1>
+                <h1><svg class="shop-inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v9.5A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5V10M3 10l1.5-5h15L21 10M3 10a3 3 0 0 0 5.2 2A3 3 0 0 0 12 12a3 3 0 0 0 3.8 0A3 3 0 0 0 21 10M9 21v-6h6v6"/></svg> Cửa Hàng Không Gian</h1>
                 <p>Dùng Đá quý (Gems) để sắm vật phẩm hỗ trợ.</p>
             </div>
             <button class="back-button" id="backButton" type="button">
@@ -114,7 +113,7 @@
                     <h2>Vật phẩm đang sở hữu</h2>
                 </div>
                 <div class="inventory-gem">
-                    <i class="fa-solid fa-gem"></i>
+                    <svg class="shop-inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 7 7-7 11L5 10l7-7Zm0 0v18M5 10h14"/></svg>
                     <strong id="inventoryGemBalance">500</strong>
                     <span>Gem còn lại</span>
                 </div>
@@ -122,7 +121,7 @@
 
             <div class="inventory-grid">
                 <div class="inventory-item">
-                    <span class="inventory-icon heart-icon"><i class="fa-solid fa-heart"></i></span>
+                    <span class="inventory-icon heart-icon"><svg class="shop-inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.9-8.6a5.5 5.5 0 0 0-.1-7.8Z"/></svg></span>
                     <div>
                         <strong>Trái tim vô hạn</strong>
                         <span id="inventoryInfinite">Chưa kích hoạt</span>
@@ -130,7 +129,7 @@
                 </div>
 
                 <div class="inventory-item">
-                    <span class="inventory-icon shield-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                    <span class="inventory-icon shield-icon"><svg class="shop-inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.8 3 8.7 7 10 4-1.3 7-5.2 7-10V6l-7-3Zm0 3v12"/></svg></span>
                     <div>
                         <strong>Khiên đóng băng</strong>
                         <span id="inventoryFreeze">0</span>
@@ -138,7 +137,7 @@
                 </div>
 
                 <div class="inventory-item">
-                    <span class="inventory-icon xp-icon"><i class="fa-solid fa-bolt"></i></span>
+                    <span class="inventory-icon xp-icon"><svg class="shop-inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-12h-7l0-8Z"/></svg></span>
                     <div>
                         <strong>Bùa x2 XP</strong>
                         <span id="inventoryDoubleXp">0</span>
@@ -146,7 +145,7 @@
                 </div>
 
                 <div class="inventory-item">
-                    <span class="inventory-icon magic-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                    <span class="inventory-icon magic-icon"><svg class="shop-inline-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 1-3 1 3 3 1-3 1-1 3-1-3-3-1 3-1ZM4 20 17 7l2 2L6 22l-2-2Zm1-9 1-3 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z"/></svg></span>
                     <div>
                         <strong>Bùa 50/50</strong>
                         <span id="inventory5050">0</span>

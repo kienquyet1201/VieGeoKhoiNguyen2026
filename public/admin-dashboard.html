@@ -55,7 +55,6 @@
                 <button class="menu-item" data-section="users"><span class="menu-icon">👥</span><span>Quản lý User</span></button>
                 <button class="menu-item" data-section="lessons"><span class="menu-icon">📚</span><span>Bài giảng</span></button>
                 <button class="menu-item" data-section="monitoring"><span class="menu-icon">📡</span><span>Giám sát</span></button>
-                <button class="menu-item" data-section="support"><span class="menu-icon">💬</span><span>Chăm sóc KH</span></button>
                 <button class="menu-item" data-section="settings"><span class="menu-icon">⚙️</span><span>Cài đặt</span></button>
             </nav>
 
@@ -128,7 +127,7 @@
                         <div class="panel-heading"><div><span class="panel-eyebrow">Phân quyền</span><h2>Vai trò hệ thống</h2></div></div>
                         <div class="role-guide"><strong>Học sinh</strong><span>Học tập và thi đấu</span></div>
                         <div class="role-guide"><strong>Phụ huynh</strong><span>Theo dõi tiến độ</span></div>
-                        <div class="role-guide"><strong>CSKH</strong><span>Hỗ trợ người dùng</span></div>
+                        <div class="role-guide" style="display: none !important;"><strong>CSKH</strong><span>Hỗ trợ người dùng</span></div>
                         <div class="role-guide"><strong>Admin</strong><span>Quản trị hệ thống</span></div>
                     </aside>
                 </section>
@@ -188,7 +187,54 @@
             <section class="admin-section" data-panel="lessons">
                 <section class="panel-card upload-panel">
                     <div class="panel-heading"><div><span class="panel-eyebrow">Kho học liệu</span><h2>Upload bộ câu hỏi</h2></div></div>
-                    <div class="upload-grid">
+                    <section class="bulk-text-upload" id="bulkTextQuestionUploader" aria-label="Nhập câu hỏi bằng văn bản">
+                        <div class="bulk-upload-intro">
+                            <strong>Nhập bộ câu hỏi bằng văn bản</strong>
+                            <p>Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Dữ liệu sẽ được lưu vào Supabase <code>questions</code>.</p>
+                        </div>
+                        <div class="bulk-upload-grid">
+                            <div class="bulk-upload-controls">
+                                <label class="field-label">Tỉnh / Thành phố <span aria-hidden="true">*</span>
+                                    <select class="field-input" id="bulkImportProvince" required>
+                                        <option value="">-- Chọn Tỉnh/Thành --</option>
+                                        <optgroup label="── Miền Bắc (25) ──">
+                                            <option value="ha-noi">Hà Nội</option><option value="hai-phong">Hải Phòng</option><option value="quang-ninh">Quảng Ninh</option><option value="ha-giang">Hà Giang</option><option value="lao-cai">Lào Cai</option><option value="lai-chau">Lai Châu</option><option value="dien-bien">Điện Biên</option><option value="son-la">Sơn La</option><option value="yen-bai">Yên Bái</option><option value="hoa-binh">Hòa Bình</option><option value="phu-tho">Phú Thọ</option><option value="tuyen-quang">Tuyên Quang</option><option value="cao-bang">Cao Bằng</option><option value="bac-kan">Bắc Kạn</option><option value="thai-nguyen">Thái Nguyên</option><option value="lang-son">Lạng Sơn</option><option value="bac-giang">Bắc Giang</option><option value="bac-ninh">Bắc Ninh</option><option value="hai-duong">Hải Dương</option><option value="hung-yen">Hưng Yên</option><option value="vinh-phuc">Vĩnh Phúc</option><option value="ha-nam">Hà Nam</option><option value="nam-dinh">Nam Định</option><option value="ninh-binh">Ninh Bình</option><option value="thai-binh">Thái Bình</option>
+                                        </optgroup>
+                                        <optgroup label="── Miền Trung (19) ──">
+                                            <option value="thanh-hoa">Thanh Hóa</option><option value="nghe-an">Nghệ An</option><option value="ha-tinh">Hà Tĩnh</option><option value="quang-binh">Quảng Bình</option><option value="quang-tri">Quảng Trị</option><option value="thua-thien-hue">Thừa Thiên Huế</option><option value="da-nang">Đà Nẵng</option><option value="quang-nam">Quảng Nam</option><option value="quang-ngai">Quảng Ngãi</option><option value="binh-dinh">Bình Định</option><option value="phu-yen">Phú Yên</option><option value="khanh-hoa">Khánh Hòa</option><option value="ninh-thuan">Ninh Thuận</option><option value="binh-thuan">Bình Thuận</option><option value="kon-tum">Kon Tum</option><option value="gia-lai">Gia Lai</option><option value="dak-lak">Đắk Lắk</option><option value="dak-nong">Đắk Nông</option><option value="lam-dong">Lâm Đồng</option>
+                                        </optgroup>
+                                        <optgroup label="── Miền Nam (19) ──">
+                                            <option value="ho-chi-minh">Hồ Chí Minh</option><option value="can-tho">Cần Thơ</option><option value="binh-phuoc">Bình Phước</option><option value="tay-ninh">Tây Ninh</option><option value="binh-duong">Bình Dương</option><option value="dong-nai">Đồng Nai</option><option value="ba-ria-vung-tau">Bà Rịa - Vũng Tàu</option><option value="long-an">Long An</option><option value="tien-giang">Tiền Giang</option><option value="ben-tre">Bến Tre</option><option value="tra-vinh">Trà Vinh</option><option value="vinh-long">Vĩnh Long</option><option value="dong-thap">Đồng Tháp</option><option value="an-giang">An Giang</option><option value="kien-giang">Kiên Giang</option><option value="hau-giang">Hậu Giang</option><option value="soc-trang">Sóc Trăng</option><option value="bac-lieu">Bạc Liêu</option><option value="ca-mau">Cà Mau</option>
+                                        </optgroup>
+                                    </select>
+                                </label>
+                                <label class="field-label">Chọn Đảo nhỏ (1–34) <span aria-hidden="true">*</span>
+                                    <select class="field-input" id="bulkImportSubIsland" required><option value="">-- Chọn Đảo nhỏ --</option></select>
+                                </label>
+                                <label class="field-label">Chủ đề bài học <span aria-hidden="true">*</span>
+                                    <input class="field-input" id="bulkImportTopic" type="text" maxlength="160" placeholder="Ví dụ: Lịch sử hình thành" required>
+                                </label>
+                                <label class="field-label">Lý thuyết của đảo <small>(chỉ hiển thị một lần trước bài)</small>
+                                    <textarea class="field-input bulk-island-theory" id="bulkImportIslandTheory" rows="7" maxlength="12000" placeholder="Nhập nội dung lý thuyết chung để học sinh đọc trước khi làm bài..."></textarea>
+                                </label>
+                                <p class="bulk-upload-note">Tỉnh/Thành, Đảo, Chủ đề và Lý thuyết đảo sẽ được ghép tự động cho mọi câu hợp lệ trong lô.</p>
+                                <button class="primary-button" id="btnProcessUpload" type="button">Phân tích và lưu câu hỏi</button>
+                            </div>
+                            <div class="bulk-upload-content">
+                                <aside class="bulk-template-guide" aria-label="Mẫu định dạng chuẩn">
+                                    <strong>Mẫu định dạng chuẩn</strong>
+                                    <code>Câu hỏi | Đáp án 0 | Đáp án 1 | Đáp án 2 | Đáp án 3 | Index đúng (0–3) | Độ khó (easy/medium/hard) | Giải thích khi trả lời đúng</code>
+                                    <small>Giải thích hiển thị sau khi học sinh chốt đáp án đúng. Có thể để trống, nhưng vẫn giữ dấu <code>|</code> ở cuối dòng.</small>
+                                </aside>
+                                <label class="field-label" for="bulkQuestionText">Nội dung văn bản
+                                    <textarea class="field-input bulk-question-text" id="bulkQuestionText" rows="16" spellcheck="false" placeholder="Hà Nội là thủ đô của nước nào? | Việt Nam | Lào | Thái Lan | Campuchia | 0 | easy | Hà Nội là Thủ đô của Việt Nam.&#10;..." required></textarea>
+                                </label>
+                                <div class="preview-title">Xem trước dữ liệu</div>
+                                <pre id="bulkUploadPreview" class="bulk-upload-preview">Dán nội dung văn bản để xem trước dữ liệu hợp lệ.</pre>
+                            </div>
+                        </div>
+                    </section>
+                    <div class="upload-grid" aria-hidden="true">
                         <div class="upload-form">
                             <label class="field-label">Tệp câu hỏi<input class="field-input" id="fileUpload" type="file" accept=".docx,.txt"></label>
                             <div class="file-status" id="fileNameDisplay">Chưa có tệp được chọn.</div>

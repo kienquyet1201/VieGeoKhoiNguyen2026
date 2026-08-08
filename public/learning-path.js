@@ -384,9 +384,43 @@
         return (await loadSupabaseIslandContent(lesson)).questions;
     }
 
+    async function getUserLearningProgress(email) {
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        const session = (() => {
+            try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); } catch (error) { return {}; }
+        })();
+        const userEmail = String(email || session.email || '').trim();
+        if (!client || typeof client.from !== 'function' || !userEmail) {
+            return { completed: 0, total: 0, percent: 0, currentNode: null };
+        }
+        try {
+            const { data, error } = await client
+                .from('users')
+                .select('game_state')
+                .eq('email', userEmail)
+                .maybeSingle();
+            if (error) throw error;
+            const state = data?.game_state && typeof data.game_state === 'object' ? data.game_state : {};
+            const completed = Array.isArray(state.completedNodes)
+                ? state.completedNodes.length
+                : (Array.isArray(state.completedLessons) ? state.completedLessons.length : Number(state.completedLessons || 0));
+            const total = Number(state.totalLessons ?? state.totalNodes ?? 0) || 0;
+            return {
+                completed,
+                total,
+                percent: total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0,
+                currentNode: state.currentNode || null
+            };
+        } catch (error) {
+            console.warn('Không thể tải tiến độ học từ Supabase:', error);
+            return { completed: 0, total: 0, percent: 0, currentNode: null };
+        }
+    }
+
     window.VieGeoLearningPath = {
         getLessonsForProvince,
         findLesson,
+        getUserLearningProgress,
         loadIslandTopics,
         loadQuestions: loadSupabaseIslandQuestions,
         loadIslandContent: loadSupabaseIslandContent
