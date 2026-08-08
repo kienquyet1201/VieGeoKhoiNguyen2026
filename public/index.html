@@ -11,8 +11,9 @@
     <!-- Font Awesome for modern icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom stylesheet -->
-    <link rel="stylesheet" href="VieGeo.css">
-    <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="VieGeo.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="legacy-ui-skin.css">
     <!-- Auth guard: redirect to login if no session -->
     <script>
         (function(){
@@ -26,7 +27,8 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-<body>
+<body class="source-ui source-ui-home">
+    <div class="source-ui-ambient" aria-hidden="true"></div>
     <!-- Background Glow Elements -->
     <div class="glow-bg">
         <div class="glow-circle glow-circle-1"></div>

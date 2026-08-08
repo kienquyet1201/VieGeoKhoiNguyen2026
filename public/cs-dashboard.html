@@ -9,11 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="legacy-ui-skin.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
 </head>
-<body class="cs-dashboard-page">
+<body class="cs-dashboard-page source-ui source-ui-cs">
+    <div class="source-ui-ambient" aria-hidden="true"></div>
     <main class="cs-dashboard-shell h-[calc(100vh-60px)] flex overflow-hidden" style="max-width:1540px;margin:0 auto">
         <header class="operations-heading cs-dashboard-heading">
             <div><h1><i class="fa-solid fa-headset" style="color:#38bdf8"></i> CS Portal</h1><p>Tiếp nhận và giải đáp yêu cầu học sinh theo thời gian thực.</p></div>
