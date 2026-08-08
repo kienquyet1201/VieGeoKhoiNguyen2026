@@ -292,6 +292,7 @@
             'province', 'island', 'topic', 'theory', 'hint1', 'hint2', 'difficulty',
             'sub_island', 'island_theory', 'import_order', 'created_at'
         ];
+        const QUESTION_TABLE_CANDIDATES = ['questions', 'Questions', 'Question'];
         function describeSupabaseQuestionError(error) {
             const text = `${error?.code || ''} ${error?.status || ''} ${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`.toLowerCase();
             if (text.includes('pgrst204') || text.includes('column') || text.includes('schema cache')) {
@@ -375,6 +376,36 @@
             return Number.isFinite(parsed) ? parsed : 0;
         }
 
+        function normalizeDifficultyValue(value) {
+            const raw = String(value || '').trim().toLowerCase();
+            const aliases = {
+                easy: 'easy',
+                'dễ': 'easy',
+                de: 'easy',
+                medium: 'medium',
+                'trung bình': 'medium',
+                'trung binh': 'medium',
+                tb: 'medium',
+                hard: 'hard',
+                'khó': 'hard',
+                kho: 'hard'
+            };
+            return aliases[raw] || raw || 'easy';
+        }
+
+        function islandNumberFromValue(value) {
+            if (value === undefined || value === null || value === '') return 0;
+            const direct = Number(value);
+            if (Number.isFinite(direct) && direct > 0) return direct;
+            const match = String(value).match(/\d+/);
+            return match ? Number(match[0]) || 0 : 0;
+        }
+
+        function questionIslandValue(data = {}) {
+            const num = islandNumberFromValue(data.subIsland ?? data.sub_island ?? data.islandIndex ?? data.island_index ?? data.island);
+            return num ? `Đảo nhỏ ${num}` : String(data.island || data.lessonTitle || data.topic || '').trim();
+        }
+
         function normalizeQuestionRow(row = {}) {
             const options = Array.isArray(row.options)
                 ? row.options
@@ -387,10 +418,10 @@
                 answer: Number.isInteger(answer) ? answer : 0,
                 correctAnswer: Number.isInteger(answer) ? answer : 0,
                 province: row.province ?? row.province_slug ?? '',
-                difficulty: row.difficulty ?? 'easy',
-                subIsland: row.subIsland ?? row.sub_island ?? row.islandIndex ?? row.island_index ?? '',
-                islandIndex: row.islandIndex ?? row.island_index ?? row.subIsland ?? row.sub_island ?? '',
-                island: row.island ?? '',
+                difficulty: normalizeDifficultyValue(row.difficulty ?? 'easy'),
+                subIsland: islandNumberFromValue(row.subIsland ?? row.sub_island ?? row.islandIndex ?? row.island_index ?? row.island),
+                islandIndex: islandNumberFromValue(row.islandIndex ?? row.island_index ?? row.subIsland ?? row.sub_island ?? row.island),
+                island: questionIslandValue(row),
                 topic: row.topic ?? row.lessonTitle ?? row.lesson_title ?? '',
                 islandTheory: row.islandTheory ?? row.island_theory ?? row.islandTheoryContent ?? row.island_theory_content ?? '',
                 explanation: row.theory ?? row.explanation ?? row.solution ?? row.explain ?? '',
@@ -1091,23 +1122,25 @@
         function refreshQuestionFilterOptions() {
             const data = allAdminQuestionDocuments.map(doc => doc.data() || {});
             setQuestionFilterOptions('filterQuestionProvince', data.map(item => item.province), questionProvinceLabel);
+            setQuestionFilterOptions('filterQuestionIsland', data.map(questionIslandValue), value => value || 'Tất cả Đảo nhỏ');
         }
 
         function applyQuestionFilters() {
-            const difficulty = el('filterQuestionDifficulty')?.value || '';
+            const rawDifficultyFilter = el('filterQuestionDifficulty')?.value || '';
+            const difficulty = rawDifficultyFilter ? normalizeDifficultyValue(rawDifficultyFilter) : '';
             const province = el('filterQuestionProvince')?.value || '';
             const islandFilter = el('filterQuestionIsland')?.value || ''; // e.g. "Đảo nhỏ 1"
-            const filterNum = Number(islandFilter.replace(/\D+/g, '')) || 0;
+            const filterNum = islandNumberFromValue(islandFilter);
 
             const filteredDocuments = allAdminQuestionDocuments.filter(doc => {
                 const data = doc.data() || {};
-                const docNum = Number(data.subIsland || data.islandIndex || String(data.island || '').replace(/\D+/g, '')) || 0;
-                const docIslandStr = String(data.island || '').trim();
+                const docNum = islandNumberFromValue(data.subIsland || data.islandIndex || data.island);
+                const docIslandStr = questionIslandValue(data);
                 const matchesIsland = !islandFilter
                     || (filterNum > 0 && docNum === filterNum)
                     || docIslandStr === islandFilter;
 
-                return (!difficulty || String(data.difficulty || '') === difficulty)
+                return (!difficulty || normalizeDifficultyValue(data.difficulty) === difficulty)
                     && (!province || String(data.province || '') === province)
                     && matchesIsland;
             });
@@ -1154,35 +1187,94 @@
             renderAdminQuestionList(questionDocs, emptyMessage);
         }
 
+        async function selectAdminQuestionRows(client) {
+            const attemptLogs = [];
+            let firstEmptySuccess = null;
+
+            for (const tableName of QUESTION_TABLE_CANDIDATES) {
+                try {
+                    const { data, error, count, status, statusText } = await client
+                        .from(tableName)
+                        .select('*', { count: 'exact' })
+                        .limit(5000);
+
+                    const rows = Array.isArray(data) ? data : [];
+                    const attemptLog = {
+                        tableName,
+                        status,
+                        statusText,
+                        count,
+                        rowCount: rows.length,
+                        firstRow: rows[0] || null,
+                        error: error ? {
+                            code: error.code,
+                            message: error.message,
+                            details: error.details,
+                            hint: error.hint
+                        } : null
+                    };
+                    attemptLogs.push(attemptLog);
+                    console.log('[VieGeo Admin] Supabase questions select attempt', attemptLog);
+
+                    if (error) continue;
+                    if (rows.length > 0) return { rows, source: tableName, attemptLogs };
+                    if (!firstEmptySuccess) firstEmptySuccess = { rows, source: tableName, attemptLogs };
+                } catch (error) {
+                    const attemptLog = {
+                        tableName,
+                        error: {
+                            message: error?.message || String(error),
+                            stack: error?.stack || ''
+                        }
+                    };
+                    attemptLogs.push(attemptLog);
+                    console.error('[VieGeo Admin] Supabase questions select crashed', attemptLog);
+                }
+            }
+
+            if (window.db && typeof window.db.collection === 'function') {
+                try {
+                    const snapshot = await window.db.collection('Questions').limit(5000).get();
+                    const rows = (snapshot?.docs || []).map(doc => ({ id: doc.id, ...(doc.data ? doc.data() : {}) }));
+                    console.log('[VieGeo Admin] Legacy db adapter Questions fallback', {
+                        rowCount: rows.length,
+                        firstRow: rows[0] || null
+                    });
+                    if (rows.length > 0) return { rows, source: 'db.collection(Questions)', attemptLogs };
+                } catch (error) {
+                    console.error('[VieGeo Admin] Legacy db adapter Questions fallback failed', error);
+                }
+            }
+
+            return firstEmptySuccess || { rows: [], source: '', attemptLogs };
+        }
+
         async function loadAdminQuestions() {
             const body = el('adminQuestionsList');
             if (!body) return;
             body.innerHTML = '<tr><td colspan="6" class="ops-muted">Đang tải câu hỏi từ Supabase…</td></tr>';
             try {
                 const client = getSupabaseClient();
-                let questions = [];
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
-                const { data, error } = await client.from('questions').select('*');
-                if (error) { console.error('Supabase select error:', error); throw error; }
-                console.log('[VieGeo Admin] Supabase questions raw data', {
-                    isArray: Array.isArray(data),
-                    count: Array.isArray(data) ? data.length : 0,
-                    firstRow: Array.isArray(data) ? data[0] || null : data
-                });
-                if (!Array.isArray(data)) {
-                    console.warn('[VieGeo Admin] Supabase questions response is not an array:', data);
-                    questions = [];
-                } else {
-                    questions = data.map(toSupabaseDoc);
-                }
+                const { rows, source, attemptLogs } = await selectAdminQuestionRows(client);
+                const questions = rows.map(toSupabaseDoc);
                 console.log('[VieGeo Admin] Supabase questions normalized', {
+                    source,
                     count: questions.length,
-                    firstDoc: questions[0]?.data?.() || null
+                    firstDoc: questions[0]?.data?.() || null,
+                    attempts: attemptLogs
                 });
                 adminQuestionDocuments.clear();
                 allAdminQuestionDocuments = questions;
                 refreshQuestionFilterOptions();
                 applyQuestionFilters();
+                if (!questions.length) {
+                    console.warn('[VieGeo Admin] Không nhận được dòng nào từ các nguồn câu hỏi.', {
+                        source,
+                        attempts: attemptLogs,
+                        hint: 'Nếu Supabase Dashboard có dữ liệu nhưng API trả 0 dòng, hãy kiểm tra RLS/Policy SELECT cho anon/authenticated hoặc xác nhận dữ liệu nằm đúng bảng questions trong schema public.'
+                    });
+                }
             } catch (error) {
                 console.warn('Supabase questions select error:', error);
                 body.innerHTML = isMissingSupabaseTableError(error)
@@ -1229,8 +1321,33 @@
         function permittedRoles() {
             try {
                 const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-                const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
+                const source = [];
+                const appendRoles = (value) => {
+                    if (!value) return;
+                    if (Array.isArray(value)) { value.forEach(appendRoles); return; }
+                    if (typeof value === 'string') {
+                        const trimmed = value.trim();
+                        if (!trimmed) return;
+                        if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
+                            try {
+                                const parsed = JSON.parse(trimmed);
+                                if (Array.isArray(parsed)) { parsed.forEach(appendRoles); return; }
+                            } catch {}
+                            trimmed.split(',').forEach(appendRoles);
+                            return;
+                        }
+                        source.push(trimmed);
+                        return;
+                    }
+                    source.push(String(value));
+                };
+                appendRoles(session.roles);
+                appendRoles(session.role);
+                appendRoles(session.activeRole);
+                appendRoles(session.active_role);
+                if (session.isAdmin || session.isSuperAdmin) appendRoles('admin');
                 const result = [...new Set(source.map(role => String(role || '').toLowerCase()).filter(role => Boolean(roleRoutes[role])))];
+                if (result.includes('admin')) ['cs', 'parent', 'user'].forEach((role) => !result.includes(role) && result.push(role));
                 return result.length ? result : ['user'];
             } catch (error) { return ['user']; }
         }

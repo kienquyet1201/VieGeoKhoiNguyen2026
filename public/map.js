@@ -1191,6 +1191,19 @@ function getSurveySession() {
     }
 }
 
+function surveyCompletionKeys(email) {
+    const safeEmail = String(email || 'anonymous').trim().toLowerCase();
+    return ['hasCompletedSurvey', `hasCompletedSurvey:${safeEmail}`, `VieGeo_survey_completed_${safeEmail}`];
+}
+
+function hasLocalSurveyCompletion(email) {
+    return surveyCompletionKeys(email).some((key) => localStorage.getItem(key) === 'true');
+}
+
+function markLocalSurveyCompleted(email) {
+    surveyCompletionKeys(email).forEach((key) => localStorage.setItem(key, 'true'));
+}
+
 function ensureLearningProfile() {
     const fallback = { surveyDone: false, goal: null, interests: [], strongTopics: [], weakTopics: [] };
     state.learningProfile = { ...fallback, ...(state.learningProfile || {}) };
@@ -1223,7 +1236,11 @@ function openSurvey(forceOpen = false) {
 async function initializeLearnerSurvey() {
     const profile = ensureLearningProfile();
     const session = getSurveySession();
-    let completed = profile.surveyDone === true;
+    let completed = profile.surveyDone === true || hasLocalSurveyCompletion(session.email);
+    if (completed) {
+        profile.surveyDone = true;
+        localStorage.setItem('VieGeo_state', JSON.stringify(state));
+    }
 
     if (session.email && typeof db !== 'undefined') {
         try {
@@ -1234,9 +1251,11 @@ async function initializeLearnerSurvey() {
                     state.learningProfile = { ...profile, ...userData.learningProfile };
                     if (!Array.isArray(state.learningProfile.interests)) state.learningProfile.interests = [];
                 }
-                // Undefined is deliberately treated as not completed, so old accounts receive the survey once.
-                completed = userData.hasCompletedSurvey === true;
+                // Local completion wins: once the learner submitted successfully on this browser,
+                // a stale/empty remote field must never make the survey appear again.
+                completed = completed || userData.hasCompletedSurvey === true || userData.learningProfile?.surveyDone === true;
                 state.learningProfile.surveyDone = completed;
+                if (completed) markLocalSurveyCompleted(session.email);
                 localStorage.setItem('VieGeo_state', JSON.stringify(state));
             }
         } catch (error) {
@@ -1265,9 +1284,11 @@ async function saveLearnerSurvey() {
     profile.goal = goal;
     profile.interests = [interest];
     profile.surveyDone = true;
+    const session = getSurveySession();
+    markLocalSurveyCompleted(session.email);
+    saveGameState(state);
 
     try {
-        const session = getSurveySession();
         if (session.email && typeof db !== 'undefined') {
             await db.collection('users').doc(session.email).set({
                 learningProfile: profile,
@@ -1275,15 +1296,15 @@ async function saveLearnerSurvey() {
                 surveyCompletedAt: new Date().toISOString()
             }, { merge: true });
         }
-        saveGameState(state);
         if (surveyModal) surveyModal.style.display = 'none';
         if (typeof renderProfile === 'function') renderProfile();
         if (typeof showToast === 'function') showToast('Đã lưu hồ sơ học tập.');
         else VieGeoUI.success('Đã lưu hồ sơ học tập.');
     } catch (error) {
-        profile.surveyDone = false;
         console.error('Không thể lưu khảo sát:', error);
-        VieGeoUI.error('Chưa thể lưu khảo sát. Vui lòng thử lại.');
+        if (surveyModal) surveyModal.style.display = 'none';
+        if (typeof showToast === 'function') showToast('Đã lưu khảo sát trên thiết bị. Supabase sẽ đồng bộ lại khi kết nối ổn định.', false);
+        else VieGeoUI.warning('Đã lưu khảo sát trên thiết bị. Supabase sẽ đồng bộ lại khi kết nối ổn định.');
     } finally {
         if (surveySubmitButton) {
             surveySubmitButton.disabled = false;

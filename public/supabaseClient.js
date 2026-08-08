@@ -182,11 +182,42 @@
     function normalizeUserPayload(id, data) {
         const now = new Date().toISOString();
         const { password: _discardedPassword, ...safeLegacyData } = data || {};
+        const normalizeRoleValue = (value) => ({ student: 'user', map: 'user', cskh: 'cs', support: 'cs' })[String(value || '').trim().toLowerCase()] || String(value || '').trim().toLowerCase();
+        const collectedRoles = [];
+        const appendRole = (value) => {
+            if (!value) return;
+            if (Array.isArray(value)) { value.forEach(appendRole); return; }
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                if (!trimmed) return;
+                if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) { parsed.forEach(appendRole); return; }
+                    } catch {}
+                    trimmed.split(',').forEach(appendRole);
+                    return;
+                }
+                collectedRoles.push(normalizeRoleValue(trimmed));
+                return;
+            }
+            collectedRoles.push(normalizeRoleValue(value));
+        };
+        appendRole(data.roles);
+        appendRole(data.role);
+        appendRole(data.activeRole);
+        appendRole(data.active_role);
+        if (data.isAdmin || data.isSuperAdmin) appendRole('admin');
+        const validRoles = [...new Set(collectedRoles.filter(role => ['user', 'parent', 'cs', 'admin'].includes(role)))];
+        if (validRoles.includes('admin')) ['cs', 'parent', 'user'].forEach(role => !validRoles.includes(role) && validRoles.push(role));
+        const primaryRole = validRoles.includes(normalizeRoleValue(data.role || data.activeRole || data.active_role))
+            ? normalizeRoleValue(data.role || data.activeRole || data.active_role)
+            : (validRoles[0] || 'user');
         const payload = {
             email: data.email || id,
-            role: data.role || data.activeRole || data.active_role || 'user',
-            roles: Array.isArray(data.roles) ? data.roles : [data.role || data.activeRole || 'user'],
-            active_role: data.active_role || data.activeRole || data.role || 'user',
+            role: primaryRole,
+            roles: validRoles.length ? validRoles : ['user'],
+            active_role: primaryRole,
             full_name: data.full_name || data.name || null,
             name: data.name || data.full_name || null,
             gender: sanitizeText(data.gender || '', 24) || null,
@@ -203,6 +234,7 @@
             current_streak: Number(data.currentStreak ?? data.streak ?? 0) || 0,
             game_state: data.gameState || data.game_state || null,
             legacy_data: safeLegacyData,
+            created_at: data.created_at || data.createdAt || now,
             updated_at: now
         };
         Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);

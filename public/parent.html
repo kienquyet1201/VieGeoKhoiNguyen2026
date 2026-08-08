@@ -24,7 +24,7 @@
             <div class="app-logo" style="margin-bottom: 0;">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo <span style="font-size: 1.2rem; color: var(--gold);">| Phụ Huynh</span>
             </div>
-            <button class="bento-btn" onclick="window.location.href='/'" style="background: rgba(255,255,255,0.1);">Trở về Trang chủ</button>
+            <button class="bento-btn" onclick="window.location.href='/map'" style="background: rgba(255,255,255,0.1);">Trở về Trang học</button>
             <div style="position: relative; display: inline-block; margin-left: 10px;" onmouseover="document.getElementById('parentRoleDrop').style.display='block'" onmouseout="document.getElementById('parentRoleDrop').style.display='none'">
                 <button class="bento-btn" style="background: rgba(255,255,255,0.1);"><i class="fa-solid fa-users-gear"></i> Đổi Quyền</button>
                 <div id="parentRoleDrop" style="display: none; position: absolute; top: 100%; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
@@ -130,43 +130,39 @@
     })();
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const rawState = localStorage.getItem('VieGeo_state');
-            if (rawState) {
-                const state = JSON.parse(rawState);
-                
-                document.getElementById('statStreak').textContent = (state.streak || 0) + " Ngày";
-                document.getElementById('statCompleted').textContent = (state.completedNodes ? state.completedNodes.length : 0) + " Bài";
-                
-                const today = new Date().toISOString().split('T')[0];
-                const lastLogin = state.lastLogin || '';
-                if (lastLogin === today) {
-                    document.getElementById('statActivity').textContent = "Đã học hôm nay";
-                    document.getElementById('statActivity').style.color = "var(--green)";
-                } else {
-                    document.getElementById('statActivity').textContent = "Chưa học hôm nay";
-                    document.getElementById('statActivity').style.color = "var(--red)";
+    function parentAllowedRolesFromSession(session) {
+        const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
+        const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
+        const collected = [];
+        const appendRoles = (value) => {
+            if (!value) return;
+            if (Array.isArray(value)) { value.forEach(appendRoles); return; }
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                if (!trimmed) return;
+                if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) { parsed.forEach(appendRoles); return; }
+                    } catch (_) {}
+                    trimmed.split(',').forEach(appendRoles);
+                    return;
                 }
-                
-                let report = `Học sinh đang duy trì tiến độ học tập <b>${state.streak || 0} ngày liên tiếp</b>. `;
-                if (state.completedNodes && state.completedNodes.length > 0) {
-                    report += `Tổng số lượng bài học hoàn thành là <b>${state.completedNodes.length} bài</b>. `;
-                }
-                
-                if (lastLogin !== today) {
-                    report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-triangle-exclamation"></i> <b>Cảnh báo:</b> Hôm nay con chưa hoàn thành bài học nào. Phụ huynh vui lòng nhắc nhở để tránh mất chuỗi (Streak).</span>`;
-                } else {
-                    report += `<br><br><span style="color: var(--green);"><i class="fa-solid fa-check-circle"></i> <b>Tốt:</b> Con đã hoàn thành bài học hôm nay. Quá trình học tập đang diễn ra rất tích cực.</span>`;
-                }
-                
-                document.getElementById('parentReport').innerHTML = report;
-                
-            } else {
-                document.getElementById('parentReport').innerHTML = "Chưa có dữ liệu học tập trên thiết bị này. Vui lòng cho học sinh đăng nhập và hoàn thành bài học đầu tiên.";
+                collected.push(aliases[trimmed.toLowerCase()] || trimmed.toLowerCase());
+                return;
             }
-        });
-    </script>
-    <script>
+            collected.push(String(value).toLowerCase());
+        };
+        appendRoles(session.roles);
+        appendRoles(session.role);
+        appendRoles(session.activeRole);
+        appendRoles(session.active_role);
+        if (session.isAdmin || session.isSuperAdmin) appendRoles('admin');
+        const allowedRoles = [...new Set(collected.filter(item => Boolean(roleLinks[item])))];
+        if (allowedRoles.includes('admin')) ['cs', 'parent', 'user'].forEach((role) => !allowedRoles.includes(role) && allowedRoles.push(role));
+        return allowedRoles.length ? allowedRoles : ['user'];
+    }
+
     window.switchRoleClientOnly = function(role) {
         if(!role) return;
         try {
@@ -174,8 +170,7 @@
             const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
             const normalizedRole = aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase();
             const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
-            const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
-            const allowedRoles = [...new Set(source.map(item => aliases[String(item || '').toLowerCase()] || String(item || '').toLowerCase()).filter(item => Boolean(roleLinks[item])))];
+            const allowedRoles = parentAllowedRolesFromSession(session);
             if (!allowedRoles.includes(normalizedRole)) { if (window.Swal) Swal.fire({icon:'warning',title:'Không có quyền truy cập',text:'Vai trò này chưa được cấp cho tài khoản của bạn.'}); return false; }
             session.roles = allowedRoles;
             session.role = normalizedRole;
@@ -188,9 +183,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         try {
             const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-            const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
-            const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
-            const allowedRoles = [...new Set(source.map(role => aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase()))];
+            const allowedRoles = parentAllowedRolesFromSession(session);
             const drop = document.getElementById('parentRoleDrop');
             const wrap = drop?.parentElement;
             if (!drop || !wrap) return;

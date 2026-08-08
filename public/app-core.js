@@ -53,10 +53,39 @@ function normalizeRole(role) {
 }
 
 function authorizedRoles(source) {
-    const roles = Array.isArray(source && source.roles)
-        ? source.roles
-        : [source && (source.activeRole || source.role)];
-    const result = [...new Set(roles.map(normalizeRole).filter((role) => Boolean(ROLE_META[role])))];
+    const collected = [];
+    const appendRoles = (value) => {
+        if (!value) return;
+        if (Array.isArray(value)) {
+            value.forEach(appendRoles);
+            return;
+        }
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed) return;
+            if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(appendRoles);
+                        return;
+                    }
+                } catch {}
+                trimmed.split(',').forEach(appendRoles);
+                return;
+            }
+            collected.push(trimmed);
+            return;
+        }
+        collected.push(String(value));
+    };
+    appendRoles(source && source.roles);
+    appendRoles(source && source.activeRole);
+    appendRoles(source && source.active_role);
+    appendRoles(source && source.role);
+    if (source && (source.isAdmin || source.isSuperAdmin)) appendRoles('admin');
+    const result = [...new Set(collected.map(normalizeRole).filter((role) => Boolean(ROLE_META[role])))];
+    if (result.includes('admin')) ['cs', 'parent', 'user'].forEach((role) => !result.includes(role) && result.push(role));
     return result.length ? result : ['user'];
 }
 

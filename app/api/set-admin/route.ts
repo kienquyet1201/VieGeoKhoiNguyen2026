@@ -28,13 +28,13 @@ export async function POST(request: NextRequest) {
     await upsertRows('users', [{
       email: ADMIN_EMAIL,
       role: 'admin',
-      roles: ['admin', 'cs', 'user'],
+      roles: ['admin', 'cs', 'parent', 'user'],
       active_role: 'admin',
       account_status: 'premium',
       updated_at: new Date().toISOString(),
     }], 'email', true);
 
-    return NextResponse.json({ ok: true, email: ADMIN_EMAIL, roles: ['admin', 'cs', 'user'] });
+    return NextResponse.json({ ok: true, email: ADMIN_EMAIL, roles: ['admin', 'cs', 'parent', 'user'] });
   } catch (error) {
     console.error('Không thể cấp quyền quản trị qua Supabase:', error);
     return NextResponse.json({ error: 'Không thể cấp quyền. Kiểm tra Supabase key hoặc bảng users.' }, { status: 500 });

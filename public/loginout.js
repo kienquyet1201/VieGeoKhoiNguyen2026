@@ -10,7 +10,7 @@ const ROLE_DESTINATIONS = Object.freeze({
 });
 const ROOT_ADMIN_EMAIL = 'kienquyet1201@gmail.com';
 const ROOT_ADMIN_PASSWORD_HASH = 'e1d9ebc55fd6baff0590282d9d7d5302047b7ab6ca817c6a47b30b791da3e282';
-const ROOT_ADMIN_ROLES = ['admin', 'cs', 'user'];
+const ROOT_ADMIN_ROLES = ['admin', 'cs', 'parent', 'user'];
 
 function normalizeRole(role) {
     const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs' };
@@ -19,10 +19,39 @@ function normalizeRole(role) {
 }
 
 function getUserRoles(user) {
-    const source = Array.isArray(user && user.roles)
-        ? user.roles
-        : [user && (user.activeRole || user.role)];
+    const source = [];
+    const appendRoles = (value) => {
+        if (!value) return;
+        if (Array.isArray(value)) {
+            value.forEach(appendRoles);
+            return;
+        }
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (!trimmed) return;
+            if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(appendRoles);
+                        return;
+                    }
+                } catch {}
+                trimmed.split(',').forEach(appendRoles);
+                return;
+            }
+            source.push(trimmed);
+            return;
+        }
+        source.push(String(value));
+    };
+    appendRoles(user && user.roles);
+    appendRoles(user && user.activeRole);
+    appendRoles(user && user.active_role);
+    appendRoles(user && user.role);
+    if (user && (user.isAdmin || user.isSuperAdmin)) appendRoles('admin');
     const roles = [...new Set(source.map(normalizeRole).filter((role) => Boolean(ROLE_DESTINATIONS[role])))];
+    if (roles.includes('admin')) ['cs', 'parent', 'user'].forEach((role) => !roles.includes(role) && roles.push(role));
     return roles.length ? roles : ['user'];
 }
 
@@ -134,6 +163,38 @@ async function ensureRootAdminProfile() {
         console.warn('[VieGeo Admin] Không thể upsert Admin Tổng lên Supabase, dùng session cục bộ.', error);
     }
     return adminProfile;
+}
+
+async function ensureAuthenticatedUserProfile(authUser, email, existingData = {}) {
+    const now = new Date().toISOString();
+    const metadata = authUser?.user_metadata || {};
+    const safeEmail = normalizeEmail(email || authUser?.email || '');
+    const existingRoles = getUserRoles(existingData);
+    const role = normalizeRole(existingData.role || existingData.activeRole || existingData.active_role || existingRoles[0] || 'user');
+    const profile = {
+        ...existingData,
+        email: safeEmail,
+        name: existingData.name || existingData.full_name || metadata.name || metadata.full_name || safeEmail.split('@')[0],
+        full_name: existingData.full_name || existingData.name || metadata.full_name || metadata.name || null,
+        gender: existingData.gender || metadata.gender || '',
+        role,
+        activeRole: normalizeRole(existingData.activeRole || existingData.active_role || role),
+        roles: existingRoles,
+        accountStatus: existingData.accountStatus || existingData.account_status || 'free',
+        createdAt: existingData.createdAt || existingData.created_at || authUser?.created_at || now,
+        updatedAt: now
+    };
+    try {
+        await db.collection('users').doc(safeEmail).set(profile, { merge: true });
+        console.log('[VieGeo Auth] Đã đồng bộ Supabase Auth user vào public.users.', {
+            email: safeEmail,
+            roles: profile.roles,
+            role: profile.role
+        });
+    } catch (error) {
+        console.warn('[VieGeo Auth] Không thể đồng bộ user vào public.users, tiếp tục bằng session cục bộ.', error);
+    }
+    return profile;
 }
 
 function persistRootAdminSession(adminProfile) {
@@ -318,15 +379,20 @@ if (loginForm) {
                 return;
             }
             let authenticated = false;
+            let authUser = null;
             try {
-                authenticated = Boolean(await signInViaSupabase(email, pass));
+                authUser = await signInViaSupabase(email, pass);
+                authenticated = Boolean(authUser);
             } catch (authError) {
                 console.warn('Supabase Auth login failed; legacy profile fallback will be checked:', authError?.message || authError);
             }
             const userDoc = await db.collection('users').doc(email).get();
             
-            if (userDoc.exists) {
-                const userData = userDoc.data();
+            if (userDoc.exists || authenticated) {
+                let userData = userDoc.exists ? userDoc.data() : {};
+                if (authenticated) {
+                    userData = await ensureAuthenticatedUserProfile(authUser, email, userData);
+                }
                 if (authenticated || (userData.password && userData.password === pass)) {
                     security.clearRateLimit(`auth_login_${email}`);
                     await updateStreakOnLogin(email, userData);
@@ -362,7 +428,7 @@ if (loginForm) {
                                 btnRole.onmouseout = () => btnRole.style.background = 'rgba(255,255,255,0.1)';
                                 
                                 btnRole.onclick = () => {
-                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, gender: userData.gender || '', activeRole: r, roles: userRoles, role: activeRole, streak: userData.currentStreak }));
+                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, gender: userData.gender || '', activeRole: r, roles: userRoles, role: r, streak: userData.currentStreak }));
                                     window.location.href = destinationForRole(r);
                                 };
                                 container.appendChild(btnRole);
