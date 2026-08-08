@@ -292,7 +292,8 @@
             'province', 'island', 'topic', 'theory', 'hint1', 'hint2', 'difficulty',
             'sub_island', 'island_theory', 'import_order', 'created_at'
         ];
-        const QUESTION_TABLE_CANDIDATES = ['questions', 'Questions', 'Question'];
+        const ADMIN_QUESTIONS_CACHE_KEY = 'viegeo_admin_questions_cache';
+        const QUESTION_TABLE_CANDIDATES = ['questions'];
         const SUPABASE_QUESTION_FALLBACK_ROWS = [
             {
                 id: 'mock-ha-noi-1',
@@ -355,9 +356,13 @@
                 return 'Supabase đang chặn quyền insert/update. Hãy kiểm tra RLS hoặc grant quyền insert cho anon/authenticated trong supabase-questions-setup.sql.';
             }
             if (text.includes('23505') || text.includes('duplicate')) {
-                return 'Có câu hỏi bị trùng khóa unique. Hãy sửa nội dung câu hỏi hoặc dùng luồng cập nhật.';
+                return 'Có câu hỏi bị trùng khóa unique. Hệ thống sẽ cố gắng cập nhật lại câu hỏi theo nội dung đã có.';
             }
             return error?.message || 'Không thể lưu câu hỏi lên Supabase.';
+        }
+        function isDuplicateSupabaseError(error) {
+            const text = `${error?.code || ''} ${error?.status || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+            return text.includes('23505') || text.includes('409') || text.includes('duplicate') || text.includes('unique');
         }
         function missingSupabaseQuestionColumn(error) {
             const source = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
@@ -366,6 +371,13 @@
             const named = source.match(/column\s+["']?([a-zA-Z0-9_]+)["']?/i);
             return named?.[1] || '';
         }
+        async function upsertQuestionsByQuestion(client, payload) {
+            const { data, error } = await client
+                .from('questions')
+                .upsert(payload, { onConflict: 'question', ignoreDuplicates: false });
+            if (error) throw error;
+            return data;
+        }
         async function insertQuestionsWithSchemaFallback(client, rows) {
             const requiredColumns = new Set(['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option']);
             let payload = rows.map(row => ({ ...row }));
@@ -373,6 +385,15 @@
             for (let attempt = 1; attempt <= QUESTION_INSERT_COLUMNS.length; attempt += 1) {
                 const { data, error } = await client.from('questions').insert(payload);
                 if (!error) return { data, droppedColumns };
+                if (isDuplicateSupabaseError(error)) {
+                    console.warn('[VieGeo Admin] Duplicate questions detected. Retrying with Supabase upsert on question.', {
+                        attempt,
+                        rowCount: payload.length,
+                        sampleQuestion: payload[0]?.question || ''
+                    });
+                    const upsertedData = await upsertQuestionsByQuestion(client, payload);
+                    return { data: upsertedData, droppedColumns, upserted: true };
+                }
                 const missingColumn = missingSupabaseQuestionColumn(error);
                 console.error('[VieGeo Admin] Supabase questions insert attempt failed', {
                     attempt,
@@ -535,6 +556,57 @@
             } catch (error) {
                 console.error('[VieGeo Admin] Không thể chuẩn hóa câu hỏi để render.', { doc, error });
                 return normalizeQuestionRow({});
+            }
+        }
+
+        function getQuestionIdentity(row = {}) {
+            const normalized = normalizeQuestionRow(row);
+            return String(looseGet(row, 'id', 'ID', 'uuid', 'question_id', 'questionId') || normalized.question || '').trim().toLowerCase();
+        }
+
+        function readCachedAdminQuestions() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(ADMIN_QUESTIONS_CACHE_KEY) || '[]');
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn('[VieGeo Admin] Không đọc được cache câu hỏi localStorage.', error);
+                return [];
+            }
+        }
+
+        function cacheAdminQuestionRows(rows = []) {
+            try {
+                const existingRows = readCachedAdminQuestions();
+                const merged = new Map();
+                [...existingRows, ...rows].forEach((row, index) => {
+                    const normalized = normalizeQuestionRow(row || {});
+                    const identity = getQuestionIdentity(row) || `cache-${Date.now()}-${index}`;
+                    merged.set(identity, {
+                        ...row,
+                        id: looseGet(row, 'id', 'ID', 'uuid', 'question_id', 'questionId') || identity,
+                        question: normalized.question,
+                        option_a: normalized.options[0] || looseGet(row, 'option_a', 'optionA') || '',
+                        option_b: normalized.options[1] || looseGet(row, 'option_b', 'optionB') || '',
+                        option_c: normalized.options[2] || looseGet(row, 'option_c', 'optionC') || '',
+                        option_d: normalized.options[3] || looseGet(row, 'option_d', 'optionD') || '',
+                        correct_option: normalized.answer,
+                        province: normalized.province,
+                        island: normalized.island,
+                        topic: normalized.topic,
+                        theory: normalized.explanation,
+                        hint1: normalized.hint1,
+                        hint2: normalized.hint2,
+                        difficulty: normalized.difficulty,
+                        sub_island: normalized.subIsland,
+                        island_theory: normalized.islandTheory,
+                        __cached: true
+                    });
+                });
+                const cachedRows = [...merged.values()].slice(-2000);
+                localStorage.setItem(ADMIN_QUESTIONS_CACHE_KEY, JSON.stringify(cachedRows));
+                console.log('[VieGeo Admin] Cached questions locally', { count: cachedRows.length });
+            } catch (error) {
+                console.warn('[VieGeo Admin] Không thể ghi cache câu hỏi localStorage.', error);
             }
         }
 
@@ -945,7 +1017,7 @@
 
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
-                const { data, droppedColumns } = await insertQuestionsWithSchemaFallback(client, newQuestions);
+                const { data, droppedColumns, upserted } = await insertQuestionsWithSchemaFallback(client, newQuestions);
                 if (droppedColumns.length) {
                     console.warn('[VieGeo Admin] Bulk insert succeeded with optional columns dropped. Run supabase-questions-setup.sql to repair schema.', {
                         droppedColumns,
@@ -955,10 +1027,12 @@
                 console.log('[VieGeo Admin] processBulkTextImport insert success', {
                     insertedCount: newQuestions.length,
                     response: data || null,
-                    droppedColumns
+                    droppedColumns,
+                    mode: upserted ? 'upsert-on-duplicate' : 'insert'
                 });
+                cacheAdminQuestionRows(newQuestions);
                 el('uploadPreview').textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions: newQuestions }, null, 2);
-                showToast(`Đã lưu ${questions.length} câu hỏi vào Supabase.`);
+                showToast(upserted ? `Đã cập nhật/lưu ${questions.length} câu hỏi vào Supabase.` : `Đã lưu ${questions.length} câu hỏi vào Supabase.`);
                 el('bulkQuestionText').value = '';
                 await loadAdminQuestions();
             } catch (error) {
@@ -1024,10 +1098,10 @@
                 assertAdminRate('single_upload', 10, 60000);
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
-                const { data, error } = await client.from('questions').insert([newQuestion]);
-                if (error) { console.error('Supabase insert single error:', error); throw error; }
+                const { upserted } = await insertQuestionsWithSchemaFallback(client, [newQuestion]);
+                cacheAdminQuestionRows([newQuestion]);
                 form.reset();
-                showToast('Thêm câu hỏi thành công vào Supabase!');
+                showToast(upserted ? 'Câu hỏi đã tồn tại, hệ thống đã cập nhật lại trên Supabase!' : 'Thêm câu hỏi thành công vào Supabase!');
                 await loadAdminQuestions();
             } catch (error) {
                 console.error('Lỗi thêm câu hỏi:', error);
@@ -1067,7 +1141,11 @@
                 showToast('Không tìm thấy câu hỏi cần sửa. Hãy tải lại danh sách.', 'warning');
                 return;
             }
-            const data = doc.data() || {};
+            const data = getQuestionDocData(doc);
+            if (data.isMock) {
+                showToast('Dữ liệu mẫu fallback không thể chỉnh sửa. Hãy kiểm tra RLS/schema để tải dữ liệu thật từ Supabase.', 'warning');
+                return;
+            }
             const options = Array.isArray(data.options) ? data.options : [];
             const answer = Number(data.answer ?? data.correctAnswer ?? 0);
             el('editQuestionId').value = doc.id;
@@ -1152,11 +1230,16 @@
         }
 
         async function deleteAdminQuestion(questionId) {
-            if (!questionId || !window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này không?')) return;
+            if (!questionId) return;
             try {
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
                 const doc = adminQuestionDocuments.get(String(questionId));
+                if (getQuestionDocData(doc).isMock) {
+                    showToast('Dữ liệu mẫu fallback không tồn tại trên Supabase nên không cần xóa.', 'info');
+                    return;
+                }
+                if (!window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này không?')) return;
                 const { error } = await client.from('questions').delete().eq('id', supabaseId(doc?.rawId ?? questionId));
                 if (error) { console.error('Supabase delete single error:', error); throw error; }
                 selectedAdminQuestionIds.delete(questionId);
@@ -1171,7 +1254,7 @@
         function syncAdminQuestionMasterCheckbox() {
             const masterCheckbox = el('adminQuestionSelectAll');
             if (!masterCheckbox) return;
-            const questionCheckboxes = [...document.querySelectorAll('#adminQuestionsList .admin-question-checkbox')];
+            const questionCheckboxes = [...document.querySelectorAll('#adminQuestionsList .admin-question-checkbox:not(:disabled)')];
             const selectedVisibleCount = questionCheckboxes.filter(input => selectedAdminQuestionIds.has(input.dataset.id)).length;
             masterCheckbox.disabled = questionCheckboxes.length === 0;
             masterCheckbox.checked = questionCheckboxes.length > 0 && selectedVisibleCount === questionCheckboxes.length;
@@ -1273,14 +1356,15 @@
                 const islandTopic = questionIslandDisplay(data);
                 const details = [data.province ? questionProvinceLabel(data.province) : '', islandTopic].filter(Boolean).join(' · ') || '—';
                 const question = String(data.question || 'Câu hỏi chưa có nội dung').trim();
-                const isSelected = selectedAdminQuestionIds.has(doc.id);
+                const isMock = Boolean(data.isMock);
+                const isSelected = !isMock && selectedAdminQuestionIds.has(doc.id);
                 return `<tr data-question-row="${escapeHtml(doc.id)}">
-                    <td><label title="Chọn câu hỏi"><input class="admin-question-checkbox" type="checkbox" value="${escapeHtml(doc.id)}" data-id="${escapeHtml(doc.id)}" ${isSelected ? 'checked' : ''}><span class="sr-only">Chọn câu hỏi ${escapeHtml(doc.id)}</span></label></td>
-                    <td><strong>${escapeHtml(question)}</strong>${data.isMock ? '<div class="ops-muted" style="font-size:12px;margin-top:4px">Dữ liệu mẫu fallback — kiểm tra RLS/schema Supabase để hiện dữ liệu thật.</div>' : ''}</td>
+                    <td><label title="${isMock ? 'Dữ liệu mẫu không thể xóa trên Supabase' : 'Chọn câu hỏi'}"><input class="admin-question-checkbox" type="checkbox" value="${escapeHtml(doc.id)}" data-id="${escapeHtml(doc.id)}" ${isSelected ? 'checked' : ''} ${isMock ? 'disabled aria-disabled="true"' : ''}><span class="sr-only">Chọn câu hỏi ${escapeHtml(doc.id)}</span></label></td>
+                    <td><strong>${escapeHtml(question)}</strong>${isMock ? '<div class="ops-muted" style="font-size:12px;margin-top:4px">Dữ liệu mẫu fallback — kiểm tra RLS/schema Supabase để hiện dữ liệu thật.</div>' : ''}</td>
                     <td>${escapeHtml(details)}</td>
                     <td>${escapeHtml(data.difficulty || '—')}</td>
                     <td><code>${escapeHtml(doc.id)}</code></td>
-                    <td style="white-space:nowrap"><button class="ops-button is-muted" type="button" data-edit-question="${escapeHtml(doc.id)}" title="Sửa câu hỏi"><i class="fa-solid fa-pen"></i> Sửa</button> <button class="ops-button is-danger" type="button" data-delete-question="${escapeHtml(doc.id)}" title="Xóa câu hỏi"><i class="fa-solid fa-trash-can"></i> Xóa</button></td>
+                    <td style="white-space:nowrap">${isMock ? '<span class="ops-muted">Không thao tác với dữ liệu mẫu</span>' : `<button class="ops-button is-muted" type="button" data-edit-question="${escapeHtml(doc.id)}" title="Sửa câu hỏi"><i class="fa-solid fa-pen"></i> Sửa</button> <button class="ops-button is-danger" type="button" data-delete-question="${escapeHtml(doc.id)}" title="Xóa câu hỏi"><i class="fa-solid fa-trash-can"></i> Xóa</button>`}</td>
                 </tr>`;
             }).join('');
         }
@@ -1362,14 +1446,24 @@
                 let effectiveRows = Array.isArray(rows) ? rows : [];
                 let effectiveSource = source;
                 if (!effectiveRows.length) {
+                    const cachedRows = readCachedAdminQuestions();
                     console.warn('[VieGeo Admin] Không nhận được dòng nào từ các nguồn câu hỏi.', {
                         source,
                         attempts: attemptLogs,
-                        hint: 'Nếu Supabase Dashboard có dữ liệu nhưng API trả 0 dòng, hãy kiểm tra RLS/Policy SELECT cho anon/authenticated hoặc xác nhận dữ liệu nằm đúng bảng questions trong schema public. Admin đang dùng dữ liệu mẫu fallback để không trắng giao diện.'
+                        cachedCount: cachedRows.length,
+                        hint: 'Nếu Supabase Dashboard có dữ liệu nhưng API trả 0 dòng, hãy kiểm tra RLS/Policy SELECT cho anon/authenticated hoặc xác nhận dữ liệu nằm đúng bảng questions trong schema public. Admin sẽ dùng cache local nếu có, sau đó mới dùng dữ liệu mẫu fallback.'
                     });
-                    effectiveRows = SUPABASE_QUESTION_FALLBACK_ROWS.map(row => ({ ...row }));
-                    effectiveSource = 'fallback:mock-admin-questions';
-                    showToast('Supabase chưa trả dữ liệu câu hỏi; đang hiển thị dữ liệu mẫu để kiểm tra giao diện.', 'warning');
+                    if (cachedRows.length) {
+                        effectiveRows = cachedRows.map(row => ({ ...row }));
+                        effectiveSource = 'fallback:localStorage-admin-questions-cache';
+                        showToast('Supabase chưa trả dữ liệu câu hỏi; đang hiển thị cache câu hỏi vừa upload.', 'warning');
+                    } else {
+                        effectiveRows = SUPABASE_QUESTION_FALLBACK_ROWS.map(row => ({ ...row }));
+                        effectiveSource = 'fallback:mock-admin-questions';
+                        showToast('Supabase chưa trả dữ liệu câu hỏi; đang hiển thị dữ liệu mẫu để kiểm tra giao diện.', 'warning');
+                    }
+                } else {
+                    cacheAdminQuestionRows(effectiveRows);
                 }
                 const questions = effectiveRows.map(toSupabaseDoc);
                 console.log('[VieGeo Admin] Supabase questions normalized', {
@@ -1391,7 +1485,12 @@
         }
 
         async function deleteSelectedAdminQuestions() {
-            const ids = [...selectedAdminQuestionIds];
+            const ids = [...selectedAdminQuestionIds].filter(id => {
+                const doc = adminQuestionDocuments.get(String(id));
+                return !getQuestionDocData(doc).isMock;
+            });
+            selectedAdminQuestionIds.clear();
+            ids.forEach(id => selectedAdminQuestionIds.add(String(id)));
             if (!ids.length) return;
             if (!window.confirm(`Bạn có chắc chắn muốn xóa ${ids.length} câu hỏi đã chọn không?`)) return;
 
@@ -1496,7 +1595,7 @@
             });
             el('adminQuestionSelectAll')?.addEventListener('change', (event) => {
                 const masterCheckbox = event.currentTarget;
-                const questionCheckboxes = [...document.querySelectorAll('#adminQuestionsList .admin-question-checkbox')];
+                const questionCheckboxes = [...document.querySelectorAll('#adminQuestionsList .admin-question-checkbox:not(:disabled)')];
                 selectedAdminQuestionIds.clear();
                 questionCheckboxes.forEach((checkbox) => {
                     checkbox.checked = masterCheckbox.checked;
