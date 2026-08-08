@@ -12,38 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
-    <script>
-        // Khởi tạo Supabase client từ CDN UMD đã load
-        (function () {
-            try {
-                const SUPABASE_URL = window.ENV_SUPABASE_URL || 'https://mijjvqkfkzwpmjpwkbgk.supabase.co';
-                const SUPABASE_ANON_KEY = window.ENV_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pamp2cWtma3p3cG1qcHdrYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTI3MzgsImV4cCI6MjEwMTc2ODczOH0.KKomdXKDi1sn7Ems1JxaFLrecq2oA_xVqMgo1jvUhiY';
-                if (window.supabase && typeof window.supabase.createClient === 'function') {
-                    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    window.supabase = window.supabaseClient;
-                }
-            } catch (e) {
-                console.warn('Supabase init error:', e);
-                // Fallback proxy
-                window.supabase = {
-                    from: function () {
-                        var noop = { data: null, error: null };
-                        var chain = {
-                            select: async function () { return noop; },
-                            insert: async function () { return noop; },
-                            update: async function () { return noop; },
-                            delete: async function () { return noop; },
-                            eq: function () { return chain; },
-                            in: function () { return chain; },
-                            limit: function () { return chain; }
-                        };
-                        return chain;
-                    }
-                };
-                window.supabaseClient = window.supabase;
-            }
-        })();
-    </script>
 </head>
 <body>
     <div class="relative w-full min-h-screen bg-slate-950" id="adminDashboard">
@@ -311,6 +279,18 @@
         const roleRoutes = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
         const el = id => document.getElementById(id);
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+        const security = window.VieGeoSecurity || {
+            sanitizeText: (value, max = 2000) => String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, max),
+            sanitizeHtml: (value, max = 12000) => String(value || '').replace(/<\s*script[\s\S]*?>[\s\S]*?<\s*\/\s*script\s*>/gi, '').trim().slice(0, max),
+            rateLimit: () => ({ allowed: true, retryAfterMs: 0 })
+        };
+        const cleanText = (value, max = 2000) => security.sanitizeText(value, max);
+        const cleanHtml = (value, max = 12000) => (security.sanitizeHtml ? security.sanitizeHtml(value, max) : cleanText(value, max));
+        const safeDifficulty = value => ['easy', 'medium', 'hard'].includes(String(value || '').toLowerCase()) ? String(value).toLowerCase() : '';
+        function assertAdminRate(action, limit = 8, windowMs = 60000) {
+            const result = security.rateLimit(`admin_${action}`, { limit, windowMs });
+            if (!result.allowed) throw new Error(`Bạn thao tác quá nhanh. Vui lòng thử lại sau ${Math.ceil(result.retryAfterMs / 1000)}s.`);
+        }
         const timestampToMs = value => typeof value === 'number' ? value : (value && typeof value.toMillis === 'function' ? value.toMillis() : 0);
         const supabaseId = value => (/^\d+$/.test(String(value ?? '')) ? Number(value) : value);
 
@@ -683,7 +663,7 @@
         }
 
                 function parseBulkQuestionText(rawText) {
-            const lines = String(rawText || '')
+            const lines = cleanText(rawText, 200000)
                 .replace(/\r\n?/g, '\n')
                 .split('\n')
                 .map(line => line.trim())
@@ -691,9 +671,11 @@
 
             if (!lines.length) throw new Error('Hãy dán ít nhất một dòng câu hỏi theo mẫu định dạng chuẩn.');
 
+            
+            if (lines.length > 500) throw new Error('Mỗi lần upload tối đa 500 câu hỏi để tránh quá tải.');
             return lines.map((line, index) => {
                 const lineNumber = index + 1;
-                const fields = line.split('|').map(field => field.trim());
+                const fields = line.split('|').map(field => cleanText(field, 6000));
                 if (fields.length !== 8) {
                     throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: cần đúng 8 trường, ngăn cách bằng dấu |.`);
                 }
@@ -701,7 +683,7 @@
                 const [question, option0, option1, option2, option3, answerIndexRaw, difficultyRaw, explanation] = fields;
                 const options = [option0, option1, option2, option3];
                 const answer = Number(answerIndexRaw);
-                const difficulty = difficultyRaw.toLowerCase();
+                const difficulty = safeDifficulty(difficultyRaw);
 
                 if (!question || options.some(option => !option)) {
                     throw new Error(`Lỗi định dạng ở dòng thứ ${lineNumber}: câu hỏi và đủ 4 đáp án là bắt buộc.`);
@@ -718,12 +700,13 @@
         }
 
         async function processBulkTextImport() {
-            const province = String(el('bulkImportProvince')?.value || '').trim();
+            const province = cleanText(el('bulkImportProvince')?.value, 80);
             const subIslandVal = String(el('bulkImportSubIsland')?.value || '').trim();
             const subIslandNum = Number(subIslandVal.replace(/\D+/g, '')) || Number(subIslandVal) || 0;
-            const topic = String(el('bulkImportTopic')?.value || el('lesson-topic')?.value || '').trim();
-            const islandTheory = String(el('bulkImportIslandTheory')?.value || '').trim();
+            const topic = cleanText(el('bulkImportTopic')?.value || el('lesson-topic')?.value, 160);
+            const islandTheory = cleanHtml(el('bulkImportIslandTheory')?.value, 12000);
             const button = el('btnProcessUpload');
+            if (button?.disabled) return;
 
             if (!province || !subIslandNum || !topic) {
                 showToast('Hãy chọn Tỉnh/Thành phố, Đảo nhỏ và nhập Chủ đề bài học.', 'warning');
@@ -733,6 +716,7 @@
             button.disabled = true;
             button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích…';
             try {
+                assertAdminRate('bulk_upload', 5, 60000);
                 const questions = parseBulkQuestionText(el('bulkQuestionText')?.value);
                 const newQuestions = questions.map((q, idx) => ({
                     question: q.question,
@@ -775,17 +759,18 @@
             event.preventDefault();
             const form = event.currentTarget;
             const button = el('btnSaveAdminQuestion');
-            const trimValue = (id) => String(el(id)?.value || '').trim();
+            const trimValue = (id, max = 2000) => cleanText(el(id)?.value, max);
             const question = trimValue('adminQuestionText');
-            const options = [0, 1, 2, 3].map(index => trimValue(`adminOption${index}`));
+            const options = [0, 1, 2, 3].map(index => trimValue(`adminOption${index}`, 500));
             const answer = Number(el('adminCorrectAnswer')?.value);
-            const province = trimValue('adminQuestionProvince');
+            const province = trimValue('adminQuestionProvince', 80);
             const subIslandVal = String(el('adminQuestionSubIsland')?.value || '').trim();
             const subIslandNum = Number(subIslandVal.replace(/\D+/g, '')) || Number(subIslandVal) || 0;
-            const topic = String(el('adminQuestionTopic')?.value || el('lesson-topic')?.value || '').trim();
-            const difficulty = trimValue('adminQuestionDifficulty');
-            const islandTheory = trimValue('adminIslandTheory');
-            const explanation = trimValue('adminQuestionExplanation');
+            const topic = cleanText(el('adminQuestionTopic')?.value || el('lesson-topic')?.value, 160);
+            const difficulty = safeDifficulty(trimValue('adminQuestionDifficulty', 24));
+            const islandTheory = cleanHtml(el('adminIslandTheory')?.value, 12000);
+            const explanation = cleanHtml(el('adminQuestionExplanation')?.value, 6000);
+            if (button?.disabled) return;
 
             if (!question || options.some(option => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !subIslandNum || !topic || !difficulty) {
                 showToast('Hãy nhập đủ câu hỏi, 4 đáp án, đáp án đúng, tỉnh, Đảo nhỏ, chủ đề và độ khó.', 'warning');
@@ -814,6 +799,7 @@
             button.disabled = true;
             button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
             try {
+                assertAdminRate('single_upload', 10, 60000);
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
                 const { data, error } = await client.from('questions').insert([newQuestion]);
@@ -881,20 +867,21 @@
 
         async function updateAdminQuestion(event) {
             event.preventDefault();
-            const questionId = el('editQuestionId')?.value.trim();
-            const question = el('editQuestionText')?.value.trim();
-            const options = [0, 1, 2, 3].map((index) => el(`editOption${index}`)?.value.trim() || '');
+            const questionId = cleanText(el('editQuestionId')?.value, 80);
+            const question = cleanText(el('editQuestionText')?.value, 1000);
+            const options = [0, 1, 2, 3].map((index) => cleanText(el(`editOption${index}`)?.value, 500));
             const answer = Number(el('editCorrectAnswer')?.value);
-            const province = el('editQuestionProvince')?.value.trim();
-            const difficulty = el('editQuestionDifficulty')?.value;
-            const grade = el('editQuestionGrade')?.value.trim();
+            const province = cleanText(el('editQuestionProvince')?.value, 80);
+            const difficulty = safeDifficulty(el('editQuestionDifficulty')?.value);
+            const grade = cleanText(el('editQuestionGrade')?.value, 24);
             const subIslandVal = String(el('editQuestionSubIsland')?.value || '').trim();
             const subIslandNum = Number(subIslandVal.replace(/\D+/g, '')) || Number(subIslandVal) || 0;
-            const topic = el('editQuestionTopic')?.value.trim();
-            const lessonId = el('editQuestionLessonId')?.value.trim();
-            const islandTheory = el('editIslandTheory')?.value.trim();
-            const explanation = el('editQuestionExplanation')?.value.trim();
+            const topic = cleanText(el('editQuestionTopic')?.value, 160);
+            const lessonId = cleanText(el('editQuestionLessonId')?.value, 120);
+            const islandTheory = cleanHtml(el('editIslandTheory')?.value, 12000);
+            const explanation = cleanHtml(el('editQuestionExplanation')?.value, 6000);
             const button = el('btnUpdateAdminQuestion');
+            if (button?.disabled) return;
 
             if (!questionId || !question || options.some((option) => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !difficulty) {
                 showToast('Hãy nhập đủ nội dung, bốn đáp án và đáp án đúng trước khi lưu.', 'warning');
@@ -904,6 +891,7 @@
             button.disabled = true;
             button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
             try {
+                assertAdminRate('question_update', 20, 60000);
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
                 const updateData = {
@@ -1043,14 +1031,20 @@
         function renderAdminQuestionList(questionDocs, emptyMessage = 'Chưa có câu hỏi trong kho dữ liệu.') {
             const body = el('adminQuestionsList');
             if (!body) return;
+            const safeDocs = Array.isArray(questionDocs) ? questionDocs : [];
+            console.log('[VieGeo Admin] renderAdminQuestionList()', {
+                requestedCount: safeDocs.length,
+                emptyMessage,
+                firstQuestion: safeDocs[0]?.data?.() || null
+            });
             adminQuestionDocuments.clear();
-            questionDocs.forEach((doc) => adminQuestionDocuments.set(doc.id, doc));
+            safeDocs.forEach((doc) => adminQuestionDocuments.set(doc.id, doc));
             ensureAdminQuestionActionColumn();
-            if (!questionDocs.length) {
+            if (!safeDocs.length) {
                 body.innerHTML = `<tr><td colspan="6" class="ops-muted">${escapeHtml(emptyMessage)}</td></tr>`;
                 return;
             }
-            body.innerHTML = questionDocs.map(doc => {
+            body.innerHTML = safeDocs.map(doc => {
                 const data = doc.data() || {};
                 const islandTopic = questionIslandDisplay(data);
                 const details = [data.province ? questionProvinceLabel(data.province) : '', islandTopic].filter(Boolean).join(' · ') || '—';
@@ -1081,7 +1075,21 @@
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
                 const { data, error } = await client.from('questions').select('*');
                 if (error) { console.error('Supabase select error:', error); throw error; }
-                if (Array.isArray(data)) questions = data.map(toSupabaseDoc);
+                console.log('[VieGeo Admin] Supabase questions raw data', {
+                    isArray: Array.isArray(data),
+                    count: Array.isArray(data) ? data.length : 0,
+                    firstRow: Array.isArray(data) ? data[0] || null : data
+                });
+                if (!Array.isArray(data)) {
+                    console.warn('[VieGeo Admin] Supabase questions response is not an array:', data);
+                    questions = [];
+                } else {
+                    questions = data.map(toSupabaseDoc);
+                }
+                console.log('[VieGeo Admin] Supabase questions normalized', {
+                    count: questions.length,
+                    firstDoc: questions[0]?.data?.() || null
+                });
                 adminQuestionDocuments.clear();
                 allAdminQuestionDocuments = questions;
                 refreshQuestionFilterOptions();

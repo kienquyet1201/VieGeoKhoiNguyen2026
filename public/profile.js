@@ -18,6 +18,15 @@ const profName = document.getElementById('profName');
 const profPhone = document.getElementById('profPhone');
 const oldPass = document.getElementById('oldPass');
 const newPass = document.getElementById('newPass');
+const security = window.VieGeoSecurity || {
+    sanitizeText: (value, max = 2000) => String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, max),
+    rateLimit: () => ({ allowed: true, retryAfterMs: 0 })
+};
+const cleanText = (value, max = 2000) => security.sanitizeText(value, max);
+function getAuthClient() {
+    const client = window.supabaseClient || window.supabase;
+    return client && client.auth && typeof client.auth.updateUser === 'function' ? client : null;
+}
 
 // 1. Kiểm tra session
 const sessionData = localStorage.getItem('lm_session');
@@ -79,9 +88,9 @@ if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const newName = profName.value.trim();
-        const newPhone = profPhone.value.trim();
-        const newGender = profGender.value || '';
+        const newName = cleanText(profName.value, 120);
+        const newPhone = cleanText(profPhone.value, 32);
+        const newGender = ['male', 'female', 'other', 'prefer_not_to_say'].includes(String(profGender.value || '').toLowerCase()) ? String(profGender.value).toLowerCase() : '';
         const inputOldPass = oldPass.value;
         const inputNewPass = newPass.value;
         
@@ -97,15 +106,23 @@ if (profileForm) {
                 Swal.fire({ icon: 'warning', title: 'Lưu ý', text: 'Vui lòng nhập cả mật khẩu cũ và mật khẩu mới để đổi mật khẩu!' });
                 return;
             }
-            if (inputOldPass !== window.currentUserData.password) {
+            if (window.currentUserData.password && inputOldPass !== window.currentUserData.password) {
                 Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Mật khẩu cũ không chính xác!' });
                 return;
             }
-            if (inputNewPass.length < 6) {
+            if (inputNewPass.length < 8 || inputNewPass.length > 128) {
                 Swal.fire({ icon: 'warning', title: 'Lưu ý', text: 'Mật khẩu mới phải từ 6 ký tự trở lên.' });
                 return;
             }
-            updateData.password = inputNewPass;
+            const authClient = getAuthClient();
+            if (!authClient) {
+                Swal.fire({ icon: 'warning', title: 'Chưa thể đổi mật khẩu', text: 'Supabase Auth chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.' });
+                return;
+            }
+            const { error } = await authClient.auth.updateUser({ password: inputNewPass });
+            if (error) throw error;
+            updateData.password = null;
+            updateData.passwordUpdatedAt = new Date().toISOString();
         }
 
         try {
@@ -139,9 +156,11 @@ if (btnPremium) {
         btnPremium.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
         
         try {
+            const limit = security.rateLimit(`premium_${sessionUser.email}`, { limit: 3, windowMs: 10 * 60 * 1000 });
+            if (!limit.allowed) throw new Error(`Bạn gửi yêu cầu quá nhanh. Vui lòng thử lại sau ${Math.ceil(limit.retryAfterMs / 1000)}s.`);
             await db.collection('premium_requests').add({
                 email: sessionUser.email,
-                name: sessionUser.name,
+                name: cleanText(sessionUser.name, 120),
                 status: 'pending',
                 created_at: new Date().toISOString()
             });

@@ -9,6 +9,15 @@ let heartTimerInterval = null;
 let heartRemoteHydrated = false;
 let lessonEntryInProgress = false;
 let gameState = window.gameState || null;
+const security = window.VieGeoSecurity || {
+    sanitizeText: (value, max = 2000) => String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, max),
+    rateLimit: () => ({ allowed: true, retryAfterMs: 0 })
+};
+const cleanText = (value, max = 2000) => security.sanitizeText(value, max);
+function getSupabaseAuthClient() {
+    const client = window.supabaseClient || window.supabase;
+    return client && client.auth && typeof client.auth.updateUser === 'function' ? client : null;
+}
 
 // Shared UI notifications, consolidated here from the removed patch script.
 window.VieGeoUI = window.VieGeoUI || {
@@ -194,6 +203,19 @@ function setupRealtimeAuth() {
     db.collection('users').doc(sessionUser.email).onSnapshot(async (doc) => {
         if (doc.exists) {
             const data = doc.data();
+            console.log('[VieGeo User Sync] Supabase user snapshot', {
+                email: sessionUser.email,
+                topLevelKeys: Object.keys(data || {}),
+                hasGameState: Boolean(data?.gameState),
+                gameStateKeys: data?.gameState && typeof data.gameState === 'object' ? Object.keys(data.gameState) : [],
+                achievementPoints: data?.achievementPoints ?? data?.gameState?.achievementPoints,
+                unlockedAchievements: Array.isArray(data?.unlockedAchievements)
+                    ? data.unlockedAchievements.length
+                    : (Array.isArray(data?.gameState?.unlockedAchievements) ? data.gameState.unlockedAchievements.length : 0),
+                completedNodes: Array.isArray(data?.completedNodes)
+                    ? data.completedNodes.length
+                    : (Array.isArray(data?.gameState?.completedNodes) ? data.gameState.completedNodes.length : 0)
+            });
             const didHydrateProgress = hydratePersistedGameState(data.gameState, {
                 completedNodes: data.completedNodes,
                 studyHistory: data.studyHistory,
@@ -1268,24 +1290,43 @@ function renderAchievements() {
     const grid = document.getElementById('achievementsGrid');
     if (!grid) return;
     grid.innerHTML = '';
+
+    const achievements = Array.isArray(window.ACHIEVEMENTS_LIST)
+        ? window.ACHIEVEMENTS_LIST
+        : (typeof ACHIEVEMENTS_LIST !== 'undefined' && Array.isArray(ACHIEVEMENTS_LIST) ? ACHIEVEMENTS_LIST : []);
+    const stateForAchievements = gameState && typeof gameState === 'object' ? gameState : {};
+    console.log('[VieGeo Achievements] render start', {
+        achievementsCount: achievements.length,
+        unlockedAchievements: Array.isArray(stateForAchievements.unlockedAchievements) ? stateForAchievements.unlockedAchievements.length : 0,
+        achievementPoints: stateForAchievements.achievementPoints,
+        completedNodes: Array.isArray(stateForAchievements.completedNodes) ? stateForAchievements.completedNodes.length : 0,
+        perfectLessons: stateForAchievements.perfectLessons,
+        pvpWins: stateForAchievements.pvpWins
+    });
+
+    if (!achievements.length) {
+        console.warn('[VieGeo Achievements] ACHIEVEMENTS_LIST is empty or not loaded.');
+        grid.innerHTML = '<p style="color: var(--text-dim); padding: 16px;">Chưa tải được dữ liệu thành tựu. Hãy kiểm tra file gamedata.js trong Console.</p>';
+        return;
+    }
     
-    if (typeof synchronizeAchievementsWithState === 'function') synchronizeAchievementsWithState(gameState);
-    else if (!gameState.unlockedAchievements) gameState.unlockedAchievements = [];
+    if (typeof synchronizeAchievementsWithState === 'function') synchronizeAchievementsWithState(stateForAchievements);
+    else if (!stateForAchievements.unlockedAchievements) stateForAchievements.unlockedAchievements = [];
     
     const profAchPoints = document.getElementById('profAchPoints');
-    if (profAchPoints) profAchPoints.textContent = gameState.achievementPoints;
+    if (profAchPoints) profAchPoints.textContent = stateForAchievements.achievementPoints || 0;
 
-    ACHIEVEMENTS_LIST.forEach(ach => {
-        const isUnlocked = gameState.unlockedAchievements && gameState.unlockedAchievements.includes(ach.id);
+    achievements.forEach(ach => {
+        const isUnlocked = stateForAchievements.unlockedAchievements && stateForAchievements.unlockedAchievements.includes(ach.id);
         
         let currentProgress = typeof getAchievementProgress === 'function'
-            ? getAchievementProgress(gameState, ach.type)
+            ? getAchievementProgress(stateForAchievements, ach.type)
             : 0;
 
         // Cap progress at target
         if (currentProgress > ach.target) currentProgress = ach.target;
 
-        const progressPercent = (currentProgress / ach.target) * 100;
+        const progressPercent = ach.target ? (currentProgress / ach.target) * 100 : 0;
         
         const opacity = isUnlocked ? '1' : '0.4';
         const filter = isUnlocked ? 'none' : 'grayscale(100%)';
@@ -1332,9 +1373,11 @@ function renderAchievements() {
 const btnSaveProfileElem = document.getElementById('btnSaveProfile');
 if (btnSaveProfileElem) {
     btnSaveProfileElem.addEventListener('click', async () => {
-        const newName = document.getElementById('editProfName').value.trim();
-        const newPhone = document.getElementById('editProfPhone').value.trim();
-        const newGender = document.getElementById('editProfGender')?.value || '';
+        if (btnSaveProfileElem.disabled) return;
+        const newName = cleanText(document.getElementById('editProfName').value, 120);
+        const newPhone = cleanText(document.getElementById('editProfPhone').value, 32);
+        const genderValue = String(document.getElementById('editProfGender')?.value || '').toLowerCase();
+        const newGender = ['male', 'female', 'other', 'prefer_not_to_say'].includes(genderValue) ? genderValue : '';
         const oldPass = document.getElementById('editOldPass').value;
         const newPass = document.getElementById('editNewPass').value;
     
@@ -1355,19 +1398,29 @@ if (btnSaveProfileElem) {
                     btn.textContent = "Lưu Thay Đổi";
                     return;
                 }
-                if (oldPass !== userData.password) {
+                if (userData.password && oldPass !== userData.password) {
                     showToast("Mật khẩu cũ không chính xác!", false);
                     btn.disabled = false;
                     btn.textContent = "Lưu Thay Đổi";
                     return;
                 }
-                if (newPass.length < 6) {
+                if (newPass.length < 8 || newPass.length > 128) {
                     showToast("Mật khẩu mới phải từ 6 ký tự!", false);
                     btn.disabled = false;
                     btn.textContent = "Lưu Thay Đổi";
                     return;
                 }
-                updateData.password = newPass;
+                const authClient = getSupabaseAuthClient();
+                if (!authClient) {
+                    showToast("Supabase Auth chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.", false);
+                    btn.disabled = false;
+                    btn.textContent = "LÆ°u Thay Äá»•i";
+                    return;
+                }
+                const { error } = await authClient.auth.updateUser({ password: newPass });
+                if (error) throw error;
+                updateData.password = null;
+                updateData.passwordUpdatedAt = new Date().toISOString();
             }
 
             await db.collection('users').doc(sessionUser.email).update(updateData);
@@ -1468,6 +1521,8 @@ window.confirmPremiumTransfer = async function() {
     btnConfirmPremium.disabled = true;
 
     try {
+        const limit = security.rateLimit(`premium_${sessionUser.email}`, { limit: 3, windowMs: 10 * 60 * 1000 });
+        if (!limit.allowed) throw new Error(`Bạn gửi yêu cầu quá nhanh. Vui lòng thử lại sau ${Math.ceil(limit.retryAfterMs / 1000)}s.`);
         const rawEmail = (sessionUser.email || '').replace('@gmail.com', '');
         const safeName = (sessionUser.name || 'USER').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9 ]/g, '');
         const rawTransferMsg = `${safeName} ${rawEmail}`.toUpperCase();
@@ -1476,7 +1531,7 @@ window.confirmPremiumTransfer = async function() {
         // Upload to Supabase/localStorage first
         await db.collection('premium_requests').add({
             email: sessionUser.email,
-            name: sessionUser.name,
+            name: cleanText(sessionUser.name, 120),
             transferContent: rawTransferMsg,
             status: 'pending',
             timestamp: new Date().toISOString()

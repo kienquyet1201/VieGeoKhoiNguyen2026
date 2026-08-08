@@ -1,4 +1,4 @@
-/* Customer support chat with image upload and an AI fallback when staff are offline. */
+﻿/* Customer support chat with image upload and an AI fallback when staff are offline. */
 (function () {
     'use strict';
 
@@ -9,6 +9,10 @@
     let messageCache = new Map();
     let recalledMessageId = null;
     const aiFallbackTimers = new Map();
+    const security = window.VieGeoSecurity || {
+        sanitizeText: (value, max = 2000) => String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, max),
+        rateLimit: () => ({ allowed: true, retryAfterMs: 0 })
+    };
 
     function session() {
         try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); }
@@ -48,11 +52,11 @@
         document.body.style.overflow = open ? 'hidden' : '';
         if (!open) return;
         byId('supportRequestType').value = type;
-        byId('supportRequestEyebrow').textContent = isReport ? 'BÁO CÁO LỖI' : 'GÓP Ý VIEGEO';
-        byId('supportRequestTitle').textContent = isReport ? 'Bạn đang gặp lỗi gì?' : 'Đóng góp ý tưởng của bạn';
+        byId('supportRequestEyebrow').textContent = isReport ? 'BÃO CÃO Lá»–I' : 'GÃ“P Ã VIEGEO';
+        byId('supportRequestTitle').textContent = isReport ? 'Báº¡n Ä‘ang gáº·p lá»—i gÃ¬?' : 'ÄÃ³ng gÃ³p Ã½ tÆ°á»Ÿng cá»§a báº¡n';
         byId('supportRequestHint').textContent = isReport
-            ? 'Hãy mô tả lỗi, thao tác vừa thực hiện và thiết bị bạn đang dùng.'
-            : 'Mọi góp ý đều giúp VieGeo cải thiện trải nghiệm học tập.';
+            ? 'HÃ£y mÃ´ táº£ lá»—i, thao tÃ¡c vá»«a thá»±c hiá»‡n vÃ  thiáº¿t bá»‹ báº¡n Ä‘ang dÃ¹ng.'
+            : 'Má»i gÃ³p Ã½ Ä‘á»u giÃºp VieGeo cáº£i thiá»‡n tráº£i nghiá»‡m há»c táº­p.';
         byId('supportRequestSubject').value = '';
         byId('supportRequestMessage').value = '';
         byId('supportRequestSubject')?.focus();
@@ -67,7 +71,7 @@
             window.showToast(message, type === 'error');
             return;
         }
-        window.alert(message);
+        console.warn(message);
     }
 
     function getSupabaseClient() {
@@ -85,7 +89,7 @@
                 return user.isAdmin || user.isCustomerSupport || roles.includes('admin') || roles.includes('cs');
             }).length;
         } catch (error) {
-            console.warn('Không kiểm tra được trạng thái CSKH:', error);
+            console.warn('KhÃ´ng kiá»ƒm tra Ä‘Æ°á»£c tráº¡ng thÃ¡i CSKH:', error);
             return 0;
         }
     }
@@ -95,10 +99,10 @@
     }
 
     function statusLabel(status) {
-        if (status === 'read') return '✓✓ Đã xem';
-        if (status === 'received') return '✓ Đã nhận';
-        if (status === 'recalled') return 'Đã thu hồi';
-        return '✓ Đã gửi';
+        if (status === 'read') return 'âœ“âœ“ ÄÃ£ xem';
+        if (status === 'received') return 'âœ“ ÄÃ£ nháº­n';
+        if (status === 'recalled') return 'ÄÃ£ thu há»“i';
+        return 'âœ“ ÄÃ£ gá»­i';
     }
 
     function updateUnreadBadge(messages) {
@@ -115,7 +119,7 @@
         if (!unread.length || typeof db === 'undefined') return;
         const batch = db.batch();
         unread.forEach((message) => batch.update(messagesRef.doc(message.id), { status: 'read', readAtClient: Date.now() }));
-        try { await batch.commit(); } catch (error) { console.warn('Không thể đánh dấu tin nhắn đã đọc:', error); }
+        try { await batch.commit(); } catch (error) { console.warn('KhÃ´ng thá»ƒ Ä‘Ã¡nh dáº¥u tin nháº¯n Ä‘Ã£ Ä‘á»c:', error); }
     }
 
     function renderMessages(snapshot) {
@@ -127,13 +131,13 @@
         updateUnreadBadge(messages);
         container.innerHTML = messages.map(message => {
             const isMine = message.sender === 'user';
-            const image = message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="Ảnh đính kèm hỗ trợ">` : '';
+            const image = message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="áº¢nh Ä‘Ã­nh kÃ¨m há»— trá»£">` : '';
             const staffName = message.staffName || message.senderName || message.staffEmail || 'VieGeo';
-            const label = isMine ? 'Bạn' : message.sender === 'AI' ? 'CSKH tự động (AI)' : `CSKH + ${staffName}`;
+            const label = isMine ? 'Báº¡n' : message.sender === 'AI' ? 'CSKH tá»± Ä‘á»™ng (AI)' : `CSKH + ${staffName}`;
             const recalled = message.recalled === true || message.status === 'recalled';
             const status = message.status || (isMine ? 'sent' : 'received');
-            return `<article class="support-message ${isMine ? 'is-mine' : 'is-agent'}${recalled ? ' is-recalled' : ''}" data-message-id="${escapeHtml(message.id)}" data-message-mine="${String(isMine)}"><span>${label}</span><p>${escapeHtml(recalled ? 'Đã thu hồi tin nhắn.' : (message.text || (message.imageUrl ? '' : '')))}</p>${recalled ? '' : image}${isMine ? `<em class="support-message-status${status === 'read' ? ' is-read' : ''}">${statusLabel(status)}</em>` : ''}</article>`;
-        }).join('') || '<p class="support-empty">Hãy để lại câu hỏi. VieGeo sẽ hỗ trợ bạn ngay.</p>';
+            return `<article class="support-message ${isMine ? 'is-mine' : 'is-agent'}${recalled ? ' is-recalled' : ''}" data-message-id="${escapeHtml(message.id)}" data-message-mine="${String(isMine)}"><span>${label}</span><p>${escapeHtml(recalled ? 'ÄÃ£ thu há»“i tin nháº¯n.' : (message.text || (message.imageUrl ? '' : '')))}</p>${recalled ? '' : image}${isMine ? `<em class="support-message-status${status === 'read' ? ' is-read' : ''}">${statusLabel(status)}</em>` : ''}</article>`;
+        }).join('') || '<p class="support-empty">HÃ£y Ä‘á»ƒ láº¡i cÃ¢u há»i. VieGeo sáº½ há»— trá»£ báº¡n ngay.</p>';
         container.scrollTop = container.scrollHeight;
         void markIncomingMessagesRead(messages);
     }
@@ -146,10 +150,16 @@
 
     async function uploadImage(file, email) {
         if (!file) return '';
+        if (!/^image\/(png|jpe?g|webp|gif)$/i.test(file.type || '')) {
+            throw new Error('Chá»‰ há»— trá»£ áº£nh PNG, JPG, WEBP hoáº·c GIF.');
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            throw new Error('áº¢nh Ä‘Ã­nh kÃ¨m khÃ´ng Ä‘Æ°á»£c vÆ°á»£t quÃ¡ 2MB.');
+        }
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => resolve(String(reader.result || ''));
-            reader.onerror = () => reject(reader.error || new Error('Không thể đọc ảnh đính kèm.'));
+            reader.onerror = () => reject(reader.error || new Error('KhÃ´ng thá»ƒ Ä‘á»c áº£nh Ä‘Ã­nh kÃ¨m.'));
             reader.readAsDataURL(file);
         });
     }
@@ -158,7 +168,7 @@
         const response = await fetch('/api/support-ai', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text })
         });
-        if (!response.ok) throw new Error('Không thể gọi trợ lý tự động.');
+        if (!response.ok) throw new Error('KhÃ´ng thá»ƒ gá»i trá»£ lÃ½ tá»± Ä‘á»™ng.');
         const data = await response.json();
         return data.reply;
     }
@@ -181,16 +191,16 @@
                 if (!messagesRef || await hasHumanStaffReplySince(timestampClient)) return;
                 const sourceMessage = await messagesRef.doc(messageId).get();
                 if (!sourceMessage.exists || sourceMessage.data()?.recalled) return;
-                const reply = await requestAiReply(text || 'Tôi cần hỗ trợ.');
+                const reply = await requestAiReply(text || 'TÃ´i cáº§n há»— trá»£.');
                 const now = Date.now();
                 await messagesRef.add({
-                    sender: 'AI', senderId: 'ai-viegeo', senderName: 'CSKH tự động (AI)',
+                    sender: 'AI', senderId: 'ai-viegeo', senderName: 'CSKH tá»± Ä‘á»™ng (AI)',
                     text: reply, status: 'received',
                     timestamp: new Date().toISOString(), timestampClient: now,
                     createdAt: new Date().toISOString(), createdAtClient: now
                 });
             } catch (error) {
-                console.warn('Không thể gửi phản hồi AI tự động.', error);
+                console.warn('KhÃ´ng thá»ƒ gá»­i pháº£n há»“i AI tá»± Ä‘á»™ng.', error);
             }
         }, delay);
         aiFallbackTimers.set(messageId, timer);
@@ -210,10 +220,10 @@
             const timer = aiFallbackTimers.get(messageId);
             if (timer) window.clearTimeout(timer);
             aiFallbackTimers.delete(messageId);
-            notify('Đã thu hồi tin nhắn.', 'success');
+            notify('ÄÃ£ thu há»“i tin nháº¯n.', 'success');
         } catch (error) {
-            console.error('Không thể thu hồi tin nhắn:', error);
-            notify('Chưa thể thu hồi tin nhắn. Vui lòng thử lại.', 'error');
+            console.error('KhÃ´ng thá»ƒ thu há»“i tin nháº¯n:', error);
+            notify('ChÆ°a thá»ƒ thu há»“i tin nháº¯n. Vui lÃ²ng thá»­ láº¡i.', 'error');
         }
     }
 
@@ -222,22 +232,24 @@
         const input = byId('supportMessageInput');
         const form = byId('supportChatForm');
         const user = session();
-        const text = input ? input.value.trim() : '';
+        const text = input ? security.sanitizeText(input.value, 1200) : '';
         if ((!text && !pendingImage) || !user.email || !messagesRef || typeof db === 'undefined') {
             if (!text && !pendingImage) input?.focus();
-            else if (window.VieGeoUI) window.VieGeoUI.warning('Đang kết nối kênh hỗ trợ, vui lòng thử lại sau ít giây.');
+            else if (window.VieGeoUI) window.VieGeoUI.warning('Äang káº¿t ná»‘i kÃªnh há»— trá»£, vui lÃ²ng thá»­ láº¡i sau Ã­t giÃ¢y.');
             return;
         }
 
         const submit = form?.querySelector('button[type="submit"]');
         if (submit) submit.disabled = true;
         try {
+            const limit = security.rateLimit(`support_chat_${user.email}`, { limit: 8, windowMs: 60000 });
+            if (!limit.allowed) throw new Error(`Báº¡n gá»­i tin nháº¯n quÃ¡ nhanh. Vui lÃ²ng thá»­ láº¡i sau ${Math.ceil(limit.retryAfterMs / 1000)}s.`);
             const timestampClient = Date.now();
             const imageUrl = await uploadImage(pendingImage, user.email);
             await db.collection('support_conversations').doc(user.email).set({
                 email: user.email,
                 name: user.name || user.displayName || user.email,
-                lastMessage: text || 'Đã gửi một hình ảnh',
+                lastMessage: text || 'ÄÃ£ gá»­i má»™t hÃ¬nh áº£nh',
                 updatedAt: new Date().toISOString(),
                 updatedAtClient: timestampClient,
                 unreadForStaff: true
@@ -255,13 +267,13 @@
 
             const activeAgents = await activeAgentCount();
             const staffOnline = activeAgents > 0;
-            byId('supportAvailability').textContent = staffOnline ? 'CSKH đang trực tuyến' : 'Trợ lý ảo đang hỗ trợ';
+            byId('supportAvailability').textContent = staffOnline ? 'CSKH Ä‘ang trá»±c tuyáº¿n' : 'Trá»£ lÃ½ áº£o Ä‘ang há»— trá»£';
             scheduleAiFallback(submittedMessage.id, text, timestampClient, staffOnline ? 120000 : 1500);
         } catch (error) {
-            console.error('Không thể gửi tin nhắn hỗ trợ:', error);
+            console.error('KhÃ´ng thá»ƒ gá»­i tin nháº¯n há»— trá»£:', error);
             const message = error?.code === 'permission-denied'
-                ? 'Bạn chưa có quyền gửi tin nhắn. Vui lòng đăng nhập lại và thử lại.'
-                : 'Chưa thể gửi yêu cầu hỗ trợ. Vui lòng thử lại.';
+                ? 'Báº¡n chÆ°a cÃ³ quyá»n gá»­i tin nháº¯n. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i vÃ  thá»­ láº¡i.'
+                : 'ChÆ°a thá»ƒ gá»­i yÃªu cáº§u há»— trá»£. Vui lÃ²ng thá»­ láº¡i.';
             if (window.VieGeoUI) window.VieGeoUI.error(message);
         } finally {
             if (submit) submit.disabled = false;
@@ -272,17 +284,17 @@
         const user = session();
         if (!user.email || typeof db === 'undefined') return;
         messagesRef = db.collection('support_conversations').doc(user.email).collection('messages');
-        messagesRef.onSnapshot(renderMessages, error => console.warn('Không thể nhận tin nhắn hỗ trợ:', error));
+        messagesRef.onSnapshot(renderMessages, error => console.warn('KhÃ´ng thá»ƒ nháº­n tin nháº¯n há»— trá»£:', error));
         const online = await hasOnlineStaff();
-        byId('supportAvailability').textContent = online ? 'CSKH đang trực tuyến' : 'Trợ lý ảo sẵn sàng hỗ trợ';
+        byId('supportAvailability').textContent = online ? 'CSKH Ä‘ang trá»±c tuyáº¿n' : 'Trá»£ lÃ½ áº£o sáºµn sÃ ng há»— trá»£';
     }
 
     async function submitSupportRequest(event) {
         event.preventDefault();
         const user = session();
         const type = byId('supportRequestType')?.value || 'feedback';
-        const subject = byId('supportRequestSubject')?.value.trim();
-        const message = byId('supportRequestMessage')?.value.trim();
+        const subject = security.sanitizeText(byId('supportRequestSubject')?.value, 160);
+        const message = security.sanitizeText(byId('supportRequestMessage')?.value, 3000);
         const form = byId('supportRequestForm');
         const submit = form?.querySelector('button[type="submit"]');
         if (!subject || !message) {
@@ -291,9 +303,11 @@
         }
         if (submit) submit.disabled = true;
         try {
+            const limit = security.rateLimit(`support_request_${type}_${user.email || 'anonymous'}`, { limit: 3, windowMs: 10 * 60 * 1000 });
+            if (!limit.allowed) throw new Error(`Báº¡n gá»­i yÃªu cáº§u quÃ¡ nhanh. Vui lÃ²ng thá»­ láº¡i sau ${Math.ceil(limit.retryAfterMs / 1000)}s.`);
             const supabase = getSupabaseClient();
             const senderEmail = user.email || 'anonymous';
-            const senderName = user.name || user.displayName || user.email || 'Khách';
+            const senderName = user.name || user.displayName || user.email || 'KhÃ¡ch';
             if (supabase) {
                 const tableName = type === 'report' ? 'error_reports' : 'user_feedbacks';
                 const payload = type === 'report'
@@ -322,7 +336,7 @@
                 if (error) throw error;
             } else {
                 if (typeof db === 'undefined') {
-                    notify('Chưa thể gửi yêu cầu khi Supabase/localStorage chưa sẵn sàng.', 'warning');
+                    notify('ChÆ°a thá»ƒ gá»­i yÃªu cáº§u khi Supabase/localStorage chÆ°a sáºµn sÃ ng.', 'warning');
                     return;
                 }
                 const collectionName = type === 'report' ? 'ErrorReports' : 'UserFeedbacks';
@@ -338,10 +352,10 @@
                 });
             }
             setSupportRequestOpen(false);
-            notify(type === 'report' ? 'Đã gửi báo cáo lỗi. Cảm ơn bạn!' : 'Đã gửi góp ý. Cảm ơn bạn!', 'success');
+            notify(type === 'report' ? 'ÄÃ£ gá»­i bÃ¡o cÃ¡o lá»—i. Cáº£m Æ¡n báº¡n!' : 'ÄÃ£ gá»­i gÃ³p Ã½. Cáº£m Æ¡n báº¡n!', 'success');
         } catch (error) {
-            console.error('Không thể gửi yêu cầu hỗ trợ:', error);
-            notify('Chưa thể gửi yêu cầu. Vui lòng thử lại sau.', 'error');
+            console.error('KhÃ´ng thá»ƒ gá»­i yÃªu cáº§u há»— trá»£:', error);
+            notify('ChÆ°a thá»ƒ gá»­i yÃªu cáº§u. Vui lÃ²ng thá»­ láº¡i sau.', 'error');
         } finally {
             if (submit) submit.disabled = false;
         }
@@ -393,7 +407,7 @@
         byId('supportImageButton')?.addEventListener('click', () => byId('supportImageInput')?.click());
         byId('supportImageInput')?.addEventListener('change', event => {
             pendingImage = event.target.files && event.target.files[0] ? event.target.files[0] : null;
-            byId('supportAttachmentLabel').textContent = pendingImage ? `Đã chọn: ${pendingImage.name}` : '';
+            byId('supportAttachmentLabel').textContent = pendingImage ? `ÄÃ£ chá»n: ${pendingImage.name}` : '';
         });
         document.addEventListener('click', (event) => {
             const support = byId('supportChat');
@@ -410,3 +424,4 @@
         initialiseChat();
     });
 }());
+

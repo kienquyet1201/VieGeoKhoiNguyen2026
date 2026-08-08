@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // VieGeo - lesson.js (Enhanced with Arena & Explanations)
 // ============================================================================
 
@@ -18,6 +18,15 @@ let activeLessonTitle = '';
 let activeLessonReward = { xp: 15, gems: 10, booster: null };
 let activeIslandNodeKind = '';
 let usedBoostersForQuestion = new Set();
+
+function escapeLessonHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 function readIslandLearningSession() {
     try {
@@ -40,12 +49,12 @@ function starsForScore(correctAnswers) {
 
 function presentIslandResult(stars, correctAnswers) {
     if (activeIslandNodeKind !== 'small' || !window.Swal) return;
-    const starText = stars ? '⭐'.repeat(stars) : 'Chưa đạt sao';
+    const starText = stars ? 'â­'.repeat(stars) : 'ChÆ°a Ä‘áº¡t sao';
     window.setTimeout(() => {
         Swal.fire({
-            title: 'Kết quả Đảo nhỏ',
-            html: `<div style="font-size:2rem;letter-spacing:4px;margin:8px 0">${starText}</div><p>Bạn trả lời đúng <strong>${correctAnswers}/5</strong> câu.</p><p style="color:#64748b;font-size:.9rem">Hệ thống đã lưu số sao cao nhất của bạn trên đảo này.</p>`,
-            confirmButtonText: 'Tuyệt vời',
+            title: 'Káº¿t quáº£ Äáº£o nhá»',
+            html: `<div style="font-size:2rem;letter-spacing:4px;margin:8px 0">${starText}</div><p>Báº¡n tráº£ lá»i Ä‘Ãºng <strong>${correctAnswers}/5</strong> cÃ¢u.</p><p style="color:#64748b;font-size:.9rem">Há»‡ thá»‘ng Ä‘Ã£ lÆ°u sá»‘ sao cao nháº¥t cá»§a báº¡n trÃªn Ä‘áº£o nÃ y.</p>`,
+            confirmButtonText: 'Tuyá»‡t vá»i',
             confirmButtonColor: '#16a34a',
             background: '#102238',
             color: '#f8fafc',
@@ -71,7 +80,7 @@ const sfxCorrect = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2
 const sfxWrong = new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3');
 const sfxWin = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
 
-// ── ARENA VARIABLES ──
+// â”€â”€ ARENA VARIABLES â”€â”€
 let arenaBots = [];
 let arenaTimer = null;
 let isDoubleXpActive = false;
@@ -95,7 +104,7 @@ async function initNormal() {
     const arenaUi = document.getElementById('arenaUI');
     if (arenaUi) arenaUi.style.display = 'none';
 
-    // Tìm bài học
+    // TÃ¬m bÃ i há»c
     let foundNode = null;
     let foundProvince = null;
     if (typeof LEARNING_REGIONS !== 'undefined') {
@@ -115,7 +124,7 @@ async function initNormal() {
     }
 
     if (!foundNode) {
-        Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Lỗi tải bài học!' });
+        Swal.fire({ icon: 'error', title: 'ÄÃ£ xáº£y ra lá»—i', text: 'Lá»—i táº£i bÃ i há»c!' });
         window.location.href = '/map';
         return;
     }
@@ -206,7 +215,7 @@ function initArena() {
             isDoubleXpActive = true;
             if (countDouble) countDouble.textContent = state.inventory.powerupDoubleXp;
             btnUseDouble.style.opacity = '0.5';
-            showToast("Đã kích hoạt x2 Điểm cho câu hỏi này!");
+            showToast("ÄÃ£ kÃ­ch hoáº¡t x2 Äiá»ƒm cho cÃ¢u há»i nÃ y!");
         }
     };
 
@@ -296,7 +305,7 @@ function updateHeartsUI() {
     const hasUnlimitedHearts = String(state.accountStatus || '').trim().toLowerCase() === 'premium'
         || (state.inventory && state.inventory.infiniteHeartsExpiry && Date.now() < state.inventory.infiniteHeartsExpiry);
     if (hasUnlimitedHearts) {
-        heartsCount.innerHTML = `<i class="fa-solid fa-heart"></i> ∞`;
+        heartsCount.innerHTML = `<i class="fa-solid fa-heart"></i> âˆž`;
     } else {
         heartsCount.innerHTML = `<i class="fa-solid fa-heart"></i> ${state.hearts}`;
     }
@@ -315,7 +324,7 @@ function loadQuestion() {
     bottomBar.className = 'bottom-bar';
     feedbackMsg.classList.remove('show');
     feedbackExplanation.style.display = 'none';
-    btnCheck.textContent = 'Kiểm tra';
+    btnCheck.textContent = 'Kiá»ƒm tra';
     btnCheck.className = 'btn-check'; 
     usedBoostersForQuestion = new Set();
     updateQuizBoosters();
@@ -343,7 +352,7 @@ function loadQuestion() {
     questionStartedAt = Date.now();
     
     optionsGrid.innerHTML = q.options.map((opt, idx) => `
-        <button class="option-btn" data-index="${idx}">${opt}</button>
+        <button class="option-btn" data-index="${idx}">${escapeLessonHtml(opt)}</button>
     `).join('');
 
     const btns = optionsGrid.querySelectorAll('.option-btn');
@@ -356,7 +365,7 @@ function loadQuestion() {
             btnCheck.classList.add('active');
             
             if (mode === 'arena') {
-                checkAnswer(); // Thi máy dập
+                checkAnswer(); // Thi mÃ¡y dáº­p
             }
         });
     });
@@ -382,7 +391,7 @@ window.useBooster = function useBooster(type) {
     if (!state.inventory) state.inventory = {};
     const inventoryKey = type === 'freeze' ? 'quizFreeze' : type === '5050' ? 'powerup5050' : 'quizRemoveOne';
     const amount = Number(state.inventory[inventoryKey] || 0);
-    if (amount <= 0) { showToast('Bạn đã dùng hết quyền trợ giúp này.'); return; }
+    if (amount <= 0) { showToast('Báº¡n Ä‘Ã£ dÃ¹ng háº¿t quyá»n trá»£ giÃºp nÃ y.'); return; }
 
     const q = currentQuestions[currentIndex];
     const options = Array.from(optionsGrid.querySelectorAll('.option-btn'));
@@ -394,11 +403,11 @@ window.useBooster = function useBooster(type) {
     if (type === 'freeze') {
         const timer = document.getElementById('normalTimer');
         const timerText = document.getElementById('normalTimerText');
-        if (timer && timerText) { timer.style.display = 'block'; timerText.textContent = 'Đã đóng băng'; }
-        showToast('Đã đóng băng thời gian cho câu hỏi này.');
+        if (timer && timerText) { timer.style.display = 'block'; timerText.textContent = 'ÄÃ£ Ä‘Ã³ng bÄƒng'; }
+        showToast('ÄÃ£ Ä‘Ã³ng bÄƒng thá»i gian cho cÃ¢u há»i nÃ y.');
     } else {
         wrongOptions.slice(0, type === '5050' ? 2 : 1).forEach(button => { button.style.visibility = 'hidden'; });
-        showToast(type === '5050' ? 'Đã ẩn 2 phương án sai.' : 'Đã bỏ đi 1 phương án sai.');
+        showToast(type === '5050' ? 'ÄÃ£ áº©n 2 phÆ°Æ¡ng Ã¡n sai.' : 'ÄÃ£ bá» Ä‘i 1 phÆ°Æ¡ng Ã¡n sai.');
     }
     saveGameState(state);
     updateQuizBoosters();
@@ -425,7 +434,7 @@ function checkAnswer() {
     // Show Explanation
     if (q.explanation) {
         feedbackExplanation.style.display = 'block';
-        feedbackExplanation.innerHTML = `<i class="fa-solid fa-book-open"></i> <strong>Giải thích:</strong> ${q.explanation}`;
+        feedbackExplanation.innerHTML = `<i class="fa-solid fa-book-open"></i> <strong>Giáº£i thÃ­ch:</strong> ${escapeLessonHtml(q.explanation)}`;
     }
 
     const isCorrect = selectedOptionIndex === q.correctAnswer;
@@ -440,13 +449,13 @@ function checkAnswer() {
     }
 
     if (isCorrect) {
-        // Đúng
+        // ÄÃºng
         sfxCorrect.play();
         selectedBtn.classList.add('correct');
         
         bottomBar.classList.add('state-correct');
         feedbackIcon.innerHTML = `<i class="fa-solid fa-check"></i>`;
-        feedbackText.textContent = "Tuyệt vời!";
+        feedbackText.textContent = "Tuyá»‡t vá»i!";
         feedbackMsg.classList.add('show');
         
         createConfetti(); 
@@ -473,7 +482,7 @@ function checkAnswer() {
             return;
         }
 
-        btnCheck.textContent = 'Tiếp tục';
+        btnCheck.textContent = 'Tiáº¿p tá»¥c';
         
     } else {
         // Sai
@@ -484,7 +493,7 @@ function checkAnswer() {
         
         bottomBar.classList.add('state-wrong');
         feedbackIcon.innerHTML = `<i class="fa-solid fa-xmark"></i>`;
-        feedbackText.textContent = "Đáp án đúng là: " + q.options[q.correctAnswer];
+        feedbackText.textContent = "ÄÃ¡p Ã¡n Ä‘Ãºng lÃ : " + q.options[q.correctAnswer];
         feedbackMsg.classList.add('show');
         
         document.body.classList.add('shake-screen');
@@ -500,7 +509,7 @@ function checkAnswer() {
         }
         
         // Stamina is charged once at lesson entry. Wrong answers never deduct it.
-        btnCheck.textContent = 'Tiếp tục';
+        btnCheck.textContent = 'Tiáº¿p tá»¥c';
     }
 }
 
@@ -518,16 +527,16 @@ function finishLesson() {
         let isTie = (arenaScoreMe === arenaScoreOpp);
         if (isTie) won = true; // Tie goes to player
         
-        questionText.textContent = won ? "CHIẾN THẮNG KÉO CO!" : "THẤT BẠI!";
+        questionText.textContent = won ? "CHIáº¾N THáº®NG KÃ‰O CO!" : "THáº¤T Báº I!";
         
         let addedXu = won ? matchReward : Math.floor(matchReward / 3);
         
         optionsGrid.innerHTML = `
             <div style="text-align: center; width:100%; grid-column: span 2;">
                 <i class="fa-solid ${won ? 'fa-trophy' : 'fa-skull'}" style="font-size: 5rem; color: ${won ? '#ffc800' : '#ff4b4b'}; margin-bottom: 20px;"></i>
-                <h3 style="font-size: 1.5rem; margin-bottom:10px;">${won ? 'Thật áp đảo!' : 'Đối thủ quá mạnh!'}</h3>
+                <h3 style="font-size: 1.5rem; margin-bottom:10px;">${won ? 'Tháº­t Ã¡p Ä‘áº£o!' : 'Äá»‘i thá»§ quÃ¡ máº¡nh!'}</h3>
                 <h3 style="font-size: 1.5rem; color: ${won ? 'var(--green)' : '#ff4b4b'};">+${addedXu} Xu | +${addedXu} XP</h3>
-                <h4 style="color: var(--text-dim); margin-top: 10px;">Tỉ số: ${arenaScoreMe} - ${arenaScoreOpp}</h4>
+                <h4 style="color: var(--text-dim); margin-top: 10px;">Tá»‰ sá»‘: ${arenaScoreMe} - ${arenaScoreOpp}</h4>
             </div>
         `;
         
@@ -536,7 +545,7 @@ function finishLesson() {
         if (won) {
             state.pvpWins = (state.pvpWins || 0) + 1;
             if (typeof showToast === 'function') {
-                showToast("🏆 CHÚC MỪNG CHIẾN THẮNG PVP! 🏆");
+                showToast("ðŸ† CHÃšC Má»ªNG CHIáº¾N THáº®NG PVP! ðŸ†");
             }
         }
         
@@ -545,7 +554,7 @@ function finishLesson() {
         }
         saveGameState(state);
         
-        btnCheck.textContent = 'Trở về Bản đồ';
+        btnCheck.textContent = 'Trá»Ÿ vá» Báº£n Ä‘á»“';
         btnCheck.classList.add('active');
         btnCheck.onclick = () => window.location.href = '/map';
 
@@ -565,12 +574,12 @@ function finishLesson() {
             color: highestStars === 3 ? 'green' : highestStars === 2 ? 'yellow' : 'red',
             updatedAt: Date.now()
         };
-        questionText.textContent = "Hoàn thành xuất sắc!";
+        questionText.textContent = "HoÃ n thÃ nh xuáº¥t sáº¯c!";
         optionsGrid.innerHTML = `
             <div style="text-align: center; width:100%; grid-column: span 2;">
                 <i class="fa-solid fa-gem" style="font-size: 4rem; color: var(--blue); margin-bottom: 20px;"></i>
                 <h3 style="font-size: 1.5rem;">+${activeLessonReward.xp || 15} XP</h3>
-                <p style="margin:10px 0 0;color:#ffc800;font-size:1.25rem;letter-spacing:2px;">${earnedStars ? '⭐'.repeat(earnedStars) : 'Chưa đạt sao'} · ${correctAnswers}/${currentQuestions.length} câu đúng</p>
+                <p style="margin:10px 0 0;color:#ffc800;font-size:1.25rem;letter-spacing:2px;">${earnedStars ? 'â­'.repeat(earnedStars) : 'ChÆ°a Ä‘áº¡t sao'} Â· ${correctAnswers}/${currentQuestions.length} cÃ¢u Ä‘Ãºng</p>
             </div>
         `;
         
@@ -621,7 +630,7 @@ function finishLesson() {
 
     bottomBar.className = 'bottom-bar state-correct';
     btnCheck.className = 'btn-check active';
-    btnCheck.textContent = 'Hoàn tất';
+    btnCheck.textContent = 'HoÃ n táº¥t';
 
     btnCheck.addEventListener('click', () => {
         window.location.href = '/map';
@@ -630,7 +639,7 @@ function finishLesson() {
 
 function showToast(msg) {
     // Simple alert for lesson page since we don't have the toast container here
-    Swal.fire({ icon: 'info', title: 'Thông báo', text: String(msg) }); 
+    Swal.fire({ icon: 'info', title: 'ThÃ´ng bÃ¡o', text: String(msg) }); 
 }
 
 function createConfetti() {
@@ -662,6 +671,7 @@ function createConfetti() {
     }
 }
 
-// Khởi chạy
+// Khá»Ÿi cháº¡y
 initLesson();
+
 

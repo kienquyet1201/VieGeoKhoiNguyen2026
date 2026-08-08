@@ -72,6 +72,49 @@ const regMsg = document.getElementById('registerMessage'); // Đã khớp ID HTM
 const QUIZ_PAGE = '/index';
 // Clean URL served by Vercel for the physical public/map.html page.
 const MAP_PAGE = '/map';
+const security = window.VieGeoSecurity || {
+    sanitizeText: (value, max = 2000) => String(value || '').replace(/<[^>]*>/g, '').trim().slice(0, max),
+    isValidEmail: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || '').trim().toLowerCase()),
+    rateLimit: () => ({ allowed: true, retryAfterMs: 0 }),
+    clearRateLimit: () => {}
+};
+
+function normalizeEmail(value) {
+    return security.sanitizeText(value, 180).toLowerCase();
+}
+
+function getAuthClient() {
+    const client = window.supabaseClient || window.supabase;
+    return client && client.auth && typeof client.auth.signInWithPassword === 'function' ? client : null;
+}
+
+function assertAuthRate(action, email, limit = 5, windowMs = 60000) {
+    const result = security.rateLimit(`auth_${action}_${email || 'anonymous'}`, { limit, windowMs });
+    if (!result.allowed) {
+        const seconds = Math.ceil(result.retryAfterMs / 1000);
+        throw new Error(`Bạn thao tác quá nhanh. Vui lòng thử lại sau ${seconds}s.`);
+    }
+}
+
+async function signInViaSupabase(email, password) {
+    const client = getAuthClient();
+    if (!client) return null;
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    return data?.user || null;
+}
+
+async function signUpViaSupabase({ email, password, name, gender }) {
+    const client = getAuthClient();
+    if (!client || typeof client.auth.signUp !== 'function') throw new Error('Supabase Auth chưa sẵn sàng.');
+    const { data, error } = await client.auth.signUp({
+        email,
+        password,
+        options: { data: { name, gender } }
+    });
+    if (error) throw error;
+    return data?.user || null;
+}
 
 // 1. ĐĂNG NHẬP
 function showToast(msg, isSuccess = true) {
@@ -117,12 +160,18 @@ if (showLoginFromForgotBtn) showLoginFromForgotBtn.addEventListener('click', () 
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('loginEmail').value.trim();
+        const email = normalizeEmail(document.getElementById('loginEmail').value);
         const pass = document.getElementById('loginPassword').value; // Đã khớp ID HTML
         const btn = loginForm.querySelector('button[type="submit"]');
+        if (btn?.disabled) return;
 
         if (!email || !pass) {
             loginMsg.textContent = "Vui lòng nhập đầy đủ email và mật khẩu.";
+            loginMsg.style.display = "block";
+            return;
+        }
+        if (!security.isValidEmail(email) || pass.length > 128) {
+            loginMsg.textContent = "Email hoặc mật khẩu không hợp lệ.";
             loginMsg.style.display = "block";
             return;
         }
@@ -131,11 +180,19 @@ if (loginForm) {
         btn.textContent = "Đang kiểm tra...";
 
         try {
+            assertAuthRate('login', email, 5, 60000);
+            let authenticated = false;
+            try {
+                authenticated = Boolean(await signInViaSupabase(email, pass));
+            } catch (authError) {
+                console.warn('Supabase Auth login failed; legacy profile fallback will be checked:', authError?.message || authError);
+            }
             const userDoc = await db.collection('users').doc(email).get();
             
             if (userDoc.exists) {
                 const userData = userDoc.data();
-                if (userData.password === pass) {
+                if (authenticated || (userData.password && userData.password === pass)) {
+                    security.clearRateLimit(`auth_login_${email}`);
                     await updateStreakOnLogin(email, userData);
                     
                     // Cập nhật lại vào object để dùng cho localStorage
@@ -231,19 +288,20 @@ const btnCancelOtp = document.getElementById('buttonCancelOtp'); // Đã khớp 
 if (regForm) {
     regForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('regName').value.trim();
-        const email = document.getElementById('regEmail').value.trim();
+        const name = security.sanitizeText(document.getElementById('regName').value, 120);
+        const email = normalizeEmail(document.getElementById('regEmail').value);
         const pass = document.getElementById('regPassword').value;
-        const gender = document.getElementById('regGender').value;
+        const gender = ['male', 'female', 'other', 'prefer_not_to_say'].includes(String(document.getElementById('regGender').value || '').toLowerCase()) ? String(document.getElementById('regGender').value).toLowerCase() : '';
         const btn = regForm.querySelector('button[type="submit"]');
+        if (btn?.disabled) return;
 
         if (!name || !email || !pass || !gender) {
             regMsg.textContent = "Vui lòng điền đủ thông tin.";
             regMsg.style.display = "block";
             return;
         }
-        if (pass.length < 6) {
-            regMsg.textContent = "Mật khẩu phải từ 6 ký tự.";
+        if (pass.length < 8 || pass.length > 128 || !security.isValidEmail(email)) {
+            regMsg.textContent = "Email không hợp lệ hoặc mật khẩu chưa đủ mạnh (8-128 ký tự).";
             regMsg.style.display = "block";
             return;
         }
@@ -252,6 +310,7 @@ if (regForm) {
         btn.textContent = "Đang kiểm tra Email...";
 
         try {
+            assertAuthRate('register', email, 3, 10 * 60 * 1000);
             // Kiểm tra trùng email
             const userDoc = await db.collection('users').doc(email).get();
             if (userDoc.exists) {
@@ -329,10 +388,15 @@ if (btnConfirmOtp) {
         } else {
             // Xác thực thành công cho luồng Đăng ký
             try {
+                await signUpViaSupabase({
+                    email: tempRegData.email,
+                    password: tempRegData.pass,
+                    name: tempRegData.name,
+                    gender: tempRegData.gender
+                });
                 const newUser = {
                     name: tempRegData.name,
                     email: tempRegData.email,
-                    password: tempRegData.pass,
                     gender: tempRegData.gender,
                     createdAt: new Date().toISOString(),
                     lastLoginDate: null,
@@ -352,8 +416,10 @@ if (btnConfirmOtp) {
                 };
 
                 await db.collection('users').doc(tempRegData.email).set(newUser);
+                security.clearRateLimit(`auth_register_${tempRegData.email}`);
                 localStorage.removeItem('VieGeo_state');
                 localStorage.setItem('lm_session', JSON.stringify({ email: tempRegData.email, name: tempRegData.name, gender: tempRegData.gender, activeRole: 'user' }));
+                tempRegData = null;
                 showToast("🎉 Chúc mừng! Đăng ký thành công.");
                 
                 setTimeout(() => window.location.href = MAP_PAGE, 1500);
@@ -378,12 +444,18 @@ let forgotOtpMode = false;
 if (forgotForm) {
     forgotForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('forgotEmail').value.trim();
+        const email = normalizeEmail(document.getElementById('forgotEmail').value);
         const msg = document.getElementById('forgotMessage');
         const btn = forgotForm.querySelector('button[type="submit"]');
+        if (btn?.disabled) return;
         
         if (!email) {
             msg.textContent = "Vui lòng nhập email.";
+            msg.style.display = "block";
+            return;
+        }
+        if (!security.isValidEmail(email)) {
+            msg.textContent = "Email không hợp lệ.";
             msg.style.display = "block";
             return;
         }
@@ -392,6 +464,16 @@ if (forgotForm) {
         btn.textContent = "Đang kiểm tra...";
         
         try {
+            assertAuthRate('forgot', email, 3, 10 * 60 * 1000);
+            const authClient = getAuthClient();
+            if (authClient && typeof authClient.auth.resetPasswordForEmail === 'function') {
+                const { error } = await authClient.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/loginout` });
+                if (error) throw error;
+                security.clearRateLimit(`auth_forgot_${email}`);
+                msg.textContent = "Đã gửi email đặt lại mật khẩu qua Supabase Auth. Vui lòng kiểm tra hộp thư.";
+                msg.style.display = "block";
+                return;
+            }
             const doc = await db.collection('users').doc(email).get();
             if (!doc.exists) {
                 msg.textContent = "Tài khoản không tồn tại.";
@@ -439,8 +521,9 @@ if (resetForm) {
         const p2 = document.getElementById('resetPasswordConfirm').value;
         const msg = document.getElementById('resetMessage');
         const btn = resetForm.querySelector('button[type="submit"]');
+        if (btn?.disabled) return;
 
-        if (p1.length < 6) {
+        if (p1.length < 8 || p1.length > 128) {
             msg.textContent = "Mật khẩu phải từ 6 ký tự.";
             msg.style.display = "block"; return;
         }
@@ -453,7 +536,11 @@ if (resetForm) {
         btn.textContent = "Đang lưu...";
         
         try {
-            await db.collection('users').doc(forgotTempEmail).update({ password: p1 });
+            const authClient = getAuthClient();
+            if (!authClient || typeof authClient.auth.updateUser !== 'function') throw new Error('Supabase Auth chưa sẵn sàng để đổi mật khẩu.');
+            const { error } = await authClient.auth.updateUser({ password: p1 });
+            if (error) throw error;
+            if (forgotTempEmail) await db.collection('users').doc(forgotTempEmail).update({ password: null, passwordUpdatedAt: new Date().toISOString() });
             showToast("Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
             switchPanel(loginPanel);
             document.getElementById('loginEmail').value = forgotTempEmail;

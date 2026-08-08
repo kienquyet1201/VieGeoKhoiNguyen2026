@@ -1,24 +1,24 @@
-// ============================================================================
+﻿// ============================================================================
 // VieGeo - map.js (Rendering Learning Path Multi-Tier)
 // ============================================================================
 
 const PROVINCE_THEORIES = Object.freeze({
     'ha-noi': `<div class="space-y-4 text-left">
-  <h3 class="text-xl font-bold text-blue-600">1. Hà Nội là nơi như thế nào?</h3>
-  <p>Hà Nội có tên chính thức là Thành phố Hà Nội và là Thủ đô của nước Cộng hòa xã hội chủ nghĩa Việt Nam. Đây là một trong năm thành phố trực thuộc Trung ương, đồng thời là trung tâm chính trị, hành chính, văn hóa, giáo dục và khoa học của cả nước.</p>
-  <p>Quốc hội, Chính phủ, Phủ Chủ tịch cùng nhiều bộ, ngành trung ương đều đặt trụ sở tại Hà Nội. Thành phố cũng là nơi diễn ra nhiều sự kiện quan trọng như các kỳ họp Quốc hội, lễ kỷ niệm lớn của đất nước, hội nghị quốc tế và các hoạt động ngoại giao.</p>
-  <p>Với lịch sử hơn 1.000 năm, Hà Nội từng mang tên Thăng Long. Trải qua nhiều giai đoạn lịch sử, thành phố vẫn giữ được nhiều công trình cổ, di tích lịch sử và giá trị văn hóa. Ngày nay, Hà Nội vừa là một đô thị hiện đại vừa là nơi lưu giữ những nét đẹp truyền thống của dân tộc.</p>
+  <h3 class="text-xl font-bold text-blue-600">1. HÃ  Ná»™i lÃ  nÆ¡i nhÆ° tháº¿ nÃ o?</h3>
+  <p>HÃ  Ná»™i cÃ³ tÃªn chÃ­nh thá»©c lÃ  ThÃ nh phá»‘ HÃ  Ná»™i vÃ  lÃ  Thá»§ Ä‘Ã´ cá»§a nÆ°á»›c Cá»™ng hÃ²a xÃ£ há»™i chá»§ nghÄ©a Viá»‡t Nam. ÄÃ¢y lÃ  má»™t trong nÄƒm thÃ nh phá»‘ trá»±c thuá»™c Trung Æ°Æ¡ng, Ä‘á»“ng thá»i lÃ  trung tÃ¢m chÃ­nh trá»‹, hÃ nh chÃ­nh, vÄƒn hÃ³a, giÃ¡o dá»¥c vÃ  khoa há»c cá»§a cáº£ nÆ°á»›c.</p>
+  <p>Quá»‘c há»™i, ChÃ­nh phá»§, Phá»§ Chá»§ tá»‹ch cÃ¹ng nhiá»u bá»™, ngÃ nh trung Æ°Æ¡ng Ä‘á»u Ä‘áº·t trá»¥ sá»Ÿ táº¡i HÃ  Ná»™i. ThÃ nh phá»‘ cÅ©ng lÃ  nÆ¡i diá»…n ra nhiá»u sá»± kiá»‡n quan trá»ng nhÆ° cÃ¡c ká»³ há»p Quá»‘c há»™i, lá»… ká»· niá»‡m lá»›n cá»§a Ä‘áº¥t nÆ°á»›c, há»™i nghá»‹ quá»‘c táº¿ vÃ  cÃ¡c hoáº¡t Ä‘á»™ng ngoáº¡i giao.</p>
+  <p>Vá»›i lá»‹ch sá»­ hÆ¡n 1.000 nÄƒm, HÃ  Ná»™i tá»«ng mang tÃªn ThÄƒng Long. Tráº£i qua nhiá»u giai Ä‘oáº¡n lá»‹ch sá»­, thÃ nh phá»‘ váº«n giá»¯ Ä‘Æ°á»£c nhiá»u cÃ´ng trÃ¬nh cá»•, di tÃ­ch lá»‹ch sá»­ vÃ  giÃ¡ trá»‹ vÄƒn hÃ³a. NgÃ y nay, HÃ  Ná»™i vá»«a lÃ  má»™t Ä‘Ã´ thá»‹ hiá»‡n Ä‘áº¡i vá»«a lÃ  nÆ¡i lÆ°u giá»¯ nhá»¯ng nÃ©t Ä‘áº¹p truyá»n thá»‘ng cá»§a dÃ¢n tá»™c.</p>
 
-  <h3 class="text-xl font-bold text-blue-600">2. Hà Nội thuộc miền và vùng nào?</h3>
-  <p>Hà Nội nằm ở miền Bắc của Việt Nam. Đây là khu vực có bốn mùa rõ rệt là xuân, hạ, thu và đông. Mỗi mùa đều mang một vẻ đẹp riêng và tạo nên những nét đặc trưng trong cuộc sống của người dân.</p>
-  <p>Theo phân chia địa lí, Hà Nội thuộc vùng Đồng bằng sông Hồng. Vùng này nổi tiếng với đất đai màu mỡ, hệ thống sông ngòi dày đặc và dân cư đông đúc. Từ lâu, đây đã là một trong những cái nôi của nền văn minh lúa nước Việt Nam.</p>
+  <h3 class="text-xl font-bold text-blue-600">2. HÃ  Ná»™i thuá»™c miá»n vÃ  vÃ¹ng nÃ o?</h3>
+  <p>HÃ  Ná»™i náº±m á»Ÿ miá»n Báº¯c cá»§a Viá»‡t Nam. ÄÃ¢y lÃ  khu vá»±c cÃ³ bá»‘n mÃ¹a rÃµ rá»‡t lÃ  xuÃ¢n, háº¡, thu vÃ  Ä‘Ã´ng. Má»—i mÃ¹a Ä‘á»u mang má»™t váº» Ä‘áº¹p riÃªng vÃ  táº¡o nÃªn nhá»¯ng nÃ©t Ä‘áº·c trÆ°ng trong cuá»™c sá»‘ng cá»§a ngÆ°á»i dÃ¢n.</p>
+  <p>Theo phÃ¢n chia Ä‘á»‹a lÃ­, HÃ  Ná»™i thuá»™c vÃ¹ng Äá»“ng báº±ng sÃ´ng Há»“ng. VÃ¹ng nÃ y ná»•i tiáº¿ng vá»›i Ä‘áº¥t Ä‘ai mÃ u má»¡, há»‡ thá»‘ng sÃ´ng ngÃ²i dÃ y Ä‘áº·c vÃ  dÃ¢n cÆ° Ä‘Ã´ng Ä‘Ãºc. Tá»« lÃ¢u, Ä‘Ã¢y Ä‘Ã£ lÃ  má»™t trong nhá»¯ng cÃ¡i nÃ´i cá»§a ná»n vÄƒn minh lÃºa nÆ°á»›c Viá»‡t Nam.</p>
 
-  <h3 class="text-xl font-bold text-blue-600">3. Khí hậu Hà Nội có gì đặc trưng?</h3>
-  <p>Hà Nội có khí hậu nhiệt đới gió mùa với bốn mùa khá rõ rệt: xuân, hạ, thu và đông. Mùa hè thường nóng, ẩm và có mưa nhiều; mùa đông se lạnh, đôi khi có mưa phùn. Mùa thu mát mẻ, trong lành là một nét đặc trưng được nhiều người yêu thích.</p>
+  <h3 class="text-xl font-bold text-blue-600">3. KhÃ­ háº­u HÃ  Ná»™i cÃ³ gÃ¬ Ä‘áº·c trÆ°ng?</h3>
+  <p>HÃ  Ná»™i cÃ³ khÃ­ háº­u nhiá»‡t Ä‘á»›i giÃ³ mÃ¹a vá»›i bá»‘n mÃ¹a khÃ¡ rÃµ rá»‡t: xuÃ¢n, háº¡, thu vÃ  Ä‘Ã´ng. MÃ¹a hÃ¨ thÆ°á»ng nÃ³ng, áº©m vÃ  cÃ³ mÆ°a nhiá»u; mÃ¹a Ä‘Ã´ng se láº¡nh, Ä‘Ã´i khi cÃ³ mÆ°a phÃ¹n. MÃ¹a thu mÃ¡t máº», trong lÃ nh lÃ  má»™t nÃ©t Ä‘áº·c trÆ°ng Ä‘Æ°á»£c nhiá»u ngÆ°á»i yÃªu thÃ­ch.</p>
 
-  <h3 class="text-xl font-bold text-blue-600">4. Điều gì làm Hà Nội nổi bật?</h3>
-  <p>Điều làm Hà Nội nổi bật là bề dày lịch sử hơn một nghìn năm và vai trò là Thủ đô của Việt Nam. Thành phố nổi tiếng với Hồ Gươm, Văn Miếu – Quốc Tử Giám, Hoàng thành Thăng Long, Lăng Chủ tịch Hồ Chí Minh và khu phố cổ.</p>
-  <p>Ngoài các công trình lịch sử, Hà Nội còn được biết đến với những hàng cây xanh, nhiều hồ nước và nền ẩm thực phong phú như phở, bún chả hay cốm. Đây là những hình ảnh thường được nhắc đến khi giới thiệu về Thủ đô.</p>
+  <h3 class="text-xl font-bold text-blue-600">4. Äiá»u gÃ¬ lÃ m HÃ  Ná»™i ná»•i báº­t?</h3>
+  <p>Äiá»u lÃ m HÃ  Ná»™i ná»•i báº­t lÃ  bá» dÃ y lá»‹ch sá»­ hÆ¡n má»™t nghÃ¬n nÄƒm vÃ  vai trÃ² lÃ  Thá»§ Ä‘Ã´ cá»§a Viá»‡t Nam. ThÃ nh phá»‘ ná»•i tiáº¿ng vá»›i Há»“ GÆ°Æ¡m, VÄƒn Miáº¿u â€“ Quá»‘c Tá»­ GiÃ¡m, HoÃ ng thÃ nh ThÄƒng Long, LÄƒng Chá»§ tá»‹ch Há»“ ChÃ­ Minh vÃ  khu phá»‘ cá»•.</p>
+  <p>NgoÃ i cÃ¡c cÃ´ng trÃ¬nh lá»‹ch sá»­, HÃ  Ná»™i cÃ²n Ä‘Æ°á»£c biáº¿t Ä‘áº¿n vá»›i nhá»¯ng hÃ ng cÃ¢y xanh, nhiá»u há»“ nÆ°á»›c vÃ  ná»n áº©m thá»±c phong phÃº nhÆ° phá»Ÿ, bÃºn cháº£ hay cá»‘m. ÄÃ¢y lÃ  nhá»¯ng hÃ¬nh áº£nh thÆ°á»ng Ä‘Æ°á»£c nháº¯c Ä‘áº¿n khi giá»›i thiá»‡u vá» Thá»§ Ä‘Ã´.</p>
 </div>`
 });
 
@@ -87,7 +87,7 @@ function updateIslandTheoryStartButton() {
     btnStartIslandQuiz.setAttribute('aria-disabled', String(!enabled));
     btnStartIslandQuiz.style.opacity = enabled ? '1' : '.5';
     btnStartIslandQuiz.style.cursor = enabled ? 'pointer' : 'not-allowed';
-    btnStartIslandQuiz.title = enabled ? 'Bắt đầu làm bài' : 'Hãy xác nhận đã đọc lý thuyết trước khi bắt đầu.';
+    btnStartIslandQuiz.title = enabled ? 'Báº¯t Ä‘áº§u lÃ m bÃ i' : 'HÃ£y xÃ¡c nháº­n Ä‘Ã£ Ä‘á»c lÃ½ thuyáº¿t trÆ°á»›c khi báº¯t Ä‘áº§u.';
 }
 
 function resetIslandTheoryConfirmation() {
@@ -200,18 +200,18 @@ function rebuildTheoryModalWithInlineCss(theoryHtml) {
     document.body.insertAdjacentHTML('beforeend', `
         <div id="theory-modal" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" style="position:fixed !important;inset:0 !important;z-index:2147483647 !important;display:none;width:100vw;height:100dvh;overflow-y:auto;background:#0f172a;color:#f8fafc;box-sizing:border-box;">
             <section style="position:relative;box-sizing:border-box;min-height:100dvh;width:100%;padding:clamp(32px,8vw,96px);background:radial-gradient(circle at 78% 0%,rgba(14,165,233,.15),transparent 35%),#0f172a;color:#f8fafc;">
-                <button id="btnCloseIslandTheory" type="button" aria-label="Đóng lý thuyết" style="position:fixed;top:24px;right:24px;z-index:2;width:44px;height:44px;border:1px solid rgba(148,163,184,.3);border-radius:50%;background:rgba(30,41,59,.92);color:#fff;font-size:22px;cursor:pointer;">×</button>
+                <button id="btnCloseIslandTheory" type="button" aria-label="ÄÃ³ng lÃ½ thuyáº¿t" style="position:fixed;top:24px;right:24px;z-index:2;width:44px;height:44px;border:1px solid rgba(148,163,184,.3);border-radius:50%;background:rgba(30,41,59,.92);color:#fff;font-size:22px;cursor:pointer;">Ã—</button>
                 <div style="width:min(100%,960px);margin:0 auto;padding-bottom:118px;">
-                    <p style="margin:0 0 8px;color:#7dd3fc;font-weight:800;letter-spacing:.04em;">HÀNH TRANG TRƯỚC THỬ THÁCH</p>
-                    <h2 id="islandTheoryTitle" style="margin:0;padding-right:54px;font-size:clamp(2rem,4vw,3.2rem);line-height:1.18;">Lý thuyết trước khi thực chiến</h2>
-                    <p id="islandTheoryMeta" style="margin:14px 0 30px;color:#94a3b8;font-size:1rem;">Hà Nội · Kiến thức nền tảng</p>
+                    <p style="margin:0 0 8px;color:#7dd3fc;font-weight:800;letter-spacing:.04em;">HÃ€NH TRANG TRÆ¯á»šC THá»¬ THÃCH</p>
+                    <h2 id="islandTheoryTitle" style="margin:0;padding-right:54px;font-size:clamp(2rem,4vw,3.2rem);line-height:1.18;">LÃ½ thuyáº¿t trÆ°á»›c khi thá»±c chiáº¿n</h2>
+                    <p id="islandTheoryMeta" style="margin:14px 0 30px;color:#94a3b8;font-size:1rem;">HÃ  Ná»™i Â· Kiáº¿n thá»©c ná»n táº£ng</p>
                     <article id="islandTheoryContent" aria-live="polite" style="color:#dbeafe;line-height:1.85;border:1px solid rgba(125,211,252,.2);border-radius:20px;padding:clamp(22px,4vw,40px);background:rgba(2,12,27,.42);">${theoryHtml || ''}</article>
                     <label for="islandTheoryConfirm" style="display:flex;align-items:flex-start;gap:12px;margin-top:24px;color:#dbeafe;line-height:1.5;cursor:pointer;">
                         <input id="islandTheoryConfirm" type="checkbox" style="width:22px;height:22px;flex:0 0 auto;margin-top:1px;accent-color:#22c55e;cursor:pointer;">
-                        <span>Tôi đã đọc và hiểu nội dung trên.</span>
+                        <span>TÃ´i Ä‘Ã£ Ä‘á»c vÃ  hiá»ƒu ná»™i dung trÃªn.</span>
                     </label>
                     <div style="position:sticky;bottom:16px;padding-top:16px;background:linear-gradient(180deg,transparent,#0f172a 34%);">
-                        <button id="btnStartIslandQuiz" type="button" disabled aria-disabled="true" style="display:flex;width:100%;min-height:58px;align-items:center;justify-content:center;gap:9px;border:0;border-radius:16px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:1rem;font-weight:800;cursor:not-allowed;box-shadow:0 16px 30px rgba(22,163,74,.24);opacity:.5;">Đã hiểu &amp; Bắt đầu làm bài</button>
+                        <button id="btnStartIslandQuiz" type="button" disabled aria-disabled="true" style="display:flex;width:100%;min-height:58px;align-items:center;justify-content:center;gap:9px;border:0;border-radius:16px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:1rem;font-weight:800;cursor:not-allowed;box-shadow:0 16px 30px rgba(22,163,74,.24);opacity:.5;">ÄÃ£ hiá»ƒu &amp; Báº¯t Ä‘áº§u lÃ m bÃ i</button>
                     </div>
                 </div>
             </section>
@@ -272,12 +272,12 @@ function rebuildIslandQuizModalWithInlineCss() {
     document.body.insertAdjacentHTML('beforeend', `
         <div id="islandQuizModal" role="dialog" aria-modal="true" aria-labelledby="islandQuizTitle" style="position:fixed !important;inset:0 !important;z-index:2147483647 !important;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);overflow:auto;box-sizing:border-box;">
             <section style="position:relative;width:min(760px,100%);max-height:80vh;overflow-y:auto;box-sizing:border-box;border:1px solid rgba(96,165,250,.48);border-radius:24px;padding:clamp(24px,5vw,42px);background:#102238;color:#f8fafc;box-shadow:0 30px 80px rgba(0,0,0,.62);">
-                <button id="btnCloseIslandQuiz" type="button" aria-label="Đóng bảng trắc nghiệm" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(148,163,184,.2);color:#fff;font-size:20px;cursor:pointer;">×</button>
-                <p style="margin:0 0 8px;color:#7dd3fc;font-weight:800;">TRẮC NGHIỆM ĐẢO NHỎ</p>
-                <h2 id="islandQuizTitle" style="margin:0;padding-right:44px;font-size:clamp(1.5rem,3vw,2rem);line-height:1.25;">Câu hỏi đã sẵn sàng</h2>
+                <button id="btnCloseIslandQuiz" type="button" aria-label="ÄÃ³ng báº£ng tráº¯c nghiá»‡m" style="position:absolute;top:16px;right:16px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(148,163,184,.2);color:#fff;font-size:20px;cursor:pointer;">Ã—</button>
+                <p style="margin:0 0 8px;color:#7dd3fc;font-weight:800;">TRáº®C NGHIá»†M Äáº¢O NHá»Ž</p>
+                <h2 id="islandQuizTitle" style="margin:0;padding-right:44px;font-size:clamp(1.5rem,3vw,2rem);line-height:1.25;">CÃ¢u há»i Ä‘Ã£ sáºµn sÃ ng</h2>
                 <p id="islandQuizMeta" style="margin:10px 0 20px;color:#94a3b8;"></p>
                 <section id="islandQuizContent" aria-live="polite" style="color:#dbeafe;line-height:1.75;border:1px solid rgba(148,163,184,.2);border-radius:16px;padding:20px;background:rgba(2,12,27,.45);"></section>
-                <button id="btnLaunchIslandQuiz" type="button" style="display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:9px;margin-top:22px;border:0;border-radius:14px;background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;font-size:1rem;font-weight:800;cursor:pointer;">Vào bài trắc nghiệm</button>
+                <button id="btnLaunchIslandQuiz" type="button" style="display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:9px;margin-top:22px;border:0;border-radius:14px;background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;font-size:1rem;font-weight:800;cursor:pointer;">VÃ o bÃ i tráº¯c nghiá»‡m</button>
             </section>
         </div>`);
     const insertedQuizModal = document.getElementById('islandQuizModal');
@@ -314,7 +314,7 @@ function rebuildIslandQuizModalWithInlineCss() {
 }
 
 function fallbackTheoryFor(lesson) {
-    return `Trước khi làm bài, hãy nắm các ý chính của ${lesson.title}.\n\nQuan sát đặc điểm địa lí, ghi nhớ từ khóa quan trọng và liên hệ kiến thức với địa phương đang khám phá. Sau đó, bạn sẽ trả lời 5 câu hỏi để kiểm tra mức độ hiểu bài.`;
+    return `TrÆ°á»›c khi lÃ m bÃ i, hÃ£y náº¯m cÃ¡c Ã½ chÃ­nh cá»§a ${lesson.title}.\n\nQuan sÃ¡t Ä‘áº·c Ä‘iá»ƒm Ä‘á»‹a lÃ­, ghi nhá»› tá»« khÃ³a quan trá»ng vÃ  liÃªn há»‡ kiáº¿n thá»©c vá»›i Ä‘á»‹a phÆ°Æ¡ng Ä‘ang khÃ¡m phÃ¡. Sau Ä‘Ã³, báº¡n sáº½ tráº£ lá»i 5 cÃ¢u há»i Ä‘á»ƒ kiá»ƒm tra má»©c Ä‘á»™ hiá»ƒu bÃ i.`;
 }
 
 function normalizeProvinceSlug(value) {
@@ -323,7 +323,7 @@ function normalizeProvinceSlug(value) {
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
-        .replace(/đ/g, 'd')
+        .replace(/Ä‘/g, 'd')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 }
@@ -337,7 +337,7 @@ function theoryHtmlFor(lesson) {
     const provinceSlug = provinceSlugFor(lesson);
     if (PROVINCE_THEORIES[provinceSlug]) return PROVINCE_THEORIES[provinceSlug];
 
-    return `<div class="text-left"><h3>${lesson?.title || 'Đảo tri thức'}</h3><p>${fallbackTheoryFor(lesson || {})}</p></div>`;
+    return `<div class="text-left"><h3>${lesson?.title || 'Äáº£o tri thá»©c'}</h3><p>${fallbackTheoryFor(lesson || {})}</p></div>`;
 }
 
 function theoryHtmlFromLoadedContent(lesson, loadedContent) {
@@ -379,6 +379,16 @@ function escapeQuizHtml(value) {
     }[character]));
 }
 
+function safeTheoryHtml(value) {
+    if (window.VieGeoSecurity?.sanitizeHtml) return window.VieGeoSecurity.sanitizeHtml(value, 12000);
+    return String(value ?? '')
+        .replace(/<\s*(script|style|iframe|object|embed|link|meta|base|form)[\s\S]*?>[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
+        .replace(/\s+on[a-z]+\s*=\s*(".*?"|'.*?'|[^\s>]+)/gi, '')
+        .replace(/\s+(href|src|xlink:href)\s*=\s*(['"]?)\s*javascript:[^'"\s>]*/gi, ' $1="#"')
+        .trim()
+        .slice(0, 12000);
+}
+
 function activeIslandQuizQuestions() {
     return Array.isArray(activeIslandLearning?.questions) ? activeIslandLearning.questions : [];
 }
@@ -388,7 +398,7 @@ function islandQuizWarning(message) {
         window.VieGeoUI.warning(message);
         return;
     }
-    window.alert(message);
+    console.warn(message);
 }
 
 function showFloatingHeartPenalty() {
@@ -398,7 +408,7 @@ function showFloatingHeartPenalty() {
     const fromHeader = Boolean(heartBounds && heartBounds.width && heartBounds.height);
     const penalty = document.createElement('div');
     penalty.className = 'fixed z-[999999] text-red-500 font-bold text-3xl md:text-5xl pointer-events-none';
-    penalty.textContent = '-1 ❤️';
+    penalty.textContent = '-1 â¤ï¸';
     penalty.setAttribute('aria-hidden', 'true');
     penalty.style.cssText = `position:fixed;z-index:2147483647;left:${fromHeader ? heartBounds.left + (heartBounds.width / 2) : window.innerWidth / 2}px;top:${fromHeader ? heartBounds.top + heartBounds.height : window.innerHeight / 2}px;color:#fb7185;font-family:'Be Vietnam Pro',sans-serif;font-size:clamp(1.875rem,5vw,3rem);font-weight:800;line-height:1;white-space:nowrap;pointer-events:none;text-shadow:0 6px 20px rgba(127,29,29,.5);will-change:transform,opacity;`;
     document.body.appendChild(penalty);
@@ -444,10 +454,10 @@ async function endIslandQuizForGameOver() {
     updateStatsUI();
 
     const options = {
-        title: 'Hết sinh mệnh!',
-        text: 'Bạn đã hết trái tim sau khi trả lời sai. Hãy hồi phục trái tim rồi quay lại hành trình học tập.',
+        title: 'Háº¿t sinh má»‡nh!',
+        text: 'Báº¡n Ä‘Ã£ háº¿t trÃ¡i tim sau khi tráº£ lá»i sai. HÃ£y há»“i phá»¥c trÃ¡i tim rá»“i quay láº¡i hÃ nh trÃ¬nh há»c táº­p.',
         icon: 'error',
-        confirmButtonText: 'Làm lại sau',
+        confirmButtonText: 'LÃ m láº¡i sau',
         confirmButtonColor: '#0284c7',
         background: '#13253a',
         color: '#f8fafc',
@@ -529,26 +539,26 @@ function renderIslandQuizWrongAnswerReview(questions) {
     }).filter(({ correctIndex, selectedIndex }) => selectedIndex !== correctIndex);
 
     if (!wrongAnswers.length) {
-        return '<p style="margin:0;color:#86efac;font-weight:700"><i class="fa-solid fa-circle-check"></i> Xuất sắc! Bạn không có câu trả lời sai.</p>';
+        return '<p style="margin:0;color:#86efac;font-weight:700"><i class="fa-solid fa-circle-check"></i> Xuáº¥t sáº¯c! Báº¡n khÃ´ng cÃ³ cÃ¢u tráº£ lá»i sai.</p>';
     }
 
     const cards = wrongAnswers.map(({ question, index, correctIndex, selectedIndex }) => {
         const options = Array.isArray(question.options) ? question.options : [];
-        const selectedText = Number.isInteger(selectedIndex) ? options[selectedIndex] : 'Chưa chọn đáp án';
-        const correctText = options[correctIndex] || 'Chưa có đáp án đúng';
+        const selectedText = Number.isInteger(selectedIndex) ? options[selectedIndex] : 'ChÆ°a chá»n Ä‘Ã¡p Ã¡n';
+        const correctText = options[correctIndex] || 'ChÆ°a cÃ³ Ä‘Ã¡p Ã¡n Ä‘Ãºng';
         const explanation = String(question.explanation || '').trim();
         return `<article style="padding:15px;border:1px solid rgba(248,113,113,.35);border-radius:14px;background:rgba(127,29,29,.16);text-align:left">
-            <strong style="display:block;color:#fecaca;margin-bottom:7px">Câu ${index + 1}: ${escapeQuizHtml(question.question || question.questionText)}</strong>
-            <p style="margin:5px 0;color:#fecaca">Bạn chọn: ${escapeQuizHtml(selectedText || 'Chưa chọn đáp án')}</p>
-            <p style="margin:5px 0;color:#bbf7d0">Đáp án đúng: ${escapeQuizHtml(correctText)}</p>
-            ${explanation ? `<p style="margin:9px 0 0;color:#cbd5e1"><strong>Giải thích:</strong> ${escapeQuizHtml(explanation)}</p>` : ''}
+            <strong style="display:block;color:#fecaca;margin-bottom:7px">CÃ¢u ${index + 1}: ${escapeQuizHtml(question.question || question.questionText)}</strong>
+            <p style="margin:5px 0;color:#fecaca">Báº¡n chá»n: ${escapeQuizHtml(selectedText || 'ChÆ°a chá»n Ä‘Ã¡p Ã¡n')}</p>
+            <p style="margin:5px 0;color:#bbf7d0">ÄÃ¡p Ã¡n Ä‘Ãºng: ${escapeQuizHtml(correctText)}</p>
+            ${explanation ? `<p style="margin:9px 0 0;color:#cbd5e1"><strong>Giáº£i thÃ­ch:</strong> ${escapeQuizHtml(explanation)}</p>` : ''}
         </article>`;
     }).join('');
 
     return `<section style="display:grid;gap:12px;width:100%;margin-top:18px;text-align:left">
         <div style="padding:14px 16px;border:1px solid rgba(250,204,21,.32);border-radius:14px;background:rgba(250,204,21,.1);color:#fef3c7">
-            <strong><i class="fa-solid fa-book-open"></i> Hãy đọc lại lý thuyết</strong>
-            <p style="margin:5px 0 0">Bạn còn ${wrongAnswers.length} câu chưa đúng. Ôn lại phần lý thuyết của đảo trước khi làm lại để ghi nhớ tốt hơn.</p>
+            <strong><i class="fa-solid fa-book-open"></i> HÃ£y Ä‘á»c láº¡i lÃ½ thuyáº¿t</strong>
+            <p style="margin:5px 0 0">Báº¡n cÃ²n ${wrongAnswers.length} cÃ¢u chÆ°a Ä‘Ãºng. Ã”n láº¡i pháº§n lÃ½ thuyáº¿t cá»§a Ä‘áº£o trÆ°á»›c khi lÃ m láº¡i Ä‘á»ƒ ghi nhá»› tá»‘t hÆ¡n.</p>
         </div>
         ${cards}
     </section>`;
@@ -567,15 +577,15 @@ async function renderIslandQuizResult() {
     const nextButton = document.getElementById('islandQuizStepNext');
     if (!header || !body || !backButton || !nextButton) return;
 
-    header.textContent = 'Kết quả bài trắc nghiệm';
+    header.textContent = 'Káº¿t quáº£ bÃ i tráº¯c nghiá»‡m';
     body.innerHTML = `<div style="display: grid; min-height: 260px; place-items: center; text-align: center; gap: 14px;">
-        <div style="font-size: 2rem; letter-spacing: 6px;">${stars ? '⭐'.repeat(stars) : '☆'}</div>
-        <h3 style="margin: 0; color: #f8fafc; font-size: 1.5rem;">Bạn trả lời đúng ${correctAnswers}/${questions.length} câu</h3>
-        <p style="margin: 0; color: #cbd5e1;">Số sao cao nhất của đảo đã được lưu vào hành trình học tập.</p>
+        <div style="font-size: 2rem; letter-spacing: 6px;">${stars ? 'â­'.repeat(stars) : 'â˜†'}</div>
+        <h3 style="margin: 0; color: #f8fafc; font-size: 1.5rem;">Báº¡n tráº£ lá»i Ä‘Ãºng ${correctAnswers}/${questions.length} cÃ¢u</h3>
+        <p style="margin: 0; color: #cbd5e1;">Sá»‘ sao cao nháº¥t cá»§a Ä‘áº£o Ä‘Ã£ Ä‘Æ°á»£c lÆ°u vÃ o hÃ nh trÃ¬nh há»c táº­p.</p>
         ${renderIslandQuizWrongAnswerReview(questions)}
     </div>`;
     backButton.style.visibility = 'hidden';
-    nextButton.textContent = 'Hoàn tất';
+    nextButton.textContent = 'HoÃ n táº¥t';
 }
 
 function renderIslandQuizQuestion(index) {
@@ -593,7 +603,7 @@ function renderIslandQuizQuestion(index) {
     const nextButton = document.getElementById('islandQuizStepNext');
     if (!header || !body || !backButton || !nextButton) return;
 
-    header.textContent = `Câu ${islandQuizCurrentIndex + 1} / ${questions.length}`;
+    header.textContent = `CÃ¢u ${islandQuizCurrentIndex + 1} / ${questions.length}`;
     const selectedAnswer = islandQuizAnswers[islandQuizCurrentIndex];
     const answerLocked = Boolean(islandQuizAnswerLocked[islandQuizCurrentIndex]);
     const correctAnswer = islandQuizCorrectAnswerIndex(question);
@@ -602,7 +612,7 @@ function renderIslandQuizQuestion(index) {
     const options = Array.isArray(question.options) ? question.options : [];
     body.innerHTML = `<h3 style="margin: 0 0 22px; color: #f8fafc; font-size: clamp(1.15rem, 2.5vw, 1.45rem); line-height: 1.5;">${escapeQuizHtml(question.question || question.questionText)}</h3>
         <div id="islandQuizOptions" style="display: grid; gap: 12px;"></div>
-        ${answerLocked ? `<aside aria-live="polite" style="margin-top:18px;padding:16px;border:1px solid ${isCorrect ? 'rgba(74,222,128,.5)' : 'rgba(248,113,113,.5)'};border-radius:14px;background:${isCorrect ? 'rgba(22,163,74,.12)' : 'rgba(127,29,29,.16)'};color:${isCorrect ? '#dcfce7' : '#fee2e2'};line-height:1.6;text-align:left;"><strong style="display:block;margin-bottom:6px;color:${isCorrect ? '#86efac' : '#fca5a5'}">${isCorrect ? '✓ Trả lời chính xác' : '✕ Đáp án chưa chính xác'}</strong><strong style="display:block;margin-bottom:5px;color:#e0f2fe">Giải thích</strong>${escapeQuizHtml(explanation || 'Chưa có nội dung giải thích cho câu hỏi này.')}</aside>` : ''}`;
+        ${answerLocked ? `<aside aria-live="polite" style="margin-top:18px;padding:16px;border:1px solid ${isCorrect ? 'rgba(74,222,128,.5)' : 'rgba(248,113,113,.5)'};border-radius:14px;background:${isCorrect ? 'rgba(22,163,74,.12)' : 'rgba(127,29,29,.16)'};color:${isCorrect ? '#dcfce7' : '#fee2e2'};line-height:1.6;text-align:left;"><strong style="display:block;margin-bottom:6px;color:${isCorrect ? '#86efac' : '#fca5a5'}">${isCorrect ? 'âœ“ Tráº£ lá»i chÃ­nh xÃ¡c' : 'âœ• ÄÃ¡p Ã¡n chÆ°a chÃ­nh xÃ¡c'}</strong><strong style="display:block;margin-bottom:5px;color:#e0f2fe">Giáº£i thÃ­ch</strong>${escapeQuizHtml(explanation || 'ChÆ°a cÃ³ ná»™i dung giáº£i thÃ­ch cho cÃ¢u há»i nÃ y.')}</aside>` : ''}`;
     const optionsContainer = document.getElementById('islandQuizOptions');
     options.forEach((option, optionIndex) => {
         const isSelected = selectedAnswer === optionIndex;
@@ -639,18 +649,18 @@ function renderIslandQuizQuestion(index) {
     nextButton.disabled = !answerLocked || islandQuizPenaltyPending;
     nextButton.style.opacity = nextButton.disabled ? '.5' : '1';
     nextButton.style.cursor = nextButton.disabled ? 'not-allowed' : 'pointer';
-    nextButton.textContent = islandQuizCurrentIndex === questions.length - 1 ? 'Xem kết quả' : 'Câu tiếp theo';
+    nextButton.textContent = islandQuizCurrentIndex === questions.length - 1 ? 'Xem káº¿t quáº£' : 'CÃ¢u tiáº¿p theo';
 }
 
 function mountIslandQuizStepper() {
     if (!islandQuizContent) return false;
     islandQuizContent.style.cssText = 'display:flex;flex:1 1 auto;min-height:0;padding:0;overflow:hidden;background:#102238;';
     islandQuizContent.innerHTML = `<section style="display:flex;width:100%;min-height:0;flex:1 1 auto;flex-direction:column;overflow:hidden;">
-        <header id="islandQuizStepHeader" style="padding: 16px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.22); color: #7dd3fc; font-weight: 800;">Câu 1</header>
+        <header id="islandQuizStepHeader" style="padding: 16px 20px; border-bottom: 1px solid rgba(148, 163, 184, 0.22); color: #7dd3fc; font-weight: 800;">CÃ¢u 1</header>
         <main id="islandQuizStepBody" style="flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:24px 20px;"></main>
         <footer style="display: flex; justify-content: space-between; gap: 12px; padding: 16px 20px; border-top: 1px solid rgba(148, 163, 184, 0.22);">
-            <button id="islandQuizStepBack" type="button" style="min-width: 112px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 12px; padding: 12px 16px; background: transparent; color: #e2e8f0; font: inherit; font-weight: 700; cursor: pointer;">Quay lại</button>
-            <button id="islandQuizStepNext" type="button" style="min-width: 130px; border: 0; border-radius: 12px; padding: 12px 16px; background: #0284c7; color: #fff; font: inherit; font-weight: 800; cursor: pointer;">Tiếp tục</button>
+            <button id="islandQuizStepBack" type="button" style="min-width: 112px; border: 1px solid rgba(148, 163, 184, 0.45); border-radius: 12px; padding: 12px 16px; background: transparent; color: #e2e8f0; font: inherit; font-weight: 700; cursor: pointer;">Quay láº¡i</button>
+            <button id="islandQuizStepNext" type="button" style="min-width: 130px; border: 0; border-radius: 12px; padding: 12px 16px; background: #0284c7; color: #fff; font: inherit; font-weight: 800; cursor: pointer;">Tiáº¿p tá»¥c</button>
         </footer>
     </section>`;
     document.getElementById('islandQuizStepBack')?.addEventListener('click', () => {
@@ -664,7 +674,7 @@ function mountIslandQuizStepper() {
             return;
         }
         if (!islandQuizAnswerLocked[islandQuizCurrentIndex] || islandQuizPenaltyPending) {
-            islandQuizWarning('Hãy chốt đáp án và đọc giải thích trước khi tiếp tục.');
+            islandQuizWarning('HÃ£y chá»‘t Ä‘Ã¡p Ã¡n vÃ  Ä‘á»c giáº£i thÃ­ch trÆ°á»›c khi tiáº¿p tá»¥c.');
             return;
         }
         if (islandQuizCurrentIndex === activeIslandQuizQuestions().length - 1) {
@@ -678,7 +688,7 @@ function mountIslandQuizStepper() {
 
 async function openIslandQuizPreview() {
     if (!activeIslandLearning?.lesson || !Array.isArray(activeIslandLearning.questions) || !activeIslandLearning.questions.length) {
-        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Hiện chưa có câu hỏi để bắt đầu bài học này.');
+        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Hiá»‡n chÆ°a cÃ³ cÃ¢u há»i Ä‘á»ƒ báº¯t Ä‘áº§u bÃ i há»c nÃ y.');
         return;
     }
 
@@ -686,7 +696,7 @@ async function openIslandQuizPreview() {
     // hidden styles can capture the event or hide the current attempt.
     const quizModal = rebuildIslandQuizModalWithInlineCss();
     if (!quizModal || !islandQuizContent || !islandQuizTitle || !islandQuizMeta) {
-        console.error('Không thể tạo Modal trắc nghiệm trong DOM.');
+        console.error('KhÃ´ng thá»ƒ táº¡o Modal tráº¯c nghiá»‡m trong DOM.');
         return;
     }
     islandQuizCurrentIndex = 0;
@@ -694,8 +704,8 @@ async function openIslandQuizPreview() {
     islandQuizAnswerLocked = {};
     islandQuizPenaltyPending = false;
     islandQuizSubmitted = false;
-    islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
-    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Supabase`;
+    islandQuizTitle.textContent = `Tráº¯c nghiá»‡m: ${activeIslandLearning.lesson.title || 'Äáº£o tri thá»©c'}`;
+    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Viá»‡t Nam'} Â· ${activeIslandLearning.questions.length} cÃ¢u há»i tá»« Supabase`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';
     if (!mountIslandQuizStepper()) return;
     forceShowIslandModal(quizModal);
@@ -703,22 +713,22 @@ async function openIslandQuizPreview() {
 }
 
 function showIslandLoadingFeedback(clickedIsland) {
-    const title = clickedIsland?.dataset.lessonTitle || 'Đảo tri thức';
-    const province = clickedIsland?.dataset.province || selectedProvince?.name || 'Việt Nam';
+    const title = clickedIsland?.dataset.lessonTitle || 'Äáº£o tri thá»©c';
+    const province = clickedIsland?.dataset.province || selectedProvince?.name || 'Viá»‡t Nam';
     const difficulty = clickedIsland?.dataset.difficulty || 'easy';
 
     if (!ensureIslandModalDom()) {
-        console.error('Không thể tạo cấu trúc Modal lý thuyết trong DOM.');
-        window.alert('Đã nhận click! Đang kết nối Supabase...');
+        console.error('KhÃ´ng thá»ƒ táº¡o cáº¥u trÃºc Modal lÃ½ thuyáº¿t trong DOM.');
+        console.warn('Đã nhận click! Đang kết nối Supabase...');
         return false;
     }
 
     forceShowIslandModal(islandTheoryModal);
-    islandTheoryTitle.textContent = 'Lý thuyết trước khi thực chiến';
-    islandTheoryMeta.textContent = `${title} · ${province} · ${difficulty} · 5 câu hỏi`;
+    islandTheoryTitle.textContent = 'LÃ½ thuyáº¿t trÆ°á»›c khi thá»±c chiáº¿n';
+    islandTheoryMeta.textContent = `${title} Â· ${province} Â· ${difficulty} Â· 5 cÃ¢u há»i`;
     islandTheoryContent.classList.add('is-loading');
     islandTheoryContent.setAttribute('aria-busy', 'true');
-    islandTheoryContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang tải dữ liệu...';
+    islandTheoryContent.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Äang táº£i dá»¯ liá»‡u...';
     btnStartIslandQuiz.disabled = true;
     return true;
 }
@@ -741,17 +751,17 @@ async function handleDelegatedIslandClick(event) {
     const nodeKind = clickedIsland.dataset.nodeKind || 'small';
 
     if (!lesson) {
-        console.error('Không tìm thấy dữ liệu bài học cho đảo:', clickedIsland.dataset.lessonId);
+        console.error('KhÃ´ng tÃ¬m tháº¥y dá»¯ liá»‡u bÃ i há»c cho Ä‘áº£o:', clickedIsland.dataset.lessonId);
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.textContent = 'Không tìm thấy dữ liệu bài học. Vui lòng tải lại trang và thử lại.';
+        islandTheoryContent.textContent = 'KhÃ´ng tÃ¬m tháº¥y dá»¯ liá»‡u bÃ i há»c. Vui lÃ²ng táº£i láº¡i trang vÃ  thá»­ láº¡i.';
         return;
     }
 
     if (!isUnlocked) {
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.textContent = 'Đảo này chưa mở khóa. Hãy hoàn thành đảo ngay trước đó để tiếp tục hành trình.';
+        islandTheoryContent.textContent = 'Äáº£o nÃ y chÆ°a má»Ÿ khÃ³a. HÃ£y hoÃ n thÃ nh Ä‘áº£o ngay trÆ°á»›c Ä‘Ã³ Ä‘á»ƒ tiáº¿p tá»¥c hÃ nh trÃ¬nh.';
         return;
     }
 
@@ -765,7 +775,7 @@ async function handleDelegatedIslandClick(event) {
     try {
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.textContent = 'Đang chuẩn bị bài kiểm tra...';
+        islandTheoryContent.textContent = 'Äang chuáº©n bá»‹ bÃ i kiá»ƒm tra...';
         if (typeof window.consumeHeart === 'function' && !await window.consumeHeart()) {
             closeIslandTheory();
             return;
@@ -774,57 +784,57 @@ async function handleDelegatedIslandClick(event) {
         localStorage.setItem('VieGeo_mode', 'normal');
         window.location.href = '/lesson';
     } catch (error) {
-        console.error('Không thể mở bài kiểm tra của đảo:', error);
-        islandTheoryContent.textContent = 'Chưa thể mở bài học. Vui lòng thử lại.';
+        console.error('KhÃ´ng thá»ƒ má»Ÿ bÃ i kiá»ƒm tra cá»§a Ä‘áº£o:', error);
+        islandTheoryContent.textContent = 'ChÆ°a thá»ƒ má»Ÿ bÃ i há»c. Vui lÃ²ng thá»­ láº¡i.';
     }
 }
 
 async function openIslandTheory(lesson) {
     if (!lesson || !ensureIslandModalDom()) {
-        if (!hasTheoryModalDom()) console.error('Không thể mở lý thuyết vì thiếu phần tử DOM cần thiết.');
+        if (!hasTheoryModalDom()) console.error('KhÃ´ng thá»ƒ má»Ÿ lÃ½ thuyáº¿t vÃ¬ thiáº¿u pháº§n tá»­ DOM cáº§n thiáº¿t.');
         return;
     }
     const requestId = ++islandTheoryRequest;
-    const theoryHtml = theoryHtmlFor(lesson);
+    const theoryHtml = safeTheoryHtml(theoryHtmlFor(lesson));
     activeIslandLearning = { lesson, theory: theoryHtml, questions: [] };
     forceShowIslandModal(islandTheoryModal);
-    islandTheoryTitle.textContent = 'Lý thuyết trước khi thực chiến';
-    islandTheoryMeta.textContent = `${lesson.title || 'Đảo tri thức'} · ${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${lesson.difficulty || 'easy'} · Đang chuẩn bị 5 câu hỏi`;
+    islandTheoryTitle.textContent = 'LÃ½ thuyáº¿t trÆ°á»›c khi thá»±c chiáº¿n';
+    islandTheoryMeta.textContent = `${lesson.title || 'Äáº£o tri thá»©c'} Â· ${lesson.province || selectedProvince?.name || 'Viá»‡t Nam'} Â· ${lesson.difficulty || 'easy'} Â· Äang chuáº©n bá»‹ 5 cÃ¢u há»i`;
     islandTheoryContent.classList.remove('is-loading');
     islandTheoryContent.setAttribute('aria-busy', 'true');
-    islandTheoryContent.innerHTML = theoryHtml;
+    islandTheoryContent.innerHTML = safeTheoryHtml(theoryHtml);
     resetIslandTheoryConfirmation();
 
     try {
         const loadIslandContent = window.VieGeoLearningPath?.loadIslandContent;
-        if (typeof loadIslandContent !== 'function') throw new Error('Không thể khởi tạo trình tải câu hỏi.');
+        if (typeof loadIslandContent !== 'function') throw new Error('KhÃ´ng thá»ƒ khá»Ÿi táº¡o trÃ¬nh táº£i cÃ¢u há»i.');
         const loaded = await loadIslandContent(lesson);
         if (requestId !== islandTheoryRequest || !ensureIslandModalDom() || islandTheoryModal.hidden) return;
         activeIslandLearning = {
             lesson,
-            theory: theoryHtmlFromLoadedContent(lesson, loaded),
+            theory: safeTheoryHtml(theoryHtmlFromLoadedContent(lesson, loaded)),
             questions: Array.isArray(loaded?.questions) ? loaded.questions.slice(0, 5) : []
         };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.innerHTML = activeIslandLearning.theory;
+        islandTheoryContent.innerHTML = safeTheoryHtml(activeIslandLearning.theory);
         const questionCount = activeIslandLearning.questions.length;
-        islandTheoryMeta.textContent = `${lesson.title || 'Đảo tri thức'} · ${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${questionCount} câu hỏi sẵn sàng`;
+        islandTheoryMeta.textContent = `${lesson.title || 'Äáº£o tri thá»©c'} Â· ${lesson.province || selectedProvince?.name || 'Viá»‡t Nam'} Â· ${questionCount} cÃ¢u há»i sáºµn sÃ ng`;
         if (!questionCount) {
             const notice = loaded?.status === 'network-error'
-                ? 'Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!'
-                : 'Hiện chưa có câu hỏi nào cho khu vực này, vui lòng quay lại sau!';
-            islandTheoryContent.insertAdjacentHTML('beforeend', `<p><strong>Thông báo:</strong> ${notice}</p>`);
+                ? 'Lá»—i Ä‘Æ°á»ng truyá»n hoáº·c mÃ¡y chá»§ Supabase. Vui lÃ²ng kiá»ƒm tra láº¡i máº¡ng!'
+                : 'Hiá»‡n chÆ°a cÃ³ cÃ¢u há»i nÃ o cho khu vá»±c nÃ y, vui lÃ²ng quay láº¡i sau!';
+            islandTheoryContent.insertAdjacentHTML('beforeend', `<p><strong>ThÃ´ng bÃ¡o:</strong> ${notice}</p>`);
         }
     } catch (error) {
-        const message = error?.message || 'Không thể kết nối Supabase.';
-        console.error('Lỗi Supabase khi tải nội dung Đảo nhỏ:', message, error);
+        const message = error?.message || 'KhÃ´ng thá»ƒ káº¿t ná»‘i Supabase.';
+        console.error('Lá»—i Supabase khi táº£i ná»™i dung Äáº£o nhá»:', message, error);
         if (requestId !== islandTheoryRequest) return;
-        activeIslandLearning = { lesson, theory: theoryHtmlFor(lesson), questions: [] };
+        activeIslandLearning = { lesson, theory: safeTheoryHtml(theoryHtmlFor(lesson)), questions: [] };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.innerHTML = `${activeIslandLearning.theory}<p><strong>Lỗi đường truyền hoặc máy chủ Supabase.</strong> Vui lòng kiểm tra lại mạng!</p>`;
-        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!');
+        islandTheoryContent.innerHTML = `${safeTheoryHtml(activeIslandLearning.theory)}<p><strong>Lá»—i Ä‘Æ°á»ng truyá»n hoáº·c mÃ¡y chá»§ Supabase.</strong> Vui lÃ²ng kiá»ƒm tra láº¡i máº¡ng!</p>`;
+        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lá»—i Ä‘Æ°á»ng truyá»n hoáº·c mÃ¡y chá»§ Supabase. Vui lÃ²ng kiá»ƒm tra láº¡i máº¡ng!');
     } finally {
         if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
             updateIslandTheoryStartButton();
@@ -835,7 +845,7 @@ async function openIslandTheory(lesson) {
 async function beginIslandQuiz() {
     if (!activeIslandLearning?.lesson) return;
     if (!Array.isArray(activeIslandLearning.questions) || !activeIslandLearning.questions.length) {
-        if (typeof VieGeoUI !== 'undefined') VieGeoUI.warning('Hiện chưa có câu hỏi để bắt đầu bài học này.');
+        if (typeof VieGeoUI !== 'undefined') VieGeoUI.warning('Hiá»‡n chÆ°a cÃ³ cÃ¢u há»i Ä‘á»ƒ báº¯t Ä‘áº§u bÃ i há»c nÃ y.');
         return;
     }
     const launchButton = btnLaunchIslandQuiz || btnStartIslandQuiz;
@@ -854,8 +864,8 @@ async function beginIslandQuiz() {
         closeIslandTheory();
         window.location.href = '/lesson';
     } catch (error) {
-        console.error('Không thể bắt đầu bài học Đảo nhỏ:', error);
-        if (typeof VieGeoUI !== 'undefined') VieGeoUI.error('Chưa thể bắt đầu bài học. Vui lòng thử lại.');
+        console.error('KhÃ´ng thá»ƒ báº¯t Ä‘áº§u bÃ i há»c Äáº£o nhá»:', error);
+        if (typeof VieGeoUI !== 'undefined') VieGeoUI.error('ChÆ°a thá»ƒ báº¯t Ä‘áº§u bÃ i há»c. Vui lÃ²ng thá»­ láº¡i.');
     } finally {
         if (islandQuizModal && !islandQuizModal.hidden && launchButton) launchButton.disabled = false;
         if (islandTheoryModal && !islandTheoryModal.hidden && btnStartIslandQuiz) btnStartIslandQuiz.disabled = false;
@@ -876,7 +886,7 @@ mapContainer?.addEventListener('click', handleDelegatedIslandClick);
 // Update Stats UI
 function updateStatsUI() {
     if (document.getElementById('statHearts')) {
-        document.getElementById('statHearts').textContent = isPremiumIslandLearner() ? '∞' : state.hearts;
+        document.getElementById('statHearts').textContent = isPremiumIslandLearner() ? 'âˆž' : state.hearts;
     }
     if (document.getElementById('statStreak')) document.getElementById('statStreak').textContent = state.streak;
     if (document.getElementById('statGems')) document.getElementById('statGems').textContent = state.gems;
@@ -892,7 +902,7 @@ function renderMap() {
     routeResizeObserver = null;
     
     if (currentView === 'regions') {
-        mapTitle.textContent = "Khám Phá Việt Nam";
+        mapTitle.textContent = "KhÃ¡m PhÃ¡ Viá»‡t Nam";
         btnMapBack.style.display = 'none';
         renderRegions();
     } else if (currentView === 'provinces') {
@@ -931,7 +941,7 @@ function renderRegions() {
         card.innerHTML = `
             <div style="font-size: 3rem; color: ${region.color};"><i class="fa-solid fa-map"></i></div>
             <h3 style="font-size: 1.5rem; margin-top: 10px;">${region.name}</h3>
-            <p style="color: var(--text-dim); margin-top: 5px;">${region.provinces.length} Tỉnh/Thành phố</p>
+            <p style="color: var(--text-dim); margin-top: 5px;">${region.provinces.length} Tá»‰nh/ThÃ nh phá»‘</p>
         `;
         card.onclick = () => {
             selectedRegion = region;
@@ -967,7 +977,7 @@ function renderProvinces() {
             <div style="margin-top: 10px; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px;">
                 <div style="background: ${prov.color}; width: ${percent}%; height: 100%; border-radius: 4px;"></div>
             </div>
-            <p style="color: var(--text-dim); margin-top: 5px; font-size: 0.9rem;">Tiến độ: ${percent}%</p>
+            <p style="color: var(--text-dim); margin-top: 5px; font-size: 0.9rem;">Tiáº¿n Ä‘á»™: ${percent}%</p>
         `;
         card.onclick = () => {
             selectedProvince = prov;
@@ -1066,8 +1076,8 @@ function renderLessons() {
         wrapper.dataset.completed = String(Boolean(isCompleted));
         wrapper.dataset.unlocked = String(Boolean(isCompleted || prevCompleted));
         wrapper.dataset.nodeKind = nodeKind;
-        wrapper.dataset.lessonTitle = lesson.title || 'Đảo tri thức';
-        wrapper.dataset.province = lesson.province || selectedProvince?.name || 'Việt Nam';
+        wrapper.dataset.lessonTitle = lesson.title || 'Äáº£o tri thá»©c';
+        wrapper.dataset.province = lesson.province || selectedProvince?.name || 'Viá»‡t Nam';
         wrapper.dataset.difficulty = lesson.difficulty || 'easy';
         wrapper.style.marginBottom = nodeKind === 'boss' ? '52px' : nodeKind === 'checkpoint' ? '42px' : '32px';
         
@@ -1101,8 +1111,8 @@ function renderLessons() {
         if (starCount > 0) {
             const stars = document.createElement('div');
             stars.className = 'map-island-stars';
-            stars.textContent = `${'⭐'.repeat(starCount)}${'☆'.repeat(3 - starCount)}`;
-            stars.setAttribute('aria-label', `${starCount} trên 3 sao`);
+            stars.textContent = `${'â­'.repeat(starCount)}${'â˜†'.repeat(3 - starCount)}`;
+            stars.setAttribute('aria-label', `${starCount} trÃªn 3 sao`);
             wrapper.appendChild(stars);
         }
         
@@ -1196,7 +1206,11 @@ function hydrateSurveyInputs(profile) {
 }
 
 function selectedSurveyValue(name) {
-    return document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+    const value = document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+    const cleanValue = window.VieGeoSecurity?.sanitizeText
+        ? window.VieGeoSecurity.sanitizeText(value, 80)
+        : String(value).replace(/<[^>]*>/g, '').trim().slice(0, 80);
+    return /^[\w-]+$/.test(cleanValue) ? cleanValue : '';
 }
 
 function openSurvey(forceOpen = false) {
@@ -1226,7 +1240,7 @@ async function initializeLearnerSurvey() {
                 localStorage.setItem('VieGeo_state', JSON.stringify(state));
             }
         } catch (error) {
-            console.warn('Không thể đọc trạng thái khảo sát từ Supabase/localStorage, dùng bản lưu cục bộ.', error);
+            console.warn('KhÃ´ng thá»ƒ Ä‘á»c tráº¡ng thÃ¡i kháº£o sÃ¡t tá»« Supabase/localStorage, dÃ¹ng báº£n lÆ°u cá»¥c bá»™.', error);
         }
     }
 
@@ -1234,17 +1248,18 @@ async function initializeLearnerSurvey() {
 }
 
 async function saveLearnerSurvey() {
+    if (surveySubmitButton?.disabled) return;
     const goal = selectedSurveyValue('surveyGoal');
     const interest = selectedSurveyValue('surveyInterest');
     if (!goal || !interest) {
-        VieGeoUI.warning('Vui lòng chọn mục tiêu và khu vực bạn quan tâm.');
+        VieGeoUI.warning('Vui lÃ²ng chá»n má»¥c tiÃªu vÃ  khu vá»±c báº¡n quan tÃ¢m.');
         return;
     }
     const profile = ensureLearningProfile();
     const previousLabel = surveySubmitButton?.textContent;
     if (surveySubmitButton) {
         surveySubmitButton.disabled = true;
-        surveySubmitButton.textContent = 'Đang lưu…';
+        surveySubmitButton.textContent = 'Äang lÆ°uâ€¦';
     }
 
     profile.goal = goal;
@@ -1263,16 +1278,16 @@ async function saveLearnerSurvey() {
         saveGameState(state);
         if (surveyModal) surveyModal.style.display = 'none';
         if (typeof renderProfile === 'function') renderProfile();
-        if (typeof showToast === 'function') showToast('Đã lưu hồ sơ học tập.');
-        else VieGeoUI.success('Đã lưu hồ sơ học tập.');
+        if (typeof showToast === 'function') showToast('ÄÃ£ lÆ°u há»“ sÆ¡ há»c táº­p.');
+        else VieGeoUI.success('ÄÃ£ lÆ°u há»“ sÆ¡ há»c táº­p.');
     } catch (error) {
         profile.surveyDone = false;
-        console.error('Không thể lưu khảo sát:', error);
-        VieGeoUI.error('Chưa thể lưu khảo sát. Vui lòng thử lại.');
+        console.error('KhÃ´ng thá»ƒ lÆ°u kháº£o sÃ¡t:', error);
+        VieGeoUI.error('ChÆ°a thá»ƒ lÆ°u kháº£o sÃ¡t. Vui lÃ²ng thá»­ láº¡i.');
     } finally {
         if (surveySubmitButton) {
             surveySubmitButton.disabled = false;
-            surveySubmitButton.textContent = previousLabel || 'Lưu khảo sát';
+            surveySubmitButton.textContent = previousLabel || 'LÆ°u kháº£o sÃ¡t';
         }
     }
 }
@@ -1303,7 +1318,7 @@ function updateCompletionTheoryButton() {
     if (currentView === 'lessons' && selectedProvince && checkAllIslandsCompleted(selectedProvince)) {
         actionsContainer.innerHTML = `
             <button id="btnReviewAllTheory" type="button" onclick="openAllIslandsTheoryModal(selectedProvince)" class="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold p-3 rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2 border border-amber-300/40 text-sm md:text-base cursor-pointer glow-btn">
-                <span>📖</span> Xem lại toàn bộ Lý thuyết
+                <span>ðŸ“–</span> Xem láº¡i toÃ n bá»™ LÃ½ thuyáº¿t
             </button>
         `;
     } else {
@@ -1325,25 +1340,25 @@ async function openAllIslandsTheoryModal(province) {
     const container = document.getElementById('allTheoryCardsContainer');
     const searchInput = document.getElementById('allTheorySearchInput');
 
-    const provName = province ? province.name : 'Tất cả 34 Đảo';
-    if (titleEl) titleEl.textContent = `TỔNG HỢP LÝ THUYẾT - ${provName.toUpperCase()}`;
-    if (subEl) subEl.textContent = `Danh sách lý thuyết 34 đảo tri thức tỉnh ${provName} được tổng hợp đầy đủ.`;
+    const provName = province ? province.name : 'Táº¥t cáº£ 34 Äáº£o';
+    if (titleEl) titleEl.textContent = `Tá»”NG Há»¢P LÃ THUYáº¾T - ${provName.toUpperCase()}`;
+    if (subEl) subEl.textContent = `Danh sÃ¡ch lÃ½ thuyáº¿t 34 Ä‘áº£o tri thá»©c tá»‰nh ${provName} Ä‘Æ°á»£c tá»•ng há»£p Ä‘áº§y Ä‘á»§.`;
     if (searchInput) searchInput.value = '';
 
     if (container) {
-        container.innerHTML = '<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p>Đang tổng hợp dữ liệu lý thuyết 34 đảo...</p></div>';
+        container.innerHTML = '<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p>Äang tá»•ng há»£p dá»¯ liá»‡u lÃ½ thuyáº¿t 34 Ä‘áº£o...</p></div>';
     }
 
     const supabaseClient = window.supabaseClient || window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
     const islandDataMap = new Map();
 
     for (let i = 1; i <= 34; i++) {
-        const defaultTitle = i === 34 ? 'BOSS CUỐI · Chinh phục tỉnh thành' : (i % 11 === 0 ? `Trạm kiểm tra ${i}` : `Đảo nhỏ ${i}`);
+        const defaultTitle = i === 34 ? 'BOSS CUá»I Â· Chinh phá»¥c tá»‰nh thÃ nh' : (i % 11 === 0 ? `Tráº¡m kiá»ƒm tra ${i}` : `Äáº£o nhá» ${i}`);
         islandDataMap.set(i, {
             islandIndex: i,
             title: defaultTitle,
-            topic: `Chủ đề Đảo ${i}`,
-            theory: `Nội dung trọng tâm của Đảo nhỏ ${i}: Ghi nhớ kiến thức cơ bản, các từ khóa địa lí quan trọng và liên hệ thực tế tỉnh thành ${provName} đang khám phá.`
+            topic: `Chá»§ Ä‘á» Äáº£o ${i}`,
+            theory: `Ná»™i dung trá»ng tÃ¢m cá»§a Äáº£o nhá» ${i}: Ghi nhá»› kiáº¿n thá»©c cÆ¡ báº£n, cÃ¡c tá»« khÃ³a Ä‘á»‹a lÃ­ quan trá»ng vÃ  liÃªn há»‡ thá»±c táº¿ tá»‰nh thÃ nh ${provName} Ä‘ang khÃ¡m phÃ¡.`
         });
     }
 
@@ -1371,7 +1386,7 @@ async function openAllIslandsTheoryModal(province) {
                 });
             }
         } catch (err) {
-            console.warn('Không thể tải dữ liệu lý thuyết từ Supabase:', err);
+            console.warn('KhÃ´ng thá»ƒ táº£i dá»¯ liá»‡u lÃ½ thuyáº¿t tá»« Supabase:', err);
         }
     }
 
@@ -1381,7 +1396,7 @@ async function openAllIslandsTheoryModal(province) {
             const idx = l.islandIndex;
             if (idx && islandDataMap.has(idx)) {
                 const item = islandDataMap.get(idx);
-                if (l.title && (!item.topic || item.topic.startsWith('Chủ đề Đảo'))) item.topic = l.title;
+                if (l.title && (!item.topic || item.topic.startsWith('Chá»§ Ä‘á» Äáº£o'))) item.topic = l.title;
             }
         });
     }
@@ -1405,7 +1420,7 @@ function renderTheoryCards(islandsList) {
     if (!container) return;
 
     if (!islandsList.length) {
-        container.innerHTML = '<p class="text-center text-slate-400 py-8">Không tìm thấy nội dung phù hợp.</p>';
+        container.innerHTML = '<p class="text-center text-slate-400 py-8">KhÃ´ng tÃ¬m tháº¥y ná»™i dung phÃ¹ há»£p.</p>';
         return;
     }
 
@@ -1422,7 +1437,7 @@ function renderTheoryCards(islandsList) {
                     </div>
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700/60 text-slate-300 border border-slate-600/50">
-                    Đảo ${item.islandIndex}/34
+                    Äáº£o ${item.islandIndex}/34
                 </span>
             </div>
             <div class="text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-line bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
@@ -1446,3 +1461,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+
+
