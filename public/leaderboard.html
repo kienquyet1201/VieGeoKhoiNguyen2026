@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo | Bảng Xếp Hạng</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="leaderboard.css">
+    <link rel="stylesheet" href="shared-topbar.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
+</head>
+<body>
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
+
+<header class="shared-topbar">
+    <div class="shared-left">
+        <a class="shared-brand" href="student-dashboard.html"><span class="shared-logo-mark">VG</span><strong>VieGeo</strong></a>
+        <div class="shared-stats">
+            <div class="shared-stat">❤️ <strong id="sharedHeart">3</strong></div>
+            <div class="shared-stat">🔥 <strong id="sharedStreak">0</strong></div>
+            <div class="shared-stat">💎 <strong id="sharedGem">500</strong></div>
+            <div class="shared-stat"><span class="shared-xp-mark">XP</span><strong id="sharedXp">0 XP</strong></div>
+        </div>
+    </div>
+    <nav class="shared-center">
+        <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
+        <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
+        <a class="shared-link" href="exam-arena.html"><span class="shared-label">Đấu trường</span></a>
+        <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
+        <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
+        <a class="shared-link" href="profile.html"><span class="shared-label">Hồ sơ</span></a>
+    </nav>
+    <div class="shared-right">
+        <div class="shared-select-control shared-role-control">
+            <span class="shared-select-label">Tài khoản</span>
+            <select class="shared-role" id="sharedRole" aria-label="Loại tài khoản">
+                <option value="user">Học sinh</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="cs">Chăm sóc KH</option>
+                <option value="admin">Quản trị viên</option>
+            </select>
+        </div>
+        <div class="shared-select-control">
+            <span class="shared-select-label">Độ khó</span>
+            <select class="shared-difficulty" id="sharedDifficulty" aria-label="Độ khó">
+                <option value="easy">Dễ</option>
+                <option value="medium">Trung bình</option>
+                <option value="hard">Khó</option>
+            </select>
+        </div>
+        <button class="shared-action shared-theme" id="sharedThemeButton" type="button">Sáng/Tối</button>
+        
+        <button class="shared-action shared-logout" id="sharedLogoutButton" type="button">Thoát</button>
+    </div>
+</header>
+
+
+
+    <div class="leaderboard-background">
+        <div class="star-field"></div>
+        <div class="glow glow-one"></div>
+        <div class="glow glow-two"></div>
+        <div class="planet planet-one"></div>
+        <div class="planet planet-two"></div>
+    </div>
+
+    
+
+    <main class="leaderboard-main">
+        <section class="hero-section">
+            <div class="hero-copy">
+                <span class="hero-badge">Mùa giải VieGeo</span>
+                <h1>Bảng Xếp Hạng</h1>
+                <p>Leo hạng bằng cách học bài, duy trì streak và chinh phục đấu trường.</p>
+            </div>
+
+            <div class="season-card">
+                <div>
+                    <span>Mùa hiện tại</span>
+                    <strong>Summer Explorer 2026</strong>
+                </div>
+                <div class="season-countdown">
+                    <i class="fa-regular fa-clock"></i>
+                    <span>Còn 12 ngày</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="filter-bar">
+            <div class="filter-group">
+                <button class="filter-button active" type="button" data-board="weekly">Tuần này</button>
+                <button class="filter-button" type="button" data-board="monthly">Tháng này</button>
+                <button class="filter-button" type="button" data-board="alltime">Toàn thời gian</button>
+            </div>
+
+            <div class="league-selector">
+                <i class="fa-solid fa-shield-halved"></i>
+                <select id="leagueSelect">
+                    <option value="diamond">Hạng Kim Cương</option>
+                    <option value="gold">Hạng Vàng</option>
+                    <option value="silver">Hạng Bạc</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="podium-section">
+            <article class="podium-card second-place">
+                <div class="podium-rank">2</div>
+                <div class="podium-avatar blue-avatar">HL</div>
+                <span class="podium-medal">🥈</span>
+                <h2>Hà Linh</h2>
+                <p>4,860 XP</p>
+                <div class="podium-stats">
+                    <span>🔥 19 ngày</span>
+                    <span>🏆 26</span>
+                </div>
+            </article>
+
+            <article class="podium-card first-place">
+                <div class="crown">👑</div>
+                <div class="podium-rank">1</div>
+                <div class="podium-avatar gold-avatar">QT</div>
+                <span class="podium-medal">🥇</span>
+                <h2>Quốc Thịnh</h2>
+                <p>5,240 XP</p>
+                <div class="podium-stats">
+                    <span>🔥 28 ngày</span>
+                    <span>🏆 34</span>
+                </div>
+            </article>
+
+            <article class="podium-card third-place">
+                <div class="podium-rank">3</div>
+                <div class="podium-avatar purple-avatar">MA</div>
+                <span class="podium-medal">🥉</span>
+                <h2>Minh Anh</h2>
+                <p>4,430 XP</p>
+                <div class="podium-stats">
+                    <span>🔥 12 ngày</span>
+                    <span>🏆 21</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="content-grid">
+            <article class="ranking-panel">
+                <div class="panel-heading">
+                    <div>
+                        <span class="panel-kicker">Top Explorer</span>
+                        <h2>Xếp hạng học viên</h2>
+                    </div>
+                    <span class="update-label">Cập nhật trực tiếp</span>
+                </div>
+
+                <div class="ranking-list" id="rankingList">
+                    <div class="ranking-row current-user">
+                        <span class="rank-number">3</span>
+                        <div class="rank-avatar purple-avatar">MA</div>
+                        <div class="rank-user">
+                            <strong>Minh Anh</strong>
+                            <span>Bạn · Cấp 8</span>
+                        </div>
+                        <div class="rank-streak">🔥 12</div>
+                        <div class="rank-xp">4,430 XP</div>
+                        <div class="rank-change up-change">▲ 2</div>
+                    </div>
+
+                    <div class="ranking-row">
+                        <span class="rank-number">4</span>
+                        <div class="rank-avatar green-avatar">TN</div>
+                        <div class="rank-user">
+                            <strong>Thu Ngân</strong>
+                            <span>Cấp 9</span>
+                        </div>
+                        <div class="rank-streak">🔥 16</div>
+                        <div class="rank-xp">4,180 XP</div>
+                        <div class="rank-change down-change">▼ 1</div>
+                    </div>
+
+                    <div class="ranking-row">
+                        <span class="rank-number">5</span>
+                        <div class="rank-avatar orange-avatar">BN</div>
+                        <div class="rank-user">
+                            <strong>Bảo Nam</strong>
+                            <span>Cấp 7</span>
+                        </div>
+                        <div class="rank-streak">🔥 9</div>
+                        <div class="rank-xp">3,920 XP</div>
+                        <div class="rank-change neutral-change">—</div>
+                    </div>
+
+                    <div class="ranking-row">
+                        <span class="rank-number">6</span>
+                        <div class="rank-avatar cyan-avatar">PT</div>
+                        <div class="rank-user">
+                            <strong>Phương Thảo</strong>
+                            <span>Cấp 7</span>
+                        </div>
+                        <div class="rank-streak">🔥 14</div>
+                        <div class="rank-xp">3,740 XP</div>
+                        <div class="rank-change up-change">▲ 1</div>
+                    </div>
+
+                    <div class="ranking-row">
+                        <span class="rank-number">7</span>
+                        <div class="rank-avatar pink-avatar">KH</div>
+                        <div class="rank-user">
+                            <strong>Khánh Huyền</strong>
+                            <span>Cấp 6</span>
+                        </div>
+                        <div class="rank-streak">🔥 8</div>
+                        <div class="rank-xp">3,510 XP</div>
+                        <div class="rank-change down-change">▼ 2</div>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="side-column">
+                <article class="personal-rank-card">
+                    <div class="personal-rank-icon">🚀</div>
+                    <span>Hạng của bạn</span>
+                    <strong>#3</strong>
+                    <p>Chỉ còn 431 XP để vượt lên hạng 2.</p>
+                    <div class="personal-progress">
+                        <div class="personal-progress-fill" style="width:72%"></div>
+                    </div>
+                </article>
+
+                <article class="reward-card">
+                    <div class="reward-heading">
+                        <span>Phần thưởng mùa</span>
+                        <strong>Top 3</strong>
+                    </div>
+                    <div class="reward-item">
+                        <span class="reward-icon">💎</span>
+                        <div>
+                            <strong>500 Gem</strong>
+                            <small>Thưởng cuối mùa</small>
+                        </div>
+                    </div>
+                    <div class="reward-item">
+                        <span class="reward-icon">🏅</span>
+                        <div>
+                            <strong>Huy hiệu Explorer</strong>
+                            <small>Phiên bản giới hạn</small>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="challenge-card">
+                    <span class="challenge-badge">Thử thách hôm nay</span>
+                    <h3>Kiếm thêm 250 XP</h3>
+                    <p>Hoàn thành 3 bài học hoặc thắng 2 trận Arena.</p>
+                    <a href="map.html">Bắt đầu ngay →</a>
+                </article>
+            </aside>
+        </section>
+    </main>
+
+    <div class="toast" id="toast"></div>
+    <script src="leaderboard.js"></script>
+    <script src="shared-topbar.js"></script>
+<button class="support-button" id="supportButton" type="button">
+        <span class="support-avatar">CS</span>
+        <span class="support-copy">
+            <strong>Hỗ trợ VieGeo</strong>
+            <small><span class="support-online-dot"></span>CSKH đang online</small>
+        </span>
+        <span class="support-arrow">›</span>
+    </button>
+</body>
+</html>

@@ -9,24 +9,82 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="bento.css">
-<script src="ui-effects.js" defer></script>
+    <link rel="stylesheet" href="bento.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="viegeo-navigation-controls.css">
+    <link rel="stylesheet" href="learning-cute-redesign.css">
+    <link rel="stylesheet" href="arena-redesign.css">
+    <link rel="stylesheet" href="shared-topbar.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
 </head>
-<body class="exam-arena-page min-h-screen w-full overflow-y-auto pb-32">
-    <header id="arenaGlobalTopbar" class="arena-global-topbar" aria-label="Điều hướng VieGeo">
-        <a class="arena-global-brand" href="/map" title="Trang học VieGeo"><i class="fa-solid fa-earth-asia"></i><span>VieGeo</span></a>
-        <button id="arenaMobileNavigationToggle" class="arena-mobile-navigation-toggle" type="button" aria-label="Mở điều hướng" aria-controls="arenaGlobalNavigation" aria-expanded="false" title="Mở điều hướng"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
-        <nav id="arenaGlobalNavigation" class="arena-global-navigation" aria-label="Điều hướng học tập">
-            <a href="/map?tab=map" title="Lộ trình học"><i class="fa-solid fa-map-location-dot"></i><span>Lộ trình</span></a>
-            <a href="/exam-arena" title="Đấu trường luyện thi" aria-current="page"><i class="fa-solid fa-graduation-cap"></i><span>Đấu trường</span></a>
-            <a href="/map?tab=leaderboard" title="Xếp hạng"><i class="fa-solid fa-trophy"></i><span>Xếp hạng</span></a>
-            <a href="/map?tab=quests" title="Nhiệm vụ"><i class="fa-solid fa-box-open"></i><span>Nhiệm vụ</span></a>
-            <a href="/map?tab=shop" title="Cửa hàng"><i class="fa-solid fa-store"></i><span>Cửa hàng</span></a>
-            <a href="/map?tab=profile" title="Hồ sơ"><i class="fa-solid fa-user"></i><span>Hồ sơ</span></a>
-        </nav>
-        <a class="arena-topbar-back" href="/map" title="Quay lại không gian học tập"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
-    </header>
+<body class="exam-arena-page arena-standalone min-h-screen w-full overflow-y-auto pb-32">
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
+
+<header class="shared-topbar">
+    <div class="shared-left">
+        <a class="shared-brand" href="student-dashboard.html"><span class="shared-logo-mark">VG</span><strong>VieGeo</strong></a>
+        <div class="shared-stats">
+            <div class="shared-stat">❤️ <strong id="sharedHeart">3</strong></div>
+            <div class="shared-stat">🔥 <strong id="sharedStreak">0</strong></div>
+            <div class="shared-stat">💎 <strong id="sharedGem">500</strong></div>
+            <div class="shared-stat"><span class="shared-xp-mark">XP</span><strong id="sharedXp">0 XP</strong></div>
+        </div>
+    </div>
+    <nav class="shared-center">
+        <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
+        <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
+        <a class="shared-link" href="exam-arena.html"><span class="shared-label">Đấu trường</span></a>
+        <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
+        <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
+        <a class="shared-link" href="profile.html"><span class="shared-label">Hồ sơ</span></a>
+    </nav>
+    <div class="shared-right">
+        <div class="shared-select-control shared-role-control">
+            <span class="shared-select-label">Tài khoản</span>
+            <select class="shared-role" id="sharedRole" aria-label="Loại tài khoản">
+                <option value="user">Học sinh</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="cs">Chăm sóc KH</option>
+                <option value="admin">Quản trị viên</option>
+            </select>
+        </div>
+        <div class="shared-select-control">
+            <span class="shared-select-label">Độ khó</span>
+            <select class="shared-difficulty" id="sharedDifficulty" aria-label="Độ khó">
+                <option value="easy">Dễ</option>
+                <option value="medium">Trung bình</option>
+                <option value="hard">Khó</option>
+            </select>
+        </div>
+        <button class="shared-action shared-theme" id="sharedThemeButton" type="button">Sáng/Tối</button>
+        
+        <button class="shared-action shared-logout" id="sharedLogoutButton" type="button">Thoát</button>
+    </div>
+</header>
+
+
+
+    
     <main class="exam-arena-shell" aria-label="Đấu trường Luyện tập">
         <header class="exam-topbar">
             <div>
@@ -35,7 +93,7 @@
                 <p id="examArenaSubtitle">Chọn cấu hình đề trước khi bắt đầu 40 câu hỏi trong 50 phút</p>
             </div>
             <div class="exam-topbar-actions">
-                <a class="exam-back-link" href="/map"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
+                <a class="exam-back-link" href="map.html"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
                 <div class="exam-timer" aria-live="polite">
                     <i class="fa-solid fa-stopwatch"></i>
                     <span id="examTimerPreview">50:00</span>
@@ -71,11 +129,11 @@
             <p class="exam-setup-note"><i class="fa-solid fa-database"></i> Quản trị viên cần khai báo <code>difficulty</code> và <code>topic</code> cho mọi tài liệu trong collection <code>questions</code>.</p>
         </section>
 
-        <div id="examWorkspace" class="exam-workspace exam-workspace-clean" hidden>
+        <div id="examWorkspace" class="exam-workspace" hidden>
             <div class="exam-session-bar"><span><i class="fa-solid fa-graduation-cap"></i> Đang làm đề luyện thi</span><div class="exam-timer" aria-live="polite"><i class="fa-solid fa-stopwatch"></i><span id="examTimer">50:00</span></div></div>
             <button id="examExit" class="exam-exit-btn" type="button" title="Thoát và hủy bài làm"><i class="fa-solid fa-xmark"></i> Thoát / Hủy làm bài</button>
             <section class="exam-question-card" aria-live="polite">
-                <div class="exam-question-meta" hidden>
+                <div class="exam-question-meta">
                     <span id="examQuestionCounter">Câu 1 / 40</span>
                     <span id="examQuestionTag">Atlat & kỹ năng địa lí</span>
                 </div>
@@ -88,7 +146,7 @@
                 </div>
             </section>
 
-            <aside class="exam-navigator-card" hidden>
+            <aside class="exam-navigator-card">
                 <div class="exam-nav-heading">
                     <div>
                         <h2>Danh sách câu hỏi</h2>
@@ -107,10 +165,22 @@
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
     <script src="gamedata.js"></script>
     <script src="telemetry.js"></script>
+    <script src="learning-theme-toggle.js"></script>
     <script src="exam-arena.js"></script>
+    <script src="role-theme.js"></script>
+    <script src="shared-topbar.js"></script>
+<button class="support-button" id="supportButton" type="button">
+        <span class="support-avatar">CS</span>
+        <span class="support-copy">
+            <strong>Hỗ trợ VieGeo</strong>
+            <small><span class="support-online-dot"></span>CSKH đang online</small>
+        </span>
+        <span class="support-arrow">›</span>
+    </button>
 </body>
 </html>

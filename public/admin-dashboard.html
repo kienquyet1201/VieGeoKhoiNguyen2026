@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo | Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="admin-dashboard.css">
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
+    <link rel="stylesheet" href="role-switcher.css">
+</head>
+<body>
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
+
+    <div class="admin-shell">
+        <aside class="admin-sidebar">
+            <button class="back-to-home-btn" id="backToHomeButton" type="button">
+                <span class="back-to-home-icon">←</span>
+                <span>Quay lại trang chính</span>
+            </button>
+            <div class="brand-block">
+                <div class="brand-icon">🌏</div>
+                <div><strong>VieGeo</strong><span>Admin Center</span></div>
+            </div>
+
+            <nav class="sidebar-menu">
+                <button class="menu-item active" data-section="overview"><span class="menu-icon">📊</span><span>Tổng quan</span></button>
+                <button class="menu-item" data-section="users"><span class="menu-icon">👥</span><span>Quản lý User</span></button>
+                <button class="menu-item" data-section="lessons"><span class="menu-icon">📚</span><span>Bài giảng</span></button>
+                <button class="menu-item" data-section="monitoring"><span class="menu-icon">📡</span><span>Giám sát</span></button>
+                <button class="menu-item" data-section="support"><span class="menu-icon">💬</span><span>Chăm sóc KH</span></button>
+                <button class="menu-item" data-section="settings"><span class="menu-icon">⚙️</span><span>Cài đặt</span></button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="theme-button" id="themeButton"><span id="themeIcon">🌙</span><span id="themeText">Chế độ tối</span></button>
+                <button class="logout-button" id="roleButton"><span>🔄</span><span>Đổi vai trò</span></button>
+                <button class="logout-button" id="logoutButton"><span>↩</span><span>Đăng xuất</span></button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-header">
+                <div>
+                    <span class="eyebrow">Quản trị hệ thống</span>
+                    <h1 id="pageTitle">Bảng điều khiển VieGeo</h1>
+                    <p id="pageSubtitle">Theo dõi người dùng, nội dung học tập và hoạt động hệ thống trong một nơi.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="connection-badge" id="connectionBadge">Đang kết nối</div>
+                    <button class="header-button" id="notificationButton"><span>🔔</span><span class="notification-dot"></span></button>
+                    <div class="admin-account">
+                        <div class="admin-avatar">A</div>
+                        <div><strong>Quản trị viên</strong><span id="adminEmail">Admin VieGeo</span></div>
+                    </div>
+                </div>
+            </header>
+
+            <section class="admin-section active" data-panel="overview">
+                <section class="stats-grid">
+                    <article class="stat-card blue-card"><div class="stat-icon">👥</div><div><span>Người đang online</span><strong id="metricOnline">142</strong><small>90 giây gần nhất</small></div></article>
+                    <article class="stat-card green-card"><div class="stat-icon">📝</div><div><span>Bài nộp</span><strong id="metricSubmissions">1,250</strong><small>Dữ liệu hệ thống</small></div></article>
+                    <article class="stat-card orange-card"><div class="stat-icon">👁️</div><div><span>Tổng User</span><strong id="metricUsers">5,684</strong><small>Tài khoản đã tải</small></div></article>
+                    <article class="stat-card purple-card"><div class="stat-icon">⚠️</div><div><span>Báo cáo lỗi</span><strong id="metricErrors">5</strong><small>Lỗi gần đây</small></div></article>
+                </section>
+
+                <section class="content-grid">
+                    <article class="panel-card activity-panel">
+                        <div class="panel-heading">
+                            <div><span class="panel-eyebrow">Tình trạng hệ thống</span><h2>Hiệu năng hiện tại</h2></div>
+                            <span class="live-badge">● Live</span>
+                        </div>
+                        <div class="activity-grid">
+                            <div class="activity-box"><span>Firestore</span><strong class="healthy-text">Ổn định</strong><small>Cơ sở dữ liệu</small></div>
+                            <div class="activity-box"><span>Authentication</span><strong class="healthy-text">Ổn định</strong><small>Đăng nhập</small></div>
+                            <div class="activity-box"><span>Server load</span><strong>34%</strong><small>Mô phỏng</small></div>
+                        </div>
+                    </article>
+
+                    <aside class="panel-card quick-panel">
+                        <div class="panel-heading"><div><span class="panel-eyebrow">Thao tác nhanh</span><h2>Vận hành nhanh</h2></div></div>
+                        <button class="quick-action" data-open-section="users"><span>👥</span><span>Quản lý người dùng</span></button>
+                        <button class="quick-action" data-open-section="lessons"><span>📤</span><span>Upload câu hỏi</span></button>
+                        <button class="quick-action" data-open-section="monitoring"><span>📡</span><span>Xem phiên học</span></button>
+                    </aside>
+                </section>
+
+                <section class="panel-card table-panel">
+                    <div class="panel-heading"><div><span class="panel-eyebrow">Thông báo vận hành</span><h2>Lỗi hệ thống gần đây</h2></div></div>
+                    <div class="notice-list" id="systemErrorList"><div class="empty-state">Đang tải dữ liệu...</div></div>
+                </section>
+            </section>
+
+            <section class="admin-section" data-panel="users">
+                <section class="content-grid user-top-grid">
+                    <article class="panel-card table-panel">
+                        <div class="panel-heading"><div><span class="panel-eyebrow">Premium</span><h2>Yêu cầu nâng cấp</h2></div></div>
+                        <div class="notice-list" id="premiumRequestList"><div class="empty-state">Đang tải yêu cầu...</div></div>
+                    </article>
+                    <aside class="panel-card quick-panel">
+                        <div class="panel-heading"><div><span class="panel-eyebrow">Phân quyền</span><h2>Vai trò hệ thống</h2></div></div>
+                        <div class="role-guide"><strong>Học sinh</strong><span>Học tập và thi đấu</span></div>
+                        <div class="role-guide"><strong>Phụ huynh</strong><span>Theo dõi tiến độ</span></div>
+                        <div class="role-guide"><strong>CSKH</strong><span>Hỗ trợ người dùng</span></div>
+                        <div class="role-guide"><strong>Admin</strong><span>Quản trị hệ thống</span></div>
+                    </aside>
+                </section>
+
+                <section class="panel-card table-panel">
+                    <div class="panel-heading table-heading">
+                        <div><span class="panel-eyebrow">Danh sách tài khoản</span><h2>Quản lý người dùng</h2></div>
+                        <div class="table-tools">
+                            <input id="searchInput" type="search" placeholder="Tìm tên hoặc email">
+                            <select id="roleFilter">
+                                <option value="all">Tất cả quyền</option>
+                                <option value="user">Học sinh</option>
+                                <option value="parent">Phụ huynh</option>
+                                <option value="cs">CSKH</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="user-table">
+                            <thead><tr><th>Người dùng</th><th>Vai trò</th><th>Trạng thái</th><th>Hoạt động</th><th>Thao tác</th></tr></thead>
+                            <tbody id="userTableBody">
+                                <tr data-user-id="mock-user-1">
+                                    <td><div class="user-cell"><div class="user-avatar">MA</div><div><strong>Minh Anh</strong><span>minhanh@viegeo.vn</span></div></div></td>
+                                    <td><span class="role-badge student-role">Học sinh</span></td>
+                                    <td><span class="status-badge active-status"><i class="status-dot"></i>Online</span></td>
+                                    <td>Vừa hoạt động</td>
+                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-1">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-1">× Xóa</button></div></td>
+                                </tr>
+                                <tr data-user-id="mock-user-2">
+                                    <td><div class="user-cell"><div class="user-avatar">QT</div><div><strong>Quốc Thịnh</strong><span>quocthinh@viegeo.vn</span></div></div></td>
+                                    <td><span class="role-badge student-role">Học sinh</span></td>
+                                    <td><span class="status-badge active-status"><i class="status-dot"></i>Online</span></td>
+                                    <td>2 phút trước</td>
+                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-2">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-2">× Xóa</button></div></td>
+                                </tr>
+                                <tr data-user-id="mock-user-3">
+                                    <td><div class="user-cell"><div class="user-avatar">HL</div><div><strong>Hà Linh</strong><span>halinh@viegeo.vn</span></div></div></td>
+                                    <td><span class="role-badge parent-role">Phụ huynh</span></td>
+                                    <td><span class="status-badge idle-status"><i class="status-dot"></i>Offline</span></td>
+                                    <td>35 phút trước</td>
+                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-3">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-3">× Xóa</button></div></td>
+                                </tr>
+                                <tr data-user-id="mock-user-4">
+                                    <td><div class="user-cell"><div class="user-avatar">NV</div><div><strong>Ngọc Vy</strong><span>ngocvy@viegeo.vn</span></div></div></td>
+                                    <td><span class="role-badge support-role">CSKH</span></td>
+                                    <td><span class="status-badge active-status"><i class="status-dot"></i>Online</span></td>
+                                    <td>5 phút trước</td>
+                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-4">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-4">× Xóa</button></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section class="admin-section" data-panel="lessons">
+                <section class="panel-card upload-panel">
+                    <div class="panel-heading"><div><span class="panel-eyebrow">Kho học liệu</span><h2>Upload bộ câu hỏi</h2></div></div>
+                    <div class="upload-grid">
+                        <div class="upload-form">
+                            <label class="field-label">Tệp câu hỏi<input class="field-input" id="fileUpload" type="file" accept=".docx,.txt"></label>
+                            <div class="file-status" id="fileNameDisplay">Chưa có tệp được chọn.</div>
+                            <label class="field-label">Tỉnh / Thành phố<input class="field-input" id="importProvince" type="text" placeholder="Ví dụ: Hà Nội"></label>
+                            <label class="field-label">Đảo nhỏ / Bài học<input class="field-input" id="importIsland" type="text" placeholder="Ví dụ: Khám phá Hồ Gươm"></label>
+                            <label class="field-label">Mức độ<select class="field-input" id="importDifficulty"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select></label>
+                            <label class="field-label">Mã bài học<input class="field-input" id="importLessonId" type="text" placeholder="Tự tạo nếu để trống"></label>
+                            <button class="primary-button" id="processUploadButton" type="button">Bóc tách và cập nhật</button>
+                        </div>
+                        <div class="preview-box">
+                            <div class="preview-title">Xem trước dữ liệu</div>
+                            <pre id="uploadPreview">Kết quả xử lý sẽ hiển thị tại đây.</pre>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <section class="admin-section" data-panel="monitoring">
+                <section class="panel-card table-panel">
+                    <div class="panel-heading"><div><span class="panel-eyebrow">Live Session</span><h2>Giám sát học tập</h2></div><button class="soft-button" id="refreshMonitoringButton">Làm mới</button></div>
+                    <div class="table-wrap">
+                        <table class="user-table">
+                            <thead><tr><th>Học viên</th><th>Hoạt động gần nhất</th><th>Trạng thái</th><th>Session replay</th></tr></thead>
+                            <tbody id="monitoringTableBody"><tr><td colspan="4"><div class="empty-state">Đang tải phiên học...</div></td></tr></tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+
+            <section class="admin-section" data-panel="support">
+                <section class="support-admin-layout">
+                    <aside class="panel-card support-ticket-panel">
+                        <div class="panel-heading">
+                            <div><span class="panel-eyebrow">Tin nhắn người dùng</span><h2>Chăm sóc khách hàng</h2></div>
+                            <button class="soft-button" id="refreshSupportAdminButton" type="button">Làm mới</button>
+                        </div>
+                        <div class="support-admin-ticket-list" id="supportAdminTicketList">
+                            <div class="empty-state">Đang tải hội thoại...</div>
+                        </div>
+                    </aside>
+
+                    <article class="panel-card support-admin-chat">
+                        <div class="support-admin-chat-head">
+                            <div>
+                                <span class="panel-eyebrow">Phản hồi trực tiếp</span>
+                                <h2 id="supportAdminCustomer">Chọn một hội thoại</h2>
+                                <p id="supportAdminMeta">Tin nhắn từ trang chính sẽ xuất hiện tại đây.</p>
+                            </div>
+                            <button class="soft-button" id="closeSupportTicketButton" type="button">Đóng ticket</button>
+                        </div>
+
+                        <div class="support-admin-messages" id="supportAdminMessages">
+                            <div class="empty-state">Chưa chọn hội thoại.</div>
+                        </div>
+
+                        <div class="support-admin-composer">
+                            <textarea id="supportAdminInput" rows="2" placeholder="Nhập phản hồi cho khách hàng..."></textarea>
+                            <button class="primary-button" id="supportAdminSendButton" type="button">Gửi phản hồi</button>
+                        </div>
+                    </article>
+                </section>
+            </section>
+
+            <section class="admin-section" data-panel="settings">
+                <section class="content-grid">
+                    <article class="panel-card quick-panel">
+                        <div class="panel-heading"><div><span class="panel-eyebrow">Giao diện</span><h2>Tùy chỉnh hiển thị</h2></div></div>
+                        <button class="quick-action" id="settingsThemeButton"><span>🌓</span><span>Đổi chế độ sáng / tối</span></button>
+                    </article>
+                    <article class="panel-card quick-panel">
+                        <div class="panel-heading"><div><span class="panel-eyebrow">Phiên làm việc</span><h2>Tài khoản quản trị</h2></div></div>
+                        <button class="quick-action" id="settingsRoleButton"><span>🔄</span><span>Đổi vai trò</span></button>
+                        <button class="quick-action danger-action" id="settingsLogoutButton"><span>↩</span><span>Đăng xuất</span></button>
+                    </article>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="support-store.js"></script>
+    <script src="admin-dashboard.js"></script>
+<label class="role-page-switcher">
+        <span>Chuyển tài khoản</span>
+        <select data-role-page-select>
+            <option value="user">Học sinh</option>
+            <option value="parent">Phụ huynh</option>
+            <option value="cs">Chăm sóc KH</option>
+            <option value="admin">Quản trị viên</option>
+        </select>
+    </label>
+    <script src="role-switcher.js"></script>
+</body>
+</html>

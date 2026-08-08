@@ -1,166 +1,284 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo - Hồ sơ người chơi</title>
-    <!-- Fonts -->
+    <title>VieGeo | Hồ sơ học viên</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CSS -->
-    <link rel="stylesheet" href="viegeo.css">
-    <link rel="stylesheet" href="map.css"> <!-- Tái sử dụng sidebar từ map.css -->
-    <style>
-        .profile-container {
-            width: 100%;
-            max-width: 600px;
-            margin: 40px auto;
-            background: var(--bg-card);
-            border: 2px solid var(--gray-light-border);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-
-        .avatar-circle {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: var(--blue);
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: white;
-            box-shadow: 0 8px 0 var(--blue-shadow);
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin: 32px 0;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.05);
-            border: 2px solid var(--gray-light-border);
-            border-radius: 16px;
-            padding: 16px;
-        }
-        
-        .stat-box i { font-size: 1.5rem; margin-bottom: 8px; }
-        .stat-box .val { font-size: 1.2rem; font-weight: 800; font-family: var(--font-heading); }
-        .stat-box .lbl { font-size: 0.8rem; color: var(--text-muted); }
-
-    </style>
-<link rel="stylesheet" href="style.css">
-<script src="ui-effects.js" defer></script>
+    <link rel="stylesheet" href="profile.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+    <link rel="stylesheet" href="shared-topbar.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
 </head>
-<body class="profile-page">
-    <div class="profile-page-scroll h-full min-h-screen w-full overflow-y-auto pb-40">
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="brand">
-            <i class="fa-solid fa-earth-asia"></i> VieGeo
-        </div>
-        <nav class="nav-menu">
-            <a href="/map" class="nav-item"><i class="fa-solid fa-house"></i> Lộ trình</a>
-            <a href="#" class="nav-item"><i class="fa-solid fa-shield-halved"></i> Xếp hạng</a>
-            <a href="#" class="nav-item"><i class="fa-solid fa-treasure-chest"></i> Nhiệm vụ</a>
-            <a href="#" class="nav-item"><i class="fa-solid fa-shop"></i> Cửa hàng</a>
-            <a href="/profile" class="nav-item active"><i class="fa-solid fa-user"></i> Hồ sơ</a>
-        </nav>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="main-content profile-main w-full pb-40">
-        
-        <div class="profile-container">
-            <div class="avatar-circle">
-                <i class="fa-solid fa-user-astronaut"></i>
-            </div>
-            <h2 id="dispName" style="font-size: 1.8rem; margin-bottom: 5px;">Người chơi</h2>
-            <p id="dispEmail" style="color: var(--text-muted);">email@example.com</p>
-
-            <div class="stats-grid">
-                <div class="stat-box" style="color: var(--gold)">
-                    <i class="fa-solid fa-fire"></i>
-                    <div class="val" id="profStreak">0</div>
-                    <div class="lbl">Chuỗi ngày</div>
-                </div>
-                <div class="stat-box" style="color: var(--blue)">
-                    <i class="fa-solid fa-star"></i>
-                    <div class="val" id="profXp">0</div>
-                    <div class="lbl">Kinh nghiệm</div>
-                </div>
-                <div class="stat-box" style="color: var(--green)">
-                    <i class="fa-solid fa-brain"></i>
-                    <div class="val" id="profStyle">Chưa test</div>
-                    <div class="lbl">Phong cách học</div>
-                </div>
-            </div>
-
-            <form id="profileForm">
-                <div class="form-group">
-                    <label>Tên hiển thị</label>
-                    <input type="text" id="profName" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label>Số điện thoại</label>
-                    <input type="tel" id="profPhone" class="form-input" placeholder="Thêm số điện thoại...">
-                </div>
-                <div class="form-group">
-                    <label for="profGender">Giới tính</label>
-                    <select id="profGender" class="form-input">
-                        <option value="">Chưa cập nhật</option>
-                        <option value="male">Nam</option>
-                        <option value="female">Nữ</option>
-                        <option value="other">Khác</option>
-                        <option value="prefer_not_to_say">Không muốn tiết lộ</option>
-                    </select>
-                </div>
-
-                <div class="form-group" style="background: rgba(255,200,0,0.1); padding: 15px; border-radius: 12px; border: 1px solid var(--gold);">
-                    <label style="color: var(--gold);">Đổi mật khẩu (Tuỳ chọn)</label>
-                    <input type="password" id="oldPass" class="form-input" placeholder="Mật khẩu cũ" style="margin-bottom: 10px;">
-                    <input type="password" id="newPass" class="form-input" placeholder="Mật khẩu mới">
-                </div>
-
-                <div style="display: flex; gap: 16px; margin-top: 30px;">
-                    <button type="button" class="btn-game btn-outline" id="btnLogout" style="flex: 1;"><i class="fa-solid fa-arrow-right-from-bracket"></i> Thoát</button>
-                    <button type="button" class="btn-game" id="btnPremium" style="flex: 1; background: var(--gold); color: #000;"><i class="fa-solid fa-crown"></i> Yêu cầu Mua Premium</button>
-                    <button type="submit" class="btn-game btn-primary" style="flex: 1;">Lưu Thay Đổi</button>
-                </div>
-            </form>
-        </div>
-
-    </main>
+<body>
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
     </div>
 
-    <script src="gamedata.js"></script>
+<header class="shared-topbar">
+    <div class="shared-left">
+        <a class="shared-brand" href="student-dashboard.html"><span class="shared-logo-mark">VG</span><strong>VieGeo</strong></a>
+        <div class="shared-stats">
+            <div class="shared-stat">❤️ <strong id="sharedHeart">3</strong></div>
+            <div class="shared-stat">🔥 <strong id="sharedStreak">0</strong></div>
+            <div class="shared-stat">💎 <strong id="sharedGem">500</strong></div>
+            <div class="shared-stat"><span class="shared-xp-mark">XP</span><strong id="sharedXp">0 XP</strong></div>
+        </div>
+    </div>
+    <nav class="shared-center">
+        <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
+        <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
+        <a class="shared-link" href="exam-arena.html"><span class="shared-label">Đấu trường</span></a>
+        <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
+        <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
+        <a class="shared-link" href="profile.html"><span class="shared-label">Hồ sơ</span></a>
+    </nav>
+    <div class="shared-right">
+        <div class="shared-select-control shared-role-control">
+            <span class="shared-select-label">Tài khoản</span>
+            <select class="shared-role" id="sharedRole" aria-label="Loại tài khoản">
+                <option value="user">Học sinh</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="cs">Chăm sóc KH</option>
+                <option value="admin">Quản trị viên</option>
+            </select>
+        </div>
+        <div class="shared-select-control">
+            <span class="shared-select-label">Độ khó</span>
+            <select class="shared-difficulty" id="sharedDifficulty" aria-label="Độ khó">
+                <option value="easy">Dễ</option>
+                <option value="medium">Trung bình</option>
+                <option value="hard">Khó</option>
+            </select>
+        </div>
+        <button class="shared-action shared-theme" id="sharedThemeButton" type="button">Sáng/Tối</button>
+        
+        <button class="shared-action shared-logout" id="sharedLogoutButton" type="button">Thoát</button>
+    </div>
+</header>
+
+
+
+    <div class="profile-shell">
+        <aside class="profile-sidebar">
+            <a class="brand-block" href="student-dashboard.html">
+                <div class="brand-icon">🌏</div>
+                <div>
+                    <strong>VieGeo</strong>
+                    <span>Student</span>
+                </div>
+            </a>
+
+            <nav class="sidebar-menu">
+                <a class="menu-item" href="student-dashboard.html"><span>🏠</span><strong>Trang chủ</strong></a>
+                <a class="menu-item" href="map.html"><span>🗺️</span><strong>Lộ trình học</strong></a>
+                <a class="menu-item" href="exam-arena.html"><span>🏆</span><strong>Đấu trường</strong></a>
+                <a class="menu-item" href="leaderboard.html"><span>🥇</span><strong>Xếp hạng</strong></a>
+                <a class="menu-item" href="shop.html"><span>🛍️</span><strong>Cửa hàng</strong></a>
+                <a class="menu-item active" href="profile.html"><span>👤</span><strong>Hồ sơ</strong></a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="theme-button" id="themeButton" type="button">
+                    <span id="themeIcon">☀️</span>
+                    <strong id="themeText">Chế độ sáng</strong>
+                </button>
+                <button class="logout-button" id="btnLogout" type="button">
+                    <span>↩</span>
+                    <strong>Đăng xuất</strong>
+                </button>
+            </div>
+        </aside>
+
+        <main class="profile-main">
+            
+
+            <section class="profile-hero">
+                <div class="avatar-area">
+                    <div class="avatar-ring">
+                        <div class="avatar-circle"><i class="fa-solid fa-user-astronaut"></i></div>
+                    </div>
+                    <div class="profile-identity">
+                        <span class="profile-badge">VieGeo Explorer</span>
+                        <h2 id="dispName">Người chơi</h2>
+                        <p id="dispEmail">email@example.com</p>
+                        <div class="level-row">
+                            <span class="level-pill">Cấp 8</span>
+                            <span class="premium-pill" id="premiumStatus">Tài khoản Free</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-progress">
+                    <div class="progress-heading">
+                        <span>Tiến độ hành trình</span>
+                        <strong>68%</strong>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width:68%"></div>
+                    </div>
+                    <small>Bạn đang tiến rất gần đến cột mốc tiếp theo.</small>
+                </div>
+            </section>
+
+            <section class="stats-grid">
+                <article class="stat-card streak-card">
+                    <div class="stat-icon">🔥</div>
+                    <div>
+                        <span>Chuỗi ngày</span>
+                        <strong id="profStreak">0</strong>
+                        <small>Học liên tục</small>
+                    </div>
+                </article>
+
+                <article class="stat-card xp-card">
+                    <div class="stat-icon">⭐</div>
+                    <div>
+                        <span>Kinh nghiệm</span>
+                        <strong id="profXp">0</strong>
+                        <small>Tổng XP</small>
+                    </div>
+                </article>
+
+                <article class="stat-card style-card">
+                    <div class="stat-icon">🧠</div>
+                    <div>
+                        <span>Phong cách học</span>
+                        <strong id="profStyle">Chưa test</strong>
+                        <small>Learning profile</small>
+                    </div>
+                </article>
+
+                <article class="stat-card achievement-card">
+                    <div class="stat-icon">🏅</div>
+                    <div>
+                        <span>Thành tựu</span>
+                        <strong>12</strong>
+                        <small>Huy hiệu đã mở</small>
+                    </div>
+                </article>
+            </section>
+
+            <section class="profile-grid">
+                <article class="panel-card">
+                    <div class="panel-heading">
+                        <div>
+                            <span class="panel-eyebrow">Thông tin cá nhân</span>
+                            <h3>Chỉnh sửa hồ sơ</h3>
+                        </div>
+                        <span class="panel-icon">✏️</span>
+                    </div>
+
+                    <form id="profileForm">
+                        <div class="form-grid">
+                            <label class="form-group">
+                                <span>Tên hiển thị</span>
+                                <input type="text" id="profName" required>
+                            </label>
+
+                            <label class="form-group">
+                                <span>Số điện thoại</span>
+                                <input type="tel" id="profPhone" placeholder="Thêm số điện thoại...">
+                            </label>
+
+                            <label class="form-group full-field">
+                                <span>Giới tính</span>
+                                <select id="profGender">
+                                    <option value="">Chưa cập nhật</option>
+                                    <option value="male">Nam</option>
+                                    <option value="female">Nữ</option>
+                                    <option value="other">Khác</option>
+                                    <option value="prefer_not_to_say">Không muốn tiết lộ</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="security-box">
+                            <div class="security-heading">
+                                <div>
+                                    <span class="security-label">Bảo mật</span>
+                                    <h4>Đổi mật khẩu</h4>
+                                </div>
+                                <span>🔐</span>
+                            </div>
+                            <div class="form-grid">
+                                <label class="form-group">
+                                    <span>Mật khẩu hiện tại</span>
+                                    <input type="password" id="oldPass" placeholder="Nhập mật khẩu hiện tại">
+                                </label>
+                                <label class="form-group">
+                                    <span>Mật khẩu mới</span>
+                                    <input type="password" id="newPass" placeholder="Tối thiểu 6 ký tự">
+                                </label>
+                            </div>
+                        </div>
+
+                        <button class="save-button" type="submit">Lưu thay đổi ✨</button>
+                    </form>
+                </article>
+
+                <aside class="side-stack">
+                    <article class="panel-card premium-card">
+                        <div class="premium-crown">👑</div>
+                        <span class="panel-eyebrow">VieGeo Premium</span>
+                        <h3>Mở khóa hành trình nâng cao</h3>
+                        <p>Truy cập thêm nội dung, thống kê chuyên sâu và trải nghiệm học tập cá nhân hóa.</p>
+                        <button id="btnPremium" class="premium-button" type="button">Yêu cầu mua Premium</button>
+                    </article>
+
+                    <article class="panel-card achievement-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="panel-eyebrow">Bộ sưu tập</span>
+                                <h3>Huy hiệu gần đây</h3>
+                            </div>
+                        </div>
+                        <div class="badge-grid">
+                            <div class="achievement-badge"><span>🗺️</span><small>Nhà thám hiểm</small></div>
+                            <div class="achievement-badge"><span>🔥</span><small>Streak 7 ngày</small></div>
+                            <div class="achievement-badge"><span>🏆</span><small>Top Arena</small></div>
+                        </div>
+                    </article>
+                </aside>
+            </section>
+        </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
     <script src="profile.js"></script>
+    <script src="shared-topbar.js"></script>
+<button class="support-button" id="supportButton" type="button">
+        <span class="support-avatar">CS</span>
+        <span class="support-copy">
+            <strong>Hỗ trợ VieGeo</strong>
+            <small><span class="support-online-dot"></span>CSKH đang online</small>
+        </span>
+        <span class="support-arrow">›</span>
+    </button>
 </body>
 </html>
-

@@ -4,174 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VieGeo - Bảng Điều Khiển Phụ Huynh</title>
-    <!-- Fonts -->
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CSS -->
+    
     <link rel="stylesheet" href="bento.css">
-<link rel="stylesheet" href="style.css">
-<script src="ui-effects.js" defer></script>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
+    <link rel="stylesheet" href="viegeo-navigation-controls.css">
+    <link rel="stylesheet" href="parent-dashboard-redesign.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
+    <link rel="stylesheet" href="role-switcher.css">
 </head>
-<body style="padding: 40px; justify-content: flex-start; height: auto; min-height: 100vh;">
+<body class="parent-role-page">
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
 
-    <div style="max-width: 1000px; margin: 0 auto; width: 100%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
-            <div class="app-logo" style="margin-bottom: 0;">
+
+    <div class="parent-dashboard-shell">
+        <div class="parent-dashboard-header">
+            <div class="parent-dashboard-brand">
                 <i class="fa-solid fa-earth-asia"></i> VieGeo <span style="font-size: 1.2rem; color: var(--gold);">| Phụ Huynh</span>
             </div>
-            <button class="bento-btn" onclick="window.location.href='/map'" style="background: rgba(255,255,255,0.1);">Trở về Trang học</button>
+            <div class="parent-dashboard-actions"><button class="parent-theme-btn" type="button" data-role-theme-toggle><i class="fa-solid fa-moon"></i><span data-theme-label>Chế độ tối</span></button><button class="bento-btn" onclick="window.location.href='index.html'" style="background: rgba(255,255,255,0.1);">Trở về Trang chủ</button>
             <div style="position: relative; display: inline-block; margin-left: 10px;" onmouseover="document.getElementById('parentRoleDrop').style.display='block'" onmouseout="document.getElementById('parentRoleDrop').style.display='none'">
                 <button class="bento-btn" style="background: rgba(255,255,255,0.1);"><i class="fa-solid fa-users-gear"></i> Đổi Quyền</button>
-                <div id="parentRoleDrop" style="display: none; position: absolute; top: 100%; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 8px; min-width: 160px; z-index: 1000; overflow: hidden;">
-                    <a href="/map" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
-                    <a href="/parent" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
-                    <a href="/cs-dashboard" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
-                    <a href="/admin" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+                <div id="parentRoleDrop" class="parent-role-menu" style="display:none;position:absolute;top:100%;right:0;min-width:180px;z-index:1000;overflow:hidden">
+                    <a href="map.html" onclick="return switchRoleClientOnly('user')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-graduation-cap"></i> Học sinh</a>
+                    <a href="parent.html" onclick="return switchRoleClientOnly('parent')" style="display: block; padding: 10px 15px; color: #f59e0b; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-children"></i> Phụ huynh</a>
+                    <a href="cs-dashboard.html" onclick="return switchRoleClientOnly('cs')" style="display: block; padding: 10px 15px; color: white; text-decoration: none; border-bottom: 1px solid #334155;"><i class="fa-solid fa-headset"></i> CSKH</a>
+                    <a href="admin-dashboard.html" onclick="return switchRoleClientOnly('admin')" style="display: block; padding: 10px 15px; color: white; text-decoration: none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
                 </div>
+            </div>
             </div>
         </div>
 
         <div class="bento-card" style="border-top: 4px solid var(--blue); margin-bottom: 30px;">
             <h2 style="font-size: 1.8rem; margin-bottom: 20px;"><i class="fa-solid fa-chart-line"></i> Báo Cáo Tiến Độ Học Tập</h2>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+            <div class="parent-stat-grid">
+                <div class="parent-stat-card">
                     <i class="fa-solid fa-fire" style="font-size: 2.5rem; color: #ff9600; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Chuỗi học liên tiếp</p>
                     <h3 id="statStreak" style="font-size: 2rem;">0 Ngày</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div class="parent-stat-card">
                     <i class="fa-solid fa-book-open-reader" style="font-size: 2.5rem; color: #1cb0f6; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Bài học hoàn thành</p>
                     <h3 id="statCompleted" style="font-size: 2rem;">0 Bài</h3>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
+                <div class="parent-stat-card">
                     <i class="fa-solid fa-stopwatch" style="font-size: 2.5rem; color: #ce82ff; margin-bottom: 10px;"></i>
                     <p style="color: var(--text-dim); margin-bottom: 5px;">Hoạt động hôm nay</p>
                     <h3 id="statActivity" style="font-size: 1.5rem; color: var(--green);">Đã học</h3>
                 </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; text-align: center;">
-                    <i class="fa-solid fa-square-poll-vertical" style="font-size: 2.5rem; color: #58cc02; margin-bottom: 10px;"></i>
-                    <p style="color: var(--text-dim); margin-bottom: 5px;">Điểm trung bình hôm nay</p>
-                    <h3 id="statAverageScore" style="font-size: 2rem;">0.0/10</h3>
-                </div>
             </div>
         </div>
         
-        <div class="bento-card" style="border-top: 4px solid var(--green);">
+        <div class="bento-card parent-report-card" style="border-top: 4px solid var(--green);">
             <h2 style="font-size: 1.5rem; margin-bottom: 20px;"><i class="fa-solid fa-bell"></i> Phân Tích & Cảnh Báo</h2>
-            <div id="parentReport" style="line-height: 1.8; color: var(--text-main); font-size: 1.1rem;">
+            <div id="parentReport" class="parent-report-content">
                 Đang tải dữ liệu...
             </div>
         </div>
+        <div class="parent-progress-strip"><div><strong>Nhịp học tuần này</strong><div>Giữ đều lịch học để xây chuỗi bền vững.</div></div><div class="parent-progress-visual"><span></span></div></div>
     </div>
 
     <script>
-    (() => {
-        'use strict';
-        const byId = id => document.getElementById(id);
-        const startOfToday = () => { const now = new Date(); now.setHours(0, 0, 0, 0); return now.getTime(); };
-        const timeToMs = value => typeof value === 'number' ? value : (value && typeof value.toMillis === 'function' ? value.toMillis() : Number(value) || 0);
-
-        function historyFromState(state) {
-            if (Array.isArray(state?.studyHistory) && state.studyHistory.length) return state.studyHistory;
-            return Object.entries(state?.lessonResults || {}).map(([lessonId, result]) => ({
-                lessonId,
-                lessonTitle: lessonId,
-                correctAnswers: Number(result?.lastCorrectAnswers) || 0,
-                questionCount: Number(result?.questionCount) || 0,
-                completedAt: timeToMs(result?.updatedAt)
-            }));
-        }
-
-        function renderParentMetrics(source) {
-            const state = source?.gameState && typeof source.gameState === 'object' ? { ...source, ...source.gameState } : (source || {});
-            const todayAttempts = historyFromState(state).filter(item => timeToMs(item.completedAt) >= startOfToday());
-            const islandsToday = todayAttempts.length;
-            const correctAnswers = todayAttempts.reduce((total, item) => total + Math.max(0, Number(item.correctAnswers) || 0), 0);
-            const totalQuestions = todayAttempts.reduce((total, item) => total + Math.max(0, Number(item.questionCount) || 0), 0);
-            const average = totalQuestions ? (correctAnswers / totalQuestions) * 10 : 0;
-            const score = Math.round(average * 10) / 10;
-            const completedAll = Array.isArray(state.completedNodes) ? state.completedNodes.length : 0;
-            const todayLearned = islandsToday > 0;
-
-            byId('statStreak').textContent = `${Number(state.streak || state.currentStreak || 0)} Ngày`;
-            byId('statCompleted').textContent = `${islandsToday} Đảo`;
-            byId('statActivity').textContent = todayLearned ? 'Đã học bài' : 'Chưa học bài';
-            byId('statActivity').style.color = todayLearned ? 'var(--green)' : 'var(--red)';
-            byId('statAverageScore').textContent = `${score.toFixed(1)}/10`;
-
-            const evaluation = !totalQuestions ? { title: 'Chưa có dữ liệu hôm nay', color: 'var(--red)', text: 'Hôm nay bé chưa hoàn thành bài học nào. Phụ huynh có thể nhắc bé học một đảo ngắn để duy trì thói quen.' }
-                : score >= 9 ? { title: 'Xuất sắc', color: 'var(--green)', text: 'Bé nắm bài rất tốt. Hãy duy trì nhịp học đều đặn.' }
-                : score >= 7 ? { title: 'Khá', color: 'var(--blue)', text: 'Bé đã có nền tảng tốt; nên đọc lại phần lý thuyết của các câu chưa đúng.' }
-                : { title: 'Cần nhắc nhở bé tập trung hơn', color: 'var(--red)', text: 'Bé nên học lại phần lý thuyết trước khi làm lại các đảo để củng cố kiến thức.' };
-            byId('parentReport').innerHTML = `Hôm nay bé đã hoàn thành <b>${islandsToday} đảo</b> (${completedAll} đảo tích lũy), trả lời đúng <b>${correctAnswers}/${totalQuestions}</b> câu. <br><br><span style="color:${evaluation.color}"><i class="fa-solid fa-circle-info"></i> <b>${evaluation.title}:</b> ${evaluation.text}</span>`;
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            let localState = {};
-            try { localState = JSON.parse(localStorage.getItem('VieGeo_state') || '{}'); } catch (_) {}
-            renderParentMetrics(localState);
-            window.setTimeout(() => renderParentMetrics(localState), 0);
-            let session = {};
-            try { session = JSON.parse(localStorage.getItem('lm_session') || '{}'); } catch (_) {}
-            if (typeof db === 'undefined' || !session.email) return;
-            db.collection('users').doc(session.email).onSnapshot((doc) => {
-                if (doc.exists) renderParentMetrics(doc.data() || {});
-            }, (error) => console.warn('Không thể tải số liệu phụ huynh từ Supabase/localStorage:', error));
+            const rawState = localStorage.getItem('VieGeo_state');
+            if (rawState) {
+                const state = JSON.parse(rawState);
+                
+                document.getElementById('statStreak').textContent = (state.streak || 0) + " Ngày";
+                document.getElementById('statCompleted').textContent = (state.completedNodes ? state.completedNodes.length : 0) + " Bài";
+                
+                const today = new Date().toISOString().split('T')[0];
+                const lastLogin = state.lastLogin || '';
+                if (lastLogin === today) {
+                    document.getElementById('statActivity').textContent = "Đã học hôm nay";
+                    document.getElementById('statActivity').style.color = "var(--green)";
+                } else {
+                    document.getElementById('statActivity').textContent = "Chưa học hôm nay";
+                    document.getElementById('statActivity').style.color = "var(--red)";
+                }
+                
+                let report = `Học sinh đang duy trì tiến độ học tập <b>${state.streak || 0} ngày liên tiếp</b>. `;
+                if (state.completedNodes && state.completedNodes.length > 0) {
+                    report += `Tổng số lượng bài học hoàn thành là <b>${state.completedNodes.length} bài</b>. `;
+                }
+                
+                if (lastLogin !== today) {
+                    report += `<br><br><span style="color: var(--red);"><i class="fa-solid fa-triangle-exclamation"></i> <b>Cảnh báo:</b> Hôm nay con chưa hoàn thành bài học nào. Phụ huynh vui lòng nhắc nhở để tránh mất chuỗi (Streak).</span>`;
+                } else {
+                    report += `<br><br><span style="color: var(--green);"><i class="fa-solid fa-check-circle"></i> <b>Tốt:</b> Con đã hoàn thành bài học hôm nay. Quá trình học tập đang diễn ra rất tích cực.</span>`;
+                }
+                
+                document.getElementById('parentReport').innerHTML = report;
+                
+            } else {
+                document.getElementById('parentReport').innerHTML = "Chưa có dữ liệu học tập trên thiết bị này. Vui lòng cho học sinh đăng nhập và hoàn thành bài học đầu tiên.";
+            }
         });
-    })();
     </script>
     <script>
-    function parentAllowedRolesFromSession(session) {
-        const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
-        const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
-        const collected = [];
-        const appendRoles = (value) => {
-            if (!value) return;
-            if (Array.isArray(value)) { value.forEach(appendRoles); return; }
-            if (typeof value === 'string') {
-                const trimmed = value.trim();
-                if (!trimmed) return;
-                if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
-                    try {
-                        const parsed = JSON.parse(trimmed);
-                        if (Array.isArray(parsed)) { parsed.forEach(appendRoles); return; }
-                    } catch (_) {}
-                    trimmed.split(',').forEach(appendRoles);
-                    return;
-                }
-                collected.push(aliases[trimmed.toLowerCase()] || trimmed.toLowerCase());
-                return;
-            }
-            collected.push(String(value).toLowerCase());
-        };
-        appendRoles(session.roles);
-        appendRoles(session.role);
-        appendRoles(session.activeRole);
-        appendRoles(session.active_role);
-        if (session.isAdmin || session.isSuperAdmin) appendRoles('admin');
-        const allowedRoles = [...new Set(collected.filter(item => Boolean(roleLinks[item])))];
-        if (allowedRoles.includes('admin')) ['cs', 'parent', 'user'].forEach((role) => !allowedRoles.includes(role) && allowedRoles.push(role));
-        return allowedRoles.length ? allowedRoles : ['user'];
-    }
-
     window.switchRoleClientOnly = function(role) {
         if(!role) return;
         try {
             var session = JSON.parse(localStorage.getItem('lm_session')) || {};
             const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
             const normalizedRole = aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase();
-            const roleLinks = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
-            const allowedRoles = parentAllowedRolesFromSession(session);
+            const roleLinks = { user: 'map.html', parent: 'parent.html', cs: 'cs-dashboard.html', admin: 'admin.html' };
+            const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
+            const allowedRoles = [...new Set(source.map(item => aliases[String(item || '').toLowerCase()] || String(item || '').toLowerCase()).filter(item => Boolean(roleLinks[item])))];
             if (!allowedRoles.includes(normalizedRole)) { if (window.Swal) Swal.fire({icon:'warning',title:'Không có quyền truy cập',text:'Vai trò này chưa được cấp cho tài khoản của bạn.'}); return false; }
             session.roles = allowedRoles;
             session.role = normalizedRole;
@@ -184,7 +153,9 @@
     document.addEventListener('DOMContentLoaded', () => {
         try {
             const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-            const allowedRoles = parentAllowedRolesFromSession(session);
+            const aliases = { map: 'user', student: 'user', cskh: 'cs', support: 'cs' };
+            const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
+            const allowedRoles = [...new Set(source.map(role => aliases[String(role || '').toLowerCase()] || String(role || '').toLowerCase()))];
             const drop = document.getElementById('parentRoleDrop');
             const wrap = drop?.parentElement;
             if (!drop || !wrap) return;
@@ -196,5 +167,16 @@
         } catch (error) { console.warn('Không thể dựng danh sách quyền:', error); }
     });
     </script>
+    <script src="role-theme.js"></script>
+<label class="role-page-switcher">
+        <span>Chuyển tài khoản</span>
+        <select data-role-page-select>
+            <option value="user">Học sinh</option>
+            <option value="parent">Phụ huynh</option>
+            <option value="cs">Chăm sóc KH</option>
+            <option value="admin">Quản trị viên</option>
+        </select>
+    </label>
+    <script src="role-switcher.js"></script>
 </body>
 </html>

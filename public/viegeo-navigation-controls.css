@@ -1,0 +1,253 @@
+/* =========================================================
+   VIEGEO — ĐỒNG BỘ NÚT ĐÓNG (X) VÀ NÚT QUAY LẠI
+   Chỉ thay đổi giao diện, không thay đổi chức năng.
+   ========================================================= */
+
+:root {
+    --vg-control-ink: #12324a;
+    --vg-control-blue: #1cb0f6;
+    --vg-control-blue-2: #0d8fd4;
+    --vg-control-danger: #ff5d68;
+    --vg-control-danger-2: #dc3848;
+    --vg-control-surface: rgba(255, 255, 255, 0.92);
+    --vg-control-border: rgba(18, 50, 74, 0.2);
+    --vg-control-shadow: rgba(12, 38, 61, 0.2);
+}
+
+html[data-theme="dark"] {
+    --vg-control-ink: #eef7ff;
+    --vg-control-surface: rgba(25, 43, 67, 0.94);
+    --vg-control-border: rgba(151, 193, 232, 0.28);
+    --vg-control-shadow: rgba(0, 0, 0, 0.42);
+}
+
+/* ---------- NÚT ĐÓNG X ---------- */
+.btn-close,
+#supportChatClose,
+.parent-pin-close,
+button[aria-label="Đóng"],
+button[aria-label="Đóng hỗ trợ"] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    padding: 0 !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    border: 2px solid rgba(255, 255, 255, 0.72) !important;
+    border-radius: 15px !important;
+    color: #fff !important;
+    background: linear-gradient(145deg, var(--vg-control-danger), var(--vg-control-danger-2)) !important;
+    box-shadow: 0 6px 0 #9f2533, 0 12px 24px rgba(184, 44, 58, 0.26) !important;
+    cursor: pointer !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transform: translateY(0) rotate(0) !important;
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease !important;
+}
+
+.btn-close::before,
+#supportChatClose::before,
+.parent-pin-close::before,
+button[aria-label="Đóng"]::before,
+button[aria-label="Đóng hỗ trợ"]::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.2);
+    pointer-events: none;
+}
+
+.btn-close i,
+#supportChatClose i,
+.parent-pin-close i,
+button[aria-label="Đóng"] i,
+button[aria-label="Đóng hỗ trợ"] i {
+    font-size: 1.08rem !important;
+    line-height: 1 !important;
+    transition: transform .22s ease !important;
+}
+
+.btn-close:hover,
+#supportChatClose:hover,
+.parent-pin-close:hover,
+button[aria-label="Đóng"]:hover,
+button[aria-label="Đóng hỗ trợ"]:hover {
+    transform: translateY(-3px) rotate(3deg) !important;
+    filter: brightness(1.07) !important;
+    box-shadow: 0 9px 0 #9f2533, 0 17px 28px rgba(184, 44, 58, 0.3) !important;
+}
+
+.btn-close:hover i,
+#supportChatClose:hover i,
+.parent-pin-close:hover i,
+button[aria-label="Đóng"]:hover i,
+button[aria-label="Đóng hỗ trợ"]:hover i {
+    transform: rotate(90deg) scale(1.08) !important;
+}
+
+.btn-close:active,
+#supportChatClose:active,
+.parent-pin-close:active,
+button[aria-label="Đóng"]:active,
+button[aria-label="Đóng hỗ trợ"]:active {
+    transform: translateY(4px) !important;
+    box-shadow: 0 2px 0 #9f2533, 0 7px 14px rgba(184, 44, 58, 0.2) !important;
+}
+
+/* ---------- NÚT QUAY LẠI ---------- */
+#back-btn,
+#btnMapBack,
+.map-back-button,
+.arena-topbar-back,
+.exam-back-link,
+#examPrevious,
+a[href="/map"][title*="Quay lại"],
+a[href="/map"]:has(.fa-arrow-left),
+a[id^="showLoginFrom"] {
+    min-height: 46px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    padding: 0 18px !important;
+    border: 2px solid var(--vg-control-border) !important;
+    border-radius: 16px !important;
+    color: var(--vg-control-ink) !important;
+    background: var(--vg-control-surface) !important;
+    box-shadow: 0 6px 0 rgba(16, 65, 94, .24), 0 13px 25px var(--vg-control-shadow) !important;
+    text-decoration: none !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    transform: translateY(0) !important;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease !important;
+}
+
+#back-btn i,
+#btnMapBack i,
+.map-back-button i,
+.arena-topbar-back i,
+.exam-back-link i,
+#examPrevious i,
+a[href="/map"]:has(.fa-arrow-left) i,
+a[id^="showLoginFrom"] i {
+    width: 28px;
+    height: 28px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    color: #fff !important;
+    background: linear-gradient(145deg, var(--vg-control-blue), var(--vg-control-blue-2));
+    box-shadow: 0 4px 0 #086b9f;
+    transition: transform .2s ease !important;
+}
+
+#back-btn:hover,
+#btnMapBack:hover,
+.map-back-button:hover,
+.arena-topbar-back:hover,
+.exam-back-link:hover,
+#examPrevious:hover,
+a[href="/map"]:has(.fa-arrow-left):hover,
+a[id^="showLoginFrom"]:hover {
+    transform: translateY(-3px) !important;
+    border-color: rgba(28,176,246,.55) !important;
+    background: color-mix(in srgb, var(--vg-control-surface) 88%, #d8f3ff) !important;
+    box-shadow: 0 9px 0 rgba(16, 65, 94, .24), 0 18px 30px var(--vg-control-shadow) !important;
+}
+
+#back-btn:hover i,
+#btnMapBack:hover i,
+.map-back-button:hover i,
+.arena-topbar-back:hover i,
+.exam-back-link:hover i,
+#examPrevious:hover i,
+a[href="/map"]:has(.fa-arrow-left):hover i,
+a[id^="showLoginFrom"]:hover i {
+    transform: translateX(-4px) !important;
+}
+
+#back-btn:active,
+#btnMapBack:active,
+.map-back-button:active,
+.arena-topbar-back:active,
+.exam-back-link:active,
+#examPrevious:active,
+a[href="/map"]:has(.fa-arrow-left):active,
+a[id^="showLoginFrom"]:active {
+    transform: translateY(4px) !important;
+    box-shadow: 0 2px 0 rgba(16, 65, 94, .24), 0 7px 14px var(--vg-control-shadow) !important;
+}
+
+/* Nút thoát bài thi: giữ ý nghĩa cảnh báo nhưng đồng bộ hình thức */
+#examExit {
+    min-height: 46px !important;
+    border: 2px solid rgba(255,255,255,.65) !important;
+    border-radius: 16px !important;
+    color: #fff !important;
+    background: linear-gradient(145deg, var(--vg-control-danger), var(--vg-control-danger-2)) !important;
+    box-shadow: 0 6px 0 #9f2533, 0 13px 25px rgba(184,44,58,.25) !important;
+    font-weight: 800 !important;
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease !important;
+}
+#examExit:hover { transform: translateY(-3px) !important; filter: brightness(1.06); }
+#examExit:active { transform: translateY(4px) !important; box-shadow: 0 2px 0 #9f2533 !important; }
+
+/* Focus bàn phím */
+.btn-close:focus-visible,
+#supportChatClose:focus-visible,
+.parent-pin-close:focus-visible,
+#back-btn:focus-visible,
+#btnMapBack:focus-visible,
+.map-back-button:focus-visible,
+.arena-topbar-back:focus-visible,
+.exam-back-link:focus-visible,
+#examPrevious:focus-visible,
+#examExit:focus-visible {
+    outline: 4px solid rgba(104, 211, 255, .34) !important;
+    outline-offset: 4px !important;
+}
+
+@media (max-width: 640px) {
+    .btn-close,
+    #supportChatClose,
+    .parent-pin-close,
+    button[aria-label="Đóng"],
+    button[aria-label="Đóng hỗ trợ"] {
+        width: 42px !important;
+        height: 42px !important;
+        min-width: 42px !important;
+        border-radius: 14px !important;
+    }
+
+    #back-btn,
+    #btnMapBack,
+    .map-back-button,
+    .arena-topbar-back,
+    .exam-back-link,
+    #examPrevious,
+    a[id^="showLoginFrom"] {
+        min-height: 44px !important;
+        padding-inline: 14px !important;
+        border-radius: 14px !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-close,
+    #supportChatClose,
+    .parent-pin-close,
+    #back-btn,
+    #btnMapBack,
+    .map-back-button,
+    .arena-topbar-back,
+    .exam-back-link,
+    #examPrevious,
+    #examExit,
+    a[id^="showLoginFrom"] {
+        transition: none !important;
+    }
+}

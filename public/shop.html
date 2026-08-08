@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo | Cửa Hàng Không Gian</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="shop.css">
+    <link rel="stylesheet" href="shared-topbar.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
+</head>
+<body>
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
+
+<header class="shared-topbar">
+    <div class="shared-left">
+        <a class="shared-brand" href="student-dashboard.html"><span class="shared-logo-mark">VG</span><strong>VieGeo</strong></a>
+        <div class="shared-stats">
+            <div class="shared-stat">❤️ <strong id="sharedHeart">3</strong></div>
+            <div class="shared-stat">🔥 <strong id="sharedStreak">0</strong></div>
+            <div class="shared-stat">💎 <strong id="sharedGem">500</strong></div>
+            <div class="shared-stat"><span class="shared-xp-mark">XP</span><strong id="sharedXp">0 XP</strong></div>
+        </div>
+    </div>
+    <nav class="shared-center">
+        <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
+        <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
+        <a class="shared-link" href="exam-arena.html"><span class="shared-label">Đấu trường</span></a>
+        <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
+        <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
+        <a class="shared-link" href="profile.html"><span class="shared-label">Hồ sơ</span></a>
+    </nav>
+    <div class="shared-right">
+        <div class="shared-select-control shared-role-control">
+            <span class="shared-select-label">Tài khoản</span>
+            <select class="shared-role" id="sharedRole" aria-label="Loại tài khoản">
+                <option value="user">Học sinh</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="cs">Chăm sóc KH</option>
+                <option value="admin">Quản trị viên</option>
+            </select>
+        </div>
+        <div class="shared-select-control">
+            <span class="shared-select-label">Độ khó</span>
+            <select class="shared-difficulty" id="sharedDifficulty" aria-label="Độ khó">
+                <option value="easy">Dễ</option>
+                <option value="medium">Trung bình</option>
+                <option value="hard">Khó</option>
+            </select>
+        </div>
+        <button class="shared-action shared-theme" id="sharedThemeButton" type="button">Sáng/Tối</button>
+        
+        <button class="shared-action shared-logout" id="sharedLogoutButton" type="button">Thoát</button>
+    </div>
+</header>
+
+
+
+    <div class="space-background">
+        <div class="star-field"></div>
+        <div class="moon"></div>
+        <div class="space-line line-one"></div>
+        <div class="space-line line-two"></div>
+        <div class="space-line line-three"></div>
+    </div>
+
+    
+
+    <main class="shop-main">
+        <div class="shop-heading-row">
+            <div class="shop-heading">
+                <span class="shop-kicker">Không gian tiếp tế</span>
+                <h1><i class="fa-solid fa-store"></i> Cửa Hàng Không Gian</h1>
+                <p>Dùng Đá quý (Gems) để sắm vật phẩm hỗ trợ.</p>
+            </div>
+            <button class="back-button" id="backButton" type="button">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Quay lại</span>
+            </button>
+        </div>
+
+        <section class="shop-grid" id="shopGrid"></section>
+
+        <section class="inventory-panel">
+            <div class="inventory-heading">
+                <div>
+                    <span class="inventory-kicker">Kho vật phẩm</span>
+                    <h2>Vật phẩm đang sở hữu</h2>
+                </div>
+                <div class="inventory-gem">
+                    <i class="fa-solid fa-gem"></i>
+                    <strong id="inventoryGemBalance">500</strong>
+                    <span>Gem còn lại</span>
+                </div>
+            </div>
+
+            <div class="inventory-grid">
+                <div class="inventory-item">
+                    <span class="inventory-icon heart-icon"><i class="fa-solid fa-heart"></i></span>
+                    <div>
+                        <strong>Trái tim vô hạn</strong>
+                        <span id="inventoryInfinite">Chưa kích hoạt</span>
+                    </div>
+                </div>
+
+                <div class="inventory-item">
+                    <span class="inventory-icon shield-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                    <div>
+                        <strong>Khiên đóng băng</strong>
+                        <span id="inventoryFreeze">0</span>
+                    </div>
+                </div>
+
+                <div class="inventory-item">
+                    <span class="inventory-icon xp-icon"><i class="fa-solid fa-bolt"></i></span>
+                    <div>
+                        <strong>Bùa x2 XP</strong>
+                        <span id="inventoryDoubleXp">0</span>
+                    </div>
+                </div>
+
+                <div class="inventory-item">
+                    <span class="inventory-icon magic-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                    <div>
+                        <strong>Bùa 50/50</strong>
+                        <span id="inventory5050">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <button class="support-button" id="supportButton" type="button">
+        <span class="support-avatar">CS</span>
+        <span class="support-copy">
+            <strong>Hỗ trợ VieGeo</strong>
+            <small><span class="support-online-dot"></span>CSKH đang online</small>
+        </span>
+        <span class="support-arrow">›</span>
+    </button>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="gamedata.js"></script>
+    <script src="shop.js"></script>
+    <script src="shared-topbar.js"></script>
+</body>
+</html>

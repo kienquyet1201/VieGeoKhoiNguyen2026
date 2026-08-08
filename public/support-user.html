@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VieGeo | Hỗ trợ khách hàng</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="global-theme.css">
+    <link rel="stylesheet" href="support-user.css">
+    <script src="global-theme.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-init.js"></script>
+</head>
+<body>
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
+    <main class="support-user-shell">
+        <header class="support-user-header">
+            <a href="student-dashboard.html" class="support-back">← Trang chủ</a>
+            <div>
+                <span>VieGeo Care</span>
+                <h1>Trung tâm hỗ trợ</h1>
+                <p>Gửi tin nhắn và nhận phản hồi trực tiếp từ đội ngũ VieGeo.</p>
+            </div>
+            <button class="support-theme-toggle" id="supportThemeButton" data-global-theme-toggle type="button">Chế độ sáng</button>
+        </header>
+
+        <section class="support-user-grid">
+            <aside class="support-info-card">
+                <div class="support-agent-avatar">CS</div>
+                <span class="support-online"><i></i>Đang online</span>
+                <h2>VieGeo Support</h2>
+                <p>Đội ngũ hỗ trợ sẽ phản hồi trong khung chat này.</p>
+                <div class="support-info-row"><span>Thời gian</span><strong>8:00 - 22:00</strong></div>
+                <div class="support-info-row"><span>Trạng thái</span><strong id="ticketStatus">Đang mở</strong></div>
+            </aside>
+
+            <section class="support-chat-card">
+                <div class="support-chat-heading">
+                    <div>
+                        <span>Cuộc trò chuyện</span>
+                        <h2 id="supportTicketTitle">Hỗ trợ tài khoản</h2>
+                    </div>
+                    <span class="ticket-code" id="ticketCode">Ticket</span>
+                </div>
+
+                <div class="support-message-list" id="supportMessageList"></div>
+
+                <div class="support-composer">
+                    <textarea id="supportMessageInput" rows="2" placeholder="Mô tả vấn đề bạn cần VieGeo hỗ trợ..."></textarea>
+                    <button id="supportSendButton" type="button">Gửi tin nhắn</button>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <div class="support-toast" id="supportToast"></div>
+    <script src="support-store.js"></script>
+    <script src="support-user.js"></script>
+</body>
+</html>

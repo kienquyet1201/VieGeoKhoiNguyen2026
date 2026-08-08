@@ -1,126 +1,279 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo | CS Portal</title>
+    <title>VieGeo | Support Chat</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="style.css">
-<script src="ui-effects.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="support-chat.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
+    <link rel="stylesheet" href="role-switcher.css">
 </head>
-<body class="cs-dashboard-page">
-    <main class="cs-dashboard-shell h-[calc(100vh-60px)] flex overflow-hidden" style="max-width:1540px;margin:0 auto">
-        <header class="operations-heading cs-dashboard-heading">
-            <div><h1><i class="fa-solid fa-headset" style="color:#38bdf8"></i> CS Portal</h1><p>Tiếp nhận và giải đáp yêu cầu học sinh theo thời gian thực.</p></div>
-            <div style="display:flex;gap:8px"><button class="ops-button is-muted" id="csRoleSwitch" type="button"><i class="fa-solid fa-users-gear"></i> Đổi vai trò</button><button class="ops-button is-muted" id="csBackToMap" type="button" title="Về không gian học tập"><i class="fa-solid fa-graduation-cap"></i> Không gian học tập</button></div>
-        </header>
-        <section class="cs-portal" id="csPortal" aria-label="Không gian chăm sóc khách hàng">
-            <aside class="cs-queues">
-                <div class="cs-queue-head"><h2>Hàng đợi hỗ trợ</h2><label><span class="sr-only">Tìm hội thoại</span><input class="ops-search" id="csSearchInput" type="search" placeholder="Tìm học sinh hoặc tin nhắn" autocomplete="off"></label></div>
-                <div class="cs-queue-list" id="csQueueList"><p class="ops-muted" style="padding:12px">Đang tải hàng đợi…</p></div>
-            </aside>
-            <section class="cs-thread">
-                <header class="cs-thread-head"><button class="cs-thread-back" id="csBackToQueue" type="button" hidden><i class="fa-solid fa-arrow-left"></i><span>Quay lại</span></button><div><h2 id="csThreadTitle">Chọn một cuộc hội thoại</h2><p id="csThreadMeta">Hàng đợi chat sẽ hiển thị ở cột bên trái.</p></div><span class="ops-muted" id="csPresence">CSKH online</span></header>
-                <div class="cs-thread-messages" id="csMessages"><div class="cs-empty"><div><i class="fa-solid fa-comments" style="font-size:2rem"></i><p>Chọn một học sinh để bắt đầu hỗ trợ.</p></div></div></div>
-                <form class="cs-composer" id="csComposer"><input id="csMessageInput" type="text" maxlength="1000" placeholder="Nhập phản hồi cho học sinh…" disabled><button class="ops-button" type="submit" id="csSendButton" disabled><i class="fa-solid fa-paper-plane"></i> Gửi</button></form>
+<body>
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
+
+    <div class="support-shell">
+        <aside class="ticket-sidebar">
+            <div class="sidebar-header">
+                <div class="brand-block">
+                    <div class="brand-icon">🌏</div>
+                    <div>
+                        <strong>VieGeo</strong>
+                        <span>Support Center</span>
+                    </div>
+                </div>
+                <button class="theme-button" id="themeButton">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+
+
+            <nav class="sidebar-navigation">
+                <a class="nav-link" href="student-dashboard.html">
+                    <span class="nav-icon">🏠</span>
+                    <span>Back to Home</span>
+                </a>
+                <a class="nav-link" href="admin-dashboard.html">
+                    <span class="nav-icon">🛡️</span>
+                    <span>Admin Dashboard</span>
+                </a>
+            </nav>
+
+            <div class="support-summary">
+                <div>
+                    <span>Đang chờ</span>
+                    <strong>8</strong>
+                </div>
+                <div>
+                    <span>Đang xử lý</span>
+                    <strong>5</strong>
+                </div>
+            </div>
+
+            <div class="ticket-tools">
+                <input id="ticketSearch" type="search" placeholder="Tìm khách hàng">
+                <select id="ticketFilter">
+                    <option value="all">Tất cả ticket</option>
+                    <option value="urgent">Ưu tiên cao</option>
+                    <option value="normal">Bình thường</option>
+                </select>
+            </div>
+
+            <div class="ticket-list" id="ticketList">
+                <button class="ticket-item active" data-ticket="1" data-priority="urgent">
+                    <div class="customer-avatar pink-avatar">MA</div>
+                    <div class="ticket-content">
+                        <div class="ticket-topline">
+                            <strong>Minh Anh</strong>
+                            <span>2 phút</span>
+                        </div>
+                        <p>Em không vào được bài học Hà Nội...</p>
+                        <div class="ticket-meta">
+                            <span class="priority-badge urgent-badge">Ưu tiên</span>
+                            <span>Ticket #1248</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="ticket-item" data-ticket="2" data-priority="normal">
+                    <div class="customer-avatar blue-avatar">QT</div>
+                    <div class="ticket-content">
+                        <div class="ticket-topline">
+                            <strong>Quốc Thịnh</strong>
+                            <span>8 phút</span>
+                        </div>
+                        <p>Điểm Arena của em chưa cập nhật.</p>
+                        <div class="ticket-meta">
+                            <span class="priority-badge normal-badge">Bình thường</span>
+                            <span>Ticket #1247</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="ticket-item" data-ticket="3" data-priority="normal">
+                    <div class="customer-avatar green-avatar">HL</div>
+                    <div class="ticket-content">
+                        <div class="ticket-topline">
+                            <strong>Hương Lan</strong>
+                            <span>15 phút</span>
+                        </div>
+                        <p>Tôi muốn kiểm tra gói Premium.</p>
+                        <div class="ticket-meta">
+                            <span class="priority-badge normal-badge">Bình thường</span>
+                            <span>Ticket #1246</span>
+                        </div>
+                    </div>
+                </button>
+
+                <button class="ticket-item" data-ticket="4" data-priority="urgent">
+                    <div class="customer-avatar orange-avatar">TN</div>
+                    <div class="ticket-content">
+                        <div class="ticket-topline">
+                            <strong>Thu Ngân</strong>
+                            <span>24 phút</span>
+                        </div>
+                        <p>Tài khoản bị đăng xuất liên tục.</p>
+                        <div class="ticket-meta">
+                            <span class="priority-badge urgent-badge">Ưu tiên</span>
+                            <span>Ticket #1245</span>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="support-agent">
+                    <div class="agent-avatar">CS</div>
+                    <div>
+                        <strong>CSKH VieGeo</strong>
+                        <span><i></i> Đang trực tuyến</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="chat-main">
+            <header class="chat-header">
+                <div class="chat-user">
+                    <div class="customer-avatar pink-avatar large-avatar">MA</div>
+                    <div>
+                        <div class="chat-title-row">
+                            <h1 id="chatCustomerName">Minh Anh</h1>
+                            <span class="online-badge">Đang online</span>
+                        </div>
+                        <p id="chatTicketInfo">Ticket #1248 · Hỗ trợ bài học</p>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="header-action" id="noteButton">📝 Ghi chú</button>
+                    <button class="header-action success-action" id="resolveButton">✓ Hoàn tất</button>
+                    <button class="header-action danger-action" id="closeButton">✕ Đóng</button>
+                </div>
+            </header>
+
+            <section class="customer-info">
+                <div class="info-card">
+                    <span>Email</span>
+                    <strong id="customerEmail">minhanh@viegeo.vn</strong>
+                </div>
+                <div class="info-card">
+                    <span>Vai trò</span>
+                    <strong id="customerRole">Học sinh</strong>
+                </div>
+                <div class="info-card">
+                    <span>Thiết bị</span>
+                    <strong id="customerDevice">Chrome · macOS</strong>
+                </div>
+                <div class="info-card">
+                    <span>Trạng thái</span>
+                    <strong class="status-text">Đang cần hỗ trợ</strong>
+                </div>
             </section>
-        </section>
-    </main>
-    <script>
-    (() => {
-        'use strict';
-        const el = id => document.getElementById(id); let conversations = []; let currentConversation = null; let unsubscribeMessages = null;
-        const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
-        const nameFor = item => item.name || item.email || item.id || 'Học sinh VieGeo';
-        const show = (message, icon='info') => window.Swal ? Swal.fire({toast:true,position:'top-end',timer:2400,showConfirmButton:false,title:message,icon,background:'#102238',color:'#fff'}) : console.info(message);
-        const session = () => { try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); } catch { return {}; } };
 
-        function startAgentPresence() {
-            if (typeof db === 'undefined') return;
-            const staff = session();
-            if (!staff.email) return;
-            const heartbeat = () => db.collection('users').doc(staff.email).set({ lastActive: Date.now() }, { merge: true }).catch(error => console.warn('Không thể cập nhật trạng thái CSKH.', error));
-            heartbeat();
-            window.setInterval(heartbeat, 30000);
-        }
+            <section class="chat-box">
+                <div class="message-list" id="messageList">
+                    <div class="message-day">Hôm nay</div>
 
-        function renderQueue() {
-            const term = el('csSearchInput').value.trim().toLowerCase(); const list = el('csQueueList');
-            if (!conversations.length) { list.innerHTML = '<p class="ops-muted" style="padding:12px">Chưa có yêu cầu hỗ trợ mới.</p>'; return; }
-            list.innerHTML = conversations.map(item => { const haystack = `${nameFor(item)} ${item.email || ''} ${item.lastMessage || ''}`.toLowerCase(); const initial = nameFor(item).trim().charAt(0).toUpperCase(); return `<button class="cs-queue-row${currentConversation === item.id ? ' is-active' : ''}${term && !haystack.includes(term) ? ' hidden' : ''}" type="button" data-conversation-id="${escapeHtml(item.id)}"><span class="cs-avatar">${escapeHtml(initial)}</span><span class="cs-queue-name">${escapeHtml(nameFor(item))}</span><span class="cs-queue-preview">${escapeHtml(item.lastMessage || 'Yêu cầu hỗ trợ mới')}</span></button>`; }).join('');
-        }
+                    <div class="message-row customer-row">
+                        <div class="message-avatar">MA</div>
+                        <div class="message-group">
+                            <div class="message-bubble customer-bubble">
+                                Chào anh/chị, em đang học phần Hà Nội nhưng bấm vào bài thì không mở được ạ.
+                            </div>
+                            <span class="message-time">20:14</span>
+                        </div>
+                    </div>
 
-        function renderMessages(snapshot) {
-            const container = el('csMessages'); const messages = snapshot.docs.map(doc => ({id:doc.id,...doc.data()})).sort((a,b) => (a.createdAtClient || 0) - (b.createdAtClient || 0));
-            container.innerHTML = messages.length ? messages.map(message => { const staff = ['staff', 'assistant', 'AI'].includes(message.sender); const senderLabel = message.sender === 'AI' ? 'CSKH tự động (AI)' : message.sender === 'staff' ? `CSKH + ${escapeHtml(message.staffName || message.senderName || message.staffEmail || 'VieGeo')}` : 'Học sinh'; const recalled = message.recalled || message.status === 'recalled'; const status = message.status === 'read' ? 'Đã xem' : message.status === 'received' ? 'Đã nhận' : message.status === 'recalled' ? 'Đã thu hồi' : 'Đã gửi'; return `<article class="cs-bubble${staff ? ' is-staff' : ''}"><small>${senderLabel}</small><p>${escapeHtml(recalled ? 'Đã thu hồi tin nhắn.' : (message.text || (message.imageUrl ? 'Đã gửi hình ảnh.' : '')))}</p>${!recalled && message.imageUrl ? `<img src="${escapeHtml(message.imageUrl)}" alt="Ảnh đính kèm" style="max-width:100%;margin-top:8px;border-radius:9px">` : ''}<small style="display:block;margin-top:6px;opacity:.72">${status}</small></article>`; }).join('') : '<div class="cs-empty">Chưa có tin nhắn trong cuộc hội thoại này.</div>';
-            container.scrollTop = container.scrollHeight;
-        }
+                    <div class="message-row agent-row">
+                        <div class="message-group">
+                            <div class="message-bubble agent-bubble">
+                                Chào Minh Anh 👋 VieGeo đã nhận được yêu cầu của em. Em đang gặp lỗi ở bài nào để mình kiểm tra nhé?
+                            </div>
+                            <span class="message-time">20:15</span>
+                        </div>
+                        <div class="message-avatar agent-message-avatar">CS</div>
+                    </div>
 
-        async function markStudentMessagesRead(snapshot) {
-            if (typeof db === 'undefined' || !currentConversation) return;
-            const unread = snapshot.docs.filter(doc => { const message = doc.data() || {}; return message.sender === 'user' && !message.recalled && message.status !== 'read'; });
-            if (!unread.length) return;
-            const batch = db.batch(); unread.forEach(doc => batch.update(doc.ref, {status:'read', readAtClient:Date.now()}));
-            try { await batch.commit(); } catch (error) { console.warn('Không thể đánh dấu tin nhắn đã đọc.', error); }
-        }
+                    <div class="message-row customer-row">
+                        <div class="message-avatar">MA</div>
+                        <div class="message-group">
+                            <div class="message-bubble customer-bubble">
+                                Dạ bài “Vị trí địa lí Hà Nội”. Khi bấm nút bắt đầu thì nó cứ đứng im.
+                            </div>
+                            <span class="message-time">20:16</span>
+                        </div>
+                    </div>
 
-        function selectConversation(id) {
-            const item = conversations.find(conversation => conversation.id === id); if (!item || typeof db === 'undefined') return;
-            currentConversation = id; renderQueue();
-            el('csPortal')?.classList.add('is-conversation-open');
-            el('csBackToQueue').hidden = false;
-            el('csThreadTitle').textContent = nameFor(item); el('csThreadMeta').textContent = item.email || id; el('csMessageInput').disabled = false; el('csSendButton').disabled = false;
-            if (unsubscribeMessages) unsubscribeMessages();
-            unsubscribeMessages = db.collection('support_conversations').doc(id).collection('messages').onSnapshot(snapshot => { renderMessages(snapshot); void markStudentMessagesRead(snapshot); }, error => { console.error(error); show('Không thể tải tin nhắn.', 'error'); });
-            db.collection('support_conversations').doc(id).set({ unreadForStaff:false, updatedAtClient:Date.now() }, {merge:true}).catch(console.warn);
-        }
+                    <div class="message-row agent-row">
+                        <div class="message-group">
+                            <div class="message-bubble agent-bubble">
+                                Mình đang kiểm tra cho em. Em thử tải lại trang một lần bằng Cmd + Shift + R nhé. Nếu vẫn lỗi mình sẽ xử lý tiếp ngay.
+                            </div>
+                            <span class="message-time">20:17</span>
+                        </div>
+                        <div class="message-avatar agent-message-avatar">CS</div>
+                    </div>
+                </div>
 
-        async function sendMessage(event) {
-            event.preventDefault();
-            const input = el('csMessageInput');
-            const text = input?.value.trim() || '';
-            if (!text || !currentConversation) { input?.focus(); return; }
-            try {
-                const timestampClient = Date.now();
-                const currentStaff = session(); const senderId = currentStaff.email || 'support@viegeo'; const staffName = currentStaff.name || currentStaff.displayName || senderId;
-                const ref = db.collection('support_conversations').doc(currentConversation);
-                await ref.collection('messages').add({
-                    sender: 'staff', senderId, staffEmail: senderId, staffName, text, status:'sent',
-                    timestamp: new Date().toISOString(), timestampClient,
-                    createdAt: new Date().toISOString(), createdAtClient: timestampClient
-                });
-                await ref.set({ lastMessage:text, updatedAt:new Date().toISOString(), updatedAtClient:timestampClient, unreadForStudent:true }, {merge:true});
-                input.value = '';
-                const container = el('csMessages');
-                if (container) container.scrollTop = container.scrollHeight;
-            } catch (error) {
-                console.error(error);
-                show(error?.code === 'permission-denied' ? 'Bạn chưa có quyền gửi phản hồi trong hội thoại này.' : 'Không thể gửi phản hồi.', 'error');
-            }
-        }
+                <div class="typing-status" id="typingStatus">Khách hàng đang nhập...</div>
 
-        const roleLabels = { user: 'Học sinh', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Admin' };
-        const roleUrls = { user: '/map', parent: '/parent', cs: '/cs-dashboard', admin: '/admin' };
-        function allowedRoles() { const data = session(); const source = Array.isArray(data.roles) ? data.roles : [data.role || data.activeRole]; const roles = [...new Set(source.map(role => String(role || '').toLowerCase()).filter(role => Boolean(roleUrls[role])))]; return roles.length ? roles : ['user']; }
-        function navigateRole(role) { const data = session(); const roles = allowedRoles(); if (!roles.includes(role)) { show('Bạn không có quyền chuyển sang vai trò này.', 'warning'); return; } data.roles = roles; data.role = role; data.activeRole = role; localStorage.setItem('lm_session',JSON.stringify(data)); window.location.href = roleUrls[role]; }
+                <div class="message-composer">
+                    <button class="composer-tool" id="emojiButton" type="button">😊</button>
+                    <button class="composer-tool" id="attachmentButton" type="button">📎</button>
+                    <textarea id="messageInput" rows="1" placeholder="Nhập tin nhắn hỗ trợ..."></textarea>
+                    <button class="send-button" id="sendButton" type="button">Gửi ➤</button>
+                </div>
+            </section>
+        </main>
+    </div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            el('csSearchInput').addEventListener('input', renderQueue); el('csComposer').addEventListener('submit', sendMessage); el('csQueueList').addEventListener('click', event => { const row = event.target.closest('[data-conversation-id]'); if (row) selectConversation(row.dataset.conversationId); });
-            el('csBackToQueue').addEventListener('click', () => { el('csPortal')?.classList.remove('is-conversation-open'); el('csBackToQueue').hidden = true; });
-            el('csBackToMap').addEventListener('click', () => navigateRole('user'));
-            if (allowedRoles().length < 2) el('csRoleSwitch').hidden = true;
-            el('csRoleSwitch').addEventListener('click', async () => { const roles = allowedRoles(); if (roles.length < 2) return; const result = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(roles.map(role => [role, roleLabels[role]])),inputValue:roles.includes('cs') ? 'cs' : roles[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if(result.isConfirmed) navigateRole(result.value); });
-            if (typeof db === 'undefined') { el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Supabase/localStorage chưa sẵn sàng.</p>'; return; }
-            startAgentPresence();
-            db.collection('support_conversations').orderBy('updatedAtClient','desc').limit(100).onSnapshot(snapshot => { conversations=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})); renderQueue(); }, error => { console.error(error); el('csQueueList').innerHTML='<p class="ops-muted" style="padding:12px">Không thể tải hàng đợi hỗ trợ.</p>'; });
-        });
-    })();
-    </script>
+    <div class="modal-overlay" id="noteModal">
+        <div class="note-modal">
+            <div class="modal-heading">
+                <div>
+                    <span>Ghi chú nội bộ</span>
+                    <h2>Thêm ghi chú cho ticket</h2>
+                </div>
+                <button id="closeNoteButton" type="button">✕</button>
+            </div>
+            <textarea id="noteInput" rows="5" placeholder="Chỉ nhân viên CSKH nhìn thấy ghi chú này..."></textarea>
+            <button class="save-note-button" id="saveNoteButton" type="button">Lưu ghi chú</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="support-chat.js"></script>
+<label class="role-page-switcher">
+        <span>Chuyển tài khoản</span>
+        <select data-role-page-select>
+            <option value="user">Học sinh</option>
+            <option value="parent">Phụ huynh</option>
+            <option value="cs">Chăm sóc KH</option>
+            <option value="admin">Quản trị viên</option>
+        </select>
+    </label>
+    <script src="role-switcher.js"></script>
 </body>
 </html>

@@ -9,34 +9,87 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="loginout.css">
-<link rel="stylesheet" href="style.css">
-<script src="ui-effects.js" defer></script>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="learning-cute-redesign.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
 </head>
-<body>
+<body class="viegeo-auth-expedition">
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
+
+
+    <div class="auth-ambient" aria-hidden="true">
+        <span class="ambient-orb orb-one"></span>
+        <span class="ambient-orb orb-two"></span>
+        <span class="ambient-orb orb-three"></span>
+        <span class="moving-cloud cloud-a"></span>
+        <span class="moving-cloud cloud-b"></span>
+        <span class="moving-cloud cloud-c"></span>
+        <span class="tiny-star star-a">✦</span>
+        <span class="tiny-star star-b">✦</span>
+        <span class="tiny-star star-c">✦</span>
+    </div>
 
     <main class="auth-wrapper">
         
-        <!-- LEFT PANEL: BRANDING -->
+        
         <section class="auth-left">
+            <div class="geo-scene" aria-hidden="true">
+                <div class="sun-disc"></div>
+                <div class="orbit-ring ring-one"></div>
+                <div class="orbit-ring ring-two"></div>
+                <div class="vietnam-map">S</div>
+                <div class="scene-pin pin-north"><i class="fa-solid fa-mountain-sun"></i><span>Miền Bắc</span></div>
+                <div class="scene-pin pin-central"><i class="fa-solid fa-water"></i><span>Miền Trung</span></div>
+                <div class="scene-pin pin-south"><i class="fa-solid fa-seedling"></i><span>Miền Nam</span></div>
+                <div class="floating-compass"><i class="fa-regular fa-compass"></i></div>
+                <div class="paper-plane"><i class="fa-solid fa-paper-plane"></i></div>
+            </div>
             <div class="brand-content">
                 <div class="brand-logo">
-                    <i class="fa-solid fa-earth-asia"></i> VieGeo
+                    <span class="brand-icon"><i class="fa-solid fa-earth-asia"></i></span>
+                    <span>VieGeo</span>
                 </div>
-                <h1 class="brand-slogan">VieGeo - Khởi Nguyên</h1>
-                <p class="brand-desc" style="line-height: 1.6; font-size: 1.1rem; color: rgba(255,255,255,0.9);">
-                    Hành trình khám phá 63 tỉnh thành Việt Nam với 6300 hòn đảo tri thức.<br><br>
-                    Từ câu hỏi cơ bản đến thử thách tư duy, phần thưởng hấp dẫn đang chờ đón...
+                <span class="brand-kicker"><i class="fa-solid fa-location-dot"></i> Học Địa lí Việt Nam thật vui</span>
+                <h1 class="brand-slogan">Một tấm vé nhỏ.<br><span>Cả Việt Nam ở phía trước.</span></h1>
+                <p class="brand-desc">
+                    Đăng nhập như mở một cuốn hộ chiếu học tập: mỗi bài học là một dấu mộc mới trên hành trình khám phá Việt Nam.
                 </p>
+                <div class="brand-highlights">
+                    <span><i class="fa-solid fa-passport"></i> Hộ chiếu học tập</span>
+                    <span><i class="fa-solid fa-location-dot"></i> Dấu chân cá nhân</span>
+                    <span><i class="fa-solid fa-stamp"></i> Sưu tầm dấu mộc</span>
+                </div>
             </div>
         </section>
 
-        <!-- RIGHT PANEL: AUTH FORM -->
+        
         <section class="auth-right">
             <div class="auth-card">
 
-                <!-- LOGIN PANEL -->
+                
                 <div class="panel active" id="loginPanel">
+                    <div class="panel-badge"><i class="fa-solid fa-route"></i> Tiếp tục chuyến đi</div>
                     <h2 class="auth-title">Chào mừng trở lại</h2>
                     <p class="auth-sub">Đăng nhập để tiếp tục hành trình của bạn</p>
 
@@ -66,8 +119,9 @@
                     </div>
                 </div>
 
-                <!-- REGISTER PANEL -->
+                
                 <div class="panel" id="registerPanel">
+                    <div class="panel-badge panel-badge-green"><i class="fa-solid fa-paper-plane"></i> Tạo hành trình mới</div>
                     <h2 class="auth-title">Bắt đầu hành trình</h2>
                     <p class="auth-sub">Tạo tài khoản VieGeo miễn phí</p>
 
@@ -111,7 +165,7 @@
                     </div>
                 </div>
 
-                <!-- FORGOT PASSWORD PANEL -->
+                
                 <div class="panel" id="forgotPasswordPanel">
                     <h2 class="auth-title">Quên Mật Khẩu</h2>
                     <p class="auth-sub">Nhập email để nhận mã xác minh</p>
@@ -134,7 +188,7 @@
                     </div>
                 </div>
 
-                <!-- RESET PASSWORD PANEL -->
+                
                 <div class="panel" id="resetPasswordPanel">
                     <h2 class="auth-title">Đặt lại Mật khẩu</h2>
                     <p class="auth-sub">Nhập mật khẩu mới của bạn</p>
@@ -157,19 +211,15 @@
                     </form>
                 </div>
 
-                <!-- ADMIN LOGIN PANEL -->
+                
                 <div class="panel" id="adminLoginPanel">
                     <h2 class="auth-title">Khu vực Quản trị</h2>
                     <p class="auth-sub">Dành riêng cho Quản trị viên</p>
 
                     <form id="adminLoginForm" novalidate>
                         <div class="field-group">
-                            <input type="email" id="adminEmail" class="form-input" placeholder=" " autocomplete="username" required>
-                            <label class="field-label">Gmail Admin Tổng</label>
-                        </div>
-                        <div class="field-group">
-                            <input type="password" id="adminPassword" class="form-input" placeholder=" " autocomplete="current-password" required>
-                            <label class="field-label">Mật khẩu Admin</label>
+                            <input type="text" id="adminSecret" class="form-input" placeholder=" " required>
+                            <label class="field-label">Mã bí mật (Secret Code)</label>
                         </div>
                         <div id="adminLoginMessage" style="color: #ff4b4b; font-size: 0.9rem; margin-bottom: 15px; text-align: center;"></div>
                         
@@ -185,7 +235,7 @@
 
             </div>
             
-            <!-- Link ẩn cho Admin -->
+            
             <div style="position: absolute; bottom: 20px; right: 20px;">
                 <button id="showAdminLogin" style="background: none; border: none; color: rgba(255,255,255,0.1); cursor: pointer; font-size: 0.8rem;">
                     <i class="fa-solid fa-lock"></i>
@@ -195,7 +245,7 @@
 
     </main>
 
-    <!-- OTP MODAL -->
+    
     <div id="otpModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 22, 40, 0.85); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center;">
         <div style="background: rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5); text-align: center; max-width: 400px; width: 90%;">
             <i class="fa-solid fa-envelope-open-text" style="font-size: 3rem; color: #1cb0f6; margin-bottom: 20px;"></i>
@@ -212,7 +262,7 @@
         </div>
     </div>
 
-    <!-- ROLE SELECTION GATEWAY MODAL -->
+    
     <div id="gatewayModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 22, 40, 0.85); backdrop-filter: blur(8px); z-index: 2000; justify-content: center; align-items: center;">
         <div style="background: rgba(255,255,255,0.05); padding: 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5); text-align: center; max-width: 400px; width: 90%;">
             <i class="fa-solid fa-users-gear" style="font-size: 3rem; color: #ce82ff; margin-bottom: 20px;"></i>
@@ -220,20 +270,21 @@
             <p style="color: rgba(255,255,255,0.6); margin-bottom: 25px; font-size: 0.95rem;">Bạn có quyền truy cập vào nhiều hệ thống. Vui lòng chọn:</p>
             
             <div id="roleSelectionContainer" style="display: flex; flex-direction: column; gap: 15px;">
-                <!-- Buttons injected by JS -->
+                
             </div>
             
             <button onclick="document.getElementById('gatewayModalOverlay').style.display='none'; localStorage.clear(); window.location.reload();" style="margin-top: 25px; background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;">Đăng xuất</button>
         </div>
     </div>
 
-    <!-- Toast Notification (Added manually here since we call it in loginout.js) -->
+    
     <div id="toastNotification" style="position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #22C55E; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transition: 0.3s; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"></div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script src="supabaseClient.js"></script>
+    <script src="firebase-init.js"></script>
     <script src="loginout.js"></script>
 </body>
 </html>

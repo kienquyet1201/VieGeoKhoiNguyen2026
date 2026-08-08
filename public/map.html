@@ -1,579 +1,215 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<script>window.onerror = function(msg, url, lineNo, columnNo, error) { if (window.VieGeoUI) VieGeoUI.error('JS Error: ' + msg + ' — dòng ' + lineNo + ', cột ' + columnNo); else console.error(msg, error); return false; };</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo - Khám phá Địa lí Việt Nam</title>
-    <!-- Fonts -->
+    <title>VieGeo | Khám phá Việt Nam</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CSS -->
-    <link rel="stylesheet" href="bento.css">
-<link rel="stylesheet" href="style.css">
-<script src="ui-effects.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="map-discovery.css">
+    <link rel="stylesheet" href="shared-topbar.css">
+    <link rel="stylesheet" href="global-theme.css">
+    <script src="global-theme.js"></script>
 </head>
-<body class="student-app min-h-screen w-full overflow-y-auto pb-32">
+<body>
+    <div class="global-animated-background" aria-hidden="true">
+        <div class="global-sun"></div>
+        <div class="global-cloud global-cloud-one"></div>
+        <div class="global-cloud global-cloud-two"></div>
+        <div class="global-cloud global-cloud-three"></div>
+        <div class="global-wind global-wind-one"></div>
+        <div class="global-wind global-wind-two"></div>
+        <div class="global-wind global-wind-three"></div>
+        <div class="global-moon"></div>
+        <div class="global-star global-star-one"></div>
+        <div class="global-star global-star-two"></div>
+        <div class="global-star global-star-three"></div>
+        <div class="global-star global-star-four"></div>
+        <div class="global-star global-star-five"></div>
+        <div class="global-star global-star-six"></div>
+        <div class="global-star global-star-seven"></div>
+        <div class="global-star global-star-eight"></div>
+        <div class="global-star global-star-nine"></div>
+        <div class="global-star global-star-ten"></div>
+    </div>
 
-    <div class="app-container min-h-screen w-full overflow-y-auto pb-32">
+<header class="shared-topbar">
+    <div class="shared-left">
+        <a class="shared-brand" href="student-dashboard.html"><span class="shared-logo-mark">VG</span><strong>VieGeo</strong></a>
+        <div class="shared-stats">
+            <div class="shared-stat">❤️ <strong id="sharedHeart">3</strong></div>
+            <div class="shared-stat">🔥 <strong id="sharedStreak">0</strong></div>
+            <div class="shared-stat">💎 <strong id="sharedGem">500</strong></div>
+            <div class="shared-stat"><span class="shared-xp-mark">XP</span><strong id="sharedXp">0 XP</strong></div>
+        </div>
+    </div>
+    <nav class="shared-center">
+        <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
+        <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
+        <a class="shared-link" href="exam-arena.html"><span class="shared-label">Đấu trường</span></a>
+        <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
+        <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
+        <a class="shared-link" href="profile.html"><span class="shared-label">Hồ sơ</span></a>
+    </nav>
+    <div class="shared-right">
+        <div class="shared-select-control shared-role-control">
+            <span class="shared-select-label">Tài khoản</span>
+            <select class="shared-role" id="sharedRole" aria-label="Loại tài khoản">
+                <option value="user">Học sinh</option>
+                <option value="parent">Phụ huynh</option>
+                <option value="cs">Chăm sóc KH</option>
+                <option value="admin">Quản trị viên</option>
+            </select>
+        </div>
+        <div class="shared-select-control">
+            <span class="shared-select-label">Độ khó</span>
+            <select class="shared-difficulty" id="sharedDifficulty" aria-label="Độ khó">
+                <option value="easy">Dễ</option>
+                <option value="medium">Trung bình</option>
+                <option value="hard">Khó</option>
+            </select>
+        </div>
+        <button class="shared-action shared-theme" id="sharedThemeButton" type="button">Sáng/Tối</button>
         
-        <!-- Student top navigation: the learning canvas stays full width below this bar. -->
-        <header class="user-top-navbar" id="studentTopbar">
-            <div class="user-topbar-brand">
-            <div class="app-logo">
-                <i class="fa-solid fa-earth-asia"></i> VieGeo
-            </div>
-            </div>
-            <button id="mobileTopbarToggle" class="mobile-topbar-toggle" type="button" aria-label="Mở điều hướng học tập" aria-controls="studentNavigation" aria-expanded="false" title="Mở điều hướng">
-                <i class="fa-solid fa-bars" aria-hidden="true"></i>
-            </button>
-            <div class="user-topbar-navigation fixed inset-y-0 left-0 z-[100] w-64 bg-slate-900 shadow-2xl -translate-x-full transition-transform duration-300" id="studentNavigation">
-            
-            <nav class="nav-items user-navigation-animated" id="navMenu" aria-label="Điều hướng học tập">
-                <a class="nav-button" href="/map?tab=map" data-target="tabMap" data-tab-key="map" title="Lộ trình học" aria-label="Lộ trình học" aria-current="page"><div class="nav-icon-frame"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></div><span class="nav-label">Lộ trình học</span></a>
-                <a class="nav-button" href="/exam-arena" title="Đấu trường Luyện thi" aria-label="Đấu trường Luyện thi"><div class="nav-icon-frame"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div><span class="nav-label">Đấu trường Luyện thi</span></a>
-                <a class="nav-button" href="/map?tab=leaderboard" data-target="tabLeaderboard" data-tab-key="leaderboard" title="Xếp hạng" aria-label="Xếp hạng"><div class="nav-icon-frame"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div><span class="nav-label">Xếp hạng</span></a>
-                <a class="nav-button" href="/map?tab=quests" data-target="tabQuests" data-tab-key="quests" title="Nhiệm vụ" aria-label="Nhiệm vụ"><div class="nav-icon-frame"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div><span class="nav-label">Nhiệm vụ</span></a>
-                <a class="nav-button" href="/map?tab=shop" data-target="tabShop" data-tab-key="shop" title="Cửa hàng" aria-label="Cửa hàng"><div class="nav-icon-frame"><i class="fa-solid fa-store" aria-hidden="true"></i></div><span class="nav-label">Cửa hàng</span></a>
-                <a class="nav-button" href="/map?tab=arena" data-target="tabArena" data-tab-key="arena" title="Đấu trường PvP" aria-label="Đấu trường PvP"><div class="nav-icon-frame"><i class="fa-solid fa-khanda" aria-hidden="true"></i></div><span class="nav-label">Đấu trường PvP</span></a>
-                <a class="nav-button" href="/map?tab=profile" data-target="tabProfile" data-tab-key="profile" title="Hồ sơ" aria-label="Hồ sơ"><div class="nav-icon-frame"><i class="fa-solid fa-user" aria-hidden="true"></i></div><span class="nav-label">Hồ sơ</span></a>
-            </nav>
-            <div class="mobile-navigation-tools" aria-label="Tiện ích học tập">
-                <button type="button" data-mobile-topbar-action="theme" title="Chế độ sáng/tối"><i class="fa-solid fa-moon" aria-hidden="true"></i><span>Chế độ sáng/tối</span></button>
-                <button type="button" data-mobile-topbar-action="parent" title="Khu vực phụ huynh"><i class="fa-solid fa-children" aria-hidden="true"></i><span>Khu vực phụ huynh</span></button>
-                <button type="button" data-mobile-topbar-action="logout" title="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Đăng xuất</span></button>
-            </div>
-            </div>
-            <div class="topbar-stats" aria-label="Chỉ số học tập">
-                <div class="stat-pill" style="color: #ff4b4b;" title="Trái tim · hồi 1 tim mỗi 15 phút"><i class="fa-solid fa-heart"></i> <span id="hdrHearts">3</span><span id="hdrHeartTimer" aria-live="polite" hidden style="margin-left: 4px; color: #ff9a9a; font-size: .7rem; font-variant-numeric: tabular-nums;">14:59</span></div>
-                <div class="stat-pill" style="color: #ffc800;" title="Chuỗi ngày học"><i class="fa-solid fa-fire" aria-hidden="true"></i> <span id="hdrStreak">1</span></div>
-                <div class="stat-pill" style="color: #1cb0f6;" title="Kim cương"><i class="fa-solid fa-gem"></i> <span id="hdrGems">100</span></div>
-                <div class="stat-pill" style="color: #a78bfa;" title="Kinh nghiệm"><i class="fa-solid fa-bolt"></i> <span id="hdrXp">0</span> XP</div>
-                <div class="stat-pill" title="Cúp"><i class="fa-solid fa-trophy"></i> <span id="hdrTrophies">0</span></div>
-                <div class="stat-pill" title="Cấp độ"><i class="fa-solid fa-star"></i> <span id="hdrLevel">1</span></div>
-            </div>
-            <div class="taskbar-actions" aria-label="Tiện ích học tập">
-                <label class="taskbar-difficulty" for="quickDifficultySelect" title="Đổi mức độ"><i class="fa-solid fa-gauge-high"></i><span class="sr-only">Chọn mức độ</span>
-                    <select id="quickDifficultySelect" title="Đổi mức độ"><option value="easy">Dễ</option><option value="medium">Trung bình</option><option value="hard">Khó</option></select>
-                </label>
-                <button id="btnThemeToggle" class="taskbar-icon-btn" type="button" title="Chế độ sáng/tối" aria-label="Chế độ sáng/tối"><i class="fa-solid fa-moon" aria-hidden="true"></i></button>
-                <button id="btnParentAccess" class="taskbar-icon-btn" type="button" title="Khu vực phụ huynh" aria-label="Khu vực phụ huynh"><i class="fa-solid fa-children"></i></button>
-                <button id="btnTaskbarLogout" class="taskbar-icon-btn taskbar-logout" type="button" title="Đăng xuất" aria-label="Đăng xuất"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-            </div>
-        </header>
+        <button class="shared-action shared-logout" id="sharedLogoutButton" type="button">Thoát</button>
+    </div>
+</header>
 
-        <button id="mobileNavigationOverlay" class="mobile-navigation-overlay fixed inset-0 z-[100] bg-black/50" type="button" aria-label="Đóng điều hướng" hidden></button>
 
-        <div id="roleSwitcherWrap" class="user-role-switcher" hidden>
-            <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
-            <label class="sr-only" for="roleSwitcherSelect">Đổi quyền</label>
-            <select id="roleSwitcherSelect" title="Đổi quyền" aria-label="Đổi quyền"></select>
+
+    <div class="night-background">
+        <div class="star star-one">✦</div>
+        <div class="star star-two">✧</div>
+        <div class="star star-three">✦</div>
+        <div class="star star-four">✧</div>
+        <div class="moon"></div>
+        <div class="night-glow glow-one"></div>
+        <div class="night-glow glow-two"></div>
+    </div>
+
+    
+
+    
+
+    <main class="discovery-main">
+        <div id="regionsView" class="learning-view" style="display:block">
+            <div class="page-heading">
+                <span class="heading-badge">Hành trình Việt Nam ✨</span>
+                <h1>Khám phá 3 miền</h1>
+                <p>Chọn một miền để mở danh sách tỉnh thành và tiếp tục hành trình học tập.</p>
+            </div>
+
+            <div class="region-grid">
+                <button class="region-card north-region" type="button" data-region="north">
+                    <div class="region-icon">🌸</div>
+                    <div class="region-copy">
+                        <span class="region-label">Miền Bắc</span>
+                        <h2>Miền Bắc</h2>
+                        <p>Núi cao, trung du, đồng bằng sông Hồng và những đô thị lịch sử.</p>
+                        <div class="region-progress">
+                            <div class="region-progress-head"><span>Tiến độ</span><strong>72%</strong></div>
+                            <div class="progress-track"><div class="progress-fill north-fill" style="width:72%"></div></div>
+                        </div>
+                        <div class="region-footer"><span>25 tỉnh / thành</span><span class="open-label">Khám phá →</span></div>
+                    </div>
+                </button>
+
+                <button class="region-card central-region" type="button" data-region="central">
+                    <div class="region-icon">🌊</div>
+                    <div class="region-copy">
+                        <span class="region-label">Miền Trung</span>
+                        <h2>Miền Trung</h2>
+                        <p>Dải đất ven biển dài, cao nguyên rộng lớn và nhiều di sản đặc sắc.</p>
+                        <div class="region-progress">
+                            <div class="region-progress-head"><span>Tiến độ</span><strong>46%</strong></div>
+                            <div class="progress-track"><div class="progress-fill central-fill" style="width:46%"></div></div>
+                        </div>
+                        <div class="region-footer"><span>19 tỉnh / thành</span><span class="open-label">Khám phá →</span></div>
+                    </div>
+                </button>
+
+                <button class="region-card south-region" type="button" data-region="south">
+                    <div class="region-icon">🌴</div>
+                    <div class="region-copy">
+                        <span class="region-label">Miền Nam</span>
+                        <h2>Miền Nam</h2>
+                        <p>Đồng bằng rộng lớn, sông nước, đô thị năng động và vùng biển nhiệt đới.</p>
+                        <div class="region-progress">
+                            <div class="region-progress-head"><span>Tiến độ</span><strong>38%</strong></div>
+                            <div class="progress-track"><div class="progress-fill south-fill" style="width:38%"></div></div>
+                        </div>
+                        <div class="region-footer"><span>19 tỉnh / thành</span><span class="open-label">Khám phá →</span></div>
+                    </div>
+                </button>
+            </div>
         </div>
 
-        <!-- BENTO MAIN -->
-        <main class="bento-main">
-
-            <div class="student-page-heading">
-                <h1 class="topbar-title">Không gian học tập</h1>
-                <button id="btnMapBack" class="bento-btn map-back-button" style="display: none; background: rgba(255,255,255,0.1);"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
-            </div>
-
-            <!-- TAB: MAP (LEARN) -->
-            <div id="tabMap" class="tab-pane active">
-                <div class="map-view-heading" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                    <div><h2 style="font-size: 2rem;" id="mapTitle">Khám Phá Việt Nam</h2></div>
-                    <div id="mapHeaderActions"></div>
+        <div id="provincesView" class="learning-view" style="display:none">
+            <div class="view-toolbar">
+                <button id="provincesBackButton" class="back-button" type="button">← Quay lại</button>
+                <div class="view-heading">
+                    <span id="provinceRegionBadge" class="detail-badge">Miền Bắc</span>
+                    <h1 id="provinceRegionTitle">Miền Bắc</h1>
+                    <p id="provinceRegionDescription">Chọn một tỉnh hoặc thành phố để tiếp tục học.</p>
                 </div>
-                
-                <!-- Khu vực chuẩn bị nhúng SVG Bản đồ Việt Nam tương tác trong giai đoạn tiếp theo. -->
-                <div id="interactive-map-container" class="map-canvas-viewport">
-                    <div id="mapViewContainer" class="island-container">
-                        <!-- JS Renders Regions/Provinces/Lessons Here -->
-                    </div>
+                <div class="view-summary" id="provinceSummary">25 tỉnh / thành</div>
+            </div>
+            <div id="provinceGrid" class="province-grid"></div>
+        </div>
+
+        <div id="roadmapView" class="learning-view" style="display:none">
+            <div class="view-toolbar">
+                <button id="roadmapBackButton" class="back-button" type="button">← Quay lại</button>
+                <div class="view-heading">
+                    <span class="detail-badge">Lộ trình học tập</span>
+                    <h1 id="roadmapProvinceTitle">Hà Nội</h1>
+                    <p>Hoàn thành từng chặng để mở khóa chặng tiếp theo.</p>
                 </div>
+                <div class="view-summary">34 chặng</div>
             </div>
+            <div id="roadmapContainer" class="roadmap-container"></div>
+        </div>
 
-            <div id="islandTheoryModal" class="island-theory-modal island-theory-fullscreen fixed inset-0 w-screen h-screen z-[999999] hidden bg-slate-900 text-white overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle" hidden>
-                <section class="island-theory-dialog island-theory-fullscreen-content w-full min-h-screen">
-                    <button id="btnCloseIslandTheory" class="island-theory-close" type="button" aria-label="Đóng lý thuyết"><i class="fa-solid fa-xmark"></i></button>
-                    <div class="island-theory-reading-column max-w-4xl mx-auto p-8 md:p-16">
-                        <p class="island-theory-eyebrow"><i class="fa-solid fa-book-open"></i> Hành trang trước thử thách</p>
-                        <h2 id="islandTheoryTitle">Lý thuyết trước khi thực chiến</h2>
-                        <p id="islandTheoryMeta" class="island-theory-meta"></p>
-                        <article id="islandTheoryContent" class="island-theory-content" aria-live="polite">Đang tải lý thuyết phù hợp với đảo này...</article>
-                        <label class="island-theory-confirm" for="islandTheoryConfirm"><input id="islandTheoryConfirm" type="checkbox"> Tôi đã đọc và hiểu nội dung trên.</label>
-                        <div class="island-theory-sticky-action"><button id="btnStartIslandQuiz" class="island-theory-start w-full" type="button" disabled aria-disabled="true"><i class="fa-solid fa-play"></i> Đã hiểu &amp; Bắt đầu làm bài</button></div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- MODAL XEM LẠI TOÀN BỘ LÝ THUYẾT 34 ĐẢO -->
-            <div id="allIslandsTheoryModal" class="fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-xl text-white overflow-y-auto p-6 md:p-12 hidden" role="dialog" aria-modal="true" aria-labelledby="allTheoryModalTitle" hidden style="display:none;">
-                <div class="max-w-5xl mx-auto relative pt-4">
-                    <button id="btnCloseAllTheoryModal" onclick="closeAllIslandsTheoryModal()" class="fixed top-6 right-6 md:top-8 md:right-10 w-12 h-12 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xl transition-all shadow-xl z-50 border border-slate-700 cursor-pointer" type="button" aria-label="Đóng lý thuyết tổng hợp">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-
-                    <div class="mb-8 pr-14">
-                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-extrabold uppercase tracking-wider mb-3">
-                            <i class="fa-solid fa-book-bookmark"></i> ÔN TẬP TỔNG HỢP 34 ĐẢO TRI THỨC
-                        </div>
-                        <h2 id="allTheoryModalTitle" class="text-2xl md:text-4xl font-black text-white tracking-tight">TỔNG HỢP LÝ THUYẾT CÁC ĐẢO TRI THỨC</h2>
-                        <p id="allTheoryModalSub" class="text-slate-400 text-sm md:text-base mt-2">Tổng hợp toàn bộ kiến thức 34 Đảo tri thức giúp học sinh ôn luyện hiệu quả.</p>
-                    </div>
-
-                    <div class="relative mb-8">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
-                        <input type="text" id="allTheorySearchInput" class="w-full bg-slate-800/90 border border-slate-700 focus:border-amber-500 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-slate-400 text-base outline-none transition-all shadow-inner" placeholder="Tìm kiếm từ khóa lý thuyết (VD: khí hậu, địa hình, dân số)...">
-                    </div>
-
-                    <div id="allTheoryCardsContainer" class="grid grid-cols-1 gap-6 pb-16">
-                        <!-- 34 cards injected by JS -->
-                    </div>
+        <div id="quizView" class="learning-view" style="display:none">
+            <div class="quiz-toolbar">
+                <button id="quizBackButton" class="back-button" type="button">← Quay lại</button>
+                <div class="quiz-heading">
+                    <span id="quizStageLabel" class="detail-badge">Chặng 1</span>
+                    <h1 id="quizProvinceTitle">Hà Nội</h1>
+                    <p>Chọn một đáp án cho câu hỏi bên dưới.</p>
                 </div>
             </div>
 
-            <div id="islandQuizModal" class="island-theory-modal fixed inset-0 z-[999999] hidden" role="dialog" aria-modal="true" aria-labelledby="islandQuizTitle" hidden>
-                <section class="island-theory-dialog w-full max-w-3xl rounded-3xl">
-                    <button id="btnCloseIslandQuiz" class="island-theory-close" type="button" aria-label="Đóng bảng trắc nghiệm"><i class="fa-solid fa-xmark"></i></button>
-                    <p class="island-theory-eyebrow"><i class="fa-solid fa-list-check"></i> Trắc nghiệm Đảo nhỏ</p>
-                    <h2 id="islandQuizTitle">5 câu hỏi đã sẵn sàng</h2>
-                    <p id="islandQuizMeta" class="island-theory-meta"></p>
-                    <section id="islandQuizContent" class="island-theory-content max-h-[55vh] overflow-y-auto" aria-live="polite"></section>
-                    <button id="btnLaunchIslandQuiz" class="island-theory-start w-full" type="button"><i class="fa-solid fa-pen-to-square"></i> Vào bài trắc nghiệm</button>
-                </section>
-            </div>
-
-            <!-- TAB: LEADERBOARD -->
-            <section class="tab-pane" id="tabLeaderboard">
-                <h2 style="font-size: 2rem; margin-bottom: 10px;"><i class="fa-solid fa-trophy" style="color: #ffc800;"></i> Bảng Xếp Hạng Tuần</h2>
-                <p style="color: var(--text-dim); margin-bottom: 40px;">So tài kỹ năng Địa lý với các nhà thám hiểm khác.</p>
-                <div class="lb-list" id="lbList">
-                    <!-- Rendered via JS -->
+            <div class="question-card">
+                <div class="question-progress">
+                    <span id="questionNumber">Câu 1</span>
+                    <span id="questionStatus">Chưa trả lời</span>
                 </div>
-            </section>
-
-            <!-- TAB: QUESTS -->
-            <section class="tab-pane" id="tabQuests">
-                <h2 style="font-size: 2rem; margin-bottom: 10px;"><i class="fa-solid fa-clipboard-list" style="color: #ce82ff;"></i> Nhiệm vụ Hàng Ngày & Trọng Điểm</h2>
-                <p style="color: var(--text-dim); margin-bottom: 40px;">Hoàn thành nhiệm vụ để thu thập Đá quý.</p>
-                <div class="bento-grid" id="questGrid">
-                    <!-- Rendered via JS -->
+                <h2 id="questionText">Việt Nam thuộc châu lục nào?</h2>
+                <div id="answerGrid" class="answer-grid">
+                    <button class="answer-card" type="button" data-answer="0">Châu Á</button>
+                    <button class="answer-card" type="button" data-answer="1">Châu Âu</button>
+                    <button class="answer-card" type="button" data-answer="2">Châu Phi</button>
+                    <button class="answer-card" type="button" data-answer="3">Châu Mĩ</button>
                 </div>
-            </section>
-
-            <!-- TAB: SHOP -->
-            <section class="tab-pane" id="tabShop">
-                <h2 style="font-size: 2rem; margin-bottom: 10px;"><i class="fa-solid fa-shop" style="color: #58cc02;"></i> Cửa Hàng Không Gian</h2>
-                <p style="color: var(--text-dim); margin-bottom: 40px;">Dùng Đá quý (Gems) để sắm vật phẩm hỗ trợ.</p>
-                <div class="bento-grid" id="shopGrid">
-                    <!-- Rendered via JS -->
-                </div>
-            </section>
-
-            <!-- TAB: PROFILE -->
-            <div id="tabProfile" class="tab-pane">
-                <h2 style="font-size: 2rem; margin-bottom: 40px;"><i class="fa-solid fa-id-badge" style="color: #ff6b6b;"></i> Hồ Sơ Phi Hành Gia</h2>
-                
-                <div class="profile-mobile-layout flex flex-col md:flex-row" style="display: flex; gap: 40px; align-items: flex-start;">
-                    <!-- Avatar Area -->
-                    <div class="profile-avatar-panel w-full flex justify-center items-center" style="text-align: center; width: 250px;">
-                        <div class="profile-avatar-frame" style="width: 150px; height: 150px; border-radius: 40px; background: var(--holo-2); display: flex; align-items: center; justify-content: center; font-size: 4rem; box-shadow: 0 10px 30px rgba(28,176,246,0.3); margin: 0 auto; overflow: hidden; position: relative;">
-                            <div id="profAvatarIconContainer" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                                <i id="profAvatarIcon" class="fa-solid fa-user-astronaut"></i>
-                            </div>
-                        </div>
-                        <div id="profLevel" style="margin-top: 15px; display: inline-block; background: #ffc800; color: #131f24; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">Cấp 1</div>
-                        <h3 id="profName" style="margin-top: 10px; font-size: 1.5rem;">Tên người dùng</h3>
-                        <p id="profEmail" style="color: var(--text-dim); margin-bottom: 10px;">email@example.com</p>
-                        
-                        <div style="margin-bottom: 20px;">
-                            <span id="profStatus" style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 12px; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--gray-border); color: var(--text-dim);">Tài khoản: Free</span>
-                            <button onclick="window.openPremiumModal()" style="display: block; width: 100%; margin-top: 10px; background: linear-gradient(90deg, #ffc800, #ff6b6b); color: white; border: none; padding: 8px; border-radius: 12px; font-weight: bold; cursor: pointer; font-family: var(--font-heading);">
-                                <i class="fa-solid fa-crown" aria-hidden="true"></i> Nâng cấp Premium
-                            </button>
-                        </div>
-                        
-                        <div style="text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px;">
-                            <h4 style="margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim);">Đổi Avatar</h4>
-                            
-                            <!-- File Upload for Avatar -->
-                            <label for="avatarUpload" style="display: block; text-align: center; background: rgba(28,176,246,0.2); border: 1px dashed var(--blue); color: var(--blue); padding: 10px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-size: 0.9rem;">
-                                <i class="fa-solid fa-upload"></i> Tải ảnh lên
-                            </label>
-                            <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
-
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                                <button onclick="selectAvatar('fa-user-astronaut', false)" style="background:none; border:none; color:white; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-astronaut"></i></button>
-                                <button onclick="selectAvatar('fa-user-ninja', false)" style="background:none; border:none; color:#58cc02; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-ninja"></i></button>
-                                <button onclick="selectAvatar('fa-user-secret', false)" style="background:none; border:none; color:#ce82ff; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-user-secret"></i></button>
-                                <button onclick="selectAvatar('fa-dragon', false)" style="background:none; border:none; color:#ff4b4b; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-dragon"></i></button>
-                                <button onclick="selectAvatar('fa-cat', false)" style="background:none; border:none; color:#ffc800; font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-cat"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Stats & Form Area -->
-                    <div class="profile-details-panel w-full" style="flex: 1;">
-                        <div class="bento-grid profile-stat-grid grid grid-cols-2 gap-4 w-full" style="margin-bottom: 40px;">
-                            <div class="bento-card">
-                                <div class="bento-card-title" style="color: #ffc800;"><i class="fa-solid fa-fire"></i> Chuỗi ngày</div>
-                                <h1 style="font-size: 2.5rem;" id="profStreak">0</h1>
-                            </div>
-                            <div class="bento-card">
-                                <div class="bento-card-title" style="color: #1cb0f6;"><i class="fa-solid fa-star"></i> Tổng XP</div>
-                                <h1 style="font-size: 2.5rem;" id="profXp">0</h1>
-                            </div>
-                            <div class="bento-card">
-                                <div class="bento-card-title" style="color: #ce82ff;"><i class="fa-solid fa-medal"></i> Thành tựu</div>
-                                <h1 style="font-size: 2.5rem;" id="profAchPoints">0</h1>
-                            </div>
-                        </div>
-
-                        <section class="profile-settings-shell" aria-label="Cài đặt cá nhân">
-                            <button id="profileSettingsToggle" class="profile-settings-toggle" type="button" aria-expanded="false" aria-controls="profileSettingsContent">
-                                <span><small>CÀI ĐẶT</small><strong>Quản lý tài khoản và trải nghiệm</strong></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-                            </button>
-                            <div id="profileSettingsContent" class="profile-settings-content" hidden>
-                            <div class="profile-settings-heading">
-                                <div>
-                                    <p class="profile-settings-eyebrow">Cài đặt</p>
-                                    <h3>Quản lý tài khoản và trải nghiệm</h3>
-                                </div>
-                                <div class="profile-settings-tabs" role="tablist" aria-label="Nhóm cài đặt">
-                                    <button class="profile-settings-tab is-active" type="button" role="tab" aria-selected="true" data-settings-tab="account"><i class="fa-solid fa-user-gear"></i> Tài khoản</button>
-                                    <button class="profile-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="appearance"><i class="fa-solid fa-palette"></i> Giao diện</button>
-                                    <button class="profile-settings-tab" type="button" role="tab" aria-selected="false" data-settings-tab="survey"><i class="fa-solid fa-clipboard-question"></i> Khảo sát</button>
-                                </div>
-                            </div>
-
-                            <div class="profile-settings-panel is-active" data-settings-panel="account">
-                        <!-- EDIT PROFILE FORM -->
-                        <div style="text-align: left; background: rgba(255,200,0,0.1); border: 1px solid var(--gold); padding: 15px; border-radius: 20px;">
-                            <h4 style="margin-bottom: 15px; font-size: 1.1rem; color: var(--gold);"><i class="fa-solid fa-pen-to-square"></i> Cập nhật Thông tin Cá nhân</h4>
-                            
-                            <!-- File Upload for Avatar -->
-                            <label for="avatarUpload" style="display: block; text-align: center; background: rgba(28,176,246,0.2); border: 1px dashed var(--blue); color: var(--blue); padding: 10px; border-radius: 10px; cursor: pointer; margin-bottom: 15px; font-size: 0.9rem;">
-                                <i class="fa-solid fa-upload"></i> Tải ảnh lên
-                            </label>
-                            <input type="file" id="avatarUpload" style="display: none;" accept="image/png, image/jpeg, image/jpg">
-                            
-                            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 25px;">
-                                <button class="avatar-preset" onclick="window.selectAvatar('fa-user-astronaut')"><i class="fa-solid fa-user-astronaut"></i></button>
-                                <button class="avatar-preset" onclick="window.selectAvatar('fa-user-ninja')"><i class="fa-solid fa-user-ninja"></i></button>
-                                <button class="avatar-preset" onclick="window.selectAvatar('fa-user-secret')"><i class="fa-solid fa-user-secret"></i></button>
-                                <button class="avatar-preset" onclick="window.selectAvatar('fa-dragon')"><i class="fa-solid fa-dragon"></i></button>
-                                <button class="avatar-preset" onclick="window.selectAvatar('fa-cat')"><i class="fa-solid fa-cat"></i></button>
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem;">Tên Hiển Thị</label>
-                                <input type="text" id="editProfName" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;">
-                            </div>
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem;">Email</label>
-                                <input type="email" id="editProfEmail" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;" readonly>
-                            </div>
-                            
-                            <div style="margin-bottom: 25px;">
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem;">Số điện thoại</label>
-                                <input type="tel" id="editProfPhone" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;">
-                            </div>
-
-                            <div style="margin-bottom: 25px;">
-                                <label for="editProfGender" style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem;">Giới tính</label>
-                                <select id="editProfGender" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;">
-                                    <option value="">Chưa cập nhật</option>
-                                    <option value="male">Nam</option>
-                                    <option value="female">Nữ</option>
-                                    <option value="other">Khác</option>
-                                    <option value="prefer_not_to_say">Không muốn tiết lộ</option>
-                                </select>
-                            </div>
-
-                            <hr style="border: 0; border-top: 1px solid rgba(255, 200, 0, 0.2); margin: 15px 0;">
-                            
-                            <div style="margin-bottom: 15px;">
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem;">Mật khẩu cũ (Để trống nếu không đổi)</label>
-                                <input type="password" id="editOldPass" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;">
-                            </div>
-
-                            <div style="margin-bottom: 25px;">
-                                <label style="display: block; margin-bottom: 8px; color: var(--text-dim); font-size: 0.9rem;">Mật khẩu mới</label>
-                                <input type="password" id="editNewPass" style="width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(0,0,0,0.3); color: white; font-family: var(--font-body); font-size: 1rem; outline: none;">
-                            </div>
-                            
-                            <button id="btnSaveProfile" class="bento-btn" style="background: var(--blue); color: white; border: none; padding: 15px 30px; font-size: 1.1rem; width: 100%; box-shadow: 0 5px 20px rgba(28,176,246,0.4);">
-                                Lưu Thay Đổi
-                            </button>
-                        </div>
-                        
-                        <button id="btnLogout" class="bento-btn" style="background: rgba(255,75,75,0.1); color: var(--red); border: 1px solid var(--red); margin-top: 20px; width: 100%;">
-                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất hệ thống
-                        </button>
-                        
-                            </div>
-
-                            <div class="profile-settings-panel" data-settings-panel="appearance" hidden>
-                                <div class="settings-card">
-                                    <div>
-                                        <h4><i class="fa-solid fa-circle-half-stroke"></i> Chế độ hiển thị</h4>
-                                        <p>Chuyển nhanh giữa giao diện sáng và tối. Lựa chọn được ghi nhớ cho lần truy cập sau.</p>
-                                    </div>
-                                    <button id="btnSettingsTheme" class="settings-action" type="button"><i class="fa-solid fa-moon"></i> Đổi chế độ sáng/tối</button>
-                                </div>
-                            </div>
-
-                            <div class="profile-settings-panel" data-settings-panel="survey" hidden>
-                                <div class="settings-card settings-card-stack">
-                                    <div>
-                                        <h4><i class="fa-solid fa-wand-magic-sparkles"></i> Cập nhật khảo sát người học</h4>
-                                        <p>Mở lại biểu mẫu để điều chỉnh mục tiêu học tập và khu vực kiến thức bạn quan tâm.</p>
-                                    </div>
-                                    <button id="btnReopenSurvey" class="settings-action" type="button"><i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa khảo sát</button>
-                                </div>
-                            </div>
-                            </div>
-                        </section>
-
-                        <!-- NEW: LEARNING PROFILE & AI SYNTHESIS -->
-                        <div style="margin-top: 40px; background: rgba(255,255,255,0.02); border: 1px solid var(--blue); padding: 25px; border-radius: 20px; position: relative; overflow: hidden;">
-                            <div style="position: absolute; top: -20px; right: -20px; font-size: 10rem; opacity: 0.05; color: var(--blue);"><i class="fa-solid fa-brain"></i></div>
-                            <h3 style="font-size: 1.5rem; margin-bottom: 20px; color: var(--blue);"><i class="fa-solid fa-chart-pie"></i> Learning Profile (Hồ Sơ Năng Lực)</h3>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;">
-                                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 5px;">Mục tiêu học tập</p>
-                                    <h4 id="lpGoal" style="font-size: 1.2rem; color: #fff;">Đang phân tích...</h4>
-                                </div>
-                                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;">
-                                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 5px;">Sở thích vùng miền</p>
-                                    <h4 id="lpInterests" style="font-size: 1.2rem; color: #fff;">Đang phân tích...</h4>
-                                </div>
-                            </div>
-                            
-                            <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 12px; border-left: 4px solid var(--green);">
-                                <h4 style="color: var(--green); margin-bottom: 10px;"><i class="fa-solid fa-robot"></i> AI Nhận Xét (Synthesis)</h4>
-                                <p id="lpReport" style="line-height: 1.6; color: var(--text-main);">Hệ thống AI đang thu thập thêm dữ liệu từ các bài kiểm tra của bạn để đưa ra nhận xét chi tiết nhất. Hãy tiếp tục học tập nhé!</p>
-                            </div>
-                        </div>
-
-                        <section class="pvp-challenge-card" aria-label="Thách đấu 1 đấu 1">
-                            <div>
-                                <h3><i class="fa-solid fa-khanda"></i> Thách đấu 1vs1</h3>
-                                <p>So tài kiến thức địa lí trong các trận đấu tốc độ và tích lũy chiến thắng.</p>
-                            </div>
-                            <button class="bento-btn" type="button" onclick="document.querySelector('.nav-button[data-target=&quot;tabArena&quot;]').click()">Vào đấu trường</button>
-                        </section>
-
-                        <!-- ── ACHIEVEMENTS COLLECTION ── -->
-                        <div style="margin-top: 40px;">
-                            <h3 style="font-size: 1.5rem; margin-bottom: 20px; color: var(--blue);"><i class="fa-solid fa-trophy"></i> Bộ Sưu Tập Danh Hiệu</h3>
-                            <div id="achievementsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-                                <!-- JS sẽ render các danh hiệu ở đây -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        <!-- ── TAB: ARENA ── -->
-        <div id="tabArena" class="tab-pane">
-            <h2 style="font-size: 2rem; margin-bottom: 10px; color: var(--red);">⚔️ Đấu Trường Sinh Tử</h2>
-            <p style="color: var(--text-dim); margin-bottom: 30px;">Thi đấu tốc độ với những người chơi khác (Giả lập). Nhận thưởng rương xu khổng lồ!</p>
-            
-            <!-- Powerups Status -->
-            <div style="display: flex; gap: 15px; margin-bottom: 30px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 16px;">
-                <div style="font-weight: bold;">Bùa của bạn:</div>
-                <div style="color: #ffc800;"><i class="fa-solid fa-bolt"></i> x2 XP: <span id="arenaBuffDouble">0</span></div>
-                <div style="color: #ce82ff;"><i class="fa-solid fa-wand-magic-sparkles"></i> 50/50: <span id="arenaBuff5050">0</span></div>
-                <div style="font-size: 0.9rem; color: var(--text-dim); margin-left: auto;">(Mua bùa ở Cửa Hàng)</div>
-            </div>
-
-            <div id="arenaGrid" class="bento-grid">
-                <!-- JS Renders Arena Matches Here -->
+                <div id="answerFeedback" class="answer-feedback">Hãy chọn một đáp án để tiếp tục.</div>
+                <button id="nextQuestionButton" class="next-question-button" type="button">Câu tiếp theo</button>
             </div>
         </div>
-        </main>
-    </div>
+    </main>
 
-    <!-- Toast Notification -->
-    <div id="toast" style="position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--holo-3); color: white; padding: 12px 24px; border-radius: 20px; font-weight: bold; transition: all 0.3s ease; opacity: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-        Thông báo
-    </div>
+    <button class="support-button" id="supportButton" type="button">
+        <span class="support-avatar">CS</span>
+        <span class="support-copy">
+            <strong>Hỗ trợ VieGeo</strong>
+            <small><span class="support-online-dot"></span>CSKH đang online</small>
+        </span>
+        <span class="support-arrow">›</span>
+    </button>
 
-    <section id="supportChat" class="support-chat" aria-label="Hỗ trợ VieGeo">
-        <button id="supportChatToggle" class="support-chat-toggle" type="button" aria-expanded="false" aria-controls="supportChatPanel"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Hỗ trợ</span><b id="supportUnreadBadge" class="support-unread-badge" hidden aria-label="Có tin nhắn mới"></b></button>
-        <div id="supportActionMenu" class="support-action-menu" role="menu" aria-label="Tùy chọn hỗ trợ" hidden>
-            <button type="button" data-support-action="report" role="menuitem"><i class="fa-solid fa-bug"></i><span><strong>Báo cáo lỗi</strong><small>Gửi chi tiết lỗi đang gặp</small></span></button>
-            <button type="button" data-support-action="feedback" role="menuitem"><i class="fa-solid fa-lightbulb"></i><span><strong>Góp ý trang web</strong><small>Đề xuất để VieGeo tốt hơn</small></span></button>
-            <button type="button" data-support-action="chat" role="menuitem"><i class="fa-solid fa-headset"></i><span><strong>Chat với CSKH</strong><small>Trao đổi trực tiếp với hỗ trợ</small></span></button>
-        </div>
-        <div id="supportChatPanel" class="support-chat-panel" hidden>
-            <header><div><strong>Trợ lý VieGeo</strong><p id="supportAvailability">Đang kiểm tra CSKH…</p></div><button id="supportChatClose" type="button" aria-label="Đóng hỗ trợ"><i class="fa-solid fa-xmark"></i></button></header>
-            <div id="supportMessages" class="support-messages" aria-live="polite"></div>
-            <form id="supportChatForm" class="support-composer">
-                <input id="supportImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-                <button id="supportImageButton" type="button" title="Gửi ảnh" aria-label="Gửi ảnh"><i class="fa-solid fa-image"></i></button>
-                <input id="supportMessageInput" maxlength="1000" placeholder="Nhập câu hỏi của bạn…" aria-label="Tin nhắn hỗ trợ">
-                <button type="submit" title="Gửi tin nhắn" aria-label="Gửi tin nhắn"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
-            </form>
-            <p id="supportAttachmentLabel" class="support-attachment" aria-live="polite"></p>
-        </div>
-        <div id="supportRecallMenu" class="support-recall-menu" role="menu" hidden><button id="supportRecallButton" type="button" role="menuitem"><i class="fa-solid fa-rotate-left"></i> Thu hồi tin nhắn</button></div>
-    </section>
-
-    <div id="supportRequestModal" class="support-request-modal" role="dialog" aria-modal="true" aria-labelledby="supportRequestTitle" hidden>
-        <form id="supportRequestForm" class="support-request-dialog">
-            <button id="supportRequestClose" class="support-request-close" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
-            <p id="supportRequestEyebrow" class="support-request-eyebrow">VIEGEO CARE</p>
-            <h2 id="supportRequestTitle">Gửi yêu cầu hỗ trợ</h2>
-            <p id="supportRequestHint">Hãy mô tả rõ để đội ngũ VieGeo có thể hỗ trợ bạn tốt hơn.</p>
-            <input id="supportRequestType" type="hidden" value="feedback">
-            <label for="supportRequestSubject">Tiêu đề</label>
-            <input id="supportRequestSubject" maxlength="120" required placeholder="Tóm tắt nội dung">
-            <label for="supportRequestMessage">Nội dung</label>
-            <textarea id="supportRequestMessage" rows="6" maxlength="2000" required placeholder="Mô tả chi tiết, các bước gây lỗi hoặc góp ý của bạn…"></textarea>
-            <div class="support-request-actions"><button class="support-request-cancel" type="button" data-close-support-request>Hủy</button><button class="support-request-submit" type="submit"><i class="fa-solid fa-paper-plane"></i> Gửi yêu cầu</button></div>
-        </form>
-    </div>
-
-    <div id="parentPinModal" class="parent-pin-modal" role="dialog" aria-modal="true" aria-labelledby="parentPinTitle" aria-hidden="true">
-        <form id="parentPinForm" class="parent-pin-card">
-            <button id="btnParentPinCancel" class="parent-pin-close" type="button" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
-            <i class="fa-solid fa-shield-heart parent-pin-icon"></i>
-            <p class="parent-pin-eyebrow">Khu vực phụ huynh</p>
-            <h2 id="parentPinTitle">Xác nhận bằng mã PIN</h2>
-            <p id="parentPinHint">Nhập mã PIN để tiếp tục vào khu vực theo dõi học tập.</p>
-            <input id="parentPinInput" inputmode="numeric" autocomplete="one-time-code" maxlength="8" type="password" placeholder="••••" aria-label="Mã PIN phụ huynh">
-            <button id="btnParentPinConfirm" class="bento-btn" type="submit">Xác nhận</button>
-        </form>
-    </div>
-
-    <!-- ── OTP MODAL ── -->
-    <div id="otpModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; backdrop-filter: blur(5px); justify-content: center; align-items: center;">
-        <div style="background: var(--bg-main); border: 1px solid var(--gray-border); border-radius: 24px; padding: 40px; width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-            <i class="fa-solid fa-shield-halved" style="font-size: 3rem; color: var(--green); margin-bottom: 20px;"></i>
-            <h2 style="margin-bottom: 10px;">Xác Thực Bảo Mật</h2>
-            <p style="color: var(--text-dim); margin-bottom: 30px; font-size: 0.9rem;">Chúng tôi đã gửi một mã gồm 6 chữ số đến số điện thoại / email của bạn. Vui lòng nhập mã để hoàn tất.</p>
-            
-            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px;">
-                <input type="text" maxlength="6" id="otpInput" placeholder="000000" style="width: 150px; padding: 15px; font-size: 1.5rem; text-align: center; letter-spacing: 5px; border-radius: 12px; border: 2px solid var(--blue); background: rgba(28,176,246,0.1); color: white; outline: none; font-weight: bold;">
-            </div>
-            
-            <div style="display: flex; gap: 15px;">
-                <button id="btnCancelOtp" class="bento-btn" style="flex: 1; background: rgba(255,255,255,0.1); color: white; border: none;">Hủy</button>
-                <button id="btnConfirmOtp" class="bento-btn" style="flex: 1; background: var(--green); color: white; border: none;">Xác Nhận</button>
-            </div>
-        </div>
-    </div>
-
-        </div>
-    </div>
-
-    <!-- ── ARENA RULES MODAL ── -->
-    <div id="arenaRulesModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: var(--bg-dark); border: 2px solid #ff4b4b; border-radius: 30px; padding: 40px; text-align: center; max-width: 500px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(255,75,75,0.2);">
-            <button onclick="document.getElementById('arenaRulesModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
-            
-            <div style="font-size: 4rem; color: #ff4b4b; margin-bottom: 10px;"><i class="fa-solid fa-khanda"></i></div>
-            <h2 style="font-size: 2.2rem; font-family: var(--font-heading); margin-bottom: 20px; background: linear-gradient(90deg, #ff4b4b, #ffc800); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Đấu Trường Sinh Tử</h2>
-            
-            <div style="text-align: left; background: rgba(255,75,75,0.1); border: 1px solid rgba(255,75,75,0.3); padding: 20px; border-radius: 20px; margin-bottom: 30px; font-size: 1.1rem; color: var(--text-primary);">
-                <div style="margin-bottom: 15px;"><i class="fa-solid fa-stopwatch" style="color: #ffc800; width: 30px; text-align: center;"></i> <b>Thời gian:</b> Trận đấu kéo dài đúng 60 giây.</div>
-                <div style="margin-bottom: 15px;"><i class="fa-solid fa-fire" style="color: #ff4b4b; width: 30px; text-align: center;"></i> <b>Luật chơi:</b> Trả lời đúng nhiều nhất có thể! Khi trả lời sẽ lập tức nhảy sang câu hỏi tiếp theo.</div>
-                <div style="margin-bottom: 15px;"><i class="fa-solid fa-arrows-left-right" style="color: #1cb0f6; width: 30px; text-align: center;"></i> <b>Kéo co:</b> Trả lời đúng đẩy thanh kéo co về phía đối thủ. Trả lời sai đối thủ sẽ có lợi. Kéo qua 50% là bạn sẽ thắng!</div>
-                <div><i class="fa-solid fa-gift" style="color: var(--green); width: 30px; text-align: center;"></i> <b>Phần thưởng:</b> Người thắng nhận toàn bộ (Xu & XP). Kẻ thua vẫn được an ủi bằng 1/3 phần thưởng.</div>
-            </div>
-            
-            <button id="btnStartArenaReal" style="width: 100%; background: linear-gradient(90deg, #ff4b4b, #ffc800); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.2rem; cursor: pointer; font-family: var(--font-heading); box-shadow: 0 5px 15px rgba(255,75,75,0.3); transition: all 0.2s;">
-                CHIẾN LUÔN!
-            </button>
-        </div>
-    </div>
-
-    <!-- 🏆 PREMIUM UPGRADE MODAL 🏆 -->
-    <div id="premiumModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 10000; justify-content: center; align-items: center; padding: 20px;">
-        <div style="background: var(--bg-dark); border: 2px solid #ffc800; border-radius: 30px; padding: 40px; text-align: center; max-width: 500px; width: 100%; position: relative; box-shadow: 0 20px 50px rgba(255, 200, 0, 0.2);">
-            <button onclick="document.getElementById('premiumModal').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-dim); font-size: 1.5rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
-            
-            <h2 style="font-size: 2.2rem; font-family: var(--font-heading); margin-bottom: 10px; background: linear-gradient(90deg, #ffc800, #ff4b4b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Nâng Cấp Premium</h2>
-            <p style="color: var(--text-dim); margin-bottom: 20px;">Mở khóa toàn bộ tính năng và bài học nâng cao!</p>
-            
-            <div style="text-align: left; background: rgba(255, 200, 0, 0.1); border: 1px solid rgba(255, 200, 0, 0.3); padding: 20px; border-radius: 20px; margin-bottom: 30px; font-size: 1.1rem; color: var(--text-primary);">
-                <h3 style="color: #ffc800; margin-bottom: 15px; text-align: center; font-size: 1.2rem;">Thông Tin Chuyển Khoản</h3>
-                
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="background: white; padding: 10px; border-radius: 15px; display: inline-block;">
-                        <img id="qrCodeImage" src="" alt="Mã QR Thanh Toán" style="width: 180px; height: 180px; border-radius: 10px;">
-                    </div>
-                    <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 10px;"><i class="fa-solid fa-qrcode"></i> Quét mã để tự động điền thông tin</p>
-                </div>
-
-                <div style="margin-bottom: 15px; display: flex; justify-content: space-between;"><b>Ngân hàng:</b> <span>MB Bank</span></div>
-                <div style="margin-bottom: 15px; display: flex; justify-content: space-between;"><b>Tên TK:</b> <span style="font-weight: bold;">Đặng Kiên Quyết</span></div>
-                <div style="margin-bottom: 15px; display: flex; justify-content: space-between;"><b>Số TK:</b> <span style="font-weight: bold; color: #ffc800; font-size: 1.2rem;">0967086871</span></div>
-                <div style="margin-bottom: 15px; display: flex; justify-content: space-between;"><b>Số tiền:</b> <span style="font-weight: bold; color: var(--red); font-size: 1.2rem;">149.000đ</span></div>
-                <hr style="border: 0; border-top: 1px solid rgba(255, 200, 0, 0.2); margin: 15px 0;">
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <b>Nội dung chuyển khoản (BẮT BUỘC):</b>
-                    <code id="premiumTransferContent" style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; color: #1cb0f6; font-size: 1.2rem; text-align: center;">ĐANG TẢI...</code>
-                </div>
-            </div>
-            
-            <button id="btnConfirmPremium" onclick="window.confirmPremiumTransfer()" style="width: 100%; background: linear-gradient(90deg, #ffc800, #ff4b4b); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 1.2rem; cursor: pointer; font-family: var(--font-heading); box-shadow: 0 5px 15px rgba(255, 200, 0, 0.3); transition: all 0.2s;">
-                <i class="fa-solid fa-check"></i> XÁC NHẬN ĐÃ CHUYỂN KHOẢN
-            </button>
-        </div>
-    </div>
-
-    <!-- ONBOARDING SURVEY MODAL -->
-    <div id="surveyModal" class="survey-modal" style="display: none;">
-        <section class="survey-dialog" role="dialog" aria-modal="true" aria-labelledby="surveyTitle">
-            <p class="survey-eyebrow text-center">Cá nhân hóa hành trình</p>
-            <h2 id="surveyTitle" class="text-center">Khảo sát Người học</h2>
-            <p class="survey-description text-center">Chọn nhanh các thông tin phù hợp để VieGeo cá nhân hóa lộ trình học cho bạn.</p>
-
-            <fieldset class="survey-choice-group">
-                <legend>Mục tiêu học tập của bạn là gì?</legend>
-                <div class="survey-choice-grid">
-                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyGoal" value="exam" checked><span>Ôn thi trên lớp</span></label>
-                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyGoal" value="knowledge"><span>Khám phá kiến thức</span></label>
-                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyGoal" value="travel"><span>Yêu thích du lịch</span></label>
-                </div>
-            </fieldset>
-
-            <fieldset class="survey-choice-group">
-                <legend>Bạn quan tâm đến khu vực nào nhất?</legend>
-                <div class="survey-choice-grid">
-                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyInterest" value="north" checked><span>Miền Bắc</span></label>
-                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyInterest" value="central"><span>Miền Trung</span></label>
-                    <label class="survey-choice-card p-4 border border-slate-300 hover:bg-blue-50"><input type="radio" name="surveyInterest" value="south"><span>Miền Nam</span></label>
-                </div>
-            </fieldset>
-
-            <button id="btnSubmitSurvey" class="bento-btn survey-submit" type="button">Hoàn tất & Bắt đầu</button>
-        </section>
-    </div>
-
-    <!-- Scripts -->
-    <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
-    <script src="gamedata.js"></script>
-    <script src="app-core.js"></script>
-    <script src="learning-path.js"></script>
-    <script src="map.js"></script>
-    <script src="taskbar-controls.js"></script>
-    <script src="support-chat.js"></script>
-
+    <div id="toast" class="toast"></div>
+    <script src="map-discovery.js"></script>
+    <script src="shared-topbar.js"></script>
 </body>
 </html>
-
