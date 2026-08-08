@@ -89,50 +89,6 @@
         return province?.name || '';
     }
 
-    function normalizeQuestion(item, fallback, index) {
-        const options = Array.isArray(item?.options) ? item.options : (Array.isArray(item?.answers) ? item.answers : []);
-        if (options.length < 2) return null;
-        const correctAnswer = Number.isInteger(item.correctAnswer) ? item.correctAnswer : Number(item.answerIndex ?? item.correct ?? 0);
-        return {
-            id: item.id || `remote-question-${index}`,
-            question: item.question || item.q || item.text || fallback.question,
-            options,
-            correctAnswer: Math.max(0, Math.min(options.length - 1, Number.isFinite(correctAnswer) ? correctAnswer : 0)),
-            explanation: item.explanation || item.solution || fallback.explanation
-        };
-    }
-
-    function randomFive(items, fallback) {
-        const pool = items.map((item, index) => normalizeQuestion(item, fallback, index)).filter(Boolean);
-        if (!pool.length) return [];
-        return fisherYatesShuffle(pool).slice(0, 5);
-    }
-
-    async function fetchQuestionsFromDataStore(lesson, fallback) {
-        const province = provinceForLesson(lesson);
-        const provinceSlug = dataStoreProvinceSlug(province);
-        const islandLabel = lessonIslandLabel(lesson);
-        if (typeof db === 'undefined' || !provinceSlug) return [];
-
-        for (const collectionName of ['questions', 'question']) {
-            try {
-                let query = db.collection(collectionName)
-                    .where('province', '==', provinceSlug)
-                    .where('difficulty', '==', lesson.difficulty || 'easy');
-                if (islandLabel) query = query.where('island', '==', islandLabel);
-                const snapshot = await query.limit(50).get();
-                const questions = randomFive(
-                    snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-                    fallback
-                );
-                if (questions.length) return questions;
-            } catch (error) {
-                console.warn(`Không thể tải câu hỏi từ ${collectionName}:`, error);
-            }
-        }
-        return [];
-    }
-
     async function loadQuestions(lesson) {
         return loadSupabaseIslandQuestions(lesson);
     }

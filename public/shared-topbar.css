@@ -32,6 +32,11 @@ html[data-theme="light"] .support-arrow{color:#2994ad}
 body:has(.shared-topbar) main{padding-top:80px}
 @media(max-width:860px){body:has(.shared-topbar) main{padding-top:72px}}
 
+/* Force sticky navigation and keep all legacy rules intact. */
+.shared-topbar{position:sticky!important;top:0;z-index:9999;width:100%}
+body:has(.shared-topbar){padding-top:80px}
+.support-button{position:fixed;bottom:20px;right:20px;z-index:10000;max-width:60px;min-width:0!important;width:60px;overflow:hidden}
+
 .shared-role-control{min-width:112px}
 .shared-role{width:100%;height:20px;border:0;padding:0 15px 0 0;color:var(--shared-nav-text);background:transparent;outline:none;font-size:8px;font-weight:800;cursor:pointer}
 .shared-role option{color:#243847;background:#ffffff}

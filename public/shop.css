@@ -44,6 +44,8 @@ html[data-theme="light"] .inventory-panel{background:#fff;border-color:#d9e7ee}
 html[data-theme="light"] .support-button{color:#31495d;background:#fff;border-color:#d3e4ec}
 .shop-item .icon-box{display:flex;align-items:center;justify-content:center;overflow:hidden;width:60px;height:60px}
 .shop-item img{max-width:100%;max-height:100%;object-fit:contain}
+.shop-item .icon-box{display:flex;align-items:center;justify-content:center}
+.shop-item img{max-width:100%;object-fit:contain}
 .toast{position:fixed;left:50%;bottom:-80px;z-index:70;transform:translateX(-50%);padding:11px 16px;border-radius:13px;color:#fff;background:#153a53;font-size:10px;font-weight:800;box-shadow:0 12px 28px rgba(0,0,0,.24);transition:bottom .22s ease}.toast.show{bottom:24px}.toast.error{background:#b43f53}
 .confetti{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:99;animation:confettiFly .8s ease-out forwards}
 @keyframes confettiFly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--move-x),var(--move-y)) scale(.2);opacity:0}}

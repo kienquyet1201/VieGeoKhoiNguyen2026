@@ -794,7 +794,7 @@ if (difficultyChips.length > 0) {
 
 
 
-// ── RENDER LEADERBOARD (SUPABASE + SAFE FALLBACK) ──
+// ── RENDER LEADERBOARD (SUPABASE) ──
 async function renderLeaderboard() {
     const lbList = document.getElementById('lbList');
     if (!lbList) return;
