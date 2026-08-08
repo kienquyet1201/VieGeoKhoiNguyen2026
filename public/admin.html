@@ -293,6 +293,59 @@
             'sub_island', 'island_theory', 'import_order', 'created_at'
         ];
         const QUESTION_TABLE_CANDIDATES = ['questions', 'Questions', 'Question'];
+        const SUPABASE_QUESTION_FALLBACK_ROWS = [
+            {
+                id: 'mock-ha-noi-1',
+                question: 'VieGeo đang chờ dữ liệu thật từ Supabase. Hà Nội là thủ đô của quốc gia nào?',
+                option_a: 'Việt Nam',
+                option_b: 'Thái Lan',
+                option_c: 'Lào',
+                option_d: 'Campuchia',
+                correct_option: 0,
+                province: 'ha-noi',
+                island: 'Đảo nhỏ 1',
+                sub_island: 1,
+                topic: 'Dữ liệu mẫu kiểm tra giao diện',
+                difficulty: 'easy',
+                theory: 'Đây là dữ liệu mẫu chỉ dùng khi Supabase trả về mảng rỗng để tránh trang Admin trắng trơn.',
+                created_at: new Date().toISOString(),
+                __mock: true
+            },
+            {
+                id: 'mock-ha-noi-2',
+                question: 'Trường province nên lưu theo slug nào để query Hà Nội ổn định?',
+                option_a: 'Hà Nội',
+                option_b: 'ha-noi',
+                option_c: 'hanoi',
+                option_d: 'HN',
+                correct_option: 1,
+                province: 'ha-noi',
+                island: 'Đảo nhỏ 1',
+                sub_island: 1,
+                topic: 'Chuẩn hóa dữ liệu',
+                difficulty: 'medium',
+                theory: 'Nên dùng slug chữ thường, không dấu và có gạch nối để đồng bộ query giữa Admin và giao diện học.',
+                created_at: new Date().toISOString(),
+                __mock: true
+            },
+            {
+                id: 'mock-question-schema',
+                question: 'Bảng questions cần tối thiểu nhóm cột nào để render đáp án?',
+                option_a: 'question, option_a, option_b, option_c, option_d, correct_option',
+                option_b: 'email, role, created_at',
+                option_c: 'score, details',
+                option_d: 'status, resolved_at',
+                correct_option: 0,
+                province: 'ha-noi',
+                island: 'Đảo nhỏ 2',
+                sub_island: 2,
+                topic: 'Schema Supabase',
+                difficulty: 'hard',
+                theory: 'Nếu dữ liệu thật không hiện, hãy mở F12 và xem log [VieGeo Admin] Supabase questions select attempt để biết API đang trả bảng nào và bao nhiêu dòng.',
+                created_at: new Date().toISOString(),
+                __mock: true
+            }
+        ];
         function describeSupabaseQuestionError(error) {
             const text = `${error?.code || ''} ${error?.status || ''} ${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`.toLowerCase();
             if (text.includes('pgrst204') || text.includes('column') || text.includes('schema cache')) {
@@ -393,6 +446,42 @@
             return aliases[raw] || raw || 'easy';
         }
 
+        function looseKeyName(key) {
+            return String(key || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+        }
+
+        function looseGet(row = {}, ...keys) {
+            if (!row || typeof row !== 'object') return undefined;
+            for (const key of keys) {
+                if (Object.prototype.hasOwnProperty.call(row, key) && row[key] !== undefined && row[key] !== null) return row[key];
+            }
+            const lookup = new Map(Object.entries(row).map(([key, value]) => [looseKeyName(key), value]));
+            for (const key of keys) {
+                const normalized = looseKeyName(key);
+                if (lookup.has(normalized) && lookup.get(normalized) !== undefined && lookup.get(normalized) !== null) return lookup.get(normalized);
+            }
+            return undefined;
+        }
+
+        function normalizeQuestionOptions(row = {}) {
+            const directOptions = looseGet(row, 'options', 'Options', 'answer_options', 'answerOptions', 'answers', 'Answers');
+            if (Array.isArray(directOptions)) return directOptions.map(value => String(value ?? '').trim()).filter(Boolean);
+            if (typeof directOptions === 'string' && directOptions.trim()) {
+                try {
+                    const parsed = JSON.parse(directOptions);
+                    if (Array.isArray(parsed)) return parsed.map(value => String(value ?? '').trim()).filter(Boolean);
+                } catch (_error) {
+                    return directOptions.split('|').map(value => value.trim()).filter(Boolean);
+                }
+            }
+            return [
+                looseGet(row, 'option_a', 'optionA', 'Option_A', 'A', 'answer0', 'option0'),
+                looseGet(row, 'option_b', 'optionB', 'Option_B', 'B', 'answer1', 'option1'),
+                looseGet(row, 'option_c', 'optionC', 'Option_C', 'C', 'answer2', 'option2'),
+                looseGet(row, 'option_d', 'optionD', 'Option_D', 'D', 'answer3', 'option3')
+            ].map(value => String(value ?? '').trim()).filter(Boolean);
+        }
+
         function islandNumberFromValue(value) {
             if (value === undefined || value === null || value === '') return 0;
             const direct = Number(value);
@@ -402,38 +491,51 @@
         }
 
         function questionIslandValue(data = {}) {
-            const num = islandNumberFromValue(data.subIsland ?? data.sub_island ?? data.islandIndex ?? data.island_index ?? data.island);
-            return num ? `Đảo nhỏ ${num}` : String(data.island || data.lessonTitle || data.topic || '').trim();
+            const island = looseGet(data, 'island', 'Island');
+            const num = islandNumberFromValue(looseGet(data, 'subIsland', 'sub_island', 'islandIndex', 'island_index', 'sub_island_index', 'Sub_Island') ?? island);
+            return num ? `Đảo nhỏ ${num}` : String(island || looseGet(data, 'lessonTitle', 'lesson_title', 'topic') || '').trim();
         }
 
         function normalizeQuestionRow(row = {}) {
-            const options = Array.isArray(row.options)
-                ? row.options
-                : [row.option_a, row.option_b, row.option_c, row.option_d, row.option0, row.option1, row.option2, row.option3, row.answer0, row.answer1, row.answer2, row.answer3].filter(value => value !== undefined && value !== null);
-            const answer = Number(row.correct_option ?? row.answer ?? row.correctAnswer ?? row.correct_answer ?? row.correct_index ?? 0);
+            const options = normalizeQuestionOptions(row);
+            const answer = Number(looseGet(row, 'correct_option', 'correctOption', 'Correct_Option', 'answer', 'Answer', 'correctAnswer', 'correct_answer', 'correct_index') ?? 0);
+            const province = looseGet(row, 'province', 'Province', 'province_slug', 'provinceSlug', 'city', 'City') ?? '';
+            const islandNumber = islandNumberFromValue(looseGet(row, 'subIsland', 'sub_island', 'Sub_Island', 'islandIndex', 'island_index', 'island'));
+            const question = looseGet(row, 'question', 'Question', 'questionText', 'question_text', 'content', 'Content', 'title') ?? '';
             return {
                 ...row,
-                question: row.question ?? row.questionText ?? row.question_text ?? '',
+                question,
                 options,
                 answer: Number.isInteger(answer) ? answer : 0,
                 correctAnswer: Number.isInteger(answer) ? answer : 0,
-                province: row.province ?? row.province_slug ?? '',
-                difficulty: normalizeDifficultyValue(row.difficulty ?? 'easy'),
-                subIsland: islandNumberFromValue(row.subIsland ?? row.sub_island ?? row.islandIndex ?? row.island_index ?? row.island),
-                islandIndex: islandNumberFromValue(row.islandIndex ?? row.island_index ?? row.subIsland ?? row.sub_island ?? row.island),
+                province,
+                difficulty: normalizeDifficultyValue(looseGet(row, 'difficulty', 'Difficulty', 'level', 'Level') ?? 'easy'),
+                subIsland: islandNumber,
+                islandIndex: islandNumber,
                 island: questionIslandValue(row),
-                topic: row.topic ?? row.lessonTitle ?? row.lesson_title ?? '',
-                islandTheory: row.islandTheory ?? row.island_theory ?? row.islandTheoryContent ?? row.island_theory_content ?? '',
-                explanation: row.theory ?? row.explanation ?? row.solution ?? row.explain ?? '',
-                hint1: row.hint1 ?? '',
-                hint2: row.hint2 ?? ''
+                topic: looseGet(row, 'topic', 'Topic', 'lessonTitle', 'lesson_title') ?? '',
+                islandTheory: looseGet(row, 'islandTheory', 'island_theory', 'islandTheoryContent', 'island_theory_content') ?? '',
+                explanation: looseGet(row, 'theory', 'Theory', 'explanation', 'Explanation', 'solution', 'explain') ?? '',
+                hint1: looseGet(row, 'hint1', 'hint_1', 'Hint1', 'Hint_1') ?? '',
+                hint2: looseGet(row, 'hint2', 'hint_2', 'Hint2', 'Hint_2') ?? '',
+                isMock: Boolean(row.__mock)
             };
         }
 
         function toSupabaseDoc(row, index = 0) {
-            const rawId = row?.id ?? row?.uuid ?? row?.question_id ?? `row-${index}`;
+            const rawId = looseGet(row, 'id', 'ID', 'uuid', 'question_id', 'questionId') ?? `row-${index}`;
             const data = normalizeQuestionRow(row || {});
             return { id: String(rawId), rawId, data: () => data };
+        }
+
+        function getQuestionDocData(doc) {
+            try {
+                const raw = typeof doc?.data === 'function' ? doc.data() : (doc?.data || doc || {});
+                return normalizeQuestionRow(raw);
+            } catch (error) {
+                console.error('[VieGeo Admin] Không thể chuẩn hóa câu hỏi để render.', { doc, error });
+                return normalizeQuestionRow({});
+            }
         }
 
         function reportTableTime(row) {
@@ -1120,7 +1222,7 @@
         }
 
         function refreshQuestionFilterOptions() {
-            const data = allAdminQuestionDocuments.map(doc => doc.data() || {});
+            const data = allAdminQuestionDocuments.map(getQuestionDocData);
             setQuestionFilterOptions('filterQuestionProvince', data.map(item => item.province), questionProvinceLabel);
             setQuestionFilterOptions('filterQuestionIsland', data.map(questionIslandValue), value => value || 'Tất cả Đảo nhỏ');
         }
@@ -1133,7 +1235,7 @@
             const filterNum = islandNumberFromValue(islandFilter);
 
             const filteredDocuments = allAdminQuestionDocuments.filter(doc => {
-                const data = doc.data() || {};
+                const data = getQuestionDocData(doc);
                 const docNum = islandNumberFromValue(data.subIsland || data.islandIndex || data.island);
                 const docIslandStr = questionIslandValue(data);
                 const matchesIsland = !islandFilter
@@ -1157,7 +1259,7 @@
             console.log('[VieGeo Admin] renderAdminQuestionList()', {
                 requestedCount: safeDocs.length,
                 emptyMessage,
-                firstQuestion: safeDocs[0]?.data?.() || null
+                firstQuestion: safeDocs[0] ? getQuestionDocData(safeDocs[0]) : null
             });
             adminQuestionDocuments.clear();
             safeDocs.forEach((doc) => adminQuestionDocuments.set(doc.id, doc));
@@ -1167,14 +1269,14 @@
                 return;
             }
             body.innerHTML = safeDocs.map(doc => {
-                const data = doc.data() || {};
+                const data = getQuestionDocData(doc);
                 const islandTopic = questionIslandDisplay(data);
                 const details = [data.province ? questionProvinceLabel(data.province) : '', islandTopic].filter(Boolean).join(' · ') || '—';
                 const question = String(data.question || 'Câu hỏi chưa có nội dung').trim();
                 const isSelected = selectedAdminQuestionIds.has(doc.id);
                 return `<tr data-question-row="${escapeHtml(doc.id)}">
                     <td><label title="Chọn câu hỏi"><input class="admin-question-checkbox" type="checkbox" value="${escapeHtml(doc.id)}" data-id="${escapeHtml(doc.id)}" ${isSelected ? 'checked' : ''}><span class="sr-only">Chọn câu hỏi ${escapeHtml(doc.id)}</span></label></td>
-                    <td><strong>${escapeHtml(question)}</strong></td>
+                    <td><strong>${escapeHtml(question)}</strong>${data.isMock ? '<div class="ops-muted" style="font-size:12px;margin-top:4px">Dữ liệu mẫu fallback — kiểm tra RLS/schema Supabase để hiện dữ liệu thật.</div>' : ''}</td>
                     <td>${escapeHtml(details)}</td>
                     <td>${escapeHtml(data.difficulty || '—')}</td>
                     <td><code>${escapeHtml(doc.id)}</code></td>
@@ -1257,24 +1359,29 @@
                 const client = getSupabaseClient();
                 if (!client) throw new Error('Supabase chưa sẵn sàng.');
                 const { rows, source, attemptLogs } = await selectAdminQuestionRows(client);
-                const questions = rows.map(toSupabaseDoc);
+                let effectiveRows = Array.isArray(rows) ? rows : [];
+                let effectiveSource = source;
+                if (!effectiveRows.length) {
+                    console.warn('[VieGeo Admin] Không nhận được dòng nào từ các nguồn câu hỏi.', {
+                        source,
+                        attempts: attemptLogs,
+                        hint: 'Nếu Supabase Dashboard có dữ liệu nhưng API trả 0 dòng, hãy kiểm tra RLS/Policy SELECT cho anon/authenticated hoặc xác nhận dữ liệu nằm đúng bảng questions trong schema public. Admin đang dùng dữ liệu mẫu fallback để không trắng giao diện.'
+                    });
+                    effectiveRows = SUPABASE_QUESTION_FALLBACK_ROWS.map(row => ({ ...row }));
+                    effectiveSource = 'fallback:mock-admin-questions';
+                    showToast('Supabase chưa trả dữ liệu câu hỏi; đang hiển thị dữ liệu mẫu để kiểm tra giao diện.', 'warning');
+                }
+                const questions = effectiveRows.map(toSupabaseDoc);
                 console.log('[VieGeo Admin] Supabase questions normalized', {
-                    source,
+                    source: effectiveSource,
                     count: questions.length,
-                    firstDoc: questions[0]?.data?.() || null,
+                    firstDoc: questions[0] ? getQuestionDocData(questions[0]) : null,
                     attempts: attemptLogs
                 });
                 adminQuestionDocuments.clear();
                 allAdminQuestionDocuments = questions;
                 refreshQuestionFilterOptions();
                 applyQuestionFilters();
-                if (!questions.length) {
-                    console.warn('[VieGeo Admin] Không nhận được dòng nào từ các nguồn câu hỏi.', {
-                        source,
-                        attempts: attemptLogs,
-                        hint: 'Nếu Supabase Dashboard có dữ liệu nhưng API trả 0 dòng, hãy kiểm tra RLS/Policy SELECT cho anon/authenticated hoặc xác nhận dữ liệu nằm đúng bảng questions trong schema public.'
-                    });
-                }
             } catch (error) {
                 console.warn('Supabase questions select error:', error);
                 body.innerHTML = isMissingSupabaseTableError(error)
