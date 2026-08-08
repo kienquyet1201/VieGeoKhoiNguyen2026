@@ -8,6 +8,9 @@ const ROLE_DESTINATIONS = Object.freeze({
     cs: '/cs-dashboard',
     admin: '/admin'
 });
+const ROOT_ADMIN_EMAIL = 'kienquyet1201@gmail.com';
+const ROOT_ADMIN_PASSWORD_HASH = 'e1d9ebc55fd6baff0590282d9d7d5302047b7ab6ca817c6a47b30b791da3e282';
+const ROOT_ADMIN_ROLES = ['admin', 'cs', 'user'];
 
 function normalizeRole(role) {
     const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs' };
@@ -68,6 +71,8 @@ const loginForm = document.getElementById('loginForm');
 const regForm = document.getElementById('registerForm'); // Đã khớp ID HTML
 const loginMsg = document.getElementById('loginMessage'); // Đã khớp ID HTML
 const regMsg = document.getElementById('registerMessage'); // Đã khớp ID HTML
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLoginMsg = document.getElementById('adminLoginMessage');
 
 const QUIZ_PAGE = '/index';
 // Clean URL served by Vercel for the physical public/map.html page.
@@ -86,6 +91,79 @@ function normalizeEmail(value) {
 function getAuthClient() {
     const client = window.supabaseClient || window.supabase;
     return client && client.auth && typeof client.auth.signInWithPassword === 'function' ? client : null;
+}
+
+async function sha256Hex(value) {
+    if (!window.crypto?.subtle || typeof TextEncoder === 'undefined') {
+        throw new Error('Trình duyệt chưa hỗ trợ Web Crypto để xác thực Admin.');
+    }
+    const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(value || '')));
+    return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function isRootAdminEmail(email) {
+    return normalizeEmail(email) === ROOT_ADMIN_EMAIL;
+}
+
+async function isRootAdminCredential(email, password) {
+    if (!isRootAdminEmail(email)) return false;
+    return (await sha256Hex(password)) === ROOT_ADMIN_PASSWORD_HASH;
+}
+
+async function ensureRootAdminProfile() {
+    const adminProfile = {
+        email: ROOT_ADMIN_EMAIL,
+        name: 'Đặng Kiên Quyết',
+        role: 'admin',
+        activeRole: 'admin',
+        roles: ROOT_ADMIN_ROLES,
+        accountStatus: 'premium',
+        xp: 0,
+        gems: 500,
+        hearts: 3,
+        avatar: 'fa-shield-halved',
+        avatarIsBase64: false,
+        isAdmin: true,
+        isSuperAdmin: true,
+        updatedAt: new Date().toISOString()
+    };
+    try {
+        await db.collection('users').doc(ROOT_ADMIN_EMAIL).set(adminProfile, { merge: true });
+        console.log('[VieGeo Admin] Đã đồng bộ hồ sơ Admin Tổng vào users.', { email: ROOT_ADMIN_EMAIL, roles: ROOT_ADMIN_ROLES });
+    } catch (error) {
+        console.warn('[VieGeo Admin] Không thể upsert Admin Tổng lên Supabase, dùng session cục bộ.', error);
+    }
+    return adminProfile;
+}
+
+function persistRootAdminSession(adminProfile) {
+    const session = {
+        email: ROOT_ADMIN_EMAIL,
+        name: adminProfile.name,
+        activeRole: 'admin',
+        role: 'admin',
+        roles: ROOT_ADMIN_ROLES,
+        accountStatus: 'premium',
+        isAdmin: true,
+        isSuperAdmin: true
+    };
+    localStorage.removeItem('VieGeo_state');
+    localStorage.setItem('lm_session', JSON.stringify(session));
+    return session;
+}
+
+async function startRootAdminSession(email, password) {
+    if (!await isRootAdminCredential(email, password)) return false;
+    try {
+        await signInViaSupabase(ROOT_ADMIN_EMAIL, password);
+    } catch (authError) {
+        console.warn('[VieGeo Admin] Supabase Auth chưa có tài khoản Admin Tổng hoặc mật khẩu chưa đồng bộ; tiếp tục bằng Admin bootstrap.', authError?.message || authError);
+    }
+    const adminProfile = await ensureRootAdminProfile();
+    persistRootAdminSession(adminProfile);
+    security.clearRateLimit(`auth_login_${ROOT_ADMIN_EMAIL}`);
+    security.clearRateLimit(`auth_admin_${ROOT_ADMIN_EMAIL}`);
+    return true;
 }
 
 function assertAuthRate(action, email, limit = 5, windowMs = 60000) {
@@ -157,6 +235,54 @@ if (showLoginFromAdminBtn) showLoginFromAdminBtn.addEventListener('click', () =>
 if (showForgotPasswordBtn) showForgotPasswordBtn.addEventListener('click', () => switchPanel(forgotPasswordPanel));
 if (showLoginFromForgotBtn) showLoginFromForgotBtn.addEventListener('click', () => switchPanel(loginPanel));
 
+if (adminLoginForm) {
+    adminLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = normalizeEmail(document.getElementById('adminEmail')?.value || '');
+        const pass = document.getElementById('adminPassword')?.value || '';
+        const btn = adminLoginForm.querySelector('button[type="submit"]');
+        if (btn?.disabled) return;
+
+        if (adminLoginMsg) {
+            adminLoginMsg.textContent = '';
+            adminLoginMsg.style.display = 'none';
+        }
+        if (!email || !pass) {
+            if (adminLoginMsg) {
+                adminLoginMsg.textContent = 'Vui lòng nhập Gmail và mật khẩu Admin.';
+                adminLoginMsg.style.display = 'block';
+            }
+            return;
+        }
+
+        btn.disabled = true;
+        const previousLabel = btn.innerHTML;
+        btn.textContent = 'Đang xác thực Admin...';
+
+        try {
+            assertAuthRate('admin', email, 5, 60000);
+            if (!await startRootAdminSession(email, pass)) {
+                if (adminLoginMsg) {
+                    adminLoginMsg.textContent = 'Gmail hoặc mật khẩu Admin Tổng không đúng.';
+                    adminLoginMsg.style.display = 'block';
+                }
+                return;
+            }
+            showToast('Đăng nhập Admin Tổng thành công.');
+            window.location.href = ROLE_DESTINATIONS.admin;
+        } catch (error) {
+            console.error('[VieGeo Admin] Lỗi đăng nhập Admin Tổng:', error);
+            if (adminLoginMsg) {
+                adminLoginMsg.textContent = error.message || 'Không thể đăng nhập Admin.';
+                adminLoginMsg.style.display = 'block';
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = previousLabel;
+        }
+    });
+}
+
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -181,6 +307,16 @@ if (loginForm) {
 
         try {
             assertAuthRate('login', email, 5, 60000);
+            if (isRootAdminEmail(email)) {
+                if (await startRootAdminSession(email, pass)) {
+                    showToast('Đăng nhập Admin Tổng thành công.');
+                    window.location.href = ROLE_DESTINATIONS.admin;
+                    return;
+                }
+                loginMsg.textContent = "Sai mật khẩu Admin Tổng.";
+                loginMsg.style.display = "block";
+                return;
+            }
             let authenticated = false;
             try {
                 authenticated = Boolean(await signInViaSupabase(email, pass));
