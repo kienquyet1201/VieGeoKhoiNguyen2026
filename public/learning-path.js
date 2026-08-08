@@ -201,14 +201,19 @@
         if (data?.options && typeof data.options === 'object') {
             return ['A', 'B', 'C', 'D'].map(key => data.options[key] ?? data.options[key.toLowerCase()]).filter(value => value !== undefined && value !== null).map(String).map(value => value.trim());
         }
-        return [data?.optionA ?? data?.a, data?.optionB ?? data?.b, data?.optionC ?? data?.c, data?.optionD ?? data?.d]
+        return [
+            data?.option_a ?? data?.optionA ?? data?.a,
+            data?.option_b ?? data?.optionB ?? data?.b,
+            data?.option_c ?? data?.optionC ?? data?.c,
+            data?.option_d ?? data?.optionD ?? data?.d
+        ]
             .filter(value => value !== undefined && value !== null)
             .map(String)
             .map(value => value.trim());
     }
 
     function answerIndexFromQuestionDocument(data, options) {
-        const raw = data?.correctAnswer ?? data?.answerIndex ?? data?.correct ?? data?.answer;
+        const raw = data?.correct_option ?? data?.correctAnswer ?? data?.answerIndex ?? data?.correct ?? data?.answer;
         const asText = String(raw ?? '').trim();
         const letterIndex = 'ABCD'.indexOf(asText.toUpperCase());
         if (letterIndex >= 0) return letterIndex;
@@ -240,6 +245,11 @@
             .replace(/(^-|-$)/g, '') || 'ha-noi';
     }
 
+    function lessonIslandLabel(lesson = {}) {
+        const index = Number(lesson.islandIndex || String(lesson.island || lesson.title || '').match(/\d+/)?.[0]) || 1;
+        return `Đảo nhỏ ${index}`;
+    }
+
     function mapFirestoreQuestions(snapshot) {
         return snapshot.docs.map((doc, index) => {
             const data = doc.data() || {};
@@ -256,9 +266,11 @@
                 question,
                 options,
                 correctAnswer,
-                explanation: String(data.explanation ?? data.solution ?? data.explain ?? data.theory ?? '').trim(),
-                islandTheory: String(data.islandTheory ?? data.islandTheoryContent ?? data.islandTheoryText ?? '').trim(),
-                lessonId: String(data.lessonId ?? '').trim()
+                explanation: String(data.theory ?? data.explanation ?? data.solution ?? data.explain ?? '').trim(),
+                islandTheory: String(data.island_theory ?? data.islandTheory ?? data.islandTheoryContent ?? data.islandTheoryText ?? '').trim(),
+                hint1: String(data.hint1 ?? '').trim(),
+                hint2: String(data.hint2 ?? '').trim(),
+                lessonId: String(data.lesson_id ?? data.lessonId ?? '').trim()
             };
         }).filter(Boolean);
     }
@@ -266,84 +278,67 @@
     // Prefer the exact lessonId saved by Admin. The province/difficulty query is
     // retained only for legacy question documents that are not island-specific.
     async function fetchQuestionsForLesson(lesson = {}) {
-        const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-        if (!firestore) throw new Error('Firestore is not ready.');
-
+        const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
         const lessonId = String(lesson.id || lesson.lessonId || '').trim();
-        if (lessonId) {
-            const islandSnapshot = await firestore.collection('Questions')
-                .where('lessonId', '==', lessonId)
-                .limit(100)
-                .get();
-            const islandQuestions = mapFirestoreQuestions(islandSnapshot);
-            if (islandQuestions.length) {
-                window.VieGeoQuestionLoadState = 'ready';
-                return islandQuestions;
-            }
-        }
+        const provinceSlug = firestoreProvinceSlug(lesson.province || '');
+        const islandLabel = lessonIslandLabel(lesson);
 
-        const difficulty = ['easy', 'medium', 'hard'].includes(String(lesson.difficulty).toLowerCase())
-            ? String(lesson.difficulty).toLowerCase()
-            : 'easy';
-        const province = firestoreProvinceSlug(lesson.province || 'ha-noi');
-        const islandMatch = /-i(\d+)$/i.exec(lessonId);
-        const island = islandMatch ? `dao-tri-thuc-${islandMatch[1]}` : '';
-        if (island) {
+        if (client && typeof client.from === 'function') {
             try {
-                const islandSnapshot = await firestore.collection('Questions')
-                    .where('province', '==', province)
-                    .where('island', '==', island)
-                    .limit(100)
-                    .get();
-                const islandQuestions = mapFirestoreQuestions(islandSnapshot);
-                if (islandQuestions.length) {
+                let query = client.from('questions').select('*');
+                if (provinceSlug) query = query.eq('province', provinceSlug);
+                if (islandLabel) query = query.eq('island', islandLabel);
+                if (lesson.difficulty) query = query.eq('difficulty', lesson.difficulty);
+                const { data, error } = await query.limit(100);
+                if (!error && Array.isArray(data) && data.length) {
                     window.VieGeoQuestionLoadState = 'ready';
-                    return islandQuestions;
+                    return mapFirestoreQuestions({ docs: data.map(item => ({ id: item.id, data: () => item })) });
                 }
-            } catch (error) {
-                console.warn('Unable to load questions by island:', error);
+                if (error && String(error.message || '').includes('difficulty')) {
+                    const fallbackQuery = client.from('questions').select('*').eq('province', provinceSlug).eq('island', islandLabel);
+                    const fallbackResult = await fallbackQuery.limit(100);
+                    if (!fallbackResult.error && Array.isArray(fallbackResult.data) && fallbackResult.data.length) {
+                        window.VieGeoQuestionLoadState = 'ready';
+                        return mapFirestoreQuestions({ docs: fallbackResult.data.map(item => ({ id: item.id, data: () => item })) });
+                    }
+                }
+            } catch (err) {
+                console.warn('Lỗi đọc câu hỏi từ Supabase:', err, { lessonId, provinceSlug, islandLabel });
             }
         }
-        const snapshot = await firestore.collection('Questions')
-            .where('province', '==', province)
-            .where('difficulty', '==', difficulty)
-            .limit(100)
-            .get();
-        const questions = mapFirestoreQuestions(snapshot);
-        window.VieGeoQuestionLoadState = questions.length ? 'ready' : 'empty';
-        return questions;
+        window.VieGeoQuestionLoadState = 'empty';
+        return [];
     }
 
-    // Reads the topic entered in Admin and applies it to the matching route
-    // node. Querying by the known lesson IDs avoids any dependency on how an
-    // administrator typed the province name.
     async function loadIslandTopics(lessons) {
         const routeLessons = Array.isArray(lessons) ? lessons.filter((lesson) => lesson?.id) : [];
-        const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-        if (!routeLessons.length || !firestore) return {};
+        const client = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+        if (!routeLessons.length || !client || typeof client.from !== 'function') return {};
 
         const topicsByLessonId = {};
         try {
-            for (let start = 0; start < routeLessons.length; start += 30) {
-                const lessonIds = routeLessons.slice(start, start + 30).map((lesson) => lesson.id);
-                const snapshot = await firestore.collection('Questions')
-                    .where('lessonId', 'in', lessonIds)
-                    .limit(100)
-                    .get();
-                snapshot.docs.forEach((doc) => {
-                    const data = doc.data() || {};
-                    const lessonId = String(data.lessonId || '').trim();
-                    const topic = String(data.topic || data.island || '').trim();
-                    if (lessonId && topic && !topicsByLessonId[lessonId]) topicsByLessonId[lessonId] = topic;
-                });
-            }
+            const provinceSlug = firestoreProvinceSlug(routeLessons[0]?.province || '');
+            const islandLabels = [...new Set(routeLessons.map(lessonIslandLabel))];
+            const { data, error } = await client
+                .from('questions')
+                .select('province,island,topic')
+                .eq('province', provinceSlug)
+                .in('island', islandLabels)
+                .limit(300);
+            if (error) throw error;
+            (Array.isArray(data) ? data : []).forEach((item) => {
+                const island = String(item.island || '').trim();
+                const topic = String(item.topic || '').trim();
+                const lesson = routeLessons.find(routeLesson => lessonIslandLabel(routeLesson) === island);
+                if (lesson?.id && topic && !topicsByLessonId[lesson.id]) topicsByLessonId[lesson.id] = topic;
+            });
             routeLessons.forEach((lesson) => {
                 lesson.title = topicsByLessonId[lesson.id] || lesson.defaultTitle || lesson.title;
             });
         } catch (error) {
             // A missing permission/index must never prevent the learning route
             // from rendering with its default island labels.
-            console.warn('Không thể tải tên chủ đề đảo từ Firebase:', error);
+            console.warn('Không thể tải tên chủ đề đảo từ Supabase:', error);
         }
         return topicsByLessonId;
     }
@@ -359,7 +354,7 @@
 
     function randomFiveFirestoreQuestions(questions) {
         if (!Array.isArray(questions) || !questions.length) return [];
-        // Firestore provides the full available question pool for this island
+        // Supabase provides the full available question pool for this island
         // (up to the query limit); draw a new unbiased set of five each time.
         return fisherYatesShuffle(questions).slice(0, 5);
     }
@@ -369,9 +364,9 @@
         try {
             sourceQuestions = await fetchQuestionsForLesson(lesson || {});
         } catch (error) {
-            console.error('Firebase island content load failed:', error);
+            console.error('Supabase island content load failed:', error);
             window.VieGeoQuestionLoadState = 'network-error';
-            notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!', true);
+            notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!', true);
         }
         const questions = randomFiveFirestoreQuestions(sourceQuestions);
         if (!questions.length && window.VieGeoQuestionLoadState !== 'network-error') {

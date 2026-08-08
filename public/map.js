@@ -695,7 +695,7 @@ async function openIslandQuizPreview() {
     islandQuizPenaltyPending = false;
     islandQuizSubmitted = false;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
-    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Firebase`;
+    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Supabase`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';
     if (!mountIslandQuizStepper()) return;
     forceShowIslandModal(quizModal);
@@ -709,7 +709,7 @@ function showIslandLoadingFeedback(clickedIsland) {
 
     if (!ensureIslandModalDom()) {
         console.error('Không thể tạo cấu trúc Modal lý thuyết trong DOM.');
-        window.alert('Đã nhận click! Đang kết nối Firebase...');
+        window.alert('Đã nhận click! Đang kết nối Supabase...');
         return false;
     }
 
@@ -757,7 +757,7 @@ async function handleDelegatedIslandClick(event) {
 
     if (nodeKind === 'small') {
         // openIslandTheory keeps the visible loading modal in place, then fetches
-        // Firestore inside its own try/catch without blocking the click feedback.
+        // Supabase fetching is isolated so it never blocks the click feedback.
         await openIslandTheory(lesson);
         return;
     }
@@ -812,19 +812,19 @@ async function openIslandTheory(lesson) {
         islandTheoryMeta.textContent = `${lesson.title || 'Đảo tri thức'} · ${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${questionCount} câu hỏi sẵn sàng`;
         if (!questionCount) {
             const notice = loaded?.status === 'network-error'
-                ? 'Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!'
+                ? 'Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!'
                 : 'Hiện chưa có câu hỏi nào cho khu vực này, vui lòng quay lại sau!';
             islandTheoryContent.insertAdjacentHTML('beforeend', `<p><strong>Thông báo:</strong> ${notice}</p>`);
         }
     } catch (error) {
-        const message = error?.message || 'Không thể kết nối Firestore.';
-        console.error('Lỗi Firebase khi tải nội dung Đảo nhỏ:', message, error);
+        const message = error?.message || 'Không thể kết nối Supabase.';
+        console.error('Lỗi Supabase khi tải nội dung Đảo nhỏ:', message, error);
         if (requestId !== islandTheoryRequest) return;
         activeIslandLearning = { lesson, theory: theoryHtmlFor(lesson), questions: [] };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.innerHTML = `${activeIslandLearning.theory}<p><strong>Lỗi đường truyền hoặc máy chủ Firebase.</strong> Vui lòng kiểm tra lại mạng!</p>`;
-        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi đường truyền hoặc máy chủ Firebase. Vui lòng kiểm tra lại mạng!');
+        islandTheoryContent.innerHTML = `${activeIslandLearning.theory}<p><strong>Lỗi đường truyền hoặc máy chủ Supabase.</strong> Vui lòng kiểm tra lại mạng!</p>`;
+        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!');
     } finally {
         if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
             updateIslandTheoryStartButton();
@@ -905,6 +905,7 @@ function renderMap() {
         renderLessons();
     }
 }
+    updateCompletionTheoryButton();
 
 btnMapBack.addEventListener('click', () => {
     if (currentView === 'lessons') {
@@ -1279,3 +1280,169 @@ async function saveLearnerSurvey() {
 window.VieGeoSurvey = { open: () => openSurvey(true) };
 surveySubmitButton?.addEventListener('click', saveLearnerSurvey);
 initializeLearnerSurvey();
+
+
+/* =========================================================
+   100% ISLAND COMPLETION & CONSOLIDATED THEORY REVIEW MODAL
+   ========================================================= */
+
+function checkAllIslandsCompleted(province) {
+    if (!province) return false;
+    const lessons = (window.VieGeoLearningPath && typeof window.VieGeoLearningPath.getLessonsForProvince === 'function')
+        ? window.VieGeoLearningPath.getLessonsForProvince(province, state.selectedDifficulty)
+        : (province.lessons || []);
+    if (!lessons.length) return false;
+    const completedCount = lessons.filter(l => state.completedNodes && state.completedNodes.includes(l.id)).length;
+    return completedCount === lessons.length || completedCount >= 34;
+}
+
+function updateCompletionTheoryButton() {
+    const actionsContainer = document.getElementById('mapHeaderActions');
+    if (!actionsContainer) return;
+
+    if (currentView === 'lessons' && selectedProvince && checkAllIslandsCompleted(selectedProvince)) {
+        actionsContainer.innerHTML = `
+            <button id="btnReviewAllTheory" type="button" onclick="openAllIslandsTheoryModal(selectedProvince)" class="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold p-3 rounded-xl shadow-lg hover:scale-105 transition-all flex items-center gap-2 border border-amber-300/40 text-sm md:text-base cursor-pointer glow-btn">
+                <span>📖</span> Xem lại toàn bộ Lý thuyết
+            </button>
+        `;
+    } else {
+        actionsContainer.innerHTML = '';
+    }
+}
+
+async function openAllIslandsTheoryModal(province) {
+    const modal = document.getElementById('allIslandsTheoryModal');
+    if (!modal) return;
+
+    modal.style.display = 'block';
+    modal.hidden = false;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    const titleEl = document.getElementById('allTheoryModalTitle');
+    const subEl = document.getElementById('allTheoryModalSub');
+    const container = document.getElementById('allTheoryCardsContainer');
+    const searchInput = document.getElementById('allTheorySearchInput');
+
+    const provName = province ? province.name : 'Tất cả 34 Đảo';
+    if (titleEl) titleEl.textContent = `TỔNG HỢP LÝ THUYẾT - ${provName.toUpperCase()}`;
+    if (subEl) subEl.textContent = `Danh sách lý thuyết 34 đảo tri thức tỉnh ${provName} được tổng hợp đầy đủ.`;
+    if (searchInput) searchInput.value = '';
+
+    if (container) {
+        container.innerHTML = '<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p>Đang tổng hợp dữ liệu lý thuyết 34 đảo...</p></div>';
+    }
+
+    const supabaseClient = window.supabaseClient || window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+    const islandDataMap = new Map();
+
+    for (let i = 1; i <= 34; i++) {
+        const defaultTitle = i === 34 ? 'BOSS CUỐI · Chinh phục tỉnh thành' : (i % 11 === 0 ? `Trạm kiểm tra ${i}` : `Đảo nhỏ ${i}`);
+        islandDataMap.set(i, {
+            islandIndex: i,
+            title: defaultTitle,
+            topic: `Chủ đề Đảo ${i}`,
+            theory: `Nội dung trọng tâm của Đảo nhỏ ${i}: Ghi nhớ kiến thức cơ bản, các từ khóa địa lí quan trọng và liên hệ thực tế tỉnh thành ${provName} đang khám phá.`
+        });
+    }
+
+    if (supabaseClient && typeof supabaseClient.from === 'function' && province) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('questions')
+                .select('province,island,topic,theory,island_theory')
+                .eq('province', normalizeProvinceSlug(province.name))
+                .limit(300);
+
+            if (error) throw error;
+            if (Array.isArray(data) && data.length) {
+                data.forEach(d => {
+                    const idx = Number(d.subIsland || d.sub_island || d.islandIndex || d.island_index || (String(d.island || '').match(/\d+/)?.[0])) || 0;
+                    if (idx >= 1 && idx <= 34) {
+                        const existing = islandDataMap.get(idx);
+                        if (existing) {
+                            if (d.topic) existing.topic = d.topic;
+                            if (d.island_theory || d.islandTheory || d.islandTheoryContent || d.islandTheoryText || d.theory) {
+                                existing.theory = d.island_theory || d.islandTheory || d.islandTheoryContent || d.islandTheoryText || d.theory;
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (err) {
+            console.warn('Không thể tải dữ liệu lý thuyết từ Supabase:', err);
+        }
+    }
+
+    if (window.VieGeoLearningPath && typeof window.VieGeoLearningPath.getLessonsForProvince === 'function' && province) {
+        const lessons = window.VieGeoLearningPath.getLessonsForProvince(province, state?.selectedDifficulty || 'easy');
+        lessons.forEach(l => {
+            const idx = l.islandIndex;
+            if (idx && islandDataMap.has(idx)) {
+                const item = islandDataMap.get(idx);
+                if (l.title && (!item.topic || item.topic.startsWith('Chủ đề Đảo'))) item.topic = l.title;
+            }
+        });
+    }
+
+    window.currentAllTheoryList = [...islandDataMap.values()];
+    renderTheoryCards(window.currentAllTheoryList);
+}
+
+function closeAllIslandsTheoryModal() {
+    const modal = document.getElementById('allIslandsTheoryModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.hidden = true;
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+function renderTheoryCards(islandsList) {
+    const container = document.getElementById('allTheoryCardsContainer');
+    if (!container) return;
+
+    if (!islandsList.length) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-8">Không tìm thấy nội dung phù hợp.</p>';
+        return;
+    }
+
+    container.innerHTML = islandsList.map(item => `
+        <div class="theory-card-item bg-slate-800/90 border border-slate-700/80 hover:border-amber-500/60 rounded-2xl p-6 transition-all shadow-md hover:shadow-xl group" data-search-text="${(item.title + ' ' + item.topic + ' ' + item.theory).toLowerCase()}">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-700/60">
+                <div class="flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black flex items-center justify-center text-sm shadow-sm">
+                        ${item.islandIndex}
+                    </span>
+                    <div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition-colors">${item.title}</h3>
+                        <p class="text-xs text-amber-400/90 font-medium"><i class="fa-solid fa-bookmark"></i> ${item.topic}</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-700/60 text-slate-300 border border-slate-600/50">
+                    Đảo ${item.islandIndex}/34
+                </span>
+            </div>
+            <div class="text-slate-300 text-sm md:text-base leading-relaxed whitespace-pre-line bg-slate-900/60 p-4 rounded-xl border border-slate-800/80">
+                ${item.theory}
+            </div>
+        </div>
+    `).join('');
+}
+
+window.checkAllIslandsCompleted = checkAllIslandsCompleted;
+window.openAllIslandsTheoryModal = openAllIslandsTheoryModal;
+window.closeAllIslandsTheoryModal = closeAllIslandsTheoryModal;
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('allTheorySearchInput')?.addEventListener('input', function(e) {
+        const query = (e.target.value || '').toLowerCase().trim();
+        const cards = document.querySelectorAll('.theory-card-item');
+        cards.forEach(card => {
+            const text = card.dataset.searchText || '';
+            card.style.display = (!query || text.includes(query)) ? 'block' : 'none';
+        });
+    });
+});

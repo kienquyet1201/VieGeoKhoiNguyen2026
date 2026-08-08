@@ -28,7 +28,8 @@ window.db = db;
 try {
     db.settings({
         experimentalForceLongPolling: true,
-        useFetchStreams: false
+        useFetchStreams: false,
+        merge: true
     });
     console.info('Firestore đã bật chế độ Long Polling.');
 } catch (error) {

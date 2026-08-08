@@ -9,11 +9,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="firebase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="supabaseClient.js"></script>
+    <script>
+        // Khởi tạo Supabase client từ CDN UMD đã load
+        (function () {
+            try {
+                const SUPABASE_URL = window.ENV_SUPABASE_URL || 'https://mijjvqkfkzwpmjpwkbgk.supabase.co';
+                const SUPABASE_ANON_KEY = window.ENV_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pamp2cWtma3p3cG1qcHdrYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTI3MzgsImV4cCI6MjEwMTc2ODczOH0.KKomdXKDi1sn7Ems1JxaFLrecq2oA_xVqMgo1jvUhiY';
+                if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    window.supabase = window.supabaseClient;
+                }
+            } catch (e) {
+                console.warn('Supabase init error:', e);
+                // Fallback proxy
+                window.supabase = {
+                    from: function () {
+                        var noop = { data: null, error: null };
+                        var chain = {
+                            select: async function () { return noop; },
+                            insert: async function () { return noop; },
+                            update: async function () { return noop; },
+                            delete: async function () { return noop; },
+                            eq: function () { return chain; },
+                            in: function () { return chain; },
+                            limit: function () { return chain; }
+                        };
+                        return chain;
+                    }
+                };
+                window.supabaseClient = window.supabase;
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="relative w-full min-h-screen bg-slate-950" id="adminDashboard">
@@ -45,7 +75,7 @@
                     <article class="ops-stat" id="operationsInfoCard" role="button" tabindex="0" title="Mở thông tin vận hành" style="cursor:pointer"><span><i class="fa-solid fa-shield-heart"></i> Thông tin vận hành</span><strong id="metricErrors">—</strong></article>
                 </div>
                 <div class="ops-grid">
-                    <article class="ops-card"><h2>Hiệu năng hệ thống</h2><p class="ops-muted">Mức tải phiên hiện tại; sẵn sàng thay bằng telemetry từ hạ tầng production.</p><div class="ops-load-bar" aria-label="Server load 34 phần trăm"><span id="serverLoadBar"></span></div><div class="ops-list" style="margin-top:16px"><div class="ops-list-item"><span>Firestore</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Auth</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Storage</span><strong style="color:#4ade80">Ổn định</strong></div></div></article>
+                    <article class="ops-card"><h2>Hiệu năng hệ thống</h2><p class="ops-muted">Mức tải phiên hiện tại; sẵn sàng thay bằng telemetry từ hạ tầng production.</p><div class="ops-load-bar" aria-label="Server load 34 phần trăm"><span id="serverLoadBar"></span></div><div class="ops-list" style="margin-top:16px"><div class="ops-list-item"><span>Supabase DB</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Auth</span><strong style="color:#4ade80">Ổn định</strong></div><div class="ops-list-item"><span>Storage</span><strong style="color:#4ade80">Ổn định</strong></div></div></article>
                     <article class="ops-card"><h2>Thông báo vận hành</h2><div class="ops-list" id="systemErrorList"><p class="ops-muted">Đang kiểm tra báo cáo lỗi…</p></div></article>
                 </div>
             </section>
@@ -53,7 +83,7 @@
             <section class="operations-tab hidden" data-admin-panel="users">
                 <div class="ops-grid">
                     <article class="ops-card"><h2>Yêu cầu nâng cấp Premium</h2><div class="ops-list" id="requestsList"><p class="ops-muted">Đang tải yêu cầu…</p></div></article>
-                    <article class="ops-card"><h2>Hướng dẫn phân quyền</h2><p class="ops-muted">Vai trò được lưu trực tiếp vào hồ sơ Firebase của người dùng. Thay đổi có hiệu lực ở phiên tải dữ liệu tiếp theo.</p><div class="ops-list"><div class="ops-list-item"><span>Học sinh</span><span class="ops-muted">Lộ trình học</span></div><div class="ops-list-item"><span>Phụ huynh</span><span class="ops-muted">Theo dõi việc học</span></div><div class="ops-list-item"><span>CSKH / Admin</span><span class="ops-muted">Vận hành hệ thống</span></div></div></article>
+                    <article class="ops-card"><h2>Hướng dẫn phân quyền</h2><p class="ops-muted">Vai trò được lưu trực tiếp vào hồ sơ Supabase của người dùng. Thay đổi có hiệu lực ở phiên tải dữ liệu tiếp theo.</p><div class="ops-list"><div class="ops-list-item"><span>Học sinh</span><span class="ops-muted">Lộ trình học</span></div><div class="ops-list-item"><span>Phụ huynh</span><span class="ops-muted">Theo dõi việc học</span></div><div class="ops-list-item"><span>CSKH / Admin</span><span class="ops-muted">Vận hành hệ thống</span></div></div></article>
                 </div>
                 <article class="ops-card" style="margin-top:18px"><div class="operations-heading" style="margin-bottom:16px"><div><h2 style="margin-bottom:4px">Quản lý người dùng</h2><p class="ops-muted">Lọc tức thì theo ID, email hoặc tên.</p></div><label><span class="sr-only">Tìm người dùng</span><input id="searchUser" class="ops-search" type="search" placeholder="Tìm email hoặc tên người dùng" autocomplete="off"></label></div><div class="ops-table-wrap"><table class="ops-table"><thead><tr><th>ID</th><th>Email</th><th>Vai trò hiện tại</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="usersList"><tr><td colspan="5" class="ops-muted">Đang tải người dùng…</td></tr></tbody></table></div></article>
             </section>
@@ -65,7 +95,7 @@
                 </div>
                 <article class="ops-card" id="bulkQuestionUploadPane">
                     <h2>Nhập bộ câu hỏi bằng văn bản</h2>
-                    <p class="ops-muted">Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Hệ thống kiểm tra định dạng trước khi lưu vào collection <code>Questions</code>.</p>
+                    <p class="ops-muted">Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Hệ thống kiểm tra định dạng trước khi lưu vào bảng Supabase <code>questions</code>.</p>
                     <div class="ops-grid">
                         <div class="ops-list">
                             <label class="ops-muted">Tỉnh / Thành phố <span aria-hidden="true">*</span><select class="ops-input" id="bulkImportProvince" required style="display:block;margin-top:7px"><option value="">-- Chọn Tỉnh/Thành --</option>
@@ -110,7 +140,7 @@
 
                 <article class="ops-card hidden" id="singleQuestionUploadPane" style="margin-top:18px">
                     <h2>Thêm câu hỏi</h2>
-                    <p class="ops-muted">Tạo nhanh một câu hỏi theo đúng schema collection <code>Questions</code>.</p>
+                    <p class="ops-muted">Tạo nhanh một câu hỏi theo đúng schema bảng Supabase <code>questions</code>.</p>
                     <form id="adminQuestionForm" class="ops-list admin-question-form" novalidate>
                         <fieldset class="admin-question-section">
                             <legend><i class="fa-solid fa-location-dot"></i> Vị trí kiến thức</legend>
@@ -282,6 +312,64 @@
         const el = id => document.getElementById(id);
         const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
         const timestampToMs = value => typeof value === 'number' ? value : (value && typeof value.toMillis === 'function' ? value.toMillis() : 0);
+        const supabaseId = value => (/^\d+$/.test(String(value ?? '')) ? Number(value) : value);
+
+        function getSupabaseClient() {
+            const client = window.supabaseClient || window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+            return client && typeof client.from === 'function' ? client : null;
+        }
+
+        function isMissingSupabaseTableError(error) {
+            const text = `${error?.code || ''} ${error?.status || ''} ${error?.message || ''} ${error?.details || ''}`.toLowerCase();
+            return text.includes('pgrst205') || text.includes('could not find the table') || text.includes('schema cache') || text.includes('404');
+        }
+
+        function supabaseSetupMessage(tableName, label = tableName) {
+            const setupHint = tableName === 'questions'
+                ? 'Hãy chạy file supabase-questions-setup.sql trong Supabase SQL Editor để tạo bảng và seed dữ liệu mẫu.'
+                : `Bảng ${tableName} chưa sẵn sàng trên Supabase. Tạo bảng này hoặc bỏ qua module ${label} trong môi trường dev.`;
+            return `<p class="ops-muted"><strong>${escapeHtml(label)}</strong> chưa có dữ liệu vì bảng <code>${escapeHtml(tableName)}</code> chưa tồn tại trên Supabase. ${escapeHtml(setupHint)}</p>`;
+        }
+
+        function isoTimeToMs(value) {
+            if (!value) return 0;
+            const parsed = Date.parse(value);
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function normalizeQuestionRow(row = {}) {
+            const options = Array.isArray(row.options)
+                ? row.options
+                : [row.option_a, row.option_b, row.option_c, row.option_d, row.option0, row.option1, row.option2, row.option3, row.answer0, row.answer1, row.answer2, row.answer3].filter(value => value !== undefined && value !== null);
+            const answer = Number(row.correct_option ?? row.answer ?? row.correctAnswer ?? row.correct_answer ?? row.correct_index ?? 0);
+            return {
+                ...row,
+                question: row.question ?? row.questionText ?? row.question_text ?? '',
+                options,
+                answer: Number.isInteger(answer) ? answer : 0,
+                correctAnswer: Number.isInteger(answer) ? answer : 0,
+                province: row.province ?? row.province_slug ?? '',
+                difficulty: row.difficulty ?? 'easy',
+                subIsland: row.subIsland ?? row.sub_island ?? row.islandIndex ?? row.island_index ?? '',
+                islandIndex: row.islandIndex ?? row.island_index ?? row.subIsland ?? row.sub_island ?? '',
+                island: row.island ?? '',
+                topic: row.topic ?? row.lessonTitle ?? row.lesson_title ?? '',
+                islandTheory: row.islandTheory ?? row.island_theory ?? row.islandTheoryContent ?? row.island_theory_content ?? '',
+                explanation: row.theory ?? row.explanation ?? row.solution ?? row.explain ?? '',
+                hint1: row.hint1 ?? '',
+                hint2: row.hint2 ?? ''
+            };
+        }
+
+        function toSupabaseDoc(row, index = 0) {
+            const rawId = row?.id ?? row?.uuid ?? row?.question_id ?? `row-${index}`;
+            const data = normalizeQuestionRow(row || {});
+            return { id: String(rawId), rawId, data: () => data };
+        }
+
+        function reportTableTime(row) {
+            return timestampToMs(row.createdAt) || Number(row.createdAtClient) || isoTimeToMs(row.created_at) || isoTimeToMs(row.createdAt) || 0;
+        }
 
         function showToast(message, icon = 'success') {
             if (window.Swal) return Swal.fire({toast:true,position:'top-end',showConfirmButton:false,timer:2600,icon,title:message,background:'#102238',color:'#fff'});
@@ -319,12 +407,26 @@
         }
 
         async function loadUsers() {
-            if (typeof db === 'undefined') return;
-            const snapshot = await db.collection('users').limit(100).get();
-            state.users = snapshot.docs.map(doc => {
-                const data = doc.data() || {};
+            const client = getSupabaseClient();
+            const body = el('usersList');
+            if (!client) {
+                if (body) body.innerHTML = '<tr><td colspan="5" class="ops-muted">Supabase chưa sẵn sàng.</td></tr>';
+                return;
+            }
+            const { data, error } = await client.from('users').select('*');
+            if (error) {
+                console.warn('Supabase users select error:', error);
+                state.users = [];
+                renderUsers();
+                renderLiveSessions();
+                return;
+            }
+            state.users = (Array.isArray(data) ? data : []).map((data, index) => {
+                const id = data.id ?? data.email ?? `user-${index}`;
                 const userRoles = normalizeUserRoles(data);
-                return { id: doc.id, email: data.email || doc.id, name: data.name || 'Người dùng', roles: userRoles, activeRole: userRoles.includes(data.activeRole) ? data.activeRole : userRoles[0], lastActive: timestampToMs(data.lastActive) };
+                const activeRole = data.activeRole || data.active_role || data.role;
+                const lastActive = timestampToMs(data.lastActive) || Number(data.last_active_client) || isoTimeToMs(data.last_active);
+                return { id: String(id), rawId: id, email: data.email || String(id), name: data.name || data.full_name || 'Người dùng', roles: userRoles, activeRole: userRoles.includes(activeRole) ? activeRole : userRoles[0], lastActive };
             });
             renderUsers(); renderLiveSessions();
         }
@@ -335,14 +437,24 @@
             const user = state.users.find(item => item.id === userId);
             const activeRole = validRoles.includes(user?.activeRole) ? user.activeRole : validRoles[0];
             try {
-                await db.collection('users').doc(userId).set({ roles: validRoles, role: activeRole, activeRole, updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date() }, { merge: true });
+                const client = getSupabaseClient();
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const { error } = await client.from('users').update({ roles: validRoles, role: activeRole, active_role: activeRole, updated_at: new Date().toISOString() }).eq('id', supabaseId(user?.rawId ?? userId));
+                if (error) throw error;
                 if (user) { user.roles = validRoles; user.activeRole = activeRole; }
                 showToast('Đã lưu các quyền người dùng.');
             } catch (error) { console.error(error); showToast('Không thể cập nhật quyền người dùng.', 'error'); }
         }
 
         async function kickUser(userId) {
-            try { await db.collection('users').doc(userId).set({ forceLogout: true }, { merge: true }); showToast('Đã yêu cầu đăng xuất phiên người dùng.'); }
+            try {
+                const client = getSupabaseClient();
+                const user = state.users.find(item => item.id === userId);
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const { error } = await client.from('users').update({ force_logout: true, forceLogout: true }).eq('id', supabaseId(user?.rawId ?? userId));
+                if (error) throw error;
+                showToast('Đã yêu cầu đăng xuất phiên người dùng.');
+            }
             catch (error) { console.error(error); showToast('Không thể thực hiện thao tác.', 'error'); }
         }
 
@@ -354,18 +466,28 @@
         }
 
         async function loadRequests() {
-            const list = el('requestsList'); if (typeof db === 'undefined') return;
+            const list = el('requestsList');
+            const client = getSupabaseClient();
+            if (!list || !client) return;
             try {
-                const snapshot = await db.collection('premium_requests').where('status','==','pending').get();
-                if (snapshot.empty) { list.innerHTML = '<p class="ops-muted">Không có yêu cầu Premium đang chờ duyệt.</p>'; return; }
-                list.innerHTML = snapshot.docs.map(doc => { const data = doc.data() || {}; return `<div class="ops-list-item"><div><strong>${escapeHtml(data.name || 'Người dùng')}</strong><br><small class="ops-muted">${escapeHtml(data.email || doc.id)}</small></div><div><button class="ops-button" data-premium-approve="${doc.id}" data-premium-email="${escapeHtml(data.email || '')}" type="button">Duyệt</button> <button class="ops-button is-danger" data-premium-reject="${doc.id}" type="button">Từ chối</button></div></div>`; }).join('');
+                const { data, error } = await client.from('premium_requests').select('*').eq('status', 'pending');
+                if (error) throw error;
+                const rows = Array.isArray(data) ? data : [];
+                if (!rows.length) { list.innerHTML = '<p class="ops-muted">Không có yêu cầu Premium đang chờ duyệt.</p>'; return; }
+                list.innerHTML = rows.map(row => { const requestId = row.id ?? row.uuid ?? row.email; return `<div class="ops-list-item"><div><strong>${escapeHtml(row.name || 'Người dùng')}</strong><br><small class="ops-muted">${escapeHtml(row.email || requestId)}</small></div><div><button class="ops-button" data-premium-approve="${escapeHtml(requestId)}" data-premium-email="${escapeHtml(row.email || '')}" type="button">Duyệt</button> <button class="ops-button is-danger" data-premium-reject="${escapeHtml(requestId)}" type="button">Từ chối</button></div></div>`; }).join('');
             } catch (error) { list.innerHTML = '<p class="ops-muted">Không thể tải yêu cầu Premium.</p>'; console.error(error); }
         }
 
         async function updateRequest(requestId, email, status) {
             try {
-                if (status === 'approved' && email) await db.collection('users').doc(email).set({ accountStatus: 'premium' }, { merge: true });
-                await db.collection('premium_requests').doc(requestId).set({ status, reviewedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date() }, { merge: true });
+                const client = getSupabaseClient();
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                if (status === 'approved' && email) {
+                    const { error: userError } = await client.from('users').update({ account_status: 'premium', accountStatus: 'premium' }).eq('email', email);
+                    if (userError) console.warn('Supabase premium user update error:', userError);
+                }
+                const { error } = await client.from('premium_requests').update({ status, reviewed_at: new Date().toISOString() }).eq('id', supabaseId(requestId));
+                if (error) throw error;
                 showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu.'); loadRequests();
             } catch (error) { console.error(error); showToast('Không thể cập nhật yêu cầu.', 'error'); }
         }
@@ -373,11 +495,11 @@
         const ERROR_REPORT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
         function reportTime(report) {
-            return timestampToMs(report.createdAt) || Number(report.createdAtClient) || 0;
+            return timestampToMs(report.createdAt) || Number(report.createdAtClient) || reportTableTime(report) || 0;
         }
 
         function isExpiredResolvedReport(report) {
-            const resolvedAt = timestampToMs(report.resolvedAt) || Number(report.resolvedAtClient) || 0;
+            const resolvedAt = timestampToMs(report.resolvedAt) || Number(report.resolvedAtClient) || isoTimeToMs(report.resolved_at) || 0;
             return Boolean(resolvedAt && (Date.now() - resolvedAt > ERROR_REPORT_RETENTION_MS));
         }
 
@@ -427,15 +549,27 @@
         }
 
         async function loadErrorReports() {
-            if (typeof db === 'undefined') return;
+            const client = getSupabaseClient();
+            if (!client) return;
             try {
-                const snapshot = await db.collection('ErrorReports').get();
-                state.errorReports = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+                const { data, error } = await client.from('error_reports').select('*');
+                if (error) throw error;
+                state.errorReports = (Array.isArray(data) ? data : []).map((row, index) => ({
+                    ...row,
+                    id: String(row.id ?? row.uuid ?? `error-${index}`),
+                    rawId: row.id ?? row.uuid ?? `error-${index}`,
+                    senderName: row.senderName ?? row.sender_name,
+                    senderId: row.senderId ?? row.sender_id,
+                    createdAtClient: row.createdAtClient ?? row.created_at_client
+                }));
                 renderErrorReportViews();
             } catch (error) {
-                console.error('Không thể tải báo cáo lỗi:', error);
-                if (el('metricErrors')) el('metricErrors').textContent = '—';
-                if (el('systemErrorList')) el('systemErrorList').innerHTML = '<p class="ops-muted">Không thể tải báo cáo lỗi.</p>';
+                console.warn('Supabase error_reports select error:', error);
+                state.errorReports = [];
+                if (el('metricErrors')) el('metricErrors').textContent = isMissingSupabaseTableError(error) ? '0' : '—';
+                if (el('systemErrorList')) el('systemErrorList').innerHTML = isMissingSupabaseTableError(error)
+                    ? supabaseSetupMessage('error_reports', 'Báo cáo lỗi')
+                    : '<p class="ops-muted">Không thể tải báo cáo lỗi từ Supabase. Vui lòng kiểm tra mạng hoặc cấu hình RLS.</p>';
             }
         }
 
@@ -443,12 +577,16 @@
             if (!reportId || !['resolved', 'rejected'].includes(status)) return;
             try {
                 const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-                await db.collection('ErrorReports').doc(reportId).set({
+                const client = getSupabaseClient();
+                const report = state.errorReports.find(item => item.id === reportId);
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const { error } = await client.from('error_reports').update({
                     status,
-                    resolvedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
-                    resolvedAtClient: Date.now(),
-                    resolvedBy: session.email || 'admin'
-                }, { merge: true });
+                    resolved_at: new Date().toISOString(),
+                    resolved_at_client: Date.now(),
+                    resolved_by: session.email || 'admin'
+                }).eq('id', supabaseId(report?.rawId ?? reportId));
+                if (error) throw error;
                 showToast(status === 'resolved' ? 'Đã đánh dấu lỗi là đã xử lý.' : 'Đã từ chối xử lý báo cáo lỗi.');
                 await loadErrorReports();
             } catch (error) {
@@ -468,15 +606,30 @@
         }
 
         async function loadUserFeedbacks() {
-            if (typeof db === 'undefined') return;
             const list = el('userFeedbackList');
+            const client = getSupabaseClient();
+            if (!client) {
+                if (list) list.innerHTML = '<p class="ops-muted">Supabase chưa sẵn sàng.</p>';
+                return;
+            }
             try {
-                const snapshot = await db.collection('UserFeedbacks').get();
-                state.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) })).sort((left, right) => reportTime(right) - reportTime(left));
+                const { data, error } = await client.from('user_feedbacks').select('*');
+                if (error) throw error;
+                state.feedbacks = (Array.isArray(data) ? data : []).map((row, index) => ({
+                    ...row,
+                    id: String(row.id ?? row.uuid ?? `feedback-${index}`),
+                    rawId: row.id ?? row.uuid ?? `feedback-${index}`,
+                    senderName: row.senderName ?? row.sender_name,
+                    senderId: row.senderId ?? row.sender_id,
+                    createdAtClient: row.createdAtClient ?? row.created_at_client
+                })).sort((left, right) => reportTime(right) - reportTime(left));
                 renderFeedbacks();
             } catch (error) {
-                console.error('Không thể tải góp ý người dùng:', error);
-                if (list) list.innerHTML = '<p class="ops-muted">Không thể tải góp ý người dùng.</p>';
+                console.warn('Supabase user_feedbacks select error:', error);
+                state.feedbacks = [];
+                if (list) list.innerHTML = isMissingSupabaseTableError(error)
+                    ? supabaseSetupMessage('user_feedbacks', 'Góp ý người dùng')
+                    : '<p class="ops-muted">Không thể tải góp ý người dùng từ Supabase. Vui lòng kiểm tra mạng hoặc cấu hình RLS.</p>';
             }
         }
 
@@ -487,7 +640,11 @@
                 : window.confirm('Xóa góp ý này?');
             if (!confirmed) return;
             try {
-                await db.collection('UserFeedbacks').doc(feedbackId).delete();
+                const client = getSupabaseClient();
+                const feedback = state.feedbacks.find(item => item.id === feedbackId);
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const { error } = await client.from('user_feedbacks').delete().eq('id', supabaseId(feedback?.rawId ?? feedbackId));
+                if (error) throw error;
                 showToast('Đã xóa góp ý.');
                 await loadUserFeedbacks();
             } catch (error) {
@@ -497,18 +654,27 @@
         }
 
         async function loadOverview() {
-            if (typeof db === 'undefined') return;
+            const client = getSupabaseClient();
+            if (!client) {
+                el('metricOnline').textContent = '—'; el('metricSubmissions').textContent = '—'; el('metricErrors').textContent = '—';
+                return;
+            }
             try {
-                const usersSnapshot = await db.collection('users').limit(200).get();
-                const users = usersSnapshot.docs.map(doc => doc.data() || {});
-                el('metricOnline').textContent = users.filter(user => Date.now() - timestampToMs(user.lastActive) <= 90000).length;
-                const submissions = await db.collection('submissions').limit(500).get();
-                el('metricSubmissions').textContent = submissions.size;
+                const [usersResult, submissionsResult] = await Promise.all([
+                    client.from('users').select('*'),
+                    client.from('submissions').select('*')
+                ]);
+                if (usersResult.error) console.warn('Supabase users metric error:', usersResult.error);
+                if (submissionsResult.error) console.warn('Supabase submissions metric error:', submissionsResult.error);
+                const users = Array.isArray(usersResult.data) ? usersResult.data : [];
+                const submissions = Array.isArray(submissionsResult.data) ? submissionsResult.data : [];
+                el('metricOnline').textContent = users.filter(user => Date.now() - (timestampToMs(user.lastActive) || Number(user.last_active_client) || isoTimeToMs(user.last_active)) <= 90000).length;
+                el('metricSubmissions').textContent = submissions.length;
                 await loadErrorReports();
             } catch (error) {
-                console.warn('Không thể nạp đủ chỉ số vận hành:', error);
+                console.warn('Không thể nạp đủ chỉ số vận hành từ Supabase:', error);
                 el('metricOnline').textContent = '—'; el('metricSubmissions').textContent = '—'; el('metricErrors').textContent = '—';
-                el('systemErrorList').innerHTML = '<p class="ops-muted">Thông tin vận hành sẽ hiển thị khi collection đã sẵn sàng.</p>';
+                el('systemErrorList').innerHTML = '<p class="ops-muted">Thông tin vận hành sẽ hiển thị khi bảng Supabase đã sẵn sàng.</p>';
             }
         }
 
@@ -559,38 +725,39 @@
                 showToast('Hãy chọn Tỉnh/Thành phố, Đảo nhỏ và nhập Chủ đề bài học.', 'warning');
                 return;
             }
-            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-            if (!firestore) {
-                showToast('Firebase chưa sẵn sàng để lưu câu hỏi.', 'error');
-                return;
-            }
 
             button.disabled = true;
             button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang phân tích…';
             try {
                 const questions = parseBulkQuestionText(el('bulkQuestionText')?.value);
-                for (let start = 0; start < questions.length; start += 450) {
-                    const batch = firestore.batch();
-                    questions.slice(start, start + 450).forEach((question, offset) => {
-                        const doc = firestore.collection('Questions').doc();
-                        batch.set(doc, {
-                            ...question,
-                            province,
-                            subIsland: subIslandNum,
-                            islandIndex: subIslandNum,
-                            island: `Đảo nhỏ ${subIslandNum}`,
-                            topic,
-                            islandTheory,
-                            importOrder: start + offset + 1,
-                            createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
-                            updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
-                        });
-                    });
-                    await batch.commit();
-                }
-                el('uploadPreview').textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions }, null, 2);
-                showToast(`Đã lưu ${questions.length} câu hỏi vào kho dữ liệu.`);
+                const newQuestions = questions.map((q, idx) => ({
+                    question: q.question,
+                    option_a: q.options[0],
+                    option_b: q.options[1],
+                    option_c: q.options[2],
+                    option_d: q.options[3],
+                    correct_option: q.answer,
+                    province,
+                    island: `Đảo nhỏ ${subIslandNum}`,
+                    topic,
+                    theory: q.explanation || '',
+                    hint1: '',
+                    hint2: '',
+                    difficulty: q.difficulty,
+                    sub_island: subIslandNum,
+                    island_theory: islandTheory,
+                    import_order: idx + 1,
+                    created_at: new Date().toISOString()
+                }));
+
+                const client = getSupabaseClient();
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const { data, error } = await client.from('questions').insert(newQuestions);
+                if (error) { console.error('Supabase bulk insert error:', error); throw error; }
+                el('uploadPreview').textContent = JSON.stringify({ province, subIsland: subIslandNum, topic, count: questions.length, questions: newQuestions }, null, 2);
+                showToast(`Đã lưu ${questions.length} câu hỏi vào Supabase.`);
                 el('bulkQuestionText').value = '';
+                await loadAdminQuestions();
             } catch (error) {
                 console.error(error);
                 showToast(error.message || 'Không thể phân tích nội dung đã dán.', 'error');
@@ -623,29 +790,33 @@
 
             const newQuestion = {
                 question,
-                options,
-                answer,
+                option_a: options[0],
+                option_b: options[1],
+                option_c: options[2],
+                option_d: options[3],
+                correct_option: answer,
                 province,
-                subIsland: subIslandNum,
-                islandIndex: subIslandNum,
                 island: `Đảo nhỏ ${subIslandNum}`,
                 topic,
+                theory: explanation,
+                hint1: '',
+                hint2: '',
                 difficulty,
-                islandTheory,
-                explanation,
-                createdAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date(),
-                updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+                sub_island: subIslandNum,
+                island_theory: islandTheory,
+                created_at: new Date().toISOString()
             };
 
             button.disabled = true;
             button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
             try {
-                const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-                if (!firestore) throw new Error('Firebase chưa sẵn sàng.');
-                await firestore.collection('Questions').add(newQuestion);
+                const client = getSupabaseClient();
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const { data, error } = await client.from('questions').insert([newQuestion]);
+                if (error) { console.error('Supabase insert single error:', error); throw error; }
                 form.reset();
-                showToast('Thêm câu hỏi thành công!');
-                loadAdminQuestions();
+                showToast('Thêm câu hỏi thành công vào Supabase!');
+                await loadAdminQuestions();
             } catch (error) {
                 console.error('Lỗi thêm câu hỏi:', error);
                 showToast('Có lỗi xảy ra, vui lòng thử lại!', 'error');
@@ -697,9 +868,9 @@
             const docSubIsland = data.subIsland || data.islandIndex || (typeof data.island === 'number' ? data.island : (String(data.island || '').match(/\d+/)?.[0] || ''));
             if (el('editQuestionSubIsland')) el('editQuestionSubIsland').value = docSubIsland ? `Đảo nhỏ ${docSubIsland}` : (data.island || '');
             el('editQuestionTopic').value = data.topic || data.lessonTitle || '';
-            el('editQuestionLessonId').value = data.lessonId || '';
+            el('editQuestionLessonId').value = data.lessonId || data.lesson_id || '';
             el('editIslandTheory').value = data.islandTheory || data.islandTheoryContent || data.islandTheoryText || '';
-            el('editQuestionExplanation').value = data.explanation || data.solution || data.explain || data.theory || '';
+            el('editQuestionExplanation').value = data.explanation || data.theory || data.solution || data.explain || '';
             setQuestionEditorOpen(true);
             el('editQuestionText')?.focus();
         }
@@ -720,9 +891,8 @@
             const islandTheory = el('editIslandTheory')?.value.trim();
             const explanation = el('editQuestionExplanation')?.value.trim();
             const button = el('btnUpdateAdminQuestion');
-            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
 
-            if (!questionId || !question || options.some((option) => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !difficulty || !firestore) {
+            if (!questionId || !question || options.some((option) => !option) || !Number.isInteger(answer) || answer < 0 || answer > 3 || !province || !difficulty) {
                 showToast('Hãy nhập đủ nội dung, bốn đáp án và đáp án đúng trước khi lưu.', 'warning');
                 return;
             }
@@ -730,25 +900,33 @@
             button.disabled = true;
             button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
             try {
-                await firestore.collection('Questions').doc(questionId).update({
+                const client = getSupabaseClient();
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const updateData = {
                     question,
-                    options,
-                    answer,
-                    correctAnswer: answer,
+                    option_a: options[0],
+                    option_b: options[1],
+                    option_c: options[2],
+                    option_d: options[3],
+                    correct_option: answer,
                     province,
-                    difficulty,
-                    grade,
-                    subIsland: subIslandNum,
-                    islandIndex: subIslandNum,
                     island: subIslandNum ? `Đảo nhỏ ${subIslandNum}` : topic,
                     topic,
-                    lessonId,
-                    islandTheory,
-                    explanation,
-                    updatedAt: (window.firebase && firebase.firestore && firebase.firestore.FieldValue) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
-                });
+                    theory: explanation,
+                    hint1: '',
+                    hint2: '',
+                    difficulty,
+                    grade,
+                    sub_island: subIslandNum,
+                    lesson_id: lessonId,
+                    island_theory: islandTheory,
+                    updated_at: new Date().toISOString()
+                };
+                const doc = adminQuestionDocuments.get(String(questionId));
+                const { error } = await client.from('questions').update(updateData).eq('id', supabaseId(doc?.rawId ?? questionId));
+                if (error) { console.error('Supabase update error:', error); throw error; }
                 setQuestionEditorOpen(false);
-                showToast('Đã cập nhật câu hỏi!');
+                showToast('Đã cập nhật câu hỏi trên Supabase!');
                 await loadAdminQuestions();
             } catch (error) {
                 console.error('Lỗi cập nhật câu hỏi:', error);
@@ -761,15 +939,14 @@
 
         async function deleteAdminQuestion(questionId) {
             if (!questionId || !window.confirm('Bạn có chắc chắn muốn xóa câu hỏi này không?')) return;
-            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-            if (!firestore) {
-                showToast('Firebase chưa sẵn sàng để xóa câu hỏi.', 'error');
-                return;
-            }
             try {
-                await firestore.collection('Questions').doc(questionId).delete();
+                const client = getSupabaseClient();
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const doc = adminQuestionDocuments.get(String(questionId));
+                const { error } = await client.from('questions').delete().eq('id', supabaseId(doc?.rawId ?? questionId));
+                if (error) { console.error('Supabase delete single error:', error); throw error; }
                 selectedAdminQuestionIds.delete(questionId);
-                showToast('Đã xóa câu hỏi.');
+                showToast('Đã xóa câu hỏi trên Supabase.');
                 await loadAdminQuestions();
             } catch (error) {
                 console.error('Lỗi xóa câu hỏi:', error);
@@ -886,24 +1063,30 @@
             }).join('');
         }
 
+        function renderAdminQuestionsTable(questionDocs, emptyMessage) {
+            renderAdminQuestionList(questionDocs, emptyMessage);
+        }
+
         async function loadAdminQuestions() {
             const body = el('adminQuestionsList');
-            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-            if (!body || !firestore) return;
-            body.innerHTML = '<tr><td colspan="6" class="ops-muted">Đang tải câu hỏi…</td></tr>';
+            if (!body) return;
+            body.innerHTML = '<tr><td colspan="6" class="ops-muted">Đang tải câu hỏi từ Supabase…</td></tr>';
             try {
-                const snapshot = await firestore.collection('Questions').limit(200).get();
-                const existingIds = new Set(snapshot.docs.map(doc => doc.id));
-                selectedAdminQuestionIds.forEach(id => {
-                    if (!existingIds.has(id)) selectedAdminQuestionIds.delete(id);
-                });
-                allAdminQuestionDocuments = snapshot.docs;
+                const client = getSupabaseClient();
+                let questions = [];
+                if (!client) throw new Error('Supabase chưa sẵn sàng.');
+                const { data, error } = await client.from('questions').select('*');
+                if (error) { console.error('Supabase select error:', error); throw error; }
+                if (Array.isArray(data)) questions = data.map(toSupabaseDoc);
+                adminQuestionDocuments.clear();
+                allAdminQuestionDocuments = questions;
                 refreshQuestionFilterOptions();
                 applyQuestionFilters();
             } catch (error) {
-                console.error('Lỗi tải danh sách câu hỏi:', error);
-                body.innerHTML = '<tr><td colspan="5" class="ops-muted">Không thể tải danh sách câu hỏi.</td></tr>';
-                showToast('Không thể tải danh sách câu hỏi.', 'error');
+                console.warn('Supabase questions select error:', error);
+                body.innerHTML = isMissingSupabaseTableError(error)
+                    ? `<tr><td colspan="6">${supabaseSetupMessage('questions', 'Danh sách câu hỏi')}</td></tr>`
+                    : '<tr><td colspan="6" class="ops-muted">Không thể tải danh sách câu hỏi từ Supabase. Vui lòng kiểm tra mạng hoặc cấu hình RLS.</td></tr>';
             }
         }
 
@@ -913,9 +1096,9 @@
             if (!window.confirm(`Bạn có chắc chắn muốn xóa ${ids.length} câu hỏi đã chọn không?`)) return;
 
             const button = el('btnDeleteSelectedQuestions');
-            const firestore = window.db || (typeof db !== 'undefined' ? db : null);
-            if (!button || !firestore) {
-                showToast('Firebase chưa sẵn sàng để xóa câu hỏi.', 'error');
+            const client = getSupabaseClient();
+            if (!button || !client) {
+                showToast('Supabase chưa sẵn sàng để xóa câu hỏi.', 'error');
                 return;
             }
 
@@ -923,10 +1106,13 @@
             button.setAttribute('aria-disabled', 'true');
             button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
             try {
-                for (let start = 0; start < ids.length; start += 450) {
-                    const batch = firestore.batch();
-                    ids.slice(start, start + 450).forEach(id => batch.delete(firestore.collection('Questions').doc(id)));
-                    await batch.commit();
+                for (let start = 0; start < ids.length; start += 500) {
+                    const rawIds = ids.slice(start, start + 500).map(id => {
+                        const doc = adminQuestionDocuments.get(String(id));
+                        return supabaseId(doc?.rawId ?? id);
+                    });
+                    const { error } = await client.from('questions').delete().in('id', rawIds);
+                    if (error) { console.error('Supabase delete selected error:', error); throw error; }
                 }
                 selectedAdminQuestionIds.clear();
                 showToast('Đã xóa thành công!');
@@ -1029,9 +1215,30 @@
                 const choice = await Swal.fire({title:'Chuyển vai trò',input:'select',inputOptions:Object.fromEntries(allowed.map(role => [role, roleLabels[role]])),inputValue:allowed.includes('admin') ? 'admin' : allowed[0],showCancelButton:true,confirmButtonText:'Chuyển'}); if (choice.isConfirmed) switchRole(choice.value);
             });
             el('adminLogout').addEventListener('click', () => { try { localStorage.removeItem('lm_session'); } finally { window.location.href = '/loginout'; } });
-            if (typeof db === 'undefined') { el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Firebase chưa sẵn sàng'; return; }
-            el('adminConnectionStatus').innerHTML = '<i class="fa-solid fa-circle" style="color:#4ade80"></i> Firebase đã kết nối';
-            Promise.all([loadOverview(), loadUsers(), loadRequests(), loadAdminQuestions(), loadUserFeedbacks()]).catch(error => console.error(error));
+            const adminSupabase = getSupabaseClient();
+            el('adminConnectionStatus').innerHTML = adminSupabase
+                ? '<i class="fa-solid fa-circle" style="color:#4ade80"></i> Supabase đã kết nối'
+                : '<i class="fa-solid fa-triangle-exclamation"></i> Supabase chưa sẵn sàng';
+            
+            // Expose functions to window scope for inline HTML event handlers
+            window.renderAdminQuestionsTable = renderAdminQuestionsTable;
+            window.loadAdminQuestions = loadAdminQuestions;
+            window.loadAdminData = loadAdminQuestions;
+            window.processBulkTextImport = processBulkTextImport;
+            window.submitAdminQuestion = submitAdminQuestion;
+            window.updateAdminQuestion = updateAdminQuestion;
+            window.deleteAdminQuestion = deleteAdminQuestion;
+            window.deleteSelectedAdminQuestions = deleteSelectedAdminQuestions;
+            window.switchQuestionEntryMode = switchQuestionEntryMode;
+            window.setQuestionEditorOpen = setQuestionEditorOpen;
+            window.openQuestionEditor = openQuestionEditor;
+            window.applyQuestionFilters = applyQuestionFilters;
+            window.openQuestionEditor = openQuestionEditor;
+
+            Promise.allSettled([loadOverview(), loadUsers(), loadRequests(), loadAdminQuestions(), loadUserFeedbacks()])
+                .then(results => results
+                    .filter(result => result.status === 'rejected')
+                    .forEach(result => console.warn('Admin loader skipped:', result.reason)));
         });
     })();
     </script>
@@ -1074,7 +1281,7 @@
     </script>
     <div id="adminQuestionEditModal" hidden role="dialog" aria-modal="true" aria-labelledby="adminQuestionEditTitle" style="position:fixed;inset:0;z-index:2147483647;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(2,6,23,.78);backdrop-filter:blur(6px)">
         <form id="adminQuestionEditForm" class="ops-card" style="width:min(820px,100%);max-height:calc(100vh - 48px);overflow:auto;padding:24px;box-shadow:0 24px 80px rgba(0,0,0,.45)" novalidate>
-            <div class="operations-heading" style="margin-bottom:18px"><div><h2 id="adminQuestionEditTitle" style="margin:0">Sửa câu hỏi</h2><p class="ops-muted" style="margin:6px 0 0">Cập nhật nội dung và lưu trực tiếp vào Firestore.</p></div><button class="ops-button is-muted" type="button" data-close-question-editor title="Đóng"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="operations-heading" style="margin-bottom:18px"><div><h2 id="adminQuestionEditTitle" style="margin:0">Sửa câu hỏi</h2><p class="ops-muted" style="margin:6px 0 0">Cập nhật nội dung và lưu trực tiếp vào Supabase.</p></div><button class="ops-button is-muted" type="button" data-close-question-editor title="Đóng"><i class="fa-solid fa-xmark"></i></button></div>
             <input id="editQuestionId" type="hidden">
             <label class="ops-muted">Nội dung câu hỏi<textarea class="ops-input" id="editQuestionText" rows="3" required style="display:block;width:100%;margin-top:7px;resize:vertical"></textarea></label>
             <div class="ops-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px">

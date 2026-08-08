@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="bento.css">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="supabaseClient.js"></script>
 </head>
 <body class="student-app min-h-screen w-full overflow-y-auto pb-32">
 
@@ -83,8 +84,9 @@
 
             <!-- TAB: MAP (LEARN) -->
             <div id="tabMap" class="tab-pane active">
-                <div class="map-view-heading" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div class="map-view-heading" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
                     <div><h2 style="font-size: 2rem;" id="mapTitle">Khám Phá Việt Nam</h2></div>
+                    <div id="mapHeaderActions"></div>
                 </div>
                 
                 <!-- Khu vực chuẩn bị nhúng SVG Bản đồ Việt Nam tương tác trong giai đoạn tiếp theo. -->
@@ -107,6 +109,32 @@
                         <div class="island-theory-sticky-action"><button id="btnStartIslandQuiz" class="island-theory-start w-full" type="button" disabled aria-disabled="true"><i class="fa-solid fa-play"></i> Đã hiểu &amp; Bắt đầu làm bài</button></div>
                     </div>
                 </section>
+            </div>
+
+            <!-- MODAL XEM LẠI TOÀN BỘ LÝ THUYẾT 34 ĐẢO -->
+            <div id="allIslandsTheoryModal" class="fixed inset-0 z-[99999] bg-slate-900/95 backdrop-blur-xl text-white overflow-y-auto p-6 md:p-12 hidden" role="dialog" aria-modal="true" aria-labelledby="allTheoryModalTitle" hidden style="display:none;">
+                <div class="max-w-5xl mx-auto relative pt-4">
+                    <button id="btnCloseAllTheoryModal" onclick="closeAllIslandsTheoryModal()" class="fixed top-6 right-6 md:top-8 md:right-10 w-12 h-12 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xl transition-all shadow-xl z-50 border border-slate-700 cursor-pointer" type="button" aria-label="Đóng lý thuyết tổng hợp">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <div class="mb-8 pr-14">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 text-xs font-extrabold uppercase tracking-wider mb-3">
+                            <i class="fa-solid fa-book-bookmark"></i> ÔN TẬP TỔNG HỢP 34 ĐẢO TRI THỨC
+                        </div>
+                        <h2 id="allTheoryModalTitle" class="text-2xl md:text-4xl font-black text-white tracking-tight">TỔNG HỢP LÝ THUYẾT CÁC ĐẢO TRI THỨC</h2>
+                        <p id="allTheoryModalSub" class="text-slate-400 text-sm md:text-base mt-2">Tổng hợp toàn bộ kiến thức 34 Đảo tri thức giúp học sinh ôn luyện hiệu quả.</p>
+                    </div>
+
+                    <div class="relative mb-8">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                        <input type="text" id="allTheorySearchInput" class="w-full bg-slate-800/90 border border-slate-700 focus:border-amber-500 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-slate-400 text-base outline-none transition-all shadow-inner" placeholder="Tìm kiếm từ khóa lý thuyết (VD: khí hậu, địa hình, dân số)...">
+                    </div>
+
+                    <div id="allTheoryCardsContainer" class="grid grid-cols-1 gap-6 pb-16">
+                        <!-- 34 cards injected by JS -->
+                    </div>
+                </div>
             </div>
 
             <div id="islandQuizModal" class="island-theory-modal fixed inset-0 z-[999999] hidden" role="dialog" aria-modal="true" aria-labelledby="islandQuizTitle" hidden>
