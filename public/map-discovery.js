@@ -30,6 +30,9 @@ var selectedAnswer=-1;
 var activeQuestionSet=[];
 var quizCompleted=false;
 var ISLAND_QUESTION_LIMIT=5;
+var activeQuestionBankSize=0;
+var activeQuestionLoadState="idle";
+var questionLoadRequestId=0;
 
 var regionData={
     north:{name:"Miền Bắc",description:"Khám phá các tỉnh thành miền Bắc từ vùng núi cao đến đồng bằng sông Hồng.",provinces:["Hà Nội","Hải Phòng","Quảng Ninh","Hà Giang","Cao Bằng","Bắc Kạn","Tuyên Quang","Lào Cai","Yên Bái","Thái Nguyên","Lạng Sơn","Bắc Giang","Phú Thọ","Vĩnh Phúc","Bắc Ninh","Hải Dương","Hưng Yên","Thái Bình","Hà Nam","Nam Định","Ninh Bình","Hòa Bình","Sơn La","Điện Biên","Lai Châu"]},
@@ -236,6 +239,90 @@ function getCurrentQuestionList(){
     return questions;
 }
 
+function normalizeProvinceKey(value){
+    try{
+        return String(value||"")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g,"")
+            .replace(/\u0111/gi,"d")
+            .replace(/[^a-z0-9]+/gi,"-")
+            .replace(/^-|-$/g,"")
+            .toLowerCase()
+            .replace(/^tp-/,"");
+    }catch(error){
+        return String(value||"").trim().toLowerCase().replace(/^tp[.\s-]*/,"");
+    }
+}
+
+function normalizeBankQuestion(row){
+    var source=row||{};
+    var options=Array.isArray(source.options)
+        ? source.options
+        : [source.option_a,source.option_b,source.option_c,source.option_d];
+    var correctAnswer=Number(source.correct_option??source.correctAnswer??source.answer??0);
+
+    options=options.map(function(value){
+        return String(value||"").trim();
+    }).filter(Boolean);
+
+    return {
+        question:String(source.question||source.question_text||source.questionText||"").trim(),
+        options:options,
+        correctAnswer:Number.isFinite(correctAnswer)?correctAnswer:0,
+        explanation:String(source.explanation||source.theory||source.island_theory||"").trim()
+    };
+}
+
+async function fetchIslandQuestionBank(){
+    var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
+    var provinceId=normalizeProvinceKey(selectedProvince);
+    var islandName="Đảo nhỏ "+selectedStage;
+    var difficulty=getDifficulty();
+    var response;
+    var rows;
+    var validRows;
+    var matchingDifficulty;
+    var selectedPool;
+
+    if(!client||typeof client.from!=="function"){
+        throw new Error("Supabase client chưa sẵn sàng");
+    }
+
+    response=await client
+        .from("questions")
+        .select("*")
+        .eq("province",provinceId)
+        .eq("island",islandName)
+        .limit(1000);
+
+    if(response.error){
+        throw response.error;
+    }
+
+    rows=Array.isArray(response.data)?response.data:[];
+    validRows=rows.map(normalizeBankQuestion).filter(function(item){
+        return item.question&&item.options.length>=2&&item.correctAnswer>=0&&item.correctAnswer<item.options.length;
+    });
+    matchingDifficulty=rows.filter(function(item){
+        return String(item.difficulty||"easy").trim().toLowerCase()===difficulty;
+    }).map(normalizeBankQuestion).filter(function(item){
+        return item.question&&item.options.length>=2&&item.correctAnswer>=0&&item.correctAnswer<item.options.length;
+    });
+    selectedPool=matchingDifficulty.length>=ISLAND_QUESTION_LIMIT?matchingDifficulty:validRows;
+    activeQuestionBankSize=selectedPool.length;
+
+    console.info("[VieGeo Map] Đồng bộ ngân hàng câu hỏi",{
+        province:provinceId,
+        island:islandName,
+        difficulty:difficulty,
+        total:validRows.length,
+        matchingDifficulty:matchingDifficulty.length,
+        selectedPool:selectedPool.length
+    });
+
+    return shuffledQuestionSet(selectedPool);
+}
+
 function shuffledQuestionSet(questions){
     var items=Array.isArray(questions)?questions.slice():[];
     var index;
@@ -263,11 +350,11 @@ function renderQuestion(){
     var index;
 
     if(!questions.length||currentQuestionIndex>=ISLAND_QUESTION_LIMIT||currentQuestionIndex>=questions.length){
-        questionNumber.textContent="Tối đa 5 câu";
+        questionNumber.textContent="Đã tìm thấy "+String(activeQuestionBankSize)+" / 5 câu";
         questionStatus.textContent="Không thể tiếp tục";
         questionText.textContent="Đảo này cần đủ 5 câu hỏi từ ngân hàng Admin.";
         answerGrid.innerHTML="";
-        answerFeedback.textContent="Vui lòng tải đủ 5 câu hỏi đúng Tỉnh/Thành và Đảo nhỏ.";
+        answerFeedback.textContent="Ngân hàng hiện có "+String(activeQuestionBankSize)+"/5 câu hợp lệ đúng Tỉnh/Thành và Đảo nhỏ.";
         nextQuestionButton.disabled=true;
         return;
     }
@@ -346,8 +433,9 @@ function openProvince(event){
     showRoadmapView();
 }
 
-function openQuiz(event){
+async function openQuiz(event){
     var button=event.target.closest(".node-circle");
+    var currentRequestId;
 
     if(!button||button.disabled){
         return;
@@ -358,14 +446,42 @@ function openQuiz(event){
     quizStageLabel.textContent="Chặng "+selectedStage;
     currentQuestionIndex=0;
     quizCompleted=false;
-    nextQuestionButton.disabled=false;
+    selectedAnswer=-1;
+    activeQuestionSet=[];
+    activeQuestionBankSize=0;
+    activeQuestionLoadState="loading";
+    currentRequestId=++questionLoadRequestId;
+    nextQuestionButton.disabled=true;
     nextQuestionButton.textContent="CÂU TIẾP THEO";
-    activeQuestionSet=shuffledQuestionSet(getCurrentQuestionList());
-    if(activeQuestionSet.length!==ISLAND_QUESTION_LIMIT){
-        activeQuestionSet=[];
-    }
-    renderQuestion();
     showQuizView();
+    questionNumber.textContent="Đang tải ngân hàng...";
+    questionStatus.textContent="Đang đồng bộ";
+    questionText.textContent="Hệ thống đang lấy câu hỏi đúng Tỉnh/Thành và Đảo nhỏ.";
+    answerGrid.innerHTML="";
+    answerFeedback.textContent="Vui lòng chờ trong giây lát.";
+
+    try{
+        activeQuestionSet=await fetchIslandQuestionBank();
+        if(currentRequestId!==questionLoadRequestId){
+            return;
+        }
+        activeQuestionLoadState="direct-ready";
+        if(activeQuestionSet.length!==ISLAND_QUESTION_LIMIT){
+            activeQuestionSet=[];
+        }
+        nextQuestionButton.disabled=activeQuestionSet.length!==ISLAND_QUESTION_LIMIT;
+        renderQuestion();
+    }catch(error){
+        if(currentRequestId!==questionLoadRequestId){
+            return;
+        }
+        activeQuestionLoadState="error";
+        activeQuestionSet=[];
+        activeQuestionBankSize=0;
+        renderQuestion();
+        answerFeedback.textContent="Không thể đồng bộ ngân hàng câu hỏi: "+String(error?.message||error);
+        console.error("[VieGeo Map] Lỗi tải câu hỏi theo đảo:",error);
+    }
 }
 
 function nextQuestion(){
@@ -447,7 +563,7 @@ document.addEventListener("DOMContentLoaded",initializeLearningFlow);
                 return item && item.question && Array.isArray(item.options) && item.options.length >= 2;
             }) : [];
             console.info('[VieGeo Map] Đã nhận câu hỏi Supabase', { count: remoteQuestions.length });
-            if(quizView&&quizView.style.display!=="none"){
+            if(quizView&&quizView.style.display!=="none"&&activeQuestionLoadState==="idle"){
                 activeQuestionSet=shuffledQuestionSet(getCurrentQuestionList());
                 if(activeQuestionSet.length!==ISLAND_QUESTION_LIMIT){
                     activeQuestionSet=[];

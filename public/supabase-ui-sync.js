@@ -5,7 +5,7 @@
     const TABLES = new Set(['questions', 'users', 'leaderboard', 'user_feedbacks', 'error_reports']);
     const CACHE_PREFIX = 'VieGeo_supabase_cache_';
     const MOCK = {
-        questions: [{ id: 'local-question-1', question: 'Việt Nam thuộc châu lục nào?', option_a: 'Châu Á', option_b: 'Châu Âu', option_c: 'Châu Phi', option_d: 'Châu Mỹ', correct_option: 0, province: 'ha-noi', island: 'Đảo nhỏ 1', topic: 'Khám phá Việt Nam', difficulty: 'easy' }],
+        questions: [],
         users: [],
         leaderboard: [],
         user_feedbacks: [],
