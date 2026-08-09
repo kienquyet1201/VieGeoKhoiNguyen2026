@@ -82,7 +82,12 @@ document.addEventListener("click",function(event){
     if(!button){return;}
     event.preventDefault();
     event.stopImmediatePropagation();
-    openVieGeoSupportModal();
+    var modal=document.getElementById("viegeoSupportModal");
+    if(modal&&!modal.hidden&&modal.style.display!=="none"){
+        closeVieGeoSupportModal();
+    }else{
+        openVieGeoSupportModal();
+    }
 },true);
 
 document.addEventListener("keydown",function(event){

@@ -53,6 +53,8 @@ body::after{content:"";position:fixed;inset:0;z-index:0;opacity:.38;background-i
 .auth-card{position:relative;z-index:2;width:min(440px,100%);max-height:calc(100vh - 110px);overflow:auto;padding:34px;border-radius:28px;background:var(--paper);border:1px solid rgba(255,255,255,.8);box-shadow:0 20px 0 rgba(10,55,48,.25),0 35px 70px rgba(6,42,37,.35);scrollbar-width:thin}
 .auth-card::before{content:"";position:absolute;inset:12px;border:1.5px dashed rgba(31,157,138,.2);border-radius:21px;pointer-events:none}
 .auth-card::after{content:"VIEGEO PASSPORT";position:absolute;right:24px;top:18px;font-size:.58rem;letter-spacing:.18em;font-weight:900;color:rgba(23,60,69,.16)}
+.auth-card{padding:30px;border-radius:20px;background:linear-gradient(135deg,#1e293b,#0f172a);color:#e2e8f0;box-shadow:0 18px 45px rgba(15,23,42,.3)}
+.auth-title{color:#38bdf8}.auth-sub{color:#cbd5e1}
 .panel{display:none;position:relative;z-index:2;animation:panelSlide .42s cubic-bezier(.2,.8,.2,1)}.panel.active{display:block}
 .panel-badge{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;background:#e9f6f1;color:var(--teal-dark);font-size:.72rem;font-weight:900}.panel-badge-green{background:#eef7df;color:#527a20}
 .auth-title{font-size:2rem;line-height:1.15;margin:18px 0 7px;color:var(--ink);letter-spacing:-.03em}.auth-sub{margin:0 0 24px;color:var(--muted);font-size:.9rem}

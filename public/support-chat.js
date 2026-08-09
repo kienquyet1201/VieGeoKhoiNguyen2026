@@ -10,9 +10,10 @@
 
         const modal = document.querySelector('#support-chat-modal,.chat-box,#supportChatPanel,#viegeoSupportModal');
         if (modal) {
-            modal.hidden = false;
-            modal.style.display = 'block';
-            modal.classList.add('is-open');
+            const isOpen = !modal.hidden && modal.style.display !== 'none';
+            modal.hidden = isOpen;
+            modal.style.display = isOpen ? 'none' : 'block';
+            modal.classList.toggle('is-open', !isOpen);
             return;
         }
         if (typeof window.openVieGeoSupportModal === 'function') {

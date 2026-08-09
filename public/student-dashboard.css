@@ -43,6 +43,8 @@ html[data-theme="dark"] .hero-card{background:linear-gradient(135deg,#183847,#1e
 html[data-theme="dark"] .theme-toggle-btn{color:#eaf8fc;background:#193542}
 html[data-theme="dark"] .theme-toggle-track{background:#315365}
 html[data-theme="dark"] .theme-toggle-knob{left:22px;background:#f7eaa3}
+.student-header{padding:30px;border-radius:20px;background:linear-gradient(135deg,#1e293b,#0f172a);box-shadow:0 16px 36px rgba(15,23,42,.22)}
+.student-header h1{color:#38bdf8}.student-header p{color:#cbd5e1}
 .support-btn{position:fixed;right:20px;bottom:20px;z-index:10000;max-width:100%;min-height:56px;border:0;border-radius:18px;padding:9px 11px;display:flex;align-items:center;gap:10px;color:#ffffff;background:linear-gradient(135deg,#2f9fc0,#36ae7c);cursor:pointer;text-align:left;transition:transform .3s ease,box-shadow .3s ease}
 .support-btn:hover{transform:scale(1.08);box-shadow:0 14px 28px rgba(26,113,128,.28)}
 .support-badge{width:34px;height:34px;flex:0 0 34px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#174354;background:#dff7f0;font-size:9px;font-weight:900}
