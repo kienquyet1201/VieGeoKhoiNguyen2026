@@ -1842,3 +1842,28 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 .cs-queues { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid rgba(148,163,184,.16); background: rgba(15,23,42,.7); }.cs-queue-head { padding: 18px; border-bottom: 1px solid rgba(148,163,184,.13); }.cs-queue-head h2 { margin: 0 0 12px; font-size: 1.05rem; }.cs-queue-list { display: grid; gap: 4px; overflow-y: auto; padding: 8px; }.cs-queue-row { width: 100%; padding: 13px; border: 1px solid transparent; border-radius: 13px; background: transparent; color: #e7eef9; text-align: left; cursor: pointer; }.cs-queue-row:hover,.cs-queue-row.is-active { border-color: rgba(56,189,248,.24); background: rgba(14,165,233,.1); }.cs-avatar { display: inline-grid; place-items: center; width: 35px; height: 35px; margin-right: 9px; border-radius: 50%; background: #075985; color: #e0f2fe; font-weight: 800; }.cs-queue-name { font-weight: 700; }.cs-queue-preview { display: block; overflow: hidden; margin: 5px 0 0 45px; color: #94a3b8; font-size: .78rem; text-overflow: ellipsis; white-space: nowrap; }
 .cs-thread { display: grid; grid-template-rows: auto minmax(0,1fr) auto; min-height: 0; }.cs-thread-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid rgba(148,163,184,.13); }.cs-thread-head h2 { margin: 0; font-size: 1.05rem; }.cs-thread-head p { margin: 4px 0 0; color: #94a3b8; font-size: .8rem; }.cs-thread-messages { display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding: 20px; background: radial-gradient(circle at 80% 15%, rgba(14,165,233,.08), transparent 35%); }.cs-bubble { max-width: min(78%,590px); padding: 11px 13px; border-radius: 14px; background: rgba(148,163,184,.13); color: #e7eef9; line-height: 1.5; }.cs-bubble.is-staff { align-self: flex-end; background: #0369a1; }.cs-bubble small { display: block; margin-bottom: 4px; color: #bae6fd; font-size: .68rem; font-weight: 800; }.cs-bubble p { margin: 0; white-space: pre-wrap; }.cs-composer { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; padding: 14px; border-top: 1px solid rgba(148,163,184,.13); }.cs-composer input { min-width: 0; border: 1px solid rgba(148,163,184,.25); border-radius: 12px; outline: 0; background: #091525; color: #f8fafc; padding: 12px 13px; font: inherit; }.cs-empty { display: grid; place-items: center; min-height: 220px; color: #94a3b8; text-align: center; }
 @media (max-width: 760px) { .cs-portal { grid-template-columns: 1fr; min-height: calc(100dvh - 112px); }.cs-queues { max-height: 245px; border-right: 0; border-bottom: 1px solid rgba(148,163,184,.16); }.cs-thread { min-height: 420px; }.cs-queue-list { grid-template-columns: repeat(2,minmax(0,1fr)); }.cs-queue-preview { margin-left: 0; } }
+
+/* Global fallback for pages that do not load global-theme.css. */
+.shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header{
+    position:sticky!important;
+    top:0!important;
+    z-index:99999!important;
+    width:100%!important;
+    background-color:#fff!important;
+}
+.support-button,.support-btn,#supportButton,#studentSupportButton,.support-fab,.cskh-button{
+    position:fixed!important;
+    bottom:25px!important;
+    right:25px!important;
+    left:auto!important;
+    z-index:999999!important;
+    width:auto!important;
+    max-width:calc(100vw - 50px)!important;
+    min-width:50px!important;
+    min-height:50px!important;
+    padding:12px 20px!important;
+    transform:scale(1)!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}

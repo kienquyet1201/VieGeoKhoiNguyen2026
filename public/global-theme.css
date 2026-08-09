@@ -38,3 +38,28 @@ body>*:not(.global-animated-background){position:relative;z-index:1}
 .viegeo-request-loading::after{content:"";display:inline-block;width:13px;height:13px;margin-left:8px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-2px;animation:viegeo-request-spin .7s linear infinite}
 button:disabled{cursor:not-allowed}
 @keyframes viegeo-request-spin{to{transform:rotate(360deg)}}
+
+/* Global sticky navigation and customer-support placement. */
+.shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header{
+    position:sticky!important;
+    top:0!important;
+    z-index:99999!important;
+    width:100%!important;
+    background-color:#fff!important;
+}
+.support-button,.support-btn,#supportButton,#studentSupportButton,.support-fab,.cskh-button{
+    position:fixed!important;
+    bottom:25px!important;
+    right:25px!important;
+    left:auto!important;
+    z-index:999999!important;
+    width:auto!important;
+    max-width:calc(100vw - 50px)!important;
+    min-width:50px!important;
+    min-height:50px!important;
+    padding:12px 20px!important;
+    transform:scale(1)!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+}
