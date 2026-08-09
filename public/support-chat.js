@@ -2,6 +2,24 @@
 (function () {
     'use strict';
 
+    document.addEventListener('click', function (event) {
+        const trigger = event.target.closest('.support-btn,#support-btn,.chat-widget,.support-button,#supportButton,#studentSupportButton');
+        if (!trigger) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const modal = document.querySelector('#support-chat-modal,.chat-box,#supportChatPanel,#viegeoSupportModal');
+        if (modal) {
+            modal.hidden = false;
+            modal.style.display = 'block';
+            modal.classList.add('is-open');
+            return;
+        }
+        if (typeof window.openVieGeoSupportModal === 'function') {
+            window.openVieGeoSupportModal();
+        }
+    }, true);
+
     const STAFF_ONLINE_WINDOW = 90 * 1000;
     const byId = (id) => document.getElementById(id);
     let pendingImage = null;

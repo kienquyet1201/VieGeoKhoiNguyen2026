@@ -1870,3 +1870,5 @@ html,body{margin:0!important;padding:0!important}
     justify-content:center!important;
     pointer-events:auto!important;
 }
+.support-btn,#support-btn,.chat-widget,.support-button,#supportButton,#studentSupportButton{position:fixed!important;bottom:25px!important;right:25px!important;left:auto!important;z-index:9999999!important;pointer-events:auto!important;width:60px!important;min-width:60px!important;max-width:60px!important;height:60px!important;min-height:60px!important;padding:0!important;border-radius:50%!important;display:flex!important;align-items:center!important;justify-content:center!important;transform:scale(1)!important}
+.support-btn img,.support-btn svg,#support-btn img,#support-btn svg,.chat-widget img,.chat-widget svg,.support-button img,.support-button svg,#supportButton img,#supportButton svg,#studentSupportButton img,#studentSupportButton svg{width:32px!important;height:32px!important;object-fit:contain!important;pointer-events:none!important}
