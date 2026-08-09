@@ -95,8 +95,8 @@
 
                     <form id="loginForm" novalidate>
                         <div class="field-group">
-                            <input type="email" id="loginEmail" class="form-input" placeholder=" " required>
-                            <label class="field-label">Tài khoản Email</label>
+                            <input type="text" id="loginEmail" class="form-input" placeholder=" " autocomplete="username" required>
+                            <label class="field-label">Email hoặc tài khoản</label>
                         </div>
                         <div class="field-group">
                             <input type="password" id="loginPassword" class="form-input" placeholder=" " required>
@@ -218,8 +218,12 @@
 
                     <form id="adminLoginForm" novalidate>
                         <div class="field-group">
-                            <input type="text" id="adminSecret" class="form-input" placeholder=" " required>
-                            <label class="field-label">Mã bí mật (Secret Code)</label>
+                            <input type="text" id="adminUsername" class="form-input" placeholder=" " autocomplete="username" required>
+                            <label class="field-label">Tài khoản Admin</label>
+                        </div>
+                        <div class="field-group">
+                            <input type="password" id="adminPassword" class="form-input" placeholder=" " autocomplete="current-password" required>
+                            <label class="field-label">Mật khẩu Admin</label>
                         </div>
                         <div id="adminLoginMessage" style="color: #ff4b4b; font-size: 0.9rem; margin-bottom: 15px; text-align: center;"></div>
                         

@@ -302,6 +302,8 @@
         }
         const theory = String(questions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
             || sourceQuestions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
+            || questions.map(item => item.explanation || item.theory || '').find(Boolean)
+            || sourceQuestions.map(item => item.explanation || item.theory || '').find(Boolean)
             || '').trim();
         return {
             theory,

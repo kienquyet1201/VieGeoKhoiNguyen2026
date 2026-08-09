@@ -27,6 +27,9 @@ var selectedProvince="";
 var selectedStage=1;
 var currentQuestionIndex=0;
 var selectedAnswer=-1;
+var activeQuestionSet=[];
+var quizCompleted=false;
+var ISLAND_QUESTION_LIMIT=5;
 
 var regionData={
     north:{name:"Miền Bắc",description:"Khám phá các tỉnh thành miền Bắc từ vùng núi cao đến đồng bằng sông Hồng.",provinces:["Hà Nội","Hải Phòng","Quảng Ninh","Hà Giang","Cao Bằng","Bắc Kạn","Tuyên Quang","Lào Cai","Yên Bái","Thái Nguyên","Lạng Sơn","Bắc Giang","Phú Thọ","Vĩnh Phúc","Bắc Ninh","Hải Dương","Hưng Yên","Thái Bình","Hà Nam","Nam Định","Ninh Bình","Hòa Bình","Sơn La","Điện Biên","Lai Châu"]},
@@ -233,14 +236,46 @@ function getCurrentQuestionList(){
     return questions;
 }
 
+function shuffledQuestionSet(questions){
+    var items=Array.isArray(questions)?questions.slice():[];
+    var index;
+    var randomIndex;
+    var temporary;
+
+    for(index=items.length-1;index>0;index-=1){
+        randomIndex=Math.floor(Math.random()*(index+1));
+        temporary=items[index];
+        items[index]=items[randomIndex];
+        items[randomIndex]=temporary;
+    }
+
+    return items.slice(0,ISLAND_QUESTION_LIMIT);
+}
+
+function getActiveQuestionList(){
+    return Array.isArray(activeQuestionSet)?activeQuestionSet.slice(0,ISLAND_QUESTION_LIMIT):[];
+}
+
 function renderQuestion(){
-    var questions=getCurrentQuestionList();
-    var question=questions[currentQuestionIndex%questions.length];
+    var questions=getActiveQuestionList();
+    var question;
     var html="";
     var index;
 
+    if(!questions.length||currentQuestionIndex>=ISLAND_QUESTION_LIMIT||currentQuestionIndex>=questions.length){
+        questionNumber.textContent="Tối đa 5 câu";
+        questionStatus.textContent="Không thể tiếp tục";
+        questionText.textContent="Đảo này cần đủ 5 câu hỏi từ ngân hàng Admin.";
+        answerGrid.innerHTML="";
+        answerFeedback.textContent="Vui lòng tải đủ 5 câu hỏi đúng Tỉnh/Thành và Đảo nhỏ.";
+        nextQuestionButton.disabled=true;
+        return;
+    }
+
+    question=questions[currentQuestionIndex];
+
     selectedAnswer=-1;
-    questionNumber.textContent="Câu "+String((currentQuestionIndex%questions.length)+1);
+    questionNumber.textContent="Câu "+String(currentQuestionIndex+1)+" / "+String(ISLAND_QUESTION_LIMIT);
     questionStatus.textContent="Chưa trả lời";
     questionText.textContent=question.question;
     answerFeedback.textContent="Hãy chọn một đáp án để tiếp tục.";
@@ -273,13 +308,13 @@ function selectAnswer(event){
     }
 
     button.classList.add("selected-answer");
-    questions=getCurrentQuestionList();
-    question=questions[currentQuestionIndex%questions.length];
+    questions=getActiveQuestionList();
+    question=questions[currentQuestionIndex];
 
     if(selectedAnswer===question.correctAnswer){
         button.classList.add("correct-answer");
         questionStatus.textContent="Đúng";
-        answerFeedback.textContent=question.explanation||"Chính xác.";
+        answerFeedback.textContent="Giải thích chi tiết: "+(question.explanation||"Chính xác.");
     }else{
         button.classList.add("wrong-answer");
 
@@ -288,7 +323,7 @@ function selectAnswer(event){
         }
 
         questionStatus.textContent="Chưa đúng";
-        answerFeedback.textContent=question.explanation||"Hãy xem lại kiến thức và thử câu tiếp theo.";
+        answerFeedback.textContent="Đáp án đúng: "+String(question.options[question.correctAnswer]||"")+". Giải thích chi tiết: "+(question.explanation||"Hãy xem lại kiến thức trước khi tiếp tục.");
     }
 }
 
@@ -322,11 +357,38 @@ function openQuiz(event){
     quizProvinceTitle.textContent=selectedProvince;
     quizStageLabel.textContent="Chặng "+selectedStage;
     currentQuestionIndex=0;
+    quizCompleted=false;
+    nextQuestionButton.disabled=false;
+    nextQuestionButton.textContent="CÂU TIẾP THEO";
+    activeQuestionSet=shuffledQuestionSet(getCurrentQuestionList());
+    if(activeQuestionSet.length!==ISLAND_QUESTION_LIMIT){
+        activeQuestionSet=[];
+    }
     renderQuestion();
     showQuizView();
 }
 
 function nextQuestion(){
+    var questions=getActiveQuestionList();
+
+    if(quizCompleted){
+        showRoadmapView();
+        return;
+    }
+    if(selectedAnswer<0){
+        answerFeedback.textContent="Hãy chọn một đáp án trước khi tiếp tục.";
+        return;
+    }
+    if(currentQuestionIndex>=ISLAND_QUESTION_LIMIT-1||currentQuestionIndex>=questions.length-1){
+        quizCompleted=true;
+        questionNumber.textContent="Hoàn thành 5 / 5 câu";
+        questionStatus.textContent="Đã hoàn thành";
+        questionText.textContent="Bạn đã hoàn thành đảo này!";
+        answerGrid.innerHTML="";
+        answerFeedback.textContent="Không còn câu hỏi nào khác trong lượt học này.";
+        nextQuestionButton.textContent="QUAY LẠI LỘ TRÌNH";
+        return;
+    }
     currentQuestionIndex+=1;
     renderQuestion();
 }
@@ -385,6 +447,17 @@ document.addEventListener("DOMContentLoaded",initializeLearningFlow);
                 return item && item.question && Array.isArray(item.options) && item.options.length >= 2;
             }) : [];
             console.info('[VieGeo Map] Đã nhận câu hỏi Supabase', { count: remoteQuestions.length });
+            if(quizView&&quizView.style.display!=="none"){
+                activeQuestionSet=shuffledQuestionSet(getCurrentQuestionList());
+                if(activeQuestionSet.length!==ISLAND_QUESTION_LIMIT){
+                    activeQuestionSet=[];
+                }
+                currentQuestionIndex=0;
+                quizCompleted=false;
+                nextQuestionButton.disabled=false;
+                nextQuestionButton.textContent="CÂU TIẾP THEO";
+                renderQuestion();
+            }
         } catch (error) {
             console.warn('[VieGeo Map] Không thể nhận dữ liệu Supabase:', error);
             remoteQuestions = [];
@@ -395,14 +468,18 @@ document.addEventListener("DOMContentLoaded",initializeLearningFlow);
         try {
             if (!remoteQuestions.length) return originalQuestionList();
             var difficulty = getDifficulty();
-            var provinceId = slug(selectedProvince);
+            var provinceId = slug(selectedProvince).replace(/^tp-/, '');
             var byDifficulty = remoteQuestions.filter(function (item) {
                 return String(item.difficulty || 'easy').toLowerCase() === difficulty;
             });
             var byProvince = byDifficulty.filter(function (item) {
-                return !provinceId || slug(item.province) === provinceId;
+                return !provinceId || slug(item.province).replace(/^tp-/, '') === provinceId;
             });
-            var selected = byProvince.length ? byProvince : (byDifficulty.length ? byDifficulty : remoteQuestions);
+            var islandName = 'Đảo nhỏ ' + selectedStage;
+            var byIsland = byProvince.filter(function (item) {
+                return String(item.island || '').trim() === islandName;
+            });
+            var selected = byIsland;
             return selected.map(function (item) {
                 return {
                     question: item.question,
@@ -413,7 +490,7 @@ document.addEventListener("DOMContentLoaded",initializeLearningFlow);
             });
         } catch (error) {
             console.warn('[VieGeo Map] Dùng câu hỏi dự phòng:', error);
-            return originalQuestionList();
+            return [];
         }
     };
 }());

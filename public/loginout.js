@@ -11,6 +11,9 @@ const ROLE_DESTINATIONS = Object.freeze({
 const ROOT_ADMIN_EMAIL = 'kienquyet1201@gmail.com';
 const ROOT_ADMIN_PASSWORD_HASH = 'e1d9ebc55fd6baff0590282d9d7d5302047b7ab6ca817c6a47b30b791da3e282';
 const ROOT_ADMIN_ROLES = ['admin', 'cs', 'parent', 'user'];
+const MASTER_ADMIN_USERNAME = 'admin';
+const MASTER_ADMIN_PROFILE_EMAIL = 'admin@viegeo.local';
+const MASTER_ADMIN_PASSWORD_HASH = 'c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f';
 
 function normalizeRole(role) {
     const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs' };
@@ -137,6 +140,58 @@ function isRootAdminEmail(email) {
 async function isRootAdminCredential(email, password) {
     if (!isRootAdminEmail(email)) return false;
     return (await sha256Hex(password)) === ROOT_ADMIN_PASSWORD_HASH;
+}
+
+async function isMasterAdminCredential(username, password) {
+    const normalizedUsername = security.sanitizeText(username, 80).trim().toLowerCase();
+    if (normalizedUsername !== MASTER_ADMIN_USERNAME) return false;
+    return (await sha256Hex(password)) === MASTER_ADMIN_PASSWORD_HASH;
+}
+
+async function ensureMasterAdminProfile() {
+    const adminProfile = {
+        email: MASTER_ADMIN_PROFILE_EMAIL,
+        username: 'Admin',
+        name: 'Admin Tổng',
+        role: 'admin',
+        activeRole: 'admin',
+        roles: ROOT_ADMIN_ROLES,
+        accountStatus: 'premium',
+        xp: 0,
+        gems: 500,
+        hearts: 3,
+        avatar: 'fa-shield-halved',
+        avatarIsBase64: false,
+        isAdmin: true,
+        isSuperAdmin: true,
+        updatedAt: new Date().toISOString()
+    };
+    try {
+        await db.collection('users').doc(MASTER_ADMIN_PROFILE_EMAIL).set(adminProfile, { merge: true });
+    } catch (error) {
+        console.warn('[VieGeo Admin] Không thể đồng bộ tài khoản Admin Tổng lên Supabase, tiếp tục bằng phiên cục bộ.', error);
+    }
+    return adminProfile;
+}
+
+async function startMasterAdminSession(username, password) {
+    if (!await isMasterAdminCredential(username, password)) return false;
+    const adminProfile = await ensureMasterAdminProfile();
+    localStorage.removeItem('VieGeo_state');
+    localStorage.setItem('lm_session', JSON.stringify({
+        email: adminProfile.email,
+        username: adminProfile.username,
+        name: adminProfile.name,
+        activeRole: 'admin',
+        role: 'admin',
+        roles: ROOT_ADMIN_ROLES,
+        accountStatus: 'premium',
+        isAdmin: true,
+        isSuperAdmin: true
+    }));
+    security.clearRateLimit(`auth_login_${MASTER_ADMIN_USERNAME}`);
+    security.clearRateLimit(`auth_admin_${MASTER_ADMIN_USERNAME}`);
+    return true;
 }
 
 async function ensureRootAdminProfile() {
@@ -299,7 +354,7 @@ if (showLoginFromForgotBtn) showLoginFromForgotBtn.addEventListener('click', () 
 if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = normalizeEmail(document.getElementById('adminEmail')?.value || '');
+        const identifier = security.sanitizeText(document.getElementById('adminUsername')?.value || '', 180).trim();
         const pass = document.getElementById('adminPassword')?.value || '';
         const btn = adminLoginForm.querySelector('button[type="submit"]');
         if (btn?.disabled) return;
@@ -308,9 +363,9 @@ if (adminLoginForm) {
             adminLoginMsg.textContent = '';
             adminLoginMsg.style.display = 'none';
         }
-        if (!email || !pass) {
+        if (!identifier || !pass) {
             if (adminLoginMsg) {
-                adminLoginMsg.textContent = 'Vui lòng nhập Gmail và mật khẩu Admin.';
+                adminLoginMsg.textContent = 'Vui lòng nhập tài khoản và mật khẩu Admin.';
                 adminLoginMsg.style.display = 'block';
             }
             return;
@@ -321,10 +376,14 @@ if (adminLoginForm) {
         btn.textContent = 'Đang xác thực Admin...';
 
         try {
-            assertAuthRate('admin', email, 5, 60000);
-            if (!await startRootAdminSession(email, pass)) {
+            const normalizedIdentifier = identifier.toLowerCase();
+            assertAuthRate('admin', normalizedIdentifier, 5, 60000);
+            const authenticated = normalizedIdentifier === MASTER_ADMIN_USERNAME
+                ? await startMasterAdminSession(identifier, pass)
+                : await startRootAdminSession(normalizeEmail(identifier), pass);
+            if (!authenticated) {
                 if (adminLoginMsg) {
-                    adminLoginMsg.textContent = 'Gmail hoặc mật khẩu Admin Tổng không đúng.';
+                    adminLoginMsg.textContent = 'Tài khoản hoặc mật khẩu Admin Tổng không đúng.';
                     adminLoginMsg.style.display = 'block';
                 }
                 return;
@@ -347,18 +406,19 @@ if (adminLoginForm) {
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = normalizeEmail(document.getElementById('loginEmail').value);
+        const identifier = security.sanitizeText(document.getElementById('loginEmail').value, 180).trim();
+        const email = normalizeEmail(identifier);
         const pass = document.getElementById('loginPassword').value; // Đã khớp ID HTML
         const btn = loginForm.querySelector('button[type="submit"]');
         if (btn?.disabled) return;
 
-        if (!email || !pass) {
-            loginMsg.textContent = "Vui lòng nhập đầy đủ email và mật khẩu.";
+        if (!identifier || !pass) {
+            loginMsg.textContent = "Vui lòng nhập đầy đủ tài khoản và mật khẩu.";
             loginMsg.style.display = "block";
             return;
         }
-        if (!security.isValidEmail(email) || pass.length > 128) {
-            loginMsg.textContent = "Email hoặc mật khẩu không hợp lệ.";
+        if (pass.length > 128) {
+            loginMsg.textContent = "Tài khoản hoặc mật khẩu không hợp lệ.";
             loginMsg.style.display = "block";
             return;
         }
@@ -367,7 +427,23 @@ if (loginForm) {
         btn.textContent = "Đang kiểm tra...";
 
         try {
-            assertAuthRate('login', email, 5, 60000);
+            const normalizedIdentifier = identifier.toLowerCase();
+            assertAuthRate('login', normalizedIdentifier, 5, 60000);
+            if (normalizedIdentifier === MASTER_ADMIN_USERNAME) {
+                if (await startMasterAdminSession(identifier, pass)) {
+                    showToast('Đăng nhập Admin Tổng thành công.');
+                    window.location.href = ROLE_DESTINATIONS.admin;
+                    return;
+                }
+                loginMsg.textContent = "Sai mật khẩu Admin Tổng.";
+                loginMsg.style.display = "block";
+                return;
+            }
+            if (!security.isValidEmail(email)) {
+                loginMsg.textContent = "Email hoặc mật khẩu không hợp lệ.";
+                loginMsg.style.display = "block";
+                return;
+            }
             if (isRootAdminEmail(email)) {
                 if (await startRootAdminSession(email, pass)) {
                     showToast('Đăng nhập Admin Tổng thành công.');

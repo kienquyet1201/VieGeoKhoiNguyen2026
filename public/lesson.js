@@ -8,6 +8,7 @@ const mode = localStorage.getItem('VieGeo_mode') || 'normal';
 const arenaId = localStorage.getItem('VieGeo_arena_id');
 
 let currentQuestions = [];
+const ISLAND_QUESTION_LIMIT = 5;
 let currentIndex = 0;
 let isAnswerChecked = false;
 let selectedOptionIndex = null;
@@ -150,7 +151,7 @@ async function initNormal() {
         activeIslandNodeKind = foundNode.nodeKind || '';
         document.getElementById('quizContainer').style.display = 'block';
         document.getElementById('theoryContainer').style.display = 'none';
-        const questionLimit = Number(window.VieGeoLearningPath?.questionsPerIsland) || 5;
+        const questionLimit = ISLAND_QUESTION_LIMIT;
         const cachedQuestions = Array.isArray(islandLearning?.questions) && islandLearning.questions.length === questionLimit
             ? islandLearning.questions.slice(0, questionLimit)
             : null;
@@ -203,7 +204,7 @@ function initArena() {
             if (Array.isArray(node.questions)) allQs = allQs.concat(node.questions);
         });
     }
-    currentQuestions = allQs.sort(() => 0.5 - Math.random());
+    currentQuestions = allQs.sort(() => 0.5 - Math.random()).slice(0, ISLAND_QUESTION_LIMIT);
     currentIndex = 0;
 
     arenaScoreMe = 0;
@@ -347,13 +348,10 @@ function loadQuestion() {
         isDoubleXpActive = false;
     }
 
-    if (mode === 'normal' && currentIndex >= currentQuestions.length) {
+    const availableQuestionCount = Math.min(ISLAND_QUESTION_LIMIT, currentQuestions.length);
+    if (currentIndex >= availableQuestionCount) {
         finishLesson();
         return;
-    }
-    if (mode === 'arena' && currentIndex >= currentQuestions.length) {
-        currentQuestions = currentQuestions.sort(() => 0.5 - Math.random());
-        currentIndex = 0;
     }
 
     const q = currentQuestions[currentIndex];
@@ -429,6 +427,11 @@ btnCheck.addEventListener('click', () => {
     if (!isAnswerChecked) {
         checkAnswer();
     } else {
+        const lastQuestionIndex = Math.min(ISLAND_QUESTION_LIMIT, currentQuestions.length) - 1;
+        if (currentIndex >= lastQuestionIndex) {
+            finishLesson();
+            return;
+        }
         currentIndex++;
         loadQuestion();
     }
@@ -445,7 +448,7 @@ function checkAnswer() {
     const explanation = String(q.explanation || q.theory || q.solution || q.islandTheory || '').trim()
         || 'Câu hỏi này chưa có nội dung giải thích. Admin vui lòng bổ sung phần lý thuyết cho câu hỏi.';
     feedbackExplanation.style.display = 'block';
-    feedbackExplanation.innerHTML = `<i class="fa-solid fa-book-open"></i> <strong>Giải thích:</strong> ${escapeLessonHtml(explanation)}`;
+    feedbackExplanation.innerHTML = `<i class="fa-solid fa-book-open"></i> <strong>Giải thích chi tiết:</strong> ${escapeLessonHtml(explanation)}`;
 
     const isCorrect = selectedOptionIndex === q.correctAnswer;
     if (mode === 'normal') {
@@ -485,14 +488,11 @@ function checkAnswer() {
             }
 
             updateTugOfWarUI();
-            setTimeout(() => {
-                currentIndex++;
-                loadQuestion();
-            }, 300);
+            btnCheck.textContent = 'CÂU TIẾP THEO';
             return;
         }
 
-        btnCheck.textContent = 'Tiếp tục';
+        btnCheck.textContent = 'CÂU TIẾP THEO';
         
     } else {
         // Sai
@@ -511,15 +511,12 @@ function checkAnswer() {
         
         if (mode === 'arena') {
             updateTugOfWarUI();
-            setTimeout(() => {
-                currentIndex++;
-                loadQuestion();
-            }, 300);
+            btnCheck.textContent = 'CÂU TIẾP THEO';
             return;
         }
         
         // Stamina is charged once at lesson entry. Wrong answers never deduct it.
-        btnCheck.textContent = 'Tiếp tục';
+        btnCheck.textContent = 'CÂU TIẾP THEO';
     }
 }
 
