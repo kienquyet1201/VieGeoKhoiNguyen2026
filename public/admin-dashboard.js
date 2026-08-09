@@ -12,6 +12,7 @@
     };
     let allUsers = [];
     let selectedTicket = null;
+    let questionBankRequestId = 0;
 
     function byId(id) { return document.getElementById(id); }
 
@@ -251,6 +252,107 @@
         }
     }
 
+    function questionOptionText(question, index) {
+        const option = (Array.isArray(question.options) ? question.options : [question.option_a, question.option_b, question.option_c, question.option_d])[index];
+        return String(option || '').trim();
+    }
+
+    function provinceLabel(slug) {
+        const option = Array.from(byId('bulkImportProvince')?.options || []).find(item => item.value === slug);
+        return option?.textContent?.trim() || slug || 'Chưa phân tỉnh';
+    }
+
+    function renderQuestionBank(rows) {
+        const body = byId('questionBankTableBody');
+        const summary = byId('questionBankSummary');
+        if (!body) return;
+        const questions = Array.isArray(rows) ? rows : [];
+        body.replaceChildren();
+        if (summary) summary.textContent = `Đang hiển thị ${questions.length} câu hỏi phù hợp.`;
+        if (!questions.length) {
+            body.innerHTML = '<tr><td colspan="8"><div class="empty-state">Không có câu hỏi phù hợp với bộ lọc đã chọn.</div></td></tr>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        questions.forEach((question, index) => {
+            const correctIndex = Math.max(0, Math.min(3, Number(question.correct_option) || 0));
+            const row = document.createElement('tr');
+            const cells = [
+                String(index + 1),
+                provinceLabel(String(question.province || '')),
+                String(question.island || 'Chưa chọn đảo'),
+                String(question.topic || 'Chưa có chủ đề'),
+                String(question.difficulty || 'easy'),
+                String(question.question || 'Câu hỏi không có nội dung'),
+                `${String.fromCharCode(65 + correctIndex)}. ${questionOptionText(question, correctIndex) || 'Chưa có đáp án'}`,
+                String(question.theory || question.explanation || 'Chưa có giải thích')
+            ];
+            cells.forEach((value, cellIndex) => {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                if (cellIndex === 1 || cellIndex === 2) cell.className = 'question-bank-location';
+                if (cellIndex === 4) cell.innerHTML = `<span class="question-bank-difficulty">${escapeText(value)}</span>`;
+                if (cellIndex === 5) cell.className = 'question-bank-question';
+                if (cellIndex === 7) cell.className = 'question-bank-explanation';
+                row.appendChild(cell);
+            });
+            fragment.appendChild(row);
+        });
+        body.appendChild(fragment);
+    }
+
+    function populateQuestionBankFilters() {
+        const provinceFilter = byId('questionProvinceFilter');
+        const sourceProvince = byId('bulkImportProvince');
+        if (provinceFilter && sourceProvince && provinceFilter.options.length === 1) {
+            sourceProvince.querySelectorAll('optgroup').forEach(group => provinceFilter.appendChild(group.cloneNode(true)));
+        }
+        const islandFilter = byId('questionIslandFilter');
+        if (islandFilter && islandFilter.options.length === 1) {
+            for (let index = 1; index <= 34; index += 1) {
+                const option = document.createElement('option');
+                option.value = `Đảo nhỏ ${index}`;
+                option.textContent = `Đảo nhỏ ${index}`;
+                islandFilter.appendChild(option);
+            }
+        }
+    }
+
+    async function loadQuestionBank() {
+        const requestId = ++questionBankRequestId;
+        const body = byId('questionBankTableBody');
+        const summary = byId('questionBankSummary');
+        const refreshButton = byId('refreshQuestionBankButton');
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        if (!client || typeof client.from !== 'function') {
+            renderQuestionBank([]);
+            if (summary) summary.textContent = 'Supabase chưa sẵn sàng.';
+            return;
+        }
+        if (body) body.innerHTML = '<tr><td colspan="8"><div class="empty-state">Đang tải ngân hàng câu hỏi...</div></td></tr>';
+        if (summary) summary.textContent = 'Đang đồng bộ từ Supabase...';
+        if (refreshButton) refreshButton.disabled = true;
+        try {
+            let query = client.from('questions').select('*');
+            const province = String(byId('questionProvinceFilter')?.value || '').trim();
+            const island = String(byId('questionIslandFilter')?.value || '').trim();
+            if (province) query = query.eq('province', province);
+            if (island) query = query.eq('island', island);
+            const { data, error } = await query.limit(1000);
+            if (error) throw error;
+            if (requestId !== questionBankRequestId) return;
+            renderQuestionBank(Array.isArray(data) ? data : []);
+        } catch (error) {
+            if (requestId !== questionBankRequestId) return;
+            console.error('[VieGeo Admin] Không thể tải ngân hàng câu hỏi:', error);
+            renderQuestionBank([]);
+            if (summary) summary.textContent = `Không thể tải câu hỏi: ${error.message || error}`;
+        } finally {
+            if (requestId === questionBankRequestId && refreshButton) refreshButton.disabled = false;
+        }
+    }
+
     async function loadDashboard() {
         try {
             const dataApi = window.VieGeoData;
@@ -328,6 +430,7 @@
             if (byId('fileUpload')) byId('fileUpload').value = '';
             if (byId('fileNameDisplay')) byId('fileNameDisplay').textContent = 'Chưa có tệp được chọn.';
             showToast(`Đã thêm ${count} câu hỏi.`, 'success');
+            await loadQuestionBank();
         } catch (error) {
             console.error('[VieGeo Admin] Upload câu hỏi thất bại:', error);
             if (preview) preview.textContent = `Không thể upload: ${error.message || error}`;
@@ -442,6 +545,7 @@
             if (byId('bulkQuestionText')) byId('bulkQuestionText').value = '';
             if (preview) preview.textContent = `Đã lưu thành công ${count} câu hỏi vào Supabase. Câu hỏi trùng đã được cập nhật thay vì gây lỗi.`;
             showToast(`Đã lưu ${count} câu hỏi.`, 'success');
+            await loadQuestionBank();
             console.info('[VieGeo Admin] Bulk text import success', { count, province: shared.province, island: shared.island });
         } catch (error) {
             console.error('[VieGeo Admin] Bulk text import failed:', error);
@@ -459,11 +563,15 @@
             byId('roleFilter')?.addEventListener('change', () => renderUsers(allUsers));
             byId('refreshMonitoringButton')?.addEventListener('click', loadDashboard);
             byId('refreshSupportAdminButton')?.addEventListener('click', loadDashboard);
-        populateBulkIslandOptions();
-        byId('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
-        byId('bulkQuestionText')?.addEventListener('input', previewBulkQuestionText);
-        ['bulkImportProvince', 'bulkImportSubIsland', 'bulkImportTopic', 'bulkImportIslandTheory']
-            .forEach((id) => byId(id)?.addEventListener('change', previewBulkQuestionText));
+            populateBulkIslandOptions();
+            populateQuestionBankFilters();
+            byId('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
+            byId('bulkQuestionText')?.addEventListener('input', previewBulkQuestionText);
+            ['bulkImportProvince', 'bulkImportSubIsland', 'bulkImportTopic', 'bulkImportIslandTheory']
+                .forEach((id) => byId(id)?.addEventListener('change', previewBulkQuestionText));
+            ['questionProvinceFilter', 'questionIslandFilter']
+                .forEach((id) => byId(id)?.addEventListener('change', loadQuestionBank));
+            byId('refreshQuestionBankButton')?.addEventListener('click', loadQuestionBank);
             byId('fileUpload')?.addEventListener('change', event => {
                 const name = event.target.files?.[0]?.name || 'Chưa có tệp được chọn.';
                 if (byId('fileNameDisplay')) byId('fileNameDisplay').textContent = name;
@@ -492,6 +600,7 @@
         try {
             initializeInteractions();
             loadDashboard();
+            loadQuestionBank();
         } catch (error) {
             console.error('[VieGeo Admin] Không thể khởi tạo:', error);
         }

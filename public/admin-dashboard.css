@@ -122,3 +122,20 @@ html[data-theme="light"] .back-to-home-btn{color:#ffffff;background:rgba(255,255
 .bulk-template-guide small{color:var(--text-secondary);font-size:11px;line-height:1.55}
 .bulk-upload-preview{margin:0;min-height:160px;max-height:300px;overflow:auto;white-space:pre-wrap;border:1px solid var(--border-color);border-radius:17px;padding:15px;color:var(--text-primary);background:var(--surface-soft);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;line-height:1.55}
 @media(max-width:980px){.bulk-upload-grid{grid-template-columns:1fr}.bulk-question-text{min-height:250px}}
+
+/* Supabase question bank list and province/island filters. */
+.question-bank-panel{margin-top:22px}
+.question-bank-heading{align-items:flex-end}
+.question-bank-summary{margin:7px 0 0;color:var(--text-secondary);font-size:12px}
+.question-bank-filters{align-items:flex-end}
+.question-bank-filters label{display:grid;gap:6px;color:var(--text-secondary);font-size:10px;font-weight:800}
+.question-bank-filters select{min-width:180px}
+.question-bank-table{min-width:1280px}
+.question-bank-table th:first-child,.question-bank-table td:first-child{width:54px;text-align:center}
+.question-bank-table td{vertical-align:top;line-height:1.5}
+.question-bank-question{min-width:270px;max-width:430px;white-space:normal;font-weight:700}
+.question-bank-explanation{min-width:230px;max-width:360px;white-space:normal;color:var(--text-secondary)}
+.question-bank-location{white-space:nowrap;font-weight:700}
+.question-bank-difficulty{display:inline-flex;padding:5px 9px;border-radius:999px;background:#e2f2ff;color:#1f6f95;font-size:10px;font-weight:800}
+html[data-theme="dark"] .question-bank-difficulty{background:#1f4559;color:#d9f2ff}
+@media(max-width:760px){.question-bank-heading{align-items:flex-start}.question-bank-filters{width:100%;display:grid;grid-template-columns:1fr}.question-bank-filters select,.question-bank-filters .soft-button{width:100%}}

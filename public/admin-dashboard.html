@@ -223,8 +223,8 @@
                             <div class="bulk-upload-content">
                                 <aside class="bulk-template-guide" aria-label="Mẫu định dạng chuẩn">
                                     <strong>Mẫu định dạng chuẩn</strong>
-                                    <code>Câu hỏi | Đáp án 0 | Đáp án 1 | Đáp án 2 | Đáp án 3 | Index đúng (0–3) | Độ khó (easy/medium/hard) | Giải thích khi trả lời đúng</code>
-                                    <small>Giải thích hiển thị sau khi học sinh chốt đáp án đúng. Có thể để trống, nhưng vẫn giữ dấu <code>|</code> ở cuối dòng.</small>
+                                    <code>Câu hỏi | Đáp án 0 | Đáp án 1 | Đáp án 2 | Đáp án 3 | Index đúng (0–3) | Độ khó (easy/medium/hard) | Giải thích sau khi trả lời</code>
+                                    <small>Giải thích hiển thị sau khi học sinh chốt đáp án, dù trả lời đúng hay sai. Có thể để trống, nhưng vẫn giữ dấu <code>|</code> ở cuối dòng.</small>
                                 </aside>
                                 <label class="field-label" for="bulkQuestionText">Nội dung văn bản
                                     <textarea class="field-input bulk-question-text" id="bulkQuestionText" rows="16" spellcheck="false" placeholder="Hà Nội là thủ đô của nước nào? | Việt Nam | Lào | Thái Lan | Campuchia | 0 | easy | Hà Nội là Thủ đô của Việt Nam.&#10;..." required></textarea>
@@ -248,6 +248,41 @@
                             <div class="preview-title">Xem trước dữ liệu</div>
                             <pre id="uploadPreview">Kết quả xử lý sẽ hiển thị tại đây.</pre>
                         </div>
+                    </div>
+                </section>
+
+                <section class="panel-card table-panel question-bank-panel" aria-labelledby="questionBankTitle">
+                    <div class="panel-heading table-heading question-bank-heading">
+                        <div>
+                            <span class="panel-eyebrow">Dữ liệu Supabase</span>
+                            <h2 id="questionBankTitle">Ngân hàng câu hỏi đã upload</h2>
+                            <p class="question-bank-summary" id="questionBankSummary">Đang tải danh sách câu hỏi...</p>
+                        </div>
+                        <div class="table-tools question-bank-filters">
+                            <label>
+                                <span>Tỉnh / Thành phố</span>
+                                <select id="questionProvinceFilter" aria-label="Lọc câu hỏi theo Tỉnh hoặc Thành phố">
+                                    <option value="">Tất cả Tỉnh/Thành</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>Đảo nhỏ</span>
+                                <select id="questionIslandFilter" aria-label="Lọc câu hỏi theo Đảo nhỏ">
+                                    <option value="">Tất cả Đảo</option>
+                                </select>
+                            </label>
+                            <button class="soft-button" id="refreshQuestionBankButton" type="button">Làm mới</button>
+                        </div>
+                    </div>
+                    <div class="table-wrap question-bank-table-wrap">
+                        <table class="user-table question-bank-table">
+                            <thead>
+                                <tr><th>STT</th><th>Tỉnh/Thành</th><th>Đảo</th><th>Chủ đề</th><th>Độ khó</th><th>Câu hỏi</th><th>Đáp án đúng</th><th>Giải thích</th></tr>
+                            </thead>
+                            <tbody id="questionBankTableBody">
+                                <tr><td colspan="8"><div class="empty-state">Đang tải ngân hàng câu hỏi...</div></td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
             </section>
