@@ -150,15 +150,24 @@ async function initNormal() {
         activeIslandNodeKind = foundNode.nodeKind || '';
         document.getElementById('quizContainer').style.display = 'block';
         document.getElementById('theoryContainer').style.display = 'none';
-        const cachedQuestions = Array.isArray(islandLearning?.questions) && islandLearning.questions.length > 0
-            ? islandLearning.questions
+        const questionLimit = Number(window.VieGeoLearningPath?.questionsPerIsland) || 5;
+        const cachedQuestions = Array.isArray(islandLearning?.questions) && islandLearning.questions.length === questionLimit
+            ? islandLearning.questions.slice(0, questionLimit)
             : null;
-        currentQuestions = cachedQuestions || foundNode.questions || [];
-        if (!cachedQuestions && foundNode.dynamicPath && window.VieGeoLearningPath && typeof window.VieGeoLearningPath.loadQuestions === 'function') {
+        currentQuestions = cachedQuestions || [];
+        if (!cachedQuestions && window.VieGeoLearningPath && typeof window.VieGeoLearningPath.loadQuestions === 'function') {
             currentQuestions = await window.VieGeoLearningPath.loadQuestions(foundNode);
         }
+        currentQuestions = Array.isArray(currentQuestions) ? currentQuestions.slice(0, questionLimit) : [];
         updateHeartsUI();
         updateQuizBoosters();
+        if (currentQuestions.length !== questionLimit) {
+            progressFill.style.width = '0%';
+            questionText.textContent = `Đảo này cần đủ ${questionLimit} câu hỏi từ ngân hàng Admin để bắt đầu.`;
+            optionsGrid.innerHTML = '';
+            btnCheck.disabled = true;
+            return;
+        }
         loadQuestion();
     }
 }
@@ -431,11 +440,12 @@ function checkAnswer() {
     const btns = optionsGrid.querySelectorAll('.option-btn');
     const selectedBtn = btns[selectedOptionIndex];
 
-    // Show Explanation
-    if (q.explanation) {
-        feedbackExplanation.style.display = 'block';
-        feedbackExplanation.innerHTML = `<i class="fa-solid fa-book-open"></i> <strong>Giải thích:</strong> ${escapeLessonHtml(q.explanation)}`;
-    }
+    // Always show the Admin explanation after the answer is locked, whether
+    // the learner answered correctly or incorrectly.
+    const explanation = String(q.explanation || q.theory || q.solution || q.islandTheory || '').trim()
+        || 'Câu hỏi này chưa có nội dung giải thích. Admin vui lòng bổ sung phần lý thuyết cho câu hỏi.';
+    feedbackExplanation.style.display = 'block';
+    feedbackExplanation.innerHTML = `<i class="fa-solid fa-book-open"></i> <strong>Giải thích:</strong> ${escapeLessonHtml(explanation)}`;
 
     const isCorrect = selectedOptionIndex === q.correctAnswer;
     if (mode === 'normal') {

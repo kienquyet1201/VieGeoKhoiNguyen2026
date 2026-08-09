@@ -352,7 +352,7 @@
             hydrateParent(user);
             const [questions, boardRows] = await Promise.all([
                 fetchRows('questions', { limit: 500 }),
-                fetchRows('leaderboard', { columns: 'id,email,user_email,name,full_name,display_name,current_streak,score', limit: 100, orderBy: 'score', ascending: false })
+                fetchRows('leaderboard', { columns: '*', limit: 100, orderBy: 'score', ascending: false })
             ]);
             hydrateMap(questions);
             hydrateLeaderboard(boardRows, user);

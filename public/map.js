@@ -81,7 +81,8 @@ function hasTheoryModalDom() {
 
 function updateIslandTheoryStartButton() {
     if (!btnStartIslandQuiz) return;
-    const ready = Boolean(activeIslandLearning?.questions?.length);
+    const questionLimit = Number(window.VieGeoLearningPath?.questionsPerIsland) || 5;
+    const ready = activeIslandLearning?.questions?.length === questionLimit;
     const enabled = ready && islandTheoryConfirmed;
     btnStartIslandQuiz.disabled = !enabled;
     btnStartIslandQuiz.setAttribute('aria-disabled', String(!enabled));
@@ -744,6 +745,11 @@ async function handleDelegatedIslandClick(event) {
     const clickedIsland = event.target.closest('.island');
     if (!clickedIsland || !mapContainer?.contains(clickedIsland)) return;
 
+    // Keep every small-island entry inside the theory-first flow, including
+    // repeat visits, and prevent older click handlers from skipping the modal.
+    event.preventDefault();
+    event.stopPropagation();
+
     if (!showIslandLoadingFeedback(clickedIsland)) return;
 
     const lesson = findRenderedIslandLesson(clickedIsland.dataset.lessonId);
@@ -810,18 +816,21 @@ async function openIslandTheory(lesson) {
         if (typeof loadIslandContent !== 'function') throw new Error('Không thể khởi tạo trình tải câu hỏi.');
         const loaded = await loadIslandContent(lesson);
         if (requestId !== islandTheoryRequest || !ensureIslandModalDom() || islandTheoryModal.hidden) return;
+        const questionLimit = Number(window.VieGeoLearningPath?.questionsPerIsland) || 5;
         activeIslandLearning = {
             lesson,
             theory: safeTheoryHtml(theoryHtmlFromLoadedContent(lesson, loaded)),
-            questions: Array.isArray(loaded?.questions) ? loaded.questions.slice(0, 5) : []
+            questions: Array.isArray(loaded?.questions) ? loaded.questions.slice(0, questionLimit) : []
         };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
         islandTheoryContent.innerHTML = safeTheoryHtml(activeIslandLearning.theory);
         const questionCount = activeIslandLearning.questions.length;
         islandTheoryMeta.textContent = `${lesson.title || 'Đảo tri thức'} · ${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${questionCount} câu hỏi sẵn sàng`;
-        if (!questionCount) {
-            const notice = loaded?.status === 'network-error'
+        if (questionCount !== questionLimit) {
+            const notice = loaded?.status === 'insufficient'
+                ? `Ngân hàng đảo này mới có ${Number(loaded?.bankSize) || 0}/${questionLimit} câu hợp lệ. Admin cần tải thêm câu hỏi.`
+                : loaded?.status === 'network-error'
                 ? 'Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!'
                 : 'Hiện chưa có câu hỏi nào cho khu vực này, vui lòng quay lại sau!';
             islandTheoryContent.insertAdjacentHTML('beforeend', `<p><strong>Thông báo:</strong> ${notice}</p>`);
@@ -844,7 +853,8 @@ async function openIslandTheory(lesson) {
 
 async function beginIslandQuiz() {
     if (!activeIslandLearning?.lesson) return;
-    if (!Array.isArray(activeIslandLearning.questions) || !activeIslandLearning.questions.length) {
+    const questionLimit = Number(window.VieGeoLearningPath?.questionsPerIsland) || 5;
+    if (!Array.isArray(activeIslandLearning.questions) || activeIslandLearning.questions.length !== questionLimit) {
         if (typeof VieGeoUI !== 'undefined') VieGeoUI.warning('Hiện chưa có câu hỏi để bắt đầu bài học này.');
         return;
     }

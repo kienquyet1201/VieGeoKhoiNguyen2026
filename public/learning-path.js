@@ -3,6 +3,8 @@
     'use strict';
 
     const cache = new Map();
+    const QUESTIONS_PER_ISLAND = 5;
+    const QUESTION_BANK_FETCH_LIMIT = 1000;
 
     function normalizeLearningDifficulty(value) {
         const normalized = String(value || '').toLowerCase();
@@ -208,14 +210,14 @@
                 if (provinceSlug) query = query.eq('province', provinceSlug);
                 if (islandLabel) query = query.eq('island', islandLabel);
                 if (lesson.difficulty) query = query.eq('difficulty', lesson.difficulty);
-                const { data, error } = await query.limit(100);
+                const { data, error } = await query.limit(QUESTION_BANK_FETCH_LIMIT);
                 if (!error && Array.isArray(data) && data.length) {
                     window.VieGeoQuestionLoadState = 'ready';
                     return mapDataStoreQuestions({ docs: data.map(item => ({ id: item.id, data: () => item })) });
                 }
                 if (error && String(error.message || '').includes('difficulty')) {
                     const fallbackQuery = client.from('questions').select('*').eq('province', provinceSlug).eq('island', islandLabel);
-                    const fallbackResult = await fallbackQuery.limit(100);
+                    const fallbackResult = await fallbackQuery.limit(QUESTION_BANK_FETCH_LIMIT);
                     if (!fallbackResult.error && Array.isArray(fallbackResult.data) && fallbackResult.data.length) {
                         window.VieGeoQuestionLoadState = 'ready';
                         return mapDataStoreQuestions({ docs: fallbackResult.data.map(item => ({ id: item.id, data: () => item })) });
@@ -275,7 +277,7 @@
         if (!Array.isArray(questions) || !questions.length) return [];
         // Supabase provides the full available question pool for this island
         // (up to the query limit); draw a new unbiased set of five each time.
-        return fisherYatesShuffle(questions).slice(0, 5);
+        return fisherYatesShuffle(questions).slice(0, QUESTIONS_PER_ISLAND);
     }
 
     async function loadSupabaseIslandContent(lesson) {
@@ -287,14 +289,26 @@
             window.VieGeoQuestionLoadState = 'network-error';
             notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!', true);
         }
-        const questions = randomFiveQuestions(sourceQuestions);
-        if (!questions.length && window.VieGeoQuestionLoadState !== 'network-error') {
+        const hasEnoughQuestions = sourceQuestions.length >= QUESTIONS_PER_ISLAND;
+        const questions = hasEnoughQuestions ? randomFiveQuestions(sourceQuestions) : [];
+        if (!hasEnoughQuestions && window.VieGeoQuestionLoadState !== 'network-error') {
+            window.VieGeoQuestionLoadState = sourceQuestions.length ? 'insufficient' : 'empty';
+        }
+        if (sourceQuestions.length > 0 && !hasEnoughQuestions) {
+            notifyQuestionLoad(`Ngân hàng đảo này mới có ${sourceQuestions.length}/${QUESTIONS_PER_ISLAND} câu hợp lệ. Admin cần tải thêm câu hỏi.`);
+        }
+        if (!questions.length && !sourceQuestions.length && window.VieGeoQuestionLoadState !== 'network-error') {
             notifyQuestionLoad('Hiện chưa có câu hỏi nào cho đảo này, vui lòng quay lại sau!');
         }
         const theory = String(questions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
             || sourceQuestions.map(item => item.islandTheory || item.islandTheoryContent || '').find(Boolean)
             || '').trim();
-        return { theory, questions, status: window.VieGeoQuestionLoadState || (questions.length ? 'ready' : 'empty') };
+        return {
+            theory,
+            questions,
+            bankSize: sourceQuestions.length,
+            status: window.VieGeoQuestionLoadState || (questions.length === QUESTIONS_PER_ISLAND ? 'ready' : 'empty')
+        };
     }
 
     async function loadSupabaseIslandQuestions(lesson) {
@@ -337,6 +351,7 @@
     }
 
     window.VieGeoLearningPath = {
+        questionsPerIsland: QUESTIONS_PER_ISLAND,
         getLessonsForProvince,
         findLesson,
         getUserLearningProgress,

@@ -413,12 +413,17 @@
     async function insertBulkQuestions(rows) {
         const client = window.supabaseClient || window.supabase;
         if (!client?.from) throw new Error('Supabase chưa sẵn sàng. Vui lòng thử lại sau.');
-        const { error } = await client.from('questions').insert(rows);
-        if (!error) return rows.length;
+        const uniqueRows = Array.from(new Map(rows.map(row => [String(row.question || '').trim(), row])).values());
+        const saveRows = async payload => client
+            .from('questions')
+            .upsert(payload, { onConflict: 'question' })
+            .select('id,question');
+        const { data, error } = await saveRows(uniqueRows);
+        if (!error) return Array.isArray(data) ? data.length : uniqueRows.length;
         if (/island_theory|column|schema/i.test(String(error.message || error.details || ''))) {
-            const compatibleRows = rows.map(({ island_theory, ...row }) => row);
-            const fallback = await client.from('questions').insert(compatibleRows);
-            if (!fallback.error) return compatibleRows.length;
+            const compatibleRows = uniqueRows.map(({ island_theory, ...row }) => row);
+            const fallback = await saveRows(compatibleRows);
+            if (!fallback.error) return Array.isArray(fallback.data) ? fallback.data.length : compatibleRows.length;
             throw fallback.error;
         }
         throw error;
@@ -435,8 +440,8 @@
             const execute = () => insertBulkQuestions(rows);
             const count = window.VieGeoData?.withRequestState ? await window.VieGeoData.withRequestState(button, execute) : await execute();
             if (byId('bulkQuestionText')) byId('bulkQuestionText').value = '';
-            if (preview) preview.textContent = `Đã thêm thành công ${count} câu hỏi vào Supabase. Bạn có thể dán lô mới ngay bây giờ.`;
-            showToast(`Đã thêm ${count} câu hỏi.`, 'success');
+            if (preview) preview.textContent = `Đã lưu thành công ${count} câu hỏi vào Supabase. Câu hỏi trùng đã được cập nhật thay vì gây lỗi.`;
+            showToast(`Đã lưu ${count} câu hỏi.`, 'success');
             console.info('[VieGeo Admin] Bulk text import success', { count, province: shared.province, island: shared.island });
         } catch (error) {
             console.error('[VieGeo Admin] Bulk text import failed:', error);
