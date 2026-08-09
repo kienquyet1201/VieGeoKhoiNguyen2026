@@ -48,6 +48,55 @@ var activeQuestionLoadState="idle";
 var questionLoadRequestId=0;
 var activeIslandTheory="";
 
+function ensureIslandTheoryUi(){
+    var runtimeStyle=document.getElementById("viegeoIslandTheoryRuntimeStyle");
+
+    islandTheoryModal=document.getElementById("islandTheoryModal");
+    if(!islandTheoryModal){
+        islandTheoryModal=document.createElement("div");
+        islandTheoryModal.id="islandTheoryModal";
+        islandTheoryModal.className="province-summary-modal island-theory-modal";
+        islandTheoryModal.hidden=true;
+        islandTheoryModal.innerHTML='<button class="province-summary-backdrop" type="button" data-close-island-theory aria-label="Quay lại lộ trình"></button>'+
+            '<section class="province-summary-dialog island-theory-dialog" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle">'+
+            '<button id="islandTheoryCloseButton" class="province-summary-close" type="button" aria-label="Quay lại lộ trình">×</button>'+
+            '<span class="province-summary-eyebrow">Chuẩn bị trước khi làm bài</span>'+
+            '<h2 id="islandTheoryTitle">Lý thuyết cần nhớ</h2>'+
+            '<p id="islandTheorySubtitle" class="province-summary-subtitle"></p>'+
+            '<div id="islandTheoryBankStatus" class="island-theory-bank-status" aria-live="polite">Đang đồng bộ ngân hàng câu hỏi Supabase...</div>'+
+            '<div id="islandTheoryContent" class="province-summary-content island-theory-content">Đang tải nội dung lý thuyết từ Admin...</div>'+
+            '<button id="islandTheoryStartButton" class="province-summary-done island-theory-start" type="button" disabled>BẮT ĐẦU LÀM BÀI</button>'+
+            '</section>';
+        document.body.appendChild(islandTheoryModal);
+    }
+
+    if(!runtimeStyle){
+        runtimeStyle=document.createElement("style");
+        runtimeStyle.id="viegeoIslandTheoryRuntimeStyle";
+        runtimeStyle.textContent="#islandTheoryModal[hidden]{display:none!important}#islandTheoryModal{position:fixed;inset:0;z-index:2147483000;place-items:center;padding:20px}#islandTheoryModal .province-summary-backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(1,10,20,.82)}#islandTheoryModal .island-theory-dialog{position:relative;z-index:1;width:min(820px,100%);max-height:82vh;overflow:auto}";
+        document.head.appendChild(runtimeStyle);
+    }
+
+    islandTheoryTitle=document.getElementById("islandTheoryTitle");
+    islandTheorySubtitle=document.getElementById("islandTheorySubtitle");
+    islandTheoryBankStatus=document.getElementById("islandTheoryBankStatus");
+    islandTheoryContent=document.getElementById("islandTheoryContent");
+    islandTheoryCloseButton=document.getElementById("islandTheoryCloseButton");
+    islandTheoryStartButton=document.getElementById("islandTheoryStartButton");
+
+    if(islandTheoryModal.dataset.viegeoBound!=="true"){
+        islandTheoryModal.dataset.viegeoBound="true";
+        islandTheoryCloseButton?.addEventListener("click",closeIslandTheory);
+        islandTheoryStartButton?.addEventListener("click",beginIslandQuiz);
+        islandTheoryModal.addEventListener("click",function(event){
+            if(event.target.closest("[data-close-island-theory]")){
+                closeIslandTheory();
+            }
+        });
+    }
+    return islandTheoryModal;
+}
+
 var regionData={
     north:{name:"Miền Bắc",description:"Khám phá các tỉnh thành miền Bắc từ vùng núi cao đến đồng bằng sông Hồng.",provinces:["Hà Nội","Hải Phòng","Quảng Ninh","Hà Giang","Cao Bằng","Bắc Kạn","Tuyên Quang","Lào Cai","Yên Bái","Thái Nguyên","Lạng Sơn","Bắc Giang","Phú Thọ","Vĩnh Phúc","Bắc Ninh","Hải Dương","Hưng Yên","Thái Bình","Hà Nam","Nam Định","Ninh Bình","Hòa Bình","Sơn La","Điện Biên","Lai Châu"]},
     central:{name:"Miền Trung",description:"Khám phá dải đất miền Trung, duyên hải và không gian Tây Nguyên.",provinces:["Thanh Hóa","Nghệ An","Hà Tĩnh","Quảng Bình","Quảng Trị","Thừa Thiên Huế","Đà Nẵng","Quảng Nam","Quảng Ngãi","Bình Định","Phú Yên","Khánh Hòa","Ninh Thuận","Bình Thuận","Kon Tum","Gia Lai","Đắk Lắk","Đắk Nông","Lâm Đồng"]},
@@ -607,6 +656,7 @@ function closeIslandTheory(){
         return;
     }
     islandTheoryModal.hidden=true;
+    islandTheoryModal.style.setProperty("display","none","important");
     document.body.classList.remove("province-summary-opened");
 }
 
@@ -622,9 +672,21 @@ function beginIslandQuiz(){
 
 async function openQuiz(event){
     var button=event.target.closest(".node-circle");
+    var node=event.target.closest(".learning-node");
     var currentRequestId;
 
+    if(!button&&node){
+        button=node.querySelector(".node-circle");
+    }
+
     if(!button||button.disabled){
+        return;
+    }
+
+    ensureIslandTheoryUi();
+    if(activeQuestionLoadState==="loading"&&selectedStage===Number(button.getAttribute("data-stage"))){
+        islandTheoryModal.hidden=false;
+        islandTheoryModal.style.setProperty("display","grid","important");
         return;
     }
 
@@ -643,6 +705,7 @@ async function openQuiz(event){
     nextQuestionButton.textContent="CÂU TIẾP THEO";
     if(islandTheoryModal){
         islandTheoryModal.hidden=false;
+        islandTheoryModal.style.setProperty("display","grid","important");
         document.body.classList.add("province-summary-opened");
         islandTheoryTitle.textContent="Lý thuyết cần nhớ";
         islandTheorySubtitle.textContent=selectedProvince+" · Đảo nhỏ "+selectedStage;
@@ -763,19 +826,7 @@ function initializeLearningFlow(){
             }
         });
     }
-    if(islandTheoryCloseButton){
-        islandTheoryCloseButton.addEventListener("click",closeIslandTheory);
-    }
-    if(islandTheoryStartButton){
-        islandTheoryStartButton.addEventListener("click",beginIslandQuiz);
-    }
-    if(islandTheoryModal){
-        islandTheoryModal.addEventListener("click",function(event){
-            if(event.target.closest("[data-close-island-theory]")){
-                closeIslandTheory();
-            }
-        });
-    }
+    ensureIslandTheoryUi();
     document.addEventListener("keydown",function(event){
         if(event.key==="Escape"&&islandTheoryModal&&!islandTheoryModal.hidden){
             closeIslandTheory();
