@@ -468,6 +468,76 @@
         }
     }
 
+    async function loadBossSummaryTheory() {
+        const province = String(byId('bulkImportProvince')?.value || '').trim();
+        const textarea = byId('bulkImportProvinceSummaryTheory');
+        const status = byId('bossSummaryTheoryStatus');
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        if (!textarea) return;
+        if (!province) {
+            textarea.value = '';
+            if (status) status.textContent = 'Chọn Tỉnh/Thành để tải hoặc cập nhật nội dung đã lưu.';
+            return;
+        }
+        if (!client?.from) {
+            if (status) status.textContent = 'Supabase chưa sẵn sàng.';
+            return;
+        }
+        textarea.disabled = true;
+        if (status) status.textContent = 'Đang tải lý thuyết tổng kết đã lưu...';
+        try {
+            const { data, error } = await client
+                .from('questions')
+                .select('island_theory')
+                .eq('province', province)
+                .eq('island', 'Đảo nhỏ 34')
+                .limit(100);
+            if (error) throw error;
+            const row = (Array.isArray(data) ? data : []).find(item => String(item?.island_theory || '').trim());
+            textarea.value = String(row?.island_theory || '').trim();
+            if (status) status.textContent = row
+                ? 'Đã tải nội dung tổng kết BOSS hiện có.'
+                : 'Tỉnh này chưa có lý thuyết tổng kết BOSS.';
+        } catch (error) {
+            console.error('[VieGeo Admin] Không thể tải lý thuyết tổng kết BOSS:', error);
+            if (status) status.textContent = `Không thể tải nội dung: ${error.message || error}`;
+        } finally {
+            textarea.disabled = false;
+        }
+    }
+
+    async function saveBossSummaryTheory() {
+        const province = String(byId('bulkImportProvince')?.value || '').trim();
+        const theory = sanitizeImportText(byId('bulkImportProvinceSummaryTheory')?.value || '', 12000);
+        const button = byId('saveBossSummaryTheoryButton');
+        const status = byId('bossSummaryTheoryStatus');
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        try {
+            if (!province) throw new Error('Hãy chọn Tỉnh/Thành trước khi lưu lý thuyết tổng kết.');
+            if (!theory) throw new Error('Hãy nhập nội dung lý thuyết tổng kết BOSS.');
+            if (!client?.from) throw new Error('Supabase chưa sẵn sàng.');
+            if (button) button.disabled = true;
+            if (status) status.textContent = 'Đang lưu lý thuyết tổng kết lên Supabase...';
+            const { data, error } = await client
+                .from('questions')
+                .update({ island_theory: theory })
+                .eq('province', province)
+                .eq('island', 'Đảo nhỏ 34')
+                .select('id');
+            if (error) throw error;
+            const count = Array.isArray(data) ? data.length : 0;
+            if (!count) throw new Error('Tỉnh này chưa có câu hỏi BOSS. Hãy upload câu hỏi cho Đảo nhỏ 34 trước.');
+            if (status) status.textContent = `Đã lưu lý thuyết tổng kết vào ${count} câu hỏi BOSS.`;
+            showToast('Đã lưu lý thuyết tổng kết BOSS.', 'success');
+        } catch (error) {
+            console.error('[VieGeo Admin] Không thể lưu lý thuyết tổng kết BOSS:', error);
+            if (status) status.textContent = `Không thể lưu: ${error.message || error}`;
+            showToast(error.message || 'Không thể lưu lý thuyết tổng kết BOSS.', 'error');
+        } finally {
+            if (button) button.disabled = false;
+        }
+    }
+
     function parseBulkQuestionText(rawText, shared) {
         const lines = String(rawText || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
         if (!lines.length) throw new Error('Hãy dán ít nhất một dòng câu hỏi.');
@@ -484,7 +554,10 @@
                 question: sanitizeImportText(question, 1000), option_a: sanitizeImportText(optionA, 500), option_b: sanitizeImportText(optionB, 500),
                 option_c: sanitizeImportText(optionC, 500), option_d: sanitizeImportText(optionD, 500), correct_option: correctOption,
                 province: shared.province, island: shared.island, topic: shared.topic, theory: sanitizeImportText(theory, 6000),
-                island_theory: shared.islandTheory, difficulty
+                island_theory: shared.island === 'Đảo nhỏ 34'
+                    ? (shared.provinceSummaryTheory || shared.islandTheory)
+                    : shared.islandTheory,
+                difficulty
             };
         });
     }
@@ -494,7 +567,8 @@
             province: String(byId('bulkImportProvince')?.value || '').trim(),
             island: String(byId('bulkImportSubIsland')?.value || '').trim(),
             topic: sanitizeImportText(byId('bulkImportTopic')?.value || '', 160),
-            islandTheory: sanitizeImportText(byId('bulkImportIslandTheory')?.value || '', 12000)
+            islandTheory: sanitizeImportText(byId('bulkImportIslandTheory')?.value || '', 12000),
+            provinceSummaryTheory: sanitizeImportText(byId('bulkImportProvinceSummaryTheory')?.value || '', 12000)
         };
     }
 
@@ -567,8 +641,10 @@
             populateQuestionBankFilters();
             byId('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
             byId('bulkQuestionText')?.addEventListener('input', previewBulkQuestionText);
-            ['bulkImportProvince', 'bulkImportSubIsland', 'bulkImportTopic', 'bulkImportIslandTheory']
+            ['bulkImportProvince', 'bulkImportSubIsland', 'bulkImportTopic', 'bulkImportIslandTheory', 'bulkImportProvinceSummaryTheory']
                 .forEach((id) => byId(id)?.addEventListener('change', previewBulkQuestionText));
+            byId('bulkImportProvince')?.addEventListener('change', loadBossSummaryTheory);
+            byId('saveBossSummaryTheoryButton')?.addEventListener('click', saveBossSummaryTheory);
             ['questionProvinceFilter', 'questionIslandFilter']
                 .forEach((id) => byId(id)?.addEventListener('change', loadQuestionBank));
             byId('refreshQuestionBankButton')?.addEventListener('click', loadQuestionBank);
@@ -578,6 +654,7 @@
             });
             byId('backToHomeButton')?.addEventListener('click', () => { window.location.href = 'student-dashboard.html'; });
             byId('logoutButton')?.addEventListener('click', () => { localStorage.removeItem('lm_session'); window.location.href = 'loginout.html'; });
+            loadBossSummaryTheory();
             byId('settingsLogoutButton')?.addEventListener('click', () => byId('logoutButton')?.click());
             byId('themeButton')?.addEventListener('click', () => window.toggleGlobalTheme?.());
             byId('settingsThemeButton')?.addEventListener('click', () => byId('themeButton')?.click());

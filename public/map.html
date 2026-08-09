@@ -202,6 +202,31 @@
         </div>
     </main>
 
+    <div id="islandTheoryModal" class="province-summary-modal island-theory-modal" hidden>
+        <button class="province-summary-backdrop" type="button" data-close-island-theory aria-label="Quay lại lộ trình"></button>
+        <section class="province-summary-dialog island-theory-dialog" role="dialog" aria-modal="true" aria-labelledby="islandTheoryTitle">
+            <button id="islandTheoryCloseButton" class="province-summary-close" type="button" aria-label="Quay lại lộ trình">×</button>
+            <span class="province-summary-eyebrow">Chuẩn bị trước khi làm bài</span>
+            <h2 id="islandTheoryTitle">Lý thuyết cần nhớ</h2>
+            <p id="islandTheorySubtitle" class="province-summary-subtitle"></p>
+            <div id="islandTheoryBankStatus" class="island-theory-bank-status" aria-live="polite">Đang đồng bộ ngân hàng câu hỏi Supabase...</div>
+            <div id="islandTheoryContent" class="province-summary-content island-theory-content">Đang tải nội dung lý thuyết từ Admin...</div>
+            <button id="islandTheoryStartButton" class="province-summary-done island-theory-start" type="button" disabled>BẮT ĐẦU LÀM BÀI</button>
+        </section>
+    </div>
+
+    <div id="provinceSummaryModal" class="province-summary-modal" hidden>
+        <button class="province-summary-backdrop" type="button" data-close-province-summary aria-label="Đóng lý thuyết tổng kết"></button>
+        <section class="province-summary-dialog" role="dialog" aria-modal="true" aria-labelledby="provinceSummaryTitle">
+            <button id="provinceSummaryCloseButton" class="province-summary-close" type="button" aria-label="Đóng">×</button>
+            <span class="province-summary-eyebrow">Kho kiến thức đã mở khóa</span>
+            <h2 id="provinceSummaryTitle">Lý thuyết tổng kết</h2>
+            <p id="provinceSummarySubtitle" class="province-summary-subtitle"></p>
+            <div id="provinceSummaryContent" class="province-summary-content">Đang tải nội dung từ ngân hàng Admin...</div>
+            <button id="provinceSummaryDoneButton" class="province-summary-done" type="button">ĐÃ ĐỌC XONG</button>
+        </section>
+    </div>
+
     <button class="support-button" id="supportButton" type="button">
         <span class="support-avatar">CS</span>
         <span class="support-copy">

@@ -139,3 +139,8 @@ html[data-theme="light"] .back-to-home-btn{color:#ffffff;background:rgba(255,255
 .question-bank-difficulty{display:inline-flex;padding:5px 9px;border-radius:999px;background:#e2f2ff;color:#1f6f95;font-size:10px;font-weight:800}
 html[data-theme="dark"] .question-bank-difficulty{background:#1f4559;color:#d9f2ff}
 @media(max-width:760px){.question-bank-heading{align-items:flex-start}.question-bank-filters{width:100%;display:grid;grid-template-columns:1fr}.question-bank-filters select,.question-bank-filters .soft-button{width:100%}}
+.boss-summary-upload{margin-top:4px;padding:16px;border:1px solid rgba(14,165,233,.24);border-radius:14px;background:linear-gradient(135deg,rgba(14,165,233,.06),rgba(16,185,129,.06))}
+.boss-summary-upload>strong{display:block;color:var(--text-primary);font-size:14px}
+.boss-summary-upload>p{margin:6px 0 12px;color:var(--text-secondary);font-size:12px;line-height:1.55}
+.boss-summary-upload .boss-summary-save{margin-top:10px}
+.boss-summary-upload>small{display:block;margin-top:9px;color:var(--text-secondary);line-height:1.5}

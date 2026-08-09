@@ -22,6 +22,19 @@ var questionStatus=document.getElementById("questionStatus");
 var questionText=document.getElementById("questionText");
 var answerFeedback=document.getElementById("answerFeedback");
 var supportButton=document.getElementById("supportButton");
+var provinceSummaryModal=document.getElementById("provinceSummaryModal");
+var provinceSummaryTitle=document.getElementById("provinceSummaryTitle");
+var provinceSummarySubtitle=document.getElementById("provinceSummarySubtitle");
+var provinceSummaryContent=document.getElementById("provinceSummaryContent");
+var provinceSummaryCloseButton=document.getElementById("provinceSummaryCloseButton");
+var provinceSummaryDoneButton=document.getElementById("provinceSummaryDoneButton");
+var islandTheoryModal=document.getElementById("islandTheoryModal");
+var islandTheoryTitle=document.getElementById("islandTheoryTitle");
+var islandTheorySubtitle=document.getElementById("islandTheorySubtitle");
+var islandTheoryBankStatus=document.getElementById("islandTheoryBankStatus");
+var islandTheoryContent=document.getElementById("islandTheoryContent");
+var islandTheoryCloseButton=document.getElementById("islandTheoryCloseButton");
+var islandTheoryStartButton=document.getElementById("islandTheoryStartButton");
 var selectedRegionKey="";
 var selectedProvince="";
 var selectedStage=1;
@@ -33,6 +46,7 @@ var ISLAND_QUESTION_LIMIT=5;
 var activeQuestionBankSize=0;
 var activeQuestionLoadState="idle";
 var questionLoadRequestId=0;
+var activeIslandTheory="";
 
 var regionData={
     north:{name:"Miền Bắc",description:"Khám phá các tỉnh thành miền Bắc từ vùng núi cao đến đồng bằng sông Hồng.",provinces:["Hà Nội","Hải Phòng","Quảng Ninh","Hà Giang","Cao Bằng","Bắc Kạn","Tuyên Quang","Lào Cai","Yên Bái","Thái Nguyên","Lạng Sơn","Bắc Giang","Phú Thọ","Vĩnh Phúc","Bắc Ninh","Hải Dương","Hưng Yên","Thái Bình","Hà Nam","Nam Định","Ninh Bình","Hòa Bình","Sơn La","Điện Biên","Lai Châu"]},
@@ -173,6 +187,17 @@ function getCompletedStageCount(){
     return completed;
 }
 
+function markCurrentStageCompleted(){
+    var state=getGameStateValue();
+    var key="completed_"+selectedProvince;
+    var previous=Number(state[key]||0);
+
+    if(selectedStage>previous){
+        state[key]=Math.min(34,selectedStage);
+        localStorage.setItem("VieGeo_state",JSON.stringify(state));
+    }
+}
+
 function renderRoadmap(){
     var completed=getCompletedStageCount();
     var html="";
@@ -182,6 +207,7 @@ function renderRoadmap(){
     var disabled;
     var title;
     var pathClass;
+    var summaryUnlocked;
 
     roadmapProvinceTitle.textContent=selectedProvince;
 
@@ -225,7 +251,63 @@ function renderRoadmap(){
         }
     }
 
+    summaryUnlocked=completed>=34;
+    html+='<div class="province-summary-connector '+(summaryUnlocked?'unlocked':'')+'" aria-hidden="true"></div>';
+    html+='<section class="province-summary-node '+(summaryUnlocked?'unlocked':'locked')+'">';
+    html+='<div class="province-summary-icon" aria-hidden="true">'+(summaryUnlocked?'📖':'🔒')+'</div>';
+    html+='<div class="province-summary-card">';
+    html+='<span>Tổng kết toàn tỉnh</span><strong>Lý thuyết tổng hợp '+selectedProvince+'</strong>';
+    html+='<small>'+(summaryUnlocked?'Đã mở khóa sau khi vượt qua BOSS':'Hoàn thành BOSS để mở khóa nội dung')+'</small>';
+    html+='<button class="province-summary-open" type="button" data-open-province-summary'+(summaryUnlocked?'':' disabled')+'>'+(summaryUnlocked?'ĐỌC LÝ THUYẾT TỔNG':'CHƯA MỞ KHÓA')+'</button>';
+    html+='</div></section>';
+
     roadmapContainer.innerHTML=html;
+}
+
+function closeProvinceSummary(){
+    if(!provinceSummaryModal){
+        return;
+    }
+    provinceSummaryModal.hidden=true;
+    document.body.classList.remove("province-summary-opened");
+}
+
+async function openProvinceSummary(event){
+    var button=event.target.closest("[data-open-province-summary]");
+    var client;
+    var rows;
+    var summaryRow;
+    var summaryText;
+
+    if(!button||button.disabled||getCompletedStageCount()<34||!provinceSummaryModal){
+        return;
+    }
+
+    provinceSummaryModal.hidden=false;
+    document.body.classList.add("province-summary-opened");
+    provinceSummaryTitle.textContent="Lý thuyết tổng kết "+selectedProvince;
+    provinceSummarySubtitle.textContent="Phần kiến thức tổng hợp được mở khóa sau khi hoàn thành BOSS của tỉnh.";
+    provinceSummaryContent.textContent="Đang tải nội dung từ ngân hàng Admin...";
+
+    try{
+        client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
+        if(!client||typeof client.from!=="function"){
+            throw new Error("Supabase client chưa sẵn sàng");
+        }
+        rows=await fetchQuestionPages(client,provinceQueryCandidates(selectedProvince));
+        rows=rows.filter(function(row){
+            return normalizeProvinceKey(row?.province||row?.province_slug||row?.provinceName)===normalizeProvinceKey(selectedProvince)
+                &&questionIslandNumber(row)===34;
+        });
+        summaryRow=rows.find(function(row){
+            return String(row?.island_theory||"").trim();
+        });
+        summaryText=String(summaryRow?.island_theory||"").trim();
+        provinceSummaryContent.textContent=summaryText||"Admin chưa upload lý thuyết tổng kết cho BOSS của tỉnh này.";
+    }catch(error){
+        provinceSummaryContent.textContent="Không thể tải lý thuyết tổng kết: "+String(error?.message||error);
+        console.error("[VieGeo Map] Lỗi tải lý thuyết tổng kết BOSS:",error);
+    }
 }
 
 function getCurrentQuestionList(){
@@ -256,14 +338,32 @@ function normalizeProvinceKey(value){
 
 function normalizeBankQuestion(row){
     var source=row||{};
-    var options=Array.isArray(source.options)
-        ? source.options
-        : [source.option_a,source.option_b,source.option_c,source.option_d];
-    var correctAnswer=Number(source.correct_option??source.correctAnswer??source.answer??0);
+    var options=source.options;
+    var rawAnswer=source.correct_option??source.correctAnswer??source.correct_answer??source.answerIndex??source.answer??0;
+    var correctAnswer;
+
+    if(typeof options==="string"){
+        try{
+            options=JSON.parse(options);
+        }catch(error){
+            options=options.split("|");
+        }
+    }
+    if(!Array.isArray(options)){
+        options=[source.option_a,source.option_b,source.option_c,source.option_d];
+    }
 
     options=options.map(function(value){
         return String(value||"").trim();
     }).filter(Boolean);
+
+    if(typeof rawAnswer==="string"&&/^[A-D]$/i.test(rawAnswer.trim())){
+        correctAnswer=rawAnswer.trim().toUpperCase().charCodeAt(0)-65;
+    }else if(typeof rawAnswer==="string"&&options.indexOf(rawAnswer.trim())>=0){
+        correctAnswer=options.indexOf(rawAnswer.trim());
+    }else{
+        correctAnswer=Number(rawAnswer);
+    }
 
     return {
         question:String(source.question||source.question_text||source.questionText||"").trim(),
@@ -273,48 +373,117 @@ function normalizeBankQuestion(row){
     };
 }
 
+function provinceQueryCandidates(value){
+    var raw=String(value||"").trim();
+    var withoutPrefix=raw.replace(/^TP\.?\s*/i,"").trim();
+    var slug=normalizeProvinceKey(raw);
+    return Array.from(new Set([
+        slug,
+        raw,
+        withoutPrefix,
+        "tp-"+slug,
+        "TP. "+withoutPrefix
+    ].filter(Boolean)));
+}
+
+function questionIslandNumber(row){
+    var source=row||{};
+    var direct=source.sub_island??source.subIsland??source.island_index??source.islandIndex;
+    var match=String(source.island||source.island_name||"").match(/\d+/);
+    if(match){
+        return Number(match[0]);
+    }
+    if(Number.isFinite(Number(direct))&&Number(direct)>0){
+        return Number(direct);
+    }
+    return 0;
+}
+
+async function fetchQuestionPages(client,provinceCandidates){
+    var rows=[];
+    var pageSize=1000;
+    var page;
+    var query;
+    var response;
+    var pageRows;
+
+    for(page=0;page<10;page+=1){
+        query=client.from("questions").select("*");
+        if(Array.isArray(provinceCandidates)&&provinceCandidates.length){
+            query=query.in("province",provinceCandidates);
+        }
+        response=await query.range(page*pageSize,(page+1)*pageSize-1);
+        if(response.error){
+            throw response.error;
+        }
+        pageRows=Array.isArray(response.data)?response.data:[];
+        rows=rows.concat(pageRows);
+        if(pageRows.length<pageSize){
+            break;
+        }
+    }
+    return rows;
+}
+
 async function fetchIslandQuestionBank(){
     var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
     var provinceId=normalizeProvinceKey(selectedProvince);
     var islandName="Đảo nhỏ "+selectedStage;
     var difficulty=getDifficulty();
-    var response;
+    var candidates=provinceQueryCandidates(selectedProvince);
     var rows;
+    var provinceRows;
+    var islandRows;
     var validRows;
     var matchingDifficulty;
     var selectedPool;
+    var theoryValues;
 
     if(!client||typeof client.from!=="function"){
         throw new Error("Supabase client chưa sẵn sàng");
     }
 
-    response=await client
-        .from("questions")
-        .select("*")
-        .eq("province",provinceId)
-        .eq("island",islandName)
-        .limit(1000);
-
-    if(response.error){
-        throw response.error;
+    rows=await fetchQuestionPages(client,candidates);
+    if(!rows.length){
+        rows=await fetchQuestionPages(client,[]);
     }
-
-    rows=Array.isArray(response.data)?response.data:[];
-    validRows=rows.map(normalizeBankQuestion).filter(function(item){
+    provinceRows=rows.filter(function(item){
+        return normalizeProvinceKey(item?.province||item?.province_slug||item?.provinceName)===provinceId;
+    });
+    islandRows=provinceRows.filter(function(item){
+        return questionIslandNumber(item)===selectedStage;
+    });
+    validRows=islandRows.map(normalizeBankQuestion).filter(function(item){
         return item.question&&item.options.length>=2&&item.correctAnswer>=0&&item.correctAnswer<item.options.length;
     });
-    matchingDifficulty=rows.filter(function(item){
+    matchingDifficulty=islandRows.filter(function(item){
         return String(item.difficulty||"easy").trim().toLowerCase()===difficulty;
     }).map(normalizeBankQuestion).filter(function(item){
         return item.question&&item.options.length>=2&&item.correctAnswer>=0&&item.correctAnswer<item.options.length;
     });
     selectedPool=matchingDifficulty.length>=ISLAND_QUESTION_LIMIT?matchingDifficulty:validRows;
     activeQuestionBankSize=selectedPool.length;
+    theoryValues=Array.from(new Set(islandRows.map(function(item){
+        return String(item?.island_theory||item?.islandTheory||"").trim();
+    }).filter(Boolean)));
+    if(theoryValues.length){
+        activeIslandTheory=theoryValues[0];
+    }else{
+        theoryValues=Array.from(new Set(islandRows.map(function(item){
+            return String(item?.theory||"").trim();
+        }).filter(Boolean))).slice(0,5);
+        activeIslandTheory=theoryValues.length>1
+            ? theoryValues.map(function(value){return "• "+value;}).join("\n\n")
+            : String(theoryValues[0]||"");
+    }
 
     console.info("[VieGeo Map] Đồng bộ ngân hàng câu hỏi",{
         province:provinceId,
         island:islandName,
         difficulty:difficulty,
+        rowsLoaded:rows.length,
+        provinceRows:provinceRows.length,
+        islandRows:islandRows.length,
         total:validRows.length,
         matchingDifficulty:matchingDifficulty.length,
         selectedPool:selectedPool.length
@@ -433,6 +602,24 @@ function openProvince(event){
     showRoadmapView();
 }
 
+function closeIslandTheory(){
+    if(!islandTheoryModal){
+        return;
+    }
+    islandTheoryModal.hidden=true;
+    document.body.classList.remove("province-summary-opened");
+}
+
+function beginIslandQuiz(){
+    if(getActiveQuestionList().length!==ISLAND_QUESTION_LIMIT){
+        return;
+    }
+    closeIslandTheory();
+    nextQuestionButton.disabled=false;
+    renderQuestion();
+    showQuizView();
+}
+
 async function openQuiz(event){
     var button=event.target.closest(".node-circle");
     var currentRequestId;
@@ -449,16 +636,21 @@ async function openQuiz(event){
     selectedAnswer=-1;
     activeQuestionSet=[];
     activeQuestionBankSize=0;
+    activeIslandTheory="";
     activeQuestionLoadState="loading";
     currentRequestId=++questionLoadRequestId;
     nextQuestionButton.disabled=true;
     nextQuestionButton.textContent="CÂU TIẾP THEO";
-    showQuizView();
-    questionNumber.textContent="Đang tải ngân hàng...";
-    questionStatus.textContent="Đang đồng bộ";
-    questionText.textContent="Hệ thống đang lấy câu hỏi đúng Tỉnh/Thành và Đảo nhỏ.";
-    answerGrid.innerHTML="";
-    answerFeedback.textContent="Vui lòng chờ trong giây lát.";
+    if(islandTheoryModal){
+        islandTheoryModal.hidden=false;
+        document.body.classList.add("province-summary-opened");
+        islandTheoryTitle.textContent="Lý thuyết cần nhớ";
+        islandTheorySubtitle.textContent=selectedProvince+" · Đảo nhỏ "+selectedStage;
+        islandTheoryContent.textContent="Đang tải nội dung lý thuyết từ Admin...";
+        islandTheoryBankStatus.className="island-theory-bank-status";
+        islandTheoryBankStatus.textContent="Đang đồng bộ ngân hàng câu hỏi Supabase...";
+        islandTheoryStartButton.disabled=true;
+    }
 
     try{
         activeQuestionSet=await fetchIslandQuestionBank();
@@ -469,8 +661,21 @@ async function openQuiz(event){
         if(activeQuestionSet.length!==ISLAND_QUESTION_LIMIT){
             activeQuestionSet=[];
         }
-        nextQuestionButton.disabled=activeQuestionSet.length!==ISLAND_QUESTION_LIMIT;
-        renderQuestion();
+        if(islandTheoryContent){
+            islandTheoryContent.textContent=activeIslandTheory||"Admin chưa upload nội dung lý thuyết cho đảo nhỏ này.";
+        }
+        if(islandTheoryBankStatus){
+            if(activeQuestionSet.length===ISLAND_QUESTION_LIMIT){
+                islandTheoryBankStatus.className="island-theory-bank-status ready";
+                islandTheoryBankStatus.textContent="Đã liên kết "+String(activeQuestionBankSize)+" câu hỏi từ Supabase. Hệ thống sẽ chọn ngẫu nhiên đúng 5 câu cho lượt làm bài này.";
+            }else{
+                islandTheoryBankStatus.className="island-theory-bank-status error";
+                islandTheoryBankStatus.textContent="Chỉ tìm thấy "+String(activeQuestionBankSize)+"/5 câu hợp lệ cho "+selectedProvince+" · Đảo nhỏ "+selectedStage+".";
+            }
+        }
+        if(islandTheoryStartButton){
+            islandTheoryStartButton.disabled=activeQuestionSet.length!==ISLAND_QUESTION_LIMIT;
+        }
     }catch(error){
         if(currentRequestId!==questionLoadRequestId){
             return;
@@ -478,8 +683,16 @@ async function openQuiz(event){
         activeQuestionLoadState="error";
         activeQuestionSet=[];
         activeQuestionBankSize=0;
-        renderQuestion();
-        answerFeedback.textContent="Không thể đồng bộ ngân hàng câu hỏi: "+String(error?.message||error);
+        if(islandTheoryContent){
+            islandTheoryContent.textContent="Không thể tải lý thuyết của đảo từ Supabase.";
+        }
+        if(islandTheoryBankStatus){
+            islandTheoryBankStatus.className="island-theory-bank-status error";
+            islandTheoryBankStatus.textContent="Không thể đồng bộ ngân hàng câu hỏi: "+String(error?.message||error);
+        }
+        if(islandTheoryStartButton){
+            islandTheoryStartButton.disabled=true;
+        }
         console.error("[VieGeo Map] Lỗi tải câu hỏi theo đảo:",error);
     }
 }
@@ -488,6 +701,7 @@ function nextQuestion(){
     var questions=getActiveQuestionList();
 
     if(quizCompleted){
+        renderRoadmap();
         showRoadmapView();
         return;
     }
@@ -497,6 +711,7 @@ function nextQuestion(){
     }
     if(currentQuestionIndex>=ISLAND_QUESTION_LIMIT-1||currentQuestionIndex>=questions.length-1){
         quizCompleted=true;
+        markCurrentStageCompleted();
         questionNumber.textContent="Hoàn thành 5 / 5 câu";
         questionStatus.textContent="Đã hoàn thành";
         questionText.textContent="Bạn đã hoàn thành đảo này!";
@@ -527,12 +742,49 @@ function initializeLearningFlow(){
     quizBackButton.addEventListener("click",showRoadmapView);
     provinceGrid.addEventListener("click",openProvince);
     roadmapContainer.addEventListener("click",openQuiz);
+    roadmapContainer.addEventListener("click",openProvinceSummary);
     answerGrid.addEventListener("click",selectAnswer);
     nextQuestionButton.addEventListener("click",nextQuestion);
 
     if(supportButton){
         supportButton.addEventListener("click",openSupport);
     }
+
+    if(provinceSummaryCloseButton){
+        provinceSummaryCloseButton.addEventListener("click",closeProvinceSummary);
+    }
+    if(provinceSummaryDoneButton){
+        provinceSummaryDoneButton.addEventListener("click",closeProvinceSummary);
+    }
+    if(provinceSummaryModal){
+        provinceSummaryModal.addEventListener("click",function(event){
+            if(event.target.closest("[data-close-province-summary]")){
+                closeProvinceSummary();
+            }
+        });
+    }
+    if(islandTheoryCloseButton){
+        islandTheoryCloseButton.addEventListener("click",closeIslandTheory);
+    }
+    if(islandTheoryStartButton){
+        islandTheoryStartButton.addEventListener("click",beginIslandQuiz);
+    }
+    if(islandTheoryModal){
+        islandTheoryModal.addEventListener("click",function(event){
+            if(event.target.closest("[data-close-island-theory]")){
+                closeIslandTheory();
+            }
+        });
+    }
+    document.addEventListener("keydown",function(event){
+        if(event.key==="Escape"&&islandTheoryModal&&!islandTheoryModal.hidden){
+            closeIslandTheory();
+            return;
+        }
+        if(event.key==="Escape"&&provinceSummaryModal&&!provinceSummaryModal.hidden){
+            closeProvinceSummary();
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded",initializeLearningFlow);

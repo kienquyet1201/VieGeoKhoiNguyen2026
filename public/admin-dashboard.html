@@ -217,6 +217,15 @@
                                 <label class="field-label">Lý thuyết của đảo <small>(chỉ hiển thị một lần trước bài)</small>
                                     <textarea class="field-input bulk-island-theory" id="bulkImportIslandTheory" rows="7" maxlength="12000" placeholder="Nhập nội dung lý thuyết chung để học sinh đọc trước khi làm bài..."></textarea>
                                 </label>
+                                <section class="boss-summary-upload" aria-labelledby="bossSummaryUploadTitle">
+                                    <strong id="bossSummaryUploadTitle">Lý thuyết tổng kết sau BOSS</strong>
+                                    <p>Nội dung này xuất hiện dưới BOSS và chỉ mở khóa sau khi học sinh hoàn thành BOSS của Tỉnh/Thành đã chọn.</p>
+                                    <label class="field-label" for="bulkImportProvinceSummaryTheory">Nội dung tổng kết của tỉnh
+                                        <textarea class="field-input bulk-island-theory" id="bulkImportProvinceSummaryTheory" rows="8" maxlength="12000" placeholder="Nhập phần tổng hợp kiến thức của toàn tỉnh..."></textarea>
+                                    </label>
+                                    <button class="primary-button boss-summary-save" id="saveBossSummaryTheoryButton" type="button">Lưu lý thuyết tổng kết BOSS</button>
+                                    <small id="bossSummaryTheoryStatus">Chọn Tỉnh/Thành để tải hoặc cập nhật nội dung đã lưu.</small>
+                                </section>
                                 <p class="bulk-upload-note">Tỉnh/Thành, Đảo, Chủ đề và Lý thuyết đảo sẽ được ghép tự động cho mọi câu hợp lệ trong lô.</p>
                                 <button class="primary-button" id="btnProcessUpload" type="button">Phân tích và lưu câu hỏi</button>
                             </div>
