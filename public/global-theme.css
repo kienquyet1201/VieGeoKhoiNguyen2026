@@ -40,9 +40,11 @@ button:disabled{cursor:not-allowed}
 @keyframes viegeo-request-spin{to{transform:rotate(360deg)}}
 
 /* Global sticky navigation and customer-support placement. */
+html,body{margin:0!important;padding:0!important}
 .shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header{
     position:sticky!important;
     top:0!important;
+    margin-top:0!important;
     z-index:99999!important;
     width:100%!important;
     background-color:#fff!important;
@@ -62,4 +64,9 @@ button:disabled{cursor:not-allowed}
     display:flex!important;
     align-items:center!important;
     justify-content:center!important;
+    pointer-events:auto!important;
 }
+.viegeo-support-modal{position:fixed;inset:0;z-index:1000000;background:rgba(2,12,24,.68);backdrop-filter:blur(5px);padding:24px;box-sizing:border-box}
+.viegeo-support-modal__dialog{position:relative;width:min(760px,100%);height:min(760px,calc(100dvh - 48px));margin:0 auto;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 24px 80px rgba(0,0,0,.38)}
+.viegeo-support-modal__frame{display:block;width:100%;height:100%;border:0;background:#fff}
+.viegeo-support-modal__close{position:absolute;top:12px;right:12px;z-index:2;width:42px;height:42px;border:0;border-radius:50%;background:#153a53;color:#fff;font-size:24px;cursor:pointer;display:grid;place-items:center}

@@ -1844,9 +1844,11 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 @media (max-width: 760px) { .cs-portal { grid-template-columns: 1fr; min-height: calc(100dvh - 112px); }.cs-queues { max-height: 245px; border-right: 0; border-bottom: 1px solid rgba(148,163,184,.16); }.cs-thread { min-height: 420px; }.cs-queue-list { grid-template-columns: repeat(2,minmax(0,1fr)); }.cs-queue-preview { margin-left: 0; } }
 
 /* Global fallback for pages that do not load global-theme.css. */
+html,body{margin:0!important;padding:0!important}
 .shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header{
     position:sticky!important;
     top:0!important;
+    margin-top:0!important;
     z-index:99999!important;
     width:100%!important;
     background-color:#fff!important;
@@ -1866,4 +1868,5 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
     display:flex!important;
     align-items:center!important;
     justify-content:center!important;
+    pointer-events:auto!important;
 }

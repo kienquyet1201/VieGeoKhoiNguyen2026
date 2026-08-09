@@ -39,9 +39,57 @@ function initializeGlobalTheme(){
     applyGlobalTheme(getGlobalTheme());
 }
 
+function ensureVieGeoSupportModal(){
+    var modal=document.getElementById("viegeoSupportModal");
+    if(modal){return modal;}
+
+    modal=document.createElement("div");
+    modal.id="viegeoSupportModal";
+    modal.className="viegeo-support-modal";
+    modal.hidden=true;
+    modal.style.display="none";
+    modal.innerHTML='<div class="viegeo-support-modal__dialog" role="dialog" aria-modal="true" aria-label="Hỗ trợ khách hàng"><button class="viegeo-support-modal__close" type="button" aria-label="Đóng">×</button><iframe class="viegeo-support-modal__frame" title="Hỗ trợ VieGeo" src="support-user.html"></iframe></div>';
+    document.body.appendChild(modal);
+
+    modal.querySelector(".viegeo-support-modal__close").addEventListener("click",closeVieGeoSupportModal);
+    modal.addEventListener("click",function(event){
+        if(event.target===modal){closeVieGeoSupportModal();}
+    });
+    return modal;
+}
+
+function openVieGeoSupportModal(){
+    var modal=ensureVieGeoSupportModal();
+    modal.hidden=false;
+    modal.style.display="block";
+    document.body.style.overflow="hidden";
+}
+
+function closeVieGeoSupportModal(){
+    var modal=document.getElementById("viegeoSupportModal");
+    if(!modal){return;}
+    modal.hidden=true;
+    modal.style.display="none";
+    document.body.style.overflow="";
+}
+
 applyGlobalTheme(getGlobalTheme());
 
 document.addEventListener("DOMContentLoaded",initializeGlobalTheme);
+
+document.addEventListener("click",function(event){
+    var button=event.target.closest(".support-button,.support-btn,#supportButton,#studentSupportButton");
+    if(!button){return;}
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openVieGeoSupportModal();
+},true);
+
+document.addEventListener("keydown",function(event){
+    if(event.key==="Escape"){closeVieGeoSupportModal();}
+});
+
+window.openVieGeoSupportModal=openVieGeoSupportModal;
 
 window.addEventListener("storage",function(event){
     if(event.key===globalThemeKey){
