@@ -4,14 +4,6 @@
 
     const TABLES = new Set(['questions', 'users', 'leaderboard', 'user_feedbacks', 'error_reports']);
     const CACHE_PREFIX = 'VieGeo_supabase_cache_';
-    const MOCK = {
-        questions: [],
-        users: [],
-        leaderboard: [],
-        user_feedbacks: [],
-        error_reports: []
-    };
-
     function getClient() {
         try {
             const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
@@ -91,9 +83,13 @@
             if (safeTable === 'questions') return rows.map(normalizeQuestion).filter(Boolean);
             return rows;
         } catch (error) {
-            console.warn(`[VieGeo UI] ${safeTable} dùng cache cục bộ:`, error?.message || error);
+            if (safeTable === 'leaderboard') {
+                console.warn('[VieGeo UI] Không thể tải bảng xếp hạng trực tiếp từ Supabase:', error?.message || error);
+                return [];
+            }
+            console.warn(`[VieGeo UI] ${safeTable} dùng cache Supabase gần nhất:`, error?.message || error);
             const cached = readCache(safeTable);
-            const rows = cached.length ? cached : (MOCK[safeTable] || []);
+            const rows = cached.length ? cached : [];
             return safeTable === 'questions' ? rows.map(normalizeQuestion).filter(Boolean) : rows;
         }
     }
@@ -124,9 +120,9 @@
         let email = String(session.email || session.user?.email || '').trim().toLowerCase();
         try {
             const client = getClient();
-            if (!email && client?.auth?.getUser) {
+            if (client?.auth?.getUser) {
                 const result = await client.auth.getUser();
-                email = String(result?.data?.user?.email || '').trim().toLowerCase();
+                email = String(result?.data?.user?.email || email).trim().toLowerCase();
             }
             if (email && client) {
                 const { data, error } = await client.from('users').select('*').eq('email', email).maybeSingle();
@@ -161,10 +157,13 @@
             localStorage.setItem('VieGeo_state', JSON.stringify(state));
 
             const session = { ...readSession(), email: user.email || readSession().email };
-            const roles = roleList(user.roles, user.active_role || user.role || session.role);
-            session.roles = roles.length ? roles : ['user'];
-            session.role = user.active_role || user.role || session.role || session.roles[0];
-            session.activeRole = session.role;
+            const sessionRoleValue = session.activeRole || session.role;
+            const sessionRole = sessionRoleValue ? roleList(sessionRoleValue, 'user')[0] : '';
+            const remoteRoles = roleList(user.roles, user.active_role || user.role);
+            const activeRole = sessionRole || roleList(user.active_role || user.role, 'user')[0] || 'user';
+            session.roles = [...new Set([...remoteRoles, activeRole])];
+            session.role = activeRole;
+            session.activeRole = activeRole;
             session.name = user.name || user.full_name || session.name || '';
             localStorage.setItem('lm_session', JSON.stringify(session));
         } catch (error) {
@@ -192,9 +191,10 @@
 
             const select = document.getElementById('sharedRole');
             if (!select) return;
-            const labels = { user: 'Học sinh', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Quản trị viên' };
-            const roles = roleList(user.roles, user.active_role || user.role);
-            const active = user.active_role || user.role || roles[0] || 'user';
+            const labels = { user: 'Học viên', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Quản trị viên' };
+            const session = readSession();
+            const active = roleList(session.activeRole || session.role || user.active_role || user.role, 'user')[0] || 'user';
+            const roles = [...new Set([...roleList(user.roles, user.active_role || user.role), active])];
             select.replaceChildren();
             roles.forEach(role => {
                 const option = document.createElement('option');

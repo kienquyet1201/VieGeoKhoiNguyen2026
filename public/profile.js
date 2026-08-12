@@ -12,10 +12,15 @@ const dispEmail = document.getElementById('dispEmail');
 const profStreak = document.getElementById('profStreak');
 const profXp = document.getElementById('profXp');
 const profStyle = document.getElementById('profStyle');
+const profileLevel = document.getElementById('profileLevel');
+const profileProgressValue = document.getElementById('profileProgressValue');
+const profileProgressFill = document.getElementById('profileProgressFill');
+const profileNotificationList = document.getElementById('profileNotificationList');
 
 // Các field nhập liệu
 const profName = document.getElementById('profName');
 const profPhone = document.getElementById('profPhone');
+const profGender = document.getElementById('profGender');
 const oldPass = document.getElementById('oldPass');
 const newPass = document.getElementById('newPass');
 const security = window.VieGeoSecurity || {
@@ -72,11 +77,7 @@ async function syncAchievementBadges(currentUser) {
 
 // 1. Kiểm tra session
 const sessionData = localStorage.getItem('lm_session');
-if (!sessionData) {
-    window.location.href = '/loginout';
-}
-
-const sessionUser = JSON.parse(sessionData);
+const sessionUser = sessionData ? JSON.parse(sessionData) : {};
 
 // Load Game State
 function getGameState() {
@@ -86,26 +87,129 @@ function getGameState() {
 }
 const gameState = getGameState();
 
+function profileClient() {
+    const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+    return client && typeof client.from === 'function' ? client : null;
+}
+
+function normalizeLearningKey(value) {
+    try {
+        return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+    } catch (error) {
+        return String(value || '').trim().toLowerCase();
+    }
+}
+
+function lessonKey(row) {
+    const details = row?.details || {};
+    const province = normalizeLearningKey(row?.province || row?.province_slug || details.province || '');
+    const rawIsland = row?.island || row?.sub_island || details.island || details.island_index || '';
+    const match = String(rawIsland).match(/\d+/);
+    const island = match ? Number(match[0]) : Number(rawIsland);
+    return province && Number.isFinite(island) && island > 0 ? `${province}|${island}` : '';
+}
+
+async function fetchProfilePages(table, columns, email) {
+    const client = profileClient();
+    if (!client) throw new Error('Supabase client chưa sẵn sàng.');
+    const rows = [];
+    const pageSize = 1000;
+    for (let page = 0; page < 50; page += 1) {
+        let query = client.from(table).select(columns || '*');
+        if (email) query = query.eq('user_email', email);
+        const { data, error } = await query.range(page * pageSize, (page + 1) * pageSize - 1);
+        if (error) throw error;
+        const pageRows = Array.isArray(data) ? data : [];
+        rows.push(...pageRows);
+        if (pageRows.length < pageSize) break;
+    }
+    return rows;
+}
+
+function normalizeNotifications(currentUser) {
+    const remoteState = currentUser?.game_state && typeof currentUser.game_state === 'object' ? currentUser.game_state : {};
+    const source = currentUser?.notifications ?? remoteState.notifications ?? [];
+    if (!Array.isArray(source)) return [];
+    return source.filter(Boolean).map((item, index) => typeof item === 'string'
+        ? { id: `notice-${index}`, title: 'Thông báo', message: item, created_at: '' }
+        : {
+            id: item.id || `notice-${index}`,
+            title: item.title || item.subject || 'Thông báo',
+            message: item.message || item.content || item.text || '',
+            created_at: item.created_at || item.createdAt || ''
+        });
+}
+
+function renderNotifications(notifications) {
+    if (!profileNotificationList) return;
+    profileNotificationList.replaceChildren();
+    if (!notifications || notifications.length === 0) {
+        profileNotificationList.innerHTML = "<p class='empty-notice'>Chưa có thông báo mới</p>";
+        return;
+    }
+    notifications.forEach(notification => {
+        const item = document.createElement('article');
+        item.className = 'notification-item';
+        item.innerHTML = '<strong></strong><span></span>';
+        item.querySelector('strong').textContent = String(notification.title || 'Thông báo');
+        const date = notification.created_at ? new Date(notification.created_at) : null;
+        const suffix = date && !Number.isNaN(date.getTime()) ? ` · ${date.toLocaleString('vi-VN')}` : '';
+        item.querySelector('span').textContent = `${String(notification.message || '')}${suffix}`;
+        profileNotificationList.appendChild(item);
+    });
+}
+
+function renderProfileMetrics(currentUser, leaderboardRows, questionRows, submissionRows) {
+    const email = String(currentUser?.email || '').trim().toLowerCase();
+    const linkedRank = (Array.isArray(leaderboardRows) ? leaderboardRows : []).find(row =>
+        (currentUser?.id !== undefined && currentUser?.id !== null && String(row?.user_id ?? '') === String(currentUser.id))
+        || String(row?.user_email || row?.email || '').trim().toLowerCase() === email
+    );
+    const score = Math.max(0, Number(currentUser?.score ?? linkedRank?.score ?? 0) || 0);
+    const level = Math.floor(score / 100) + 1;
+    const totalLessons = new Set((Array.isArray(questionRows) ? questionRows : []).map(lessonKey).filter(Boolean));
+    const completedLessons = new Set((Array.isArray(submissionRows) ? submissionRows : []).map(lessonKey).filter(key => key && totalLessons.has(key)));
+    const progress = totalLessons.size > 0 ? Math.min(100, Math.round(completedLessons.size / totalLessons.size * 100)) : 0;
+
+    if (profileLevel) profileLevel.textContent = `Cấp ${level}`;
+    if (profileProgressValue) profileProgressValue.textContent = `${progress}%`;
+    if (profileProgressFill) profileProgressFill.style.width = `${progress}%`;
+}
+
 // 2. Tải thông tin hồ sơ
 async function loadProfile() {
     try {
-        const userDoc = await db.collection('users').doc(sessionUser.email).get();
-        // A newly created Supabase account may not have a profile row yet.
-        // Keep the complete profile UI usable from the authenticated local
-        // session while the synchronizer creates or reloads that row.
-        const currentUser = userDoc.exists ? userDoc.data() : {
-            email: sessionUser.email || '',
-            name: sessionUser.name || sessionUser.displayName || 'Người chơi',
-            phone: sessionUser.phone || '',
-            gender: sessionUser.gender || '',
-            role: sessionUser.role || 'user'
+        const client = profileClient();
+        if (!client) throw new Error('Supabase client chưa sẵn sàng.');
+        let authUser = null;
+        if (client.auth && typeof client.auth.getUser === 'function') {
+            const authResult = await client.auth.getUser();
+            authUser = authResult?.data?.user || null;
+        }
+        const email = String(authUser?.email || sessionUser.email || '').trim().toLowerCase();
+        if (!email) throw new Error('Không xác định được tài khoản hiện tại.');
+
+        const userResult = await client.from('users').select('*').eq('email', email).maybeSingle();
+        if (userResult.error) throw userResult.error;
+        const currentUser = userResult.data || {
+            email,
+            name: authUser?.user_metadata?.name || sessionUser.name || sessionUser.displayName || 'Người chơi',
+            phone: '', gender: '', role: 'user', score: 0, current_streak: 0
         };
+        const [leaderboardResult, questionRows, submissionRows] = await Promise.all([
+            client.from('leaderboard').select('*').limit(500),
+            fetchProfilePages('questions', 'province,island'),
+            fetchProfilePages('submissions', '*', email)
+        ]);
+        const leaderboardRows = leaderboardResult.error ? [] : (Array.isArray(leaderboardResult.data) ? leaderboardResult.data : []);
         
-        dispName.textContent = currentUser.name;
+        dispName.textContent = currentUser.name || currentUser.full_name || currentUser.display_name || 'Người chơi';
         dispEmail.textContent = currentUser.email;
 
-        profStreak.textContent = gameState ? (gameState.streak || 0) : 0;
-        profXp.textContent = gameState ? (gameState.xp || 0) : 0;
+        profStreak.textContent = Number(currentUser.current_streak || 0);
+        profXp.textContent = Number(currentUser.xp ?? currentUser.score ?? 0) || 0;
+        renderProfileMetrics(currentUser, leaderboardRows, questionRows, submissionRows);
+        renderNotifications(normalizeNotifications(currentUser));
         
         let evalText = "Chưa test";
         if (gameState && gameState.assessmentScore !== undefined) {
@@ -124,7 +228,11 @@ async function loadProfile() {
         await syncAchievementBadges(currentUser);
         
     } catch (err) {
-        console.error("Lỗi tải profile:", err);
+        console.warn("Không thể tải profile từ Supabase:", err);
+        if (profileLevel) profileLevel.textContent = 'Cấp 1';
+        if (profileProgressValue) profileProgressValue.textContent = '0%';
+        if (profileProgressFill) profileProgressFill.style.width = '0%';
+        renderNotifications([]);
     }
 }
 

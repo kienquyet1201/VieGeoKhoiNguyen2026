@@ -828,24 +828,10 @@ async function renderLeaderboard() {
             ];
 
             for (const attempt of attempts) {
-                const columns = attempt.table === 'leaderboard'
-                    ? 'id,email,user_email,name,full_name,display_name,avatar,current_streak,score'
-                    : 'id,email,name,full_name,display_name,avatar,current_streak,score,xp';
                 let { data, error } = await client
                     .from(attempt.table)
-                    .select(columns)
-                    .order('score', { ascending: false })
+                    .select('*')
                     .limit(attempt.limit);
-
-                // Older users tables may not yet expose score; retain the
-                // same ranking flow with XP while leaderboard keeps score.
-                if (error && attempt.table === 'users') {
-                    ({ data, error } = await client
-                        .from('users')
-                        .select('id,email,name,full_name,display_name,avatar,current_streak,xp')
-                        .order('xp', { ascending: false })
-                        .limit(attempt.limit));
-                }
 
                 if (error) {
                     console.warn(`[VieGeo Leaderboard] Không tải được bảng ${attempt.table}:`, {

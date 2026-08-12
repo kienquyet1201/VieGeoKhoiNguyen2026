@@ -56,11 +56,75 @@
     }
 
     function roleName(role) {
-        return ({ user: 'Học sinh', parent: 'Phụ huynh', cs: 'CSKH', admin: 'Admin' })[String(role || 'user').toLowerCase()] || 'Học sinh';
+        return ({ user: 'Học viên', student: 'Học viên', premium: 'Premium', parent: 'Phụ huynh', cs: 'CSKH', admin: 'Admin' })[String(role || 'user').toLowerCase()] || 'Học viên';
     }
 
     function roleClass(role) {
-        return ({ parent: 'parent-role', cs: 'support-role', admin: 'admin-role' })[String(role || '').toLowerCase()] || 'student-role';
+        return ({ premium: 'premium-role', parent: 'parent-role', cs: 'support-role', admin: 'admin-role' })[String(role || '').toLowerCase()] || 'student-role';
+    }
+
+    function normalizeRoles(value) {
+        try {
+            const source = Array.isArray(value) ? value : (typeof value === 'string' && value.trim().startsWith('[') ? JSON.parse(value) : [value]);
+            return [...new Set(source.map(item => String(item || '').trim().toLowerCase()).filter(Boolean))];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    async function fetchAllUsers() {
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        if (!client || typeof client.from !== 'function') throw new Error('Supabase client chưa sẵn sàng.');
+        const rows = [];
+        const pageSize = 1000;
+        for (let page = 0; page < 50; page += 1) {
+            const { data, error } = await client.from('users').select('*').range(page * pageSize, (page + 1) * pageSize - 1);
+            if (error) throw error;
+            const pageRows = Array.isArray(data) ? data : [];
+            rows.push(...pageRows);
+            if (pageRows.length < pageSize) break;
+        }
+        return rows.sort((first, second) => displayName(first).localeCompare(displayName(second), 'vi'));
+    }
+
+    async function fetchSubmissionCount() {
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        if (!client || typeof client.from !== 'function') return 0;
+        const { count, error } = await client.from('submissions').select('id', { count: 'exact', head: true });
+        if (error) throw error;
+        return Number(count || 0);
+    }
+
+    async function updateUserRole(user, selectedRole, button) {
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        const role = selectedRole === 'student' ? 'user' : String(selectedRole || '').trim().toLowerCase();
+        if (!client || !['user', 'premium', 'parent', 'cs', 'admin'].includes(role)) {
+            showToast('Vai trò không hợp lệ.', 'error');
+            return;
+        }
+        if (button) button.disabled = true;
+        try {
+            const roles = [...new Set([...normalizeRoles(user.roles), role])];
+            const payload = {
+                role,
+                active_role: role,
+                roles,
+                account_status: role === 'premium' ? 'premium' : (user.account_status === 'premium' ? 'free' : (user.account_status || 'free')),
+                updated_at: new Date().toISOString()
+            };
+            let query = client.from('users').update(payload);
+            query = user.id !== undefined && user.id !== null ? query.eq('id', user.id) : query.eq('email', user.email);
+            const { data, error } = await query.select('*').maybeSingle();
+            if (error) throw error;
+            const index = allUsers.findIndex(item => String(item.id || item.email) === String(user.id || user.email));
+            if (index >= 0) allUsers[index] = data || { ...user, ...payload };
+            renderUsers(allUsers);
+            showToast(`Đã cập nhật ${displayName(user)} thành ${roleName(role)}.`, 'success');
+        } catch (error) {
+            console.error('[VieGeo Admin] Không thể cập nhật vai trò:', error);
+            showToast(error.message || 'Không thể cập nhật vai trò trên Supabase.', 'error');
+            if (button) button.disabled = false;
+        }
     }
 
     function selectPanel(section) {
@@ -92,15 +156,16 @@
             }
             filtered.forEach(user => {
                 const name = displayName(user);
-                const primaryRole = user.active_role || user.role || 'user';
+                const primaryRole = user.role || user.active_role || 'user';
                 const online = activeWithinNinetySeconds(user);
                 const row = document.createElement('tr');
                 row.dataset.userId = String(user.id || user.email || '');
-                row.innerHTML = `<td><div class="user-cell"><div class="user-avatar"></div><div><strong></strong><span></span></div></div></td><td><span class="role-badge ${roleClass(primaryRole)}"></span></td><td><span class="status-badge ${online ? 'active-status' : 'idle-status'}"><i class="status-dot"></i>${online ? 'Online' : 'Offline'}</span></td><td>${escapeText(formatTime(user.last_active_client || user.updated_at || user.created_at))}</td><td><div class="action-group"><button class="mini-button" type="button" data-edit-role="${escapeText(user.id || user.email || '')}">Sửa</button></div></td>`;
+                row.innerHTML = `<td><div class="user-cell"><div class="user-avatar"></div><div><strong></strong><span></span></div></div></td><td><span class="role-badge ${roleClass(primaryRole)}"></span></td><td><span class="status-badge ${online ? 'active-status' : 'idle-status'}"><i class="status-dot"></i>${online ? 'Online' : 'Offline'}</span></td><td>${escapeText(formatTime(user.last_active_client || user.updated_at || user.created_at))}</td><td><div class="action-group"><select class="user-role-select" aria-label="Chọn vai trò"><option value="user">Học viên</option><option value="premium">Premium</option><option value="parent">Phụ huynh</option><option value="cs">CSKH</option><option value="admin">Admin</option></select><button class="mini-button" type="button" data-save-user-role>Lưu role</button></div></td>`;
                 row.querySelector('.user-avatar').textContent = name.slice(0, 2).toUpperCase();
                 row.querySelector('.user-cell strong').textContent = name;
                 row.querySelector('.user-cell span').textContent = user.email || 'Chưa có email';
                 row.querySelector('.role-badge').textContent = roleName(primaryRole);
+                row.querySelector('.user-role-select').value = String(primaryRole).toLowerCase() === 'student' ? 'user' : String(primaryRole).toLowerCase();
                 body.appendChild(row);
             });
         } catch (error) {
@@ -359,17 +424,18 @@
             if (!dataApi) throw new Error('Lớp dữ liệu Supabase chưa sẵn sàng');
             const connection = byId('connectionBadge');
             if (connection) connection.textContent = 'Đang tải Supabase…';
-            const [user, users, errors, feedbacks, premiumRequests] = await Promise.all([
+            const [user, users, submissionCount, errors, feedbacks, premiumRequests] = await Promise.all([
                 dataApi.getCurrentUser(),
-                dataApi.fetchRows('users', { limit: 500 }),
+                fetchAllUsers(),
+                fetchSubmissionCount(),
                 dataApi.fetchRows('error_reports', { limit: 100, orderBy: 'created_at', ascending: false }),
                 dataApi.fetchRows('user_feedbacks', { limit: 100, orderBy: 'created_at', ascending: false }),
                 fetchPendingPremiumRequests()
             ]);
-            allUsers = Array.isArray(users) && users.length ? users : [user].filter(Boolean);
+            allUsers = Array.isArray(users) ? users : [];
             if (byId('adminEmail')) byId('adminEmail').textContent = user.email || 'Admin VieGeo';
             if (byId('metricOnline')) byId('metricOnline').textContent = String(allUsers.filter(activeWithinNinetySeconds).length);
-            if (byId('metricSubmissions')) byId('metricSubmissions').textContent = String(Math.max(0, Number(user.completed_lessons || 0)));
+            if (byId('metricSubmissions')) byId('metricSubmissions').textContent = String(submissionCount);
             if (byId('metricUsers')) byId('metricUsers').textContent = String(allUsers.length);
             if (byId('metricErrors')) byId('metricErrors').textContent = String(errors.length);
             if (connection) {
@@ -386,7 +452,7 @@
         } catch (error) {
             console.error('[VieGeo Admin] Không thể tải dashboard:', error);
             if (byId('connectionBadge')) {
-                byId('connectionBadge').textContent = 'Đang dùng dữ liệu cục bộ';
+                byId('connectionBadge').textContent = 'Không thể kết nối Supabase';
                 byId('connectionBadge').classList.add('error');
             }
             renderUsers(allUsers);
@@ -635,6 +701,14 @@
             document.querySelectorAll('.menu-item[data-section], [data-open-section]').forEach(button => button.addEventListener('click', () => selectPanel(button.dataset.section || button.dataset.openSection)));
             byId('searchInput')?.addEventListener('input', () => renderUsers(allUsers));
             byId('roleFilter')?.addEventListener('change', () => renderUsers(allUsers));
+            byId('userTableBody')?.addEventListener('click', event => {
+                const button = event.target.closest('[data-save-user-role]');
+                const row = button?.closest('tr');
+                if (!button || !row) return;
+                const user = allUsers.find(item => String(item.id || item.email) === String(row.dataset.userId || ''));
+                const select = row.querySelector('.user-role-select');
+                if (user && select) updateUserRole(user, select.value, button);
+            });
             byId('refreshMonitoringButton')?.addEventListener('click', loadDashboard);
             byId('refreshSupportAdminButton')?.addEventListener('click', loadDashboard);
             populateBulkIslandOptions();

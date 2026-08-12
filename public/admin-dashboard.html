@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo | Admin Dashboard</title>
+    <title>VieGeo | Quản trị hệ thống</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin-dashboard.css">
+    <link rel="stylesheet" href="admin-dashboard.css?v=20260812-1">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
     <script src="supabase-ui-sync.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="global-theme.css">
+    <link rel="stylesheet" href="global-theme.css?v=20260812-1">
     <script src="global-theme.js"></script>
     <link rel="stylesheet" href="role-switcher.css">
 </head>
@@ -84,10 +84,10 @@
 
             <section class="admin-section active" data-panel="overview">
                 <section class="stats-grid">
-                    <article class="stat-card blue-card"><div class="stat-icon">👥</div><div><span>Người đang online</span><strong id="metricOnline">142</strong><small>90 giây gần nhất</small></div></article>
-                    <article class="stat-card green-card"><div class="stat-icon">📝</div><div><span>Bài nộp</span><strong id="metricSubmissions">1,250</strong><small>Dữ liệu hệ thống</small></div></article>
-                    <article class="stat-card orange-card"><div class="stat-icon">👁️</div><div><span>Tổng User</span><strong id="metricUsers">5,684</strong><small>Tài khoản đã tải</small></div></article>
-                    <article class="stat-card purple-card"><div class="stat-icon">⚠️</div><div><span>Báo cáo lỗi</span><strong id="metricErrors">5</strong><small>Lỗi gần đây</small></div></article>
+                    <article class="stat-card blue-card"><div class="stat-icon">👥</div><div><span>Người đang online</span><strong id="metricOnline">—</strong><small>90 giây gần nhất</small></div></article>
+                    <article class="stat-card green-card"><div class="stat-icon">📝</div><div><span>Bài nộp</span><strong id="metricSubmissions">—</strong><small>Dữ liệu hệ thống</small></div></article>
+                    <article class="stat-card orange-card"><div class="stat-icon">👁️</div><div><span>Tổng User</span><strong id="metricUsers">—</strong><small>Tài khoản đã tải</small></div></article>
+                    <article class="stat-card purple-card"><div class="stat-icon">⚠️</div><div><span>Báo cáo lỗi</span><strong id="metricErrors">—</strong><small>Lỗi gần đây</small></div></article>
                 </section>
 
                 <section class="content-grid">
@@ -140,6 +140,7 @@
                             <select id="roleFilter">
                                 <option value="all">Tất cả quyền</option>
                                 <option value="user">Học sinh</option>
+                                <option value="premium">Premium</option>
                                 <option value="parent">Phụ huynh</option>
                                 <option value="cs">CSKH</option>
                                 <option value="admin">Admin</option>
@@ -149,36 +150,7 @@
                     <div class="table-wrap">
                         <table class="user-table">
                             <thead><tr><th>Người dùng</th><th>Vai trò</th><th>Trạng thái</th><th>Hoạt động</th><th>Thao tác</th></tr></thead>
-                            <tbody id="userTableBody">
-                                <tr data-user-id="mock-user-1">
-                                    <td><div class="user-cell"><div class="user-avatar">MA</div><div><strong>Minh Anh</strong><span>minhanh@viegeo.vn</span></div></div></td>
-                                    <td><span class="role-badge student-role">Học sinh</span></td>
-                                    <td><span class="status-badge active-status"><i class="status-dot"></i>Online</span></td>
-                                    <td>Vừa hoạt động</td>
-                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-1">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-1">× Xóa</button></div></td>
-                                </tr>
-                                <tr data-user-id="mock-user-2">
-                                    <td><div class="user-cell"><div class="user-avatar">QT</div><div><strong>Quốc Thịnh</strong><span>quocthinh@viegeo.vn</span></div></div></td>
-                                    <td><span class="role-badge student-role">Học sinh</span></td>
-                                    <td><span class="status-badge active-status"><i class="status-dot"></i>Online</span></td>
-                                    <td>2 phút trước</td>
-                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-2">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-2">× Xóa</button></div></td>
-                                </tr>
-                                <tr data-user-id="mock-user-3">
-                                    <td><div class="user-cell"><div class="user-avatar">HL</div><div><strong>Hà Linh</strong><span>halinh@viegeo.vn</span></div></div></td>
-                                    <td><span class="role-badge parent-role">Phụ huynh</span></td>
-                                    <td><span class="status-badge idle-status"><i class="status-dot"></i>Offline</span></td>
-                                    <td>35 phút trước</td>
-                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-3">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-3">× Xóa</button></div></td>
-                                </tr>
-                                <tr data-user-id="mock-user-4">
-                                    <td><div class="user-cell"><div class="user-avatar">NV</div><div><strong>Ngọc Vy</strong><span>ngocvy@viegeo.vn</span></div></div></td>
-                                    <td><span class="role-badge support-role">CSKH</span></td>
-                                    <td><span class="status-badge active-status"><i class="status-dot"></i>Online</span></td>
-                                    <td>5 phút trước</td>
-                                    <td><div class="action-group"><button class="mini-button" type="button" data-edit-role="mock-user-4">✎ Sửa</button><button class="mini-button danger" type="button" data-kick-user="mock-user-4">× Xóa</button></div></td>
-                                </tr>
-                            </tbody>
+                            <tbody id="userTableBody"><tr><td colspan="5"><div class="empty-state">Đang tải người dùng từ Supabase...</div></td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -361,15 +333,6 @@
     <div class="toast" id="toast"></div>
     <script src="support-store.js"></script>
     <script src="admin-dashboard.js"></script>
-<label class="role-page-switcher">
-        <span>Chuyển tài khoản</span>
-        <select data-role-page-select>
-            <option value="user">Học sinh</option>
-            <option value="parent">Phụ huynh</option>
-            <option value="cs">Chăm sóc KH</option>
-            <option value="admin">Quản trị viên</option>
-        </select>
-    </label>
     <script src="role-switcher.js"></script>
 </body>
 </html>

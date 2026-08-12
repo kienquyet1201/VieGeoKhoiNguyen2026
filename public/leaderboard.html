@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="leaderboard.css">
+    <link rel="stylesheet" href="leaderboard.css?v=20260812-1">
     <link rel="stylesheet" href="shared-topbar.css">
-    <link rel="stylesheet" href="global-theme.css">
+    <link rel="stylesheet" href="global-theme.css?v=20260812-1">
     <script src="global-theme.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
@@ -60,7 +60,7 @@
         <div class="shared-select-control shared-role-control">
             <span class="shared-select-label">Tài khoản</span>
             <select class="shared-role" id="sharedRole" aria-label="Loại tài khoản">
-                <option value="user">Học sinh</option>
+                <option value="user">Học viên</option>
                 <option value="parent">Phụ huynh</option>
                 <option value="cs">Chăm sóc KH</option>
                 <option value="admin">Quản trị viên</option>
@@ -129,44 +129,7 @@
             </div>
         </section>
 
-        <section class="podium-section">
-            <article class="podium-card second-place">
-                <div class="podium-rank">2</div>
-                <div class="podium-avatar blue-avatar">HL</div>
-                <span class="podium-medal">🥈</span>
-                <h2>Hà Linh</h2>
-                <p>4,860 XP</p>
-                <div class="podium-stats">
-                    <span>🔥 19 ngày</span>
-                    <span>🏆 26</span>
-                </div>
-            </article>
-
-            <article class="podium-card first-place">
-                <div class="crown">👑</div>
-                <div class="podium-rank">1</div>
-                <div class="podium-avatar gold-avatar">QT</div>
-                <span class="podium-medal">🥇</span>
-                <h2>Quốc Thịnh</h2>
-                <p>5,240 XP</p>
-                <div class="podium-stats">
-                    <span>🔥 28 ngày</span>
-                    <span>🏆 34</span>
-                </div>
-            </article>
-
-            <article class="podium-card third-place">
-                <div class="podium-rank">3</div>
-                <div class="podium-avatar purple-avatar">MA</div>
-                <span class="podium-medal">🥉</span>
-                <h2>Minh Anh</h2>
-                <p>4,430 XP</p>
-                <div class="podium-stats">
-                    <span>🔥 12 ngày</span>
-                    <span>🏆 21</span>
-                </div>
-            </article>
-        </section>
+        <section class="podium-section" id="leaderboardPodium" aria-live="polite"></section>
 
         <section class="content-grid">
             <article class="ranking-panel">
@@ -178,77 +141,17 @@
                     <span class="update-label">Cập nhật trực tiếp</span>
                 </div>
 
-                <div class="ranking-list" id="rankingList">
-                    <div class="ranking-row current-user">
-                        <span class="rank-number">3</span>
-                        <div class="rank-avatar purple-avatar">MA</div>
-                        <div class="rank-user">
-                            <strong>Minh Anh</strong>
-                            <span>Bạn · Cấp 8</span>
-                        </div>
-                        <div class="rank-streak">🔥 12</div>
-                        <div class="rank-xp">4,430 XP</div>
-                        <div class="rank-change up-change">▲ 2</div>
-                    </div>
-
-                    <div class="ranking-row">
-                        <span class="rank-number">4</span>
-                        <div class="rank-avatar green-avatar">TN</div>
-                        <div class="rank-user">
-                            <strong>Thu Ngân</strong>
-                            <span>Cấp 9</span>
-                        </div>
-                        <div class="rank-streak">🔥 16</div>
-                        <div class="rank-xp">4,180 XP</div>
-                        <div class="rank-change down-change">▼ 1</div>
-                    </div>
-
-                    <div class="ranking-row">
-                        <span class="rank-number">5</span>
-                        <div class="rank-avatar orange-avatar">BN</div>
-                        <div class="rank-user">
-                            <strong>Bảo Nam</strong>
-                            <span>Cấp 7</span>
-                        </div>
-                        <div class="rank-streak">🔥 9</div>
-                        <div class="rank-xp">3,920 XP</div>
-                        <div class="rank-change neutral-change">—</div>
-                    </div>
-
-                    <div class="ranking-row">
-                        <span class="rank-number">6</span>
-                        <div class="rank-avatar cyan-avatar">PT</div>
-                        <div class="rank-user">
-                            <strong>Phương Thảo</strong>
-                            <span>Cấp 7</span>
-                        </div>
-                        <div class="rank-streak">🔥 14</div>
-                        <div class="rank-xp">3,740 XP</div>
-                        <div class="rank-change up-change">▲ 1</div>
-                    </div>
-
-                    <div class="ranking-row">
-                        <span class="rank-number">7</span>
-                        <div class="rank-avatar pink-avatar">KH</div>
-                        <div class="rank-user">
-                            <strong>Khánh Huyền</strong>
-                            <span>Cấp 6</span>
-                        </div>
-                        <div class="rank-streak">🔥 8</div>
-                        <div class="rank-xp">3,510 XP</div>
-                        <div class="rank-change down-change">▼ 2</div>
-                    </div>
-                </div>
+                <div class="ranking-list" id="rankingList" aria-live="polite"></div>
             </article>
 
             <aside class="side-column">
                 <article class="personal-rank-card">
                     <div class="personal-rank-icon">🚀</div>
                     <span>Hạng của bạn</span>
-                    <strong>#3</strong>
-                    <p>Chỉ còn 431 XP để vượt lên hạng 2.</p>
+                    <strong id="personalRankValue">—</strong>
+                    <p id="personalRankHint">Đang đồng bộ dữ liệu Supabase.</p>
                     <div class="personal-progress">
-                        <div class="personal-progress-fill" style="width:72%"></div>
+                        <div class="personal-progress-fill" id="personalRankProgress" style="width:0"></div>
                     </div>
                 </article>
 

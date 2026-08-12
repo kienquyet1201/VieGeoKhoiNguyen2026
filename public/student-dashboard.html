@@ -7,8 +7,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="student-dashboard.css">
-    <link rel="stylesheet" href="global-theme.css">
+    <link rel="stylesheet" href="student-dashboard.css?v=20260812-1">
+    <link rel="stylesheet" href="global-theme.css?v=20260812-1">
     <script src="global-theme.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
@@ -84,7 +84,7 @@
                 <label class="role-switch-card">
                     <span>Chuyển tài khoản</span>
                     <select id="studentRoleSelect">
-                        <option value="user">Học sinh</option>
+                        <option value="user">Học viên</option>
                         <option value="parent">Phụ huynh</option>
                         <option value="cs">Chăm sóc KH</option>
                         <option value="admin">Quản trị viên</option>
@@ -113,10 +113,10 @@
                 <div class="hero-content">
                     <span class="hero-badge">Lộ trình đang học</span>
                     <h2>Khám phá Địa lí Việt Nam</h2>
-                    <p>Bạn đã đi được hơn một nửa hành trình. Hãy tiếp tục chinh phục các tỉnh thành tiếp theo.</p>
+                    <p>Tiến độ được tính từ các bài đã hoàn thành và lưu trên Supabase.</p>
                     <div class="hero-progress">
-                        <div class="progress-label"><span>Tiến độ tổng</span><strong>68%</strong></div>
-                        <div class="progress-track"><div class="progress-fill" style="width:68%"></div></div>
+                        <div class="progress-label"><span>Tiến độ tổng</span><strong id="studentOverallProgress">0%</strong></div>
+                        <div class="progress-track"><div class="progress-fill" id="studentOverallProgressFill" style="width:0"></div></div>
                     </div>
                     <button class="primary-button" id="continueButton">Tiếp tục học 🚀</button>
                 </div>
@@ -145,10 +145,10 @@
                         <div class="course-region">Miền Bắc</div>
                     </div>
                     <div class="course-content">
-                        <div class="course-topline"><span>Hà Nội</span><strong>82%</strong></div>
+                        <div class="course-topline"><span>Hà Nội</span><strong>0%</strong></div>
                         <h3>Khám phá Thủ đô</h3>
                         <p>Vị trí, lịch sử, văn hóa và các địa danh nổi bật.</p>
-                        <div class="course-progress"><div class="course-progress-fill" style="width:82%"></div></div>
+                        <div class="course-progress"><div class="course-progress-fill" style="width:0"></div></div>
                         <button class="course-button" data-course="Hà Nội">Học tiếp</button>
                     </div>
                 </article>
@@ -159,10 +159,10 @@
                         <div class="course-region">Miền Trung</div>
                     </div>
                     <div class="course-content">
-                        <div class="course-topline"><span>Đà Nẵng</span><strong>55%</strong></div>
+                        <div class="course-topline"><span>Đà Nẵng</span><strong>0%</strong></div>
                         <h3>Thành phố bên biển</h3>
                         <p>Thiên nhiên, kinh tế biển và điểm đến đặc trưng.</p>
-                        <div class="course-progress"><div class="course-progress-fill" style="width:55%"></div></div>
+                        <div class="course-progress"><div class="course-progress-fill" style="width:0"></div></div>
                         <button class="course-button" data-course="Đà Nẵng">Học tiếp</button>
                     </div>
                 </article>
@@ -173,10 +173,10 @@
                         <div class="course-region">Miền Nam</div>
                     </div>
                     <div class="course-content">
-                        <div class="course-topline"><span>An Giang</span><strong>34%</strong></div>
+                        <div class="course-topline"><span>An Giang</span><strong>0%</strong></div>
                         <h3>Vùng đất sông nước</h3>
                         <p>Đồng bằng, núi thấp, văn hóa và đời sống địa phương.</p>
-                        <div class="course-progress"><div class="course-progress-fill" style="width:34%"></div></div>
+                        <div class="course-progress"><div class="course-progress-fill" style="width:0"></div></div>
                         <button class="course-button" data-course="An Giang">Học tiếp</button>
                     </div>
                 </article>
@@ -188,9 +188,9 @@
                         <div><span class="section-eyebrow">Tuần này</span><h2>Hoạt động học tập</h2></div>
                     </div>
                     <div class="weekly-grid">
-                        <div class="weekly-card"><span>📚</span><strong>14</strong><small>Bài đã học</small></div>
-                        <div class="weekly-card"><span>⭐</span><strong>8.7</strong><small>Điểm trung bình</small></div>
-                        <div class="weekly-card"><span>⏱️</span><strong>5h 20m</strong><small>Thời gian học</small></div>
+                        <div class="weekly-card"><span>📚</span><strong id="weeklyLessons">0</strong><small>Bài đã học</small></div>
+                        <div class="weekly-card"><span>⭐</span><strong id="weeklyAverage">0</strong><small>Điểm trung bình</small></div>
+                        <div class="weekly-card"><span>⏱️</span><strong id="weeklyStudyTime">0 phút</strong><small>Thời gian học</small></div>
                     </div>
                 </article>
 
@@ -198,11 +198,7 @@
                     <div class="section-heading compact-heading">
                         <div><span class="section-eyebrow">Xếp hạng tuần</span><h2>Top học viên</h2></div>
                     </div>
-                    <div class="leaderboard-list">
-                        <div class="leaderboard-item first-place"><span class="rank">1</span><div class="leader-avatar">QT</div><div><strong>Quốc Thịnh</strong><small>4,620 XP</small></div><span>🥇</span></div>
-                        <div class="leaderboard-item current-place"><span class="rank">2</span><div class="leader-avatar current-avatar">--</div><div><strong>Đang tải</strong><small>— XP</small></div><span>🥈</span></div>
-                        <div class="leaderboard-item"><span class="rank">3</span><div class="leader-avatar third-avatar">HL</div><div><strong>Hà Linh</strong><small>3,940 XP</small></div><span>🥉</span></div>
-                    </div>
+                    <div class="leaderboard-list" aria-live="polite"></div>
                     <button class="leaderboard-button" id="leaderboardButton">Xem bảng xếp hạng</button>
                 </aside>
             </section>

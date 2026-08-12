@@ -47,6 +47,11 @@ var activeQuestionBankSize=0;
 var activeQuestionLoadState="idle";
 var questionLoadRequestId=0;
 var activeIslandTheory="";
+var quizCorrectAnswers=0;
+var quizStartedAt=0;
+var mapProgressByProvince=Object.create(null);
+var mapProgressReady=false;
+var currentMapUserEmail="";
 
 function ensureIslandTheoryUi(){
     var runtimeStyle=document.getElementById("viegeoIslandTheoryRuntimeStyle");
@@ -165,14 +170,104 @@ function getDifficulty(){
 }
 
 function getProvinceProgress(province){
-    var state=getGameStateValue();
-    var completed=state["completed_"+province];
+    var info=mapProgressByProvince[normalizeProvinceKey(province)];
+    if(!info||!info.total.size){return 0;}
+    var completed=Array.from(info.completed).filter(function(stage){return info.total.has(stage);}).length;
+    return Math.min(100,Math.round(completed/info.total.size*100));
+}
 
-    if(typeof completed!=="number"){
-        completed=0;
+function getProvinceProgressInfo(province){
+    return mapProgressByProvince[normalizeProvinceKey(province)]||{total:new Set(),completed:new Set()};
+}
+
+function renderRegionProgress(){
+    Object.keys(regionData).forEach(function(regionKey){
+        var card=document.querySelector('.region-card[data-region="'+regionKey+'"]');
+        var region=regionData[regionKey];
+        var total=0;
+        var completed=0;
+        if(!card||!region){return;}
+        region.provinces.forEach(function(province){
+            var info=getProvinceProgressInfo(province);
+            total+=info.total.size;
+            completed+=Array.from(info.completed).filter(function(stage){return info.total.has(stage);}).length;
+        });
+        var percent=total?Math.min(100,Math.round(completed/total*100)):0;
+        var label=card.querySelector('.region-progress-head strong');
+        var fill=card.querySelector('.progress-fill');
+        if(label){label.textContent=percent+'%';}
+        if(fill){fill.style.width=percent+'%';}
+    });
+}
+
+async function getCurrentMapUserEmail(){
+    var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
+    var session={};
+    try{session=JSON.parse(localStorage.getItem("lm_session")||"{}");}catch(error){session={};}
+    var email=String(session.email||"").trim().toLowerCase();
+    if(client?.auth?.getUser){
+        var authResult=await client.auth.getUser();
+        email=String(authResult?.data?.user?.email||email).trim().toLowerCase();
     }
+    return email;
+}
 
-    return Math.round((completed/34)*100);
+async function fetchSubmissionPages(client,email){
+    var rows=[];
+    var pageSize=1000;
+    for(var page=0;page<50;page+=1){
+        var response=await client.from("submissions").select("*").eq("user_email",email).range(page*pageSize,(page+1)*pageSize-1);
+        if(response.error){throw response.error;}
+        var pageRows=Array.isArray(response.data)?response.data:[];
+        rows=rows.concat(pageRows);
+        if(pageRows.length<pageSize){break;}
+    }
+    return rows;
+}
+
+async function fetchProgressQuestionPages(client){
+    var rows=[];
+    var pageSize=1000;
+    for(var page=0;page<50;page+=1){
+        var response=await client.from("questions").select("province,island").range(page*pageSize,(page+1)*pageSize-1);
+        if(response.error){throw response.error;}
+        var pageRows=Array.isArray(response.data)?response.data:[];
+        rows=rows.concat(pageRows);
+        if(pageRows.length<pageSize){break;}
+    }
+    return rows;
+}
+
+async function syncMapProgressFromSupabase(){
+    var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
+    if(!client||typeof client.from!=="function"){throw new Error("Supabase client chưa sẵn sàng.");}
+    currentMapUserEmail=await getCurrentMapUserEmail();
+    var result=await Promise.all([
+        fetchProgressQuestionPages(client),
+        currentMapUserEmail?fetchSubmissionPages(client,currentMapUserEmail):Promise.resolve([])
+    ]);
+    var progress=Object.create(null);
+    result[0].forEach(function(row){
+        var province=normalizeProvinceKey(row?.province||row?.province_slug||row?.provinceName);
+        var stage=questionIslandNumber(row);
+        if(!province||stage<=0){return;}
+        if(!progress[province]){progress[province]={total:new Set(),completed:new Set()};}
+        progress[province].total.add(stage);
+    });
+    result[1].forEach(function(row){
+        var details=row?.details||{};
+        var province=normalizeProvinceKey(row?.province||details.province);
+        var stage=questionIslandNumber({...details,...row});
+        if(!province||stage<=0){return;}
+        if(!progress[province]){progress[province]={total:new Set(),completed:new Set()};}
+        progress[province].completed.add(stage);
+    });
+    mapProgressByProvince=progress;
+    mapProgressReady=true;
+    renderRegionProgress();
+    if(selectedRegionKey&&provincesView.style.display!=="none"){renderProvinces(selectedRegionKey);}
+    if(selectedProvince&&roadmapView.style.display!=="none"){renderRoadmap();}
+    return progress;
 }
 
 function renderProvinces(regionKey){
@@ -181,6 +276,7 @@ function renderProvinces(regionKey){
     var index;
     var province;
     var progress;
+    var progressInfo;
     var number;
 
     selectedRegionKey=regionKey;
@@ -192,6 +288,7 @@ function renderProvinces(regionKey){
     for(index=0;index<region.provinces.length;index+=1){
         province=region.provinces[index];
         progress=getProvinceProgress(province);
+        progressInfo=getProvinceProgressInfo(province);
         number=String(index+1);
 
         if(number.length<2){
@@ -199,8 +296,8 @@ function renderProvinces(regionKey){
         }
 
         html+='<button class="province-card" type="button" data-province="'+province+'">';
-        html+='<div class="province-card-header"><span class="province-card-number">'+number+'</span><span class="province-card-status">✓ Sẵn sàng</span></div>';
-        html+='<div class="province-card-body"><div class="province-location">⌖</div><div class="province-info"><h3>'+province+'</h3><p>34 đảo tri thức</p></div></div>';
+        html+='<div class="province-card-header"><span class="province-card-number">'+number+'</span><span class="province-card-status">'+(mapProgressReady?'✓ Đã đồng bộ':'Đang tải')+'</span></div>';
+        html+='<div class="province-card-body"><div class="province-location">⌖</div><div class="province-info"><h3>'+province+'</h3><p>'+String(progressInfo.total.size)+' đảo từ Supabase</p></div></div>';
         html+='<div class="province-progress-meta"><span>Tiến độ</span><strong>'+progress+'%</strong></div>';
         html+='<div class="province-progress-track"><div class="province-progress-fill" style="width:'+progress+'%"></div></div>';
         html+='</button>';
@@ -226,25 +323,33 @@ function getCurve(index){
 }
 
 function getCompletedStageCount(){
-    var state=getGameStateValue();
-    var completed=state["completed_"+selectedProvince];
-
-    if(typeof completed!=="number"){
-        return 0;
-    }
-
+    var info=getProvinceProgressInfo(selectedProvince);
+    var completed=0;
+    while(info.completed.has(completed+1)){completed+=1;}
     return completed;
 }
 
-function markCurrentStageCompleted(){
-    var state=getGameStateValue();
-    var key="completed_"+selectedProvince;
-    var previous=Number(state[key]||0);
-
-    if(selectedStage>previous){
-        state[key]=Math.min(34,selectedStage);
-        localStorage.setItem("VieGeo_state",JSON.stringify(state));
-    }
+async function markCurrentStageCompleted(){
+    var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
+    var email=currentMapUserEmail||await getCurrentMapUserEmail();
+    if(!client||!email){throw new Error("Không thể xác định phiên Supabase hiện tại.");}
+    var durationSeconds=Math.max(0,Math.round((Date.now()-quizStartedAt)/1000));
+    var payload={
+        user_email:email,
+        score:Math.round(quizCorrectAnswers/ISLAND_QUESTION_LIMIT*100)/10,
+        province:normalizeProvinceKey(selectedProvince),
+        island:"Đảo nhỏ "+selectedStage,
+        topic:"Đảo nhỏ "+selectedStage,
+        correct_count:quizCorrectAnswers,
+        total_count:ISLAND_QUESTION_LIMIT,
+        details:{province:normalizeProvinceKey(selectedProvince),island_index:selectedStage,difficulty:getDifficulty(),duration_seconds:durationSeconds}
+    };
+    var result=await client.from("submissions").insert(payload).select("id").maybeSingle();
+    if(result.error){throw result.error;}
+    var key=normalizeProvinceKey(selectedProvince);
+    if(!mapProgressByProvince[key]){mapProgressByProvince[key]={total:new Set(),completed:new Set()};}
+    mapProgressByProvince[key].completed.add(selectedStage);
+    return true;
 }
 
 function renderRoadmap(){
@@ -456,7 +561,7 @@ async function fetchQuestionPages(client,provinceCandidates){
     var response;
     var pageRows;
 
-    for(page=0;page<10;page+=1){
+    for(page=0;page<50;page+=1){
         query=client.from("questions").select("*");
         if(Array.isArray(provinceCandidates)&&provinceCandidates.length){
             query=query.in("province",provinceCandidates);
@@ -599,7 +704,7 @@ function selectAnswer(event){
     var question;
     var index;
 
-    if(!button){
+    if(!button||selectedAnswer>=0){
         return;
     }
 
@@ -617,6 +722,7 @@ function selectAnswer(event){
     question=questions[currentQuestionIndex];
 
     if(selectedAnswer===question.correctAnswer){
+        quizCorrectAnswers+=1;
         button.classList.add("correct-answer");
         questionStatus.textContent="Đúng";
         answerFeedback.textContent="Giải thích chi tiết: "+(question.explanation||"Chính xác.");
@@ -696,6 +802,8 @@ async function openQuiz(event){
     currentQuestionIndex=0;
     quizCompleted=false;
     selectedAnswer=-1;
+    quizCorrectAnswers=0;
+    quizStartedAt=Date.now();
     activeQuestionSet=[];
     activeQuestionBankSize=0;
     activeIslandTheory="";
@@ -760,7 +868,7 @@ async function openQuiz(event){
     }
 }
 
-function nextQuestion(){
+async function nextQuestion(){
     var questions=getActiveQuestionList();
 
     if(quizCompleted){
@@ -774,13 +882,24 @@ function nextQuestion(){
     }
     if(currentQuestionIndex>=ISLAND_QUESTION_LIMIT-1||currentQuestionIndex>=questions.length-1){
         quizCompleted=true;
-        markCurrentStageCompleted();
         questionNumber.textContent="Hoàn thành 5 / 5 câu";
         questionStatus.textContent="Đã hoàn thành";
         questionText.textContent="Bạn đã hoàn thành đảo này!";
         answerGrid.innerHTML="";
-        answerFeedback.textContent="Không còn câu hỏi nào khác trong lượt học này.";
-        nextQuestionButton.textContent="QUAY LẠI LỘ TRÌNH";
+        answerFeedback.textContent="Đang lưu kết quả lên Supabase...";
+        nextQuestionButton.disabled=true;
+        try{
+            await markCurrentStageCompleted();
+            answerFeedback.textContent="Kết quả đã được lưu vào lịch sử học tập Supabase.";
+            nextQuestionButton.textContent="QUAY LẠI LỘ TRÌNH";
+            nextQuestionButton.disabled=false;
+        }catch(error){
+            console.error("[VieGeo Map] Không thể lưu tiến độ:",error);
+            quizCompleted=false;
+            answerFeedback.textContent="Chưa thể lưu kết quả lên Supabase. Bấm nút bên dưới để thử lại.";
+            nextQuestionButton.textContent="THỬ LƯU LẠI";
+            nextQuestionButton.disabled=false;
+        }
         return;
     }
     currentQuestionIndex+=1;
@@ -795,6 +914,12 @@ function initializeLearningFlow(){
     var index;
 
     showRegionsView();
+    syncMapProgressFromSupabase().catch(function(error){
+        mapProgressReady=true;
+        console.warn("[VieGeo Map] Không thể đồng bộ tiến độ Supabase:",error);
+        renderRegionProgress();
+        if(selectedRegionKey){renderProvinces(selectedRegionKey);}
+    });
 
     for(index=0;index<regionCards.length;index+=1){
         regionCards[index].addEventListener("click",openRegion);

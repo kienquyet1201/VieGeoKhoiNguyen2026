@@ -8,13 +8,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="profile.css?v=20260812-1">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
     <script src="supabase-ui-sync.js"></script>
     <link rel="stylesheet" href="shared-topbar.css">
-    <link rel="stylesheet" href="global-theme.css">
+    <link rel="stylesheet" href="global-theme.css?v=20260812-1">
     <script src="global-theme.js"></script>
 </head>
 <body>
@@ -127,7 +127,7 @@
                         <h2 id="dispName">Người chơi</h2>
                         <p id="dispEmail">email@example.com</p>
                         <div class="level-row">
-                            <span class="level-pill">Cấp 8</span>
+                            <span class="level-pill" id="profileLevel">Cấp 1</span>
                             <span class="premium-pill" id="premiumStatus">Tài khoản Free</span>
                         </div>
                     </div>
@@ -136,10 +136,10 @@
                 <div class="hero-progress">
                     <div class="progress-heading">
                         <span>Tiến độ hành trình</span>
-                        <strong>68%</strong>
+                        <strong id="profileProgressValue">0%</strong>
                     </div>
                     <div class="progress-track">
-                        <div class="progress-fill" style="width:68%"></div>
+                        <div class="progress-fill" id="profileProgressFill" style="width:0"></div>
                     </div>
                     <small>Bạn đang tiến rất gần đến cột mốc tiếp theo.</small>
                 </div>
@@ -261,6 +261,19 @@
                             <div class="achievement-badge"><span>🗺️</span><small>Nhà thám hiểm</small></div>
                             <div class="achievement-badge"><span>🔥</span><small>Streak 7 ngày</small></div>
                             <div class="achievement-badge"><span>🏆</span><small>Top Arena</small></div>
+                        </div>
+                    </article>
+
+                    <article class="panel-card notification-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <span class="panel-eyebrow">Cập nhật tài khoản</span>
+                                <h3>Thông báo</h3>
+                            </div>
+                            <span class="panel-icon" aria-hidden="true">🔔</span>
+                        </div>
+                        <div class="notification-list" id="profileNotificationList" aria-live="polite">
+                            <p class="empty-notice">Chưa có thông báo mới</p>
                         </div>
                     </article>
                 </aside>
