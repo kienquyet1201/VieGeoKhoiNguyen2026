@@ -249,7 +249,7 @@
             const list = document.getElementById('rankingList');
             if (!list) return;
             if (!rows || rows.length === 0) {
-                list.innerHTML = '<div class="empty-state">Chưa có dữ liệu xếp hạng.</div>';
+                list.innerHTML = '<table style="width:100%;border-collapse:collapse;"><tbody><tr><td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">Chưa có dữ liệu học viên nào trong thời gian này. Hãy trở thành người đầu tiên!</td></tr></tbody></table>';
                 return;
             }
             const ranks = leaderboardModel(rows);

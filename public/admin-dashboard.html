@@ -139,18 +139,16 @@
                             <input id="searchInput" type="search" placeholder="Tìm tên hoặc email">
                             <select id="roleFilter">
                                 <option value="all">Tất cả quyền</option>
-                                <option value="user">Học sinh</option>
+                                <option value="student">Học viên</option>
                                 <option value="premium">Premium</option>
-                                <option value="parent">Phụ huynh</option>
-                                <option value="cs">CSKH</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
                     </div>
                     <div class="table-wrap">
                         <table class="user-table">
-                            <thead><tr><th>Người dùng</th><th>Vai trò</th><th>Trạng thái</th><th>Hoạt động</th><th>Thao tác</th></tr></thead>
-                            <tbody id="userTableBody"><tr><td colspan="5"><div class="empty-state">Đang tải người dùng từ Supabase...</div></td></tr></tbody>
+                            <thead><tr><th>Email</th><th>Tên hiển thị</th><th>Chức vụ (Role)</th><th>Điểm số</th><th>Chuỗi ngày học</th><th>Thay đổi Role</th></tr></thead>
+                            <tbody id="userTableBody"><tr><td colspan="6"><div class="empty-state">Đang tải người dùng từ Supabase...</div></td></tr></tbody>
                         </table>
                     </div>
                 </section>

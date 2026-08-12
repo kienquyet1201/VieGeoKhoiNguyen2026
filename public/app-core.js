@@ -844,7 +844,6 @@ async function renderLeaderboard() {
                 }
 
                 if (Array.isArray(data) && data.length > 0) {
-                    console.log(`[VieGeo Leaderboard] Đã tải ${data.length} dòng từ Supabase.${attempt.table}`, data[0]);
                     return data;
                 }
             }
@@ -854,7 +853,7 @@ async function renderLeaderboard() {
 
         const rows = await fetchLeaderboardRows();
         if (!rows || rows.length === 0) {
-            lbList.innerHTML = '<div class="empty-state">Chưa có dữ liệu xếp hạng để hiển thị.</div>';
+            lbList.innerHTML = '<table style="width:100%;border-collapse:collapse;"><tbody><tr><td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">Chưa có dữ liệu học viên nào trong thời gian này. Hãy trở thành người đầu tiên!</td></tr></tbody></table>';
             return;
         }
         const users = rows
@@ -914,8 +913,8 @@ async function renderLeaderboard() {
             index++;
         });
     } catch (error) {
-        console.error('[VieGeo Leaderboard] Lỗi lấy Bảng xếp hạng:', error);
-        lbList.innerHTML = '<div class="empty-state">Không thể tải dữ liệu xếp hạng từ Supabase.</div>';
+        console.warn('[VieGeo Leaderboard] Không thể đồng bộ dữ liệu:', error?.message || error);
+        lbList.innerHTML = '<table style="width:100%;border-collapse:collapse;"><tbody><tr><td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">Chưa có dữ liệu học viên nào trong thời gian này. Hãy trở thành người đầu tiên!</td></tr></tbody></table>';
     }
 }
 

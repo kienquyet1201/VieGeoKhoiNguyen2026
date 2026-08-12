@@ -16,6 +16,7 @@
     var activeBoard = 'weekly';
     var leaderboardRows = [];
     var currentUser = {};
+    var emptyLeaderboardHtml = '<table style="width:100%;border-collapse:collapse;"><tbody><tr><td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">Chưa có dữ liệu học viên nào trong thời gian này. Hãy trở thành người đầu tiên!</td></tr></tbody></table>';
 
     function getClient() {
         var client = window.supabaseClient || window.supabase || (window.VieGeoSupabase && window.VieGeoSupabase.client);
@@ -166,7 +167,7 @@
         if (!rankingList) return;
         rankingList.replaceChildren();
         if (!rows.length) {
-            rankingList.innerHTML = '<div class="empty-state">Chưa có dữ liệu xếp hạng trên Supabase.</div>';
+            rankingList.innerHTML = emptyLeaderboardHtml;
             return;
         }
         var currentEmail = String(currentUser.email || '').trim().toLowerCase();
@@ -224,7 +225,7 @@
             currentUser = results[1] || {};
             renderData();
         } catch (error) {
-            console.error('[VieGeo Leaderboard] Không thể đồng bộ Supabase:', error);
+            console.warn('[VieGeo Leaderboard] Không thể đồng bộ Supabase:', error?.message || error);
             leaderboardRows = [];
             renderData();
         }

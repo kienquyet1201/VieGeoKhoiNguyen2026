@@ -72,19 +72,12 @@
         }
     }
 
-    async function fetchAllUsers() {
-        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
-        if (!client || typeof client.from !== 'function') throw new Error('Supabase client chưa sẵn sàng.');
-        const rows = [];
-        const pageSize = 1000;
-        for (let page = 0; page < 50; page += 1) {
-            const { data, error } = await client.from('users').select('*').range(page * pageSize, (page + 1) * pageSize - 1);
-            if (error) throw error;
-            const pageRows = Array.isArray(data) ? data : [];
-            rows.push(...pageRows);
-            if (pageRows.length < pageSize) break;
-        }
-        return rows.sort((first, second) => displayName(first).localeCompare(displayName(second), 'vi'));
+    async function fetchUsers() {
+        const supabase = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        if (!supabase || typeof supabase.from !== 'function') throw new Error('Supabase client chưa sẵn sàng.');
+        const { data, error } = await supabase.from('users').select('*');
+        if (error) throw error;
+        return (Array.isArray(data) ? data : []).sort((first, second) => displayName(first).localeCompare(displayName(second), 'vi'));
     }
 
     async function fetchSubmissionCount() {
@@ -97,19 +90,18 @@
 
     async function updateUserRole(user, selectedRole, button) {
         const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
-        const role = selectedRole === 'student' ? 'user' : String(selectedRole || '').trim().toLowerCase();
-        if (!client || !['user', 'premium', 'parent', 'cs', 'admin'].includes(role)) {
+        const role = String(selectedRole || '').trim().toLowerCase();
+        if (!client || !['student', 'admin', 'premium'].includes(role)) {
             showToast('Vai trò không hợp lệ.', 'error');
             return;
         }
         if (button) button.disabled = true;
         try {
-            const roles = [...new Set([...normalizeRoles(user.roles), role])];
             const payload = {
                 role,
                 active_role: role,
-                roles,
-                account_status: role === 'premium' ? 'premium' : (user.account_status === 'premium' ? 'free' : (user.account_status || 'free')),
+                roles: [role],
+                account_status: role === 'premium' ? 'premium' : 'free',
                 updated_at: new Date().toISOString()
             };
             let query = client.from('users').update(payload);
@@ -147,25 +139,25 @@
             const role = String(byId('roleFilter')?.value || 'all');
             const filtered = (Array.isArray(rows) ? rows : []).filter(user => {
                 const matchesKeyword = !keyword || `${displayName(user)} ${user.email || ''}`.toLowerCase().includes(keyword);
-                return matchesKeyword && (role === 'all' || String(user.role || user.active_role || 'user') === role);
+                const currentRole = String(user.role || user.active_role || 'student').toLowerCase();
+                const matchesRole = role === 'all' || currentRole === role || (role === 'student' && currentRole === 'user');
+                return matchesKeyword && matchesRole;
             });
             body.replaceChildren();
             if (!filtered.length) {
-                body.innerHTML = '<tr><td colspan="5"><div class="empty-state">Chưa có người dùng phù hợp để hiển thị.</div></td></tr>';
+                body.innerHTML = '<tr><td colspan="6"><div class="empty-state">Chưa có người dùng phù hợp để hiển thị.</div></td></tr>';
                 return;
             }
             filtered.forEach(user => {
                 const name = displayName(user);
                 const primaryRole = user.role || user.active_role || 'user';
-                const online = activeWithinNinetySeconds(user);
+                const score = Math.max(0, Number(user.score ?? user.xp ?? 0) || 0);
+                const streak = Math.max(0, Number(user.current_streak ?? user.streak ?? 0) || 0);
                 const row = document.createElement('tr');
                 row.dataset.userId = String(user.id || user.email || '');
-                row.innerHTML = `<td><div class="user-cell"><div class="user-avatar"></div><div><strong></strong><span></span></div></div></td><td><span class="role-badge ${roleClass(primaryRole)}"></span></td><td><span class="status-badge ${online ? 'active-status' : 'idle-status'}"><i class="status-dot"></i>${online ? 'Online' : 'Offline'}</span></td><td>${escapeText(formatTime(user.last_active_client || user.updated_at || user.created_at))}</td><td><div class="action-group"><select class="user-role-select" aria-label="Chọn vai trò"><option value="user">Học viên</option><option value="premium">Premium</option><option value="parent">Phụ huynh</option><option value="cs">CSKH</option><option value="admin">Admin</option></select><button class="mini-button" type="button" data-save-user-role>Lưu role</button></div></td>`;
-                row.querySelector('.user-avatar').textContent = name.slice(0, 2).toUpperCase();
-                row.querySelector('.user-cell strong').textContent = name;
-                row.querySelector('.user-cell span').textContent = user.email || 'Chưa có email';
+                row.innerHTML = `<td>${escapeText(user.email || 'Chưa có email')}</td><td>${escapeText(name)}</td><td><span class="role-badge ${roleClass(primaryRole)}"></span></td><td>${score.toLocaleString('vi-VN')}</td><td>🔥 ${streak}</td><td><div class="action-group"><select class="user-role-select" aria-label="Chọn vai trò"><option value="student">Học viên</option><option value="admin">Admin</option><option value="premium">Premium</option></select><button class="mini-button" type="button" data-save-user-role>Lưu role</button></div></td>`;
                 row.querySelector('.role-badge').textContent = roleName(primaryRole);
-                row.querySelector('.user-role-select').value = String(primaryRole).toLowerCase() === 'student' ? 'user' : String(primaryRole).toLowerCase();
+                row.querySelector('.user-role-select').value = ['admin', 'premium'].includes(String(primaryRole).toLowerCase()) ? String(primaryRole).toLowerCase() : 'student';
                 body.appendChild(row);
             });
         } catch (error) {
@@ -426,7 +418,7 @@
             if (connection) connection.textContent = 'Đang tải Supabase…';
             const [user, users, submissionCount, errors, feedbacks, premiumRequests] = await Promise.all([
                 dataApi.getCurrentUser(),
-                fetchAllUsers(),
+                fetchUsers(),
                 fetchSubmissionCount(),
                 dataApi.fetchRows('error_reports', { limit: 100, orderBy: 'created_at', ascending: false }),
                 dataApi.fetchRows('user_feedbacks', { limit: 100, orderBy: 'created_at', ascending: false }),
