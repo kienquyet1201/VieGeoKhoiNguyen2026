@@ -468,7 +468,7 @@
             renderSupport(feedbacks);
             console.info('[VieGeo Admin] Đồng bộ giao diện hoàn tất', { users: allUsers.length, errors: errors.length, feedbacks: feedbacks.length });
         } catch (error) {
-            console.error('[VieGeo Admin] Không thể tải dashboard:', error);
+            console.error('[VieGeo Admin] Không thể tải trang quản trị:', error);
             if (byId('connectionBadge')) {
                 byId('connectionBadge').textContent = 'Không thể kết nối Supabase';
                 byId('connectionBadge').classList.add('error');

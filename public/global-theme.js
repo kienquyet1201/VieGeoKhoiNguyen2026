@@ -79,7 +79,9 @@ function ensureVieGeoSupportModal(){
     modal.className="viegeo-support-modal";
     modal.hidden=true;
     modal.style.display="none";
-    modal.innerHTML='<div class="viegeo-support-modal__dialog" role="dialog" aria-modal="true" aria-label="Hỗ trợ khách hàng"><button class="viegeo-support-modal__close" type="button" aria-label="Đóng">×</button><iframe class="viegeo-support-modal__frame" title="Hỗ trợ VieGeo" src="support-user.html"></iframe></div>';
+    modal.innerHTML='<div class="viegeo-support-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="viegeoSupportModalTitle">'+
+        '<header class="viegeo-support-modal__header"><span class="viegeo-support-modal__icon" aria-hidden="true">🎧</span><div><strong id="viegeoSupportModalTitle">VieGeo Care</strong><small><i></i>CSKH đang online</small></div><button class="viegeo-support-modal__close" type="button" aria-label="Đóng cửa sổ hỗ trợ">×</button></header>'+
+        '<iframe class="viegeo-support-modal__frame" title="Hỗ trợ VieGeo" src="support-user.html?embedded=1"></iframe></div>';
     document.body.appendChild(modal);
 
     modal.querySelector(".viegeo-support-modal__close").addEventListener("click",closeVieGeoSupportModal);

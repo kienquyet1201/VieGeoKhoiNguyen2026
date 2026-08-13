@@ -1857,7 +1857,7 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 
 /* Global fallback for pages that do not load global-theme.css. */
 html,body{margin:0!important;padding:0!important}
-.shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header{
+.shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header,.exam-topbar{
     position:sticky!important;
     top:0!important;
     margin-top:0!important;
@@ -1887,3 +1887,4 @@ html,body{margin:0!important;padding:0!important}
 .support-btn,#support-btn,.chat-widget,.support-button,#supportButton,#studentSupportButton{width:68px!important;min-width:68px!important;max-width:68px!important;height:68px!important;min-height:68px!important;border-radius:50%!important;background:linear-gradient(135deg,#0084ff,#00c6ff)!important;position:fixed!important;bottom:25px!important;right:25px!important;z-index:9999999!important;pointer-events:auto!important}
 .support-btn img,.support-btn svg,#support-btn img,#support-btn svg,.chat-widget img,.chat-widget svg,.support-button img,.support-button svg,#supportButton img,#supportButton svg,#studentSupportButton img,#studentSupportButton svg,.support-avatar,.support-badge{width:36px!important;height:36px!important;object-fit:contain!important;pointer-events:none!important}
 .support-button .support-copy,.support-button .support-arrow,.support-btn .support-copy{display:none!important}
+.sidebar-footer .logout-button,.admin-sidebar .logout-button,.student-sidebar .logout-button,.profile-sidebar .logout-button{width:100%!important;box-sizing:border-box!important;overflow-wrap:anywhere!important;word-break:break-word!important}

@@ -365,7 +365,7 @@ function renderProvinces(regionKey){
         }
 
         html+='<button class="province-card" type="button" data-province="'+province+'">';
-        html+='<div class="province-card-header"><span class="province-card-number">'+number+'</span><span class="province-card-status">'+(mapProgressReady?'✓ Đã đồng bộ':'Đang tải')+'</span></div>';
+        html+='<div class="province-card-header"><span class="province-card-number">'+number+'</span><span class="province-card-status">'+(mapProgressReady?'✓ Sẵn sàng':'Đang tải')+'</span></div>';
         html+='<div class="province-card-body"><div class="province-location">⌖</div><div class="province-info"><h3>'+province+'</h3><p>'+String(progressInfo.total.size)+' đảo từ Supabase</p></div></div>';
         html+='<div class="province-progress-meta"><span>Tiến độ</span><strong>'+progress+'%</strong></div>';
         html+='<div class="province-progress-track"><div class="province-progress-fill" style="width:'+progress+'%"></div></div>';

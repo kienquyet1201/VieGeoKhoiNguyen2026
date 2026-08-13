@@ -87,6 +87,7 @@ function sendSupportMessage(){
 }
 
 function initializeSupportUser(){
+    if(window.self!==window.top){document.documentElement.classList.add("support-embedded");}
     applyGlobalTheme(getGlobalTheme());
     currentSupportTicket=supportEnsureTicket();
     renderSupportMessages(currentSupportTicket);

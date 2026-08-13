@@ -13,6 +13,8 @@ var studentRoleSelect=document.getElementById("studentRoleSelect");
 var studentSupportButton=document.getElementById("studentSupportButton");
 var studentGreeting=document.getElementById("studentGreeting");
 var studentStreak=document.getElementById("studentStreak");
+var studentGemValue=document.getElementById("studentGemValue");
+var studentExpValue=document.getElementById("studentExpValue");
 
 function applyTheme(theme){
     applyGlobalTheme(theme);
@@ -45,12 +47,34 @@ function getStudentSession(){
 
 function updateStudentIdentity(user){
     var session=getStudentSession();
-    var name=String((user&& (user.name||user.full_name||user.display_name)) || session.name || session.displayName || "Bạn").trim();
+    var name=String((user&& (user.user_name||user.name||user.full_name||user.display_name)) || session.name || session.displayName || "Bạn").trim();
     var streak=Number(user&&(user.current_streak!==undefined?user.current_streak:user.streak));
+    var exp=Number(user&&(user.score??user.xp));
+    var gems=Number(user&&(user.gems??user.diamonds));
+    var legacyAvatar=String(user&&user.avatar||"").trim();
+    var avatarUrl=String(user&&(user.avatar_url||user.avatarUrl)||"").trim();
+    if(!avatarUrl&&/^(https?:|data:image\/)/i.test(legacyAvatar)){avatarUrl=legacyAvatar;}
+    var initials=name.split(/\s+/).filter(Boolean).slice(-2).map(function(part){return part.charAt(0);}).join("").toUpperCase()||"HV";
 
     if(!Number.isFinite(streak)){streak=0;}
+    if(!Number.isFinite(exp)){exp=0;}
+    if(!Number.isFinite(gems)){gems=0;}
     if(studentGreeting){studentGreeting.textContent="Chào "+name+" 👋";}
     if(studentStreak){studentStreak.textContent="🔥 "+streak+" ngày";}
+    if(studentExpValue){studentExpValue.textContent=exp.toLocaleString("vi-VN")+" EXP";}
+    if(studentGemValue){studentGemValue.textContent=gems.toLocaleString("vi-VN");}
+    if(profileButton){
+        profileButton.replaceChildren();
+        if(avatarUrl){
+            var avatarImage=document.createElement("img");
+            avatarImage.src=avatarUrl;
+            avatarImage.alt="Ảnh đại diện của "+name;
+            avatarImage.addEventListener("error",function(){profileButton.textContent=initials;},{once:true});
+            profileButton.appendChild(avatarImage);
+        }else{
+            profileButton.textContent=initials;
+        }
+    }
 }
 
 async function syncStudentIdentity(){
@@ -67,7 +91,7 @@ async function syncStudentIdentity(){
         }
         if(client&&typeof client.from==="function"&&email){
             var result=await client.from("users")
-                .select("name,full_name,display_name,email,current_streak")
+                .select("*")
                 .eq("email",email)
                 .maybeSingle();
             if(result.error){throw result.error;}

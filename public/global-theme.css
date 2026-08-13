@@ -97,7 +97,7 @@ body>footer{margin-top:auto}
 .viegeo-toast.is-visible{opacity:1;transform:translateX(0)}
 .viegeo-toast.is-leaving{opacity:0;transform:translateX(calc(100% + 32px))}
 @media(max-width:600px){.viegeo-toast-container{top:12px;right:16px;left:16px;width:auto}}
-.shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header{
+.shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header,.exam-topbar{
     position:sticky!important;
     top:0!important;
     margin-top:0!important;
@@ -197,4 +197,47 @@ body>footer{margin-top:auto}
     overflow-wrap:anywhere!important;
     word-wrap:break-word!important;
     box-sizing:border-box!important;
+    word-break:break-word!important;
 }
+
+/* Softer customer-care window with a compact, human-friendly header. */
+.viegeo-support-modal[hidden]{display:none!important}
+.viegeo-support-modal:not([hidden]){
+    position:fixed!important;
+    inset:0!important;
+    top:0!important;
+    left:0!important;
+    width:100vw!important;
+    height:100dvh!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:clamp(14px,3vw,30px)!important;
+    display:grid!important;
+    place-items:center!important;
+    transform:none!important;
+    background:rgba(2,12,24,.7)!important;
+    backdrop-filter:blur(8px)!important;
+    z-index:9999999!important;
+}
+.viegeo-support-modal__dialog{
+    position:relative!important;
+    display:grid!important;
+    grid-template-rows:auto minmax(0,1fr)!important;
+    width:min(760px,92vw)!important;
+    height:min(720px,90vh)!important;
+    max-width:92vw!important;
+    max-height:90vh!important;
+    margin:0!important;
+    overflow:hidden!important;
+    border:1px solid rgba(148,163,184,.3)!important;
+    border-radius:20px!important;
+    background:#f8fafc!important;
+    box-shadow:0 30px 90px rgba(2,6,23,.42),0 8px 24px rgba(15,23,42,.18)!important;
+}
+.viegeo-support-modal__header{position:relative;z-index:3;display:flex;align-items:center;gap:12px;min-height:68px;padding:12px 16px;border-bottom:1px solid #dbe6ee;background:linear-gradient(135deg,#fff,#edf8fc);color:#17384b}
+.viegeo-support-modal__icon{display:grid;width:42px;height:42px;flex:0 0 42px;place-items:center;border-radius:14px;background:linear-gradient(135deg,#38bdf8,#34d399);font-size:21px;box-shadow:0 8px 18px rgba(14,165,233,.2)}
+.viegeo-support-modal__header>div{min-width:0}.viegeo-support-modal__header strong,.viegeo-support-modal__header small{display:block}.viegeo-support-modal__header strong{font-size:.95rem}.viegeo-support-modal__header small{margin-top:3px;color:#64748b;font-size:.7rem;font-weight:700}.viegeo-support-modal__header small i{display:inline-block;width:7px;height:7px;margin-right:5px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+.viegeo-support-modal__close{position:static!important;width:40px!important;height:40px!important;flex:0 0 40px;margin-left:auto;border:1px solid #d7e3ea!important;border-radius:13px!important;background:#fff!important;color:#334155!important;box-shadow:0 5px 14px rgba(15,23,42,.09);font-size:23px!important;transition:background .18s ease,color .18s ease,transform .18s ease}.viegeo-support-modal__close:hover{background:#fee2e2!important;color:#b91c1c!important;transform:scale(1.04)}
+.viegeo-support-modal__frame{display:block!important;width:100%!important;height:100%!important;min-height:0!important;border:0!important;background:#f8fafc!important}
+@media(max-width:600px){.viegeo-support-modal:not([hidden]){padding:10px!important}.viegeo-support-modal__dialog{width:100%!important;max-width:100%!important;height:calc(100dvh - 20px)!important;max-height:calc(100dvh - 20px)!important;border-radius:18px!important}.viegeo-support-modal__header{min-height:62px;padding:10px 12px}}

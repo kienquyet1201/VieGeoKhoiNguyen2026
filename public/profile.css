@@ -28,3 +28,4 @@ button,input,select{font:inherit}
 body.achievement-modal-open{overflow:hidden}
 @media(max-width:760px){.achievement-modal{padding:12px}.achievement-modal-dialog{max-height:92vh;padding:22px 16px}.achievement-modal-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:460px){.achievement-modal-list{grid-template-columns:1fr}}
+.achievement-modal-dialog{position:fixed!important;top:50%!important;left:50%!important;transform:translate(-50%,-50%)!important;width:min(920px,90vw)!important;max-width:90vw!important;max-height:85vh!important;overflow-y:auto!important;z-index:99999!important;border-radius:20px!important;scroll-behavior:smooth}

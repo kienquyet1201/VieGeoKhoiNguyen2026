@@ -213,7 +213,7 @@ async function ensureRootAdminProfile() {
     };
     try {
         await db.collection('users').doc(ROOT_ADMIN_EMAIL).set(adminProfile, { merge: true });
-        console.log('[VieGeo Admin] Đã đồng bộ hồ sơ Admin Tổng vào users.', { email: ROOT_ADMIN_EMAIL, roles: ROOT_ADMIN_ROLES });
+        console.log('[VieGeo Admin] Hồ sơ Admin Tổng đã lưu vào users.', { email: ROOT_ADMIN_EMAIL, roles: ROOT_ADMIN_ROLES });
     } catch (error) {
         console.warn('[VieGeo Admin] Không thể upsert Admin Tổng lên Supabase, dùng session cục bộ.', error);
     }
@@ -241,7 +241,7 @@ async function ensureAuthenticatedUserProfile(authUser, email, existingData = {}
     };
     try {
         await db.collection('users').doc(safeEmail).set(profile, { merge: true });
-        console.log('[VieGeo Auth] Đã đồng bộ Supabase Auth user vào public.users.', {
+        console.log('[VieGeo Auth] Supabase Auth user đã lưu vào public.users.', {
             email: safeEmail,
             roles: profile.roles,
             role: profile.role

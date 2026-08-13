@@ -311,7 +311,7 @@
                 list.appendChild(item);
             });
         } catch (error) {
-            console.warn('[VieGeo UI] Không thể đồng bộ dashboard học viên:', error);
+            console.warn('[VieGeo UI] Không thể tải dữ liệu học viên:', error);
         }
     }
 
