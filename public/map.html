@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="map-discovery.css?v=20260809-3">
+    <link rel="stylesheet" href="map-discovery.css?v=20260813-1">
     <link rel="stylesheet" href="shared-topbar.css">
     <link rel="stylesheet" href="global-theme.css?v=20260812-1">
     <script src="global-theme.js"></script>
@@ -227,6 +227,22 @@
         </section>
     </div>
 
+    <div id="islandResultModal" class="island-result-modal" hidden aria-hidden="true">
+        <button class="island-result-backdrop" type="button" data-close-island-result aria-label="Đóng kết quả"></button>
+        <section class="island-result-dialog" role="dialog" aria-modal="true" aria-labelledby="islandResultTitle">
+            <button id="islandResultCloseButton" class="island-result-close" type="button" aria-label="Đóng">×</button>
+            <span class="island-result-kicker">Hoàn thành đảo nhỏ</span>
+            <div id="islandResultStars" class="island-result-stars" aria-label="Số sao đạt được">☆☆☆</div>
+            <h2 id="islandResultTitle">Chúc mừng!</h2>
+            <p id="islandResultScore" class="island-result-score"></p>
+            <div class="island-result-rewards">
+                <div><span>⚡</span><strong id="islandResultXp">+0 XP</strong><small>Kinh nghiệm</small></div>
+                <div><span>💎</span><strong id="islandResultGems">+0 Gem</strong><small>Kim cương</small></div>
+            </div>
+            <button id="islandResultContinueButton" class="island-result-continue" type="button">TIẾP TỤC LỘ TRÌNH</button>
+        </section>
+    </div>
+
     <button class="support-button" id="supportButton" type="button">
         <span class="support-avatar">CS</span>
         <span class="support-copy">
@@ -237,7 +253,7 @@
     </button>
 
     <div id="toast" class="toast"></div>
-    <script src="map-discovery.js?v=20260809-3"></script>
+    <script src="map-discovery.js?v=20260813-1"></script>
     <script src="shared-topbar.js"></script>
 </body>
 </html>

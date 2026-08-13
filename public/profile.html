@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="profile.css?v=20260812-1">
+    <link rel="stylesheet" href="profile.css?v=20260813-1">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
@@ -173,7 +173,7 @@
                     </div>
                 </article>
 
-                <article class="stat-card achievement-card">
+                <article class="stat-card achievement-card" data-open-achievements role="button" tabindex="0" aria-label="Mở danh sách thành tựu">
                     <div class="stat-icon">🏅</div>
                     <div>
                         <span>Thành tựu</span>
@@ -250,7 +250,7 @@
                         <button id="btnPremium" class="premium-button" type="button">Yêu cầu mua Premium</button>
                     </article>
 
-                    <article class="panel-card achievement-panel">
+                    <article class="panel-card achievement-panel" data-open-achievements role="button" tabindex="0" aria-label="Mở danh sách huy hiệu và thành tựu">
                         <div class="panel-heading">
                             <div>
                                 <span class="panel-eyebrow">Bộ sưu tập</span>
@@ -281,8 +281,19 @@
         </main>
     </div>
 
+    <div id="achievementModal" class="achievement-modal" hidden aria-hidden="true">
+        <button class="achievement-modal-backdrop" type="button" data-close-achievements aria-label="Đóng danh sách thành tựu"></button>
+        <section class="achievement-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="achievementModalTitle">
+            <button id="achievementModalClose" class="achievement-modal-close" type="button" aria-label="Đóng">×</button>
+            <span class="panel-eyebrow">Bộ sưu tập VieGeo</span>
+            <h2 id="achievementModalTitle">Huy hiệu & Thành tựu</h2>
+            <p id="achievementModalSummary" class="achievement-modal-summary">Đang đồng bộ thành tựu...</p>
+            <div id="achievementModalList" class="achievement-modal-list" aria-live="polite"></div>
+        </section>
+    </div>
+
     <div class="toast" id="toast"></div>
-    <script src="profile.js"></script>
+    <script src="profile.js?v=20260813-1"></script>
     <script src="shared-topbar.js"></script>
 <button class="support-button" id="supportButton" type="button">
         <span class="support-avatar">CS</span>

@@ -52,7 +52,7 @@
     }
 
     function displayName(user) {
-        return String(user?.name || user?.full_name || user?.display_name || user?.email || 'Người dùng');
+        return String(user?.user_name || user?.name || user?.full_name || user?.display_name || user?.email || 'Người dùng');
     }
 
     function roleName(role) {
@@ -75,9 +75,12 @@
     async function fetchUsers() {
         const supabase = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
         if (!supabase || typeof supabase.from !== 'function') throw new Error('Supabase client chưa sẵn sàng.');
+        const orderedResult = await supabase.from('users').select('*').order('score', { ascending: false });
+        if (!orderedResult.error) return Array.isArray(orderedResult.data) ? orderedResult.data : [];
+        console.warn('[VieGeo Admin] Cột score chưa sẵn sàng, tải danh sách users không sắp xếp:', orderedResult.error.message || orderedResult.error);
         const { data, error } = await supabase.from('users').select('*');
         if (error) throw error;
-        return (Array.isArray(data) ? data : []).sort((first, second) => displayName(first).localeCompare(displayName(second), 'vi'));
+        return (Array.isArray(data) ? data : []).sort((first, second) => Number(second.score ?? second.xp ?? 0) - Number(first.score ?? first.xp ?? 0));
     }
 
     async function fetchSubmissionCount() {
@@ -235,23 +238,46 @@
         }
         const buttons = document.querySelectorAll('[data-premium-action]');
         buttons.forEach(button => { button.disabled = true; });
+        let requestUpdated = false;
         try {
+            let userId = request?.user_id ?? request?.userId ?? null;
             if (status === 'approved') {
-                const { error: userError } = await client
-                    .from('users')
-                    .update({ role: 'premium', account_status: 'premium' })
-                    .eq('email', email);
-                if (userError) throw userError;
+                if (userId === null || userId === undefined || userId === '') {
+                    const { data: linkedUser, error: linkedUserError } = await client
+                        .from('users')
+                        .select('id')
+                        .eq('email', email)
+                        .maybeSingle();
+                    if (linkedUserError) throw linkedUserError;
+                    userId = linkedUser?.id;
+                }
+                if (userId === null || userId === undefined || userId === '') throw new Error('Không tìm thấy userId của yêu cầu Premium.');
             }
             const { error: requestError } = await client
                 .from('premium_requests')
                 .update({ status, reviewed_at: new Date().toISOString() })
                 .eq('id', request.id);
             if (requestError) throw requestError;
+            requestUpdated = true;
+            if (status === 'approved') {
+                const { error: userError } = await client
+                    .from('users')
+                    .update({ role: 'premium' })
+                    .eq('id', userId);
+                if (userError) throw userError;
+                const { error: accountError } = await client
+                    .from('users')
+                    .update({ account_status: 'premium', updated_at: new Date().toISOString() })
+                    .eq('id', userId);
+                if (accountError) throw accountError;
+            }
             showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu Premium.', 'success');
             await loadDashboard();
         } catch (error) {
             console.error('[VieGeo Admin] Không thể xử lý Premium:', error);
+            if (requestUpdated && status === 'approved') {
+                await client.from('premium_requests').update({ status: 'pending', reviewed_at: null }).eq('id', request.id);
+            }
             showToast('Không thể cập nhật yêu cầu Premium.', 'error');
             buttons.forEach(button => { button.disabled = false; });
         }

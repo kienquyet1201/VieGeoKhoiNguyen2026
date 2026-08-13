@@ -38,6 +38,78 @@ function normalizeAchievementIds(source) {
     return source.map(item => String((item?.achievement_id ?? item?.achievementId ?? item?.code ?? item?.id ?? item) || '').trim()).filter(Boolean);
 }
 
+const PROFILE_ACHIEVEMENTS = [
+    { id: 'ach_pvp_1', title: 'Tân binh Đấu trường', description: 'Chiến thắng 1 trận PvP', type: 'pvpWins', target: 1, icon: '⚔️' },
+    { id: 'ach_pvp_10', title: 'Chiến binh Đấu trường', description: 'Chiến thắng 10 trận PvP', type: 'pvpWins', target: 10, icon: '🛡️' },
+    { id: 'ach_pvp_99', title: 'Huyền thoại Đấu trường', description: 'Chiến thắng 99 trận PvP', type: 'pvpWins', target: 99, icon: '🏆' },
+    { id: 'ach_lesson_1', title: 'Bước chân đầu tiên', description: 'Hoàn thành xuất sắc 1 bài học', type: 'perfectLessons', target: 1, icon: '📖' },
+    { id: 'ach_lesson_10', title: 'Học bá Địa lý', description: 'Hoàn thành xuất sắc 10 bài học', type: 'perfectLessons', target: 10, icon: '🎓' },
+    { id: 'ach_lesson_50', title: 'Học giả uyên bác', description: 'Hoàn thành xuất sắc 50 bài học', type: 'perfectLessons', target: 50, icon: '🏅' },
+    { id: 'ach_streak_3', title: 'Khởi động bền bỉ', description: 'Đạt chuỗi học tập 3 ngày', type: 'streak', target: 3, icon: '🔥' },
+    { id: 'ach_streak_7', title: 'Kiên trì bền bỉ', description: 'Đạt chuỗi học tập 7 ngày', type: 'streak', target: 7, icon: '🔥' },
+    { id: 'ach_streak_30', title: 'Bậc thầy kỷ luật', description: 'Đạt chuỗi học tập 30 ngày', type: 'streak', target: 30, icon: '🌟' },
+    { id: 'ach_gems_1k', title: 'Khởi nghiệp', description: 'Tích lũy 1.000 Gem', type: 'gems', target: 1000, icon: '💎' },
+    { id: 'ach_gems_10k', title: 'Triệu phú VieGeo', description: 'Tích lũy 10.000 Gem', type: 'gems', target: 10000, icon: '👑' },
+    { id: 'ach_chest_1', title: 'Chạm vào may mắn', description: 'Mở 1 rương báu', type: 'chestsOpened', target: 1, icon: '🎁' },
+    { id: 'ach_chest_5', title: 'Thợ săn kho báu', description: 'Mở 5 rương báu', type: 'chestsOpened', target: 5, icon: '🗝️' }
+];
+let profileEarnedAchievementIds = new Set();
+
+function profileAchievementProgress(currentUser, type) {
+    const storedState = currentUser?.game_state || currentUser?.gameState || gameState || {};
+    const fields = {
+        pvpWins: currentUser?.pvp_wins ?? currentUser?.pvpWins ?? storedState.pvpWins,
+        perfectLessons: currentUser?.perfect_lessons ?? currentUser?.perfectLessons ?? storedState.perfectLessons,
+        streak: currentUser?.current_streak ?? currentUser?.streak ?? storedState.streak,
+        gems: currentUser?.gems ?? storedState.gems,
+        chestsOpened: currentUser?.chests_opened ?? currentUser?.chestsOpened ?? storedState.chestsOpened
+    };
+    return Math.max(0, Number(fields[type]) || 0);
+}
+
+function renderAchievementModal(currentUser, earnedIds) {
+    const list = document.getElementById('achievementModalList');
+    const summary = document.getElementById('achievementModalSummary');
+    if (!list || !summary) return;
+    const earnedSet = new Set(normalizeAchievementIds(earnedIds));
+    if (earnedSet.has('explorer')) earnedSet.add('ach_lesson_1');
+    if (earnedSet.has('streak_7')) earnedSet.add('ach_streak_7');
+    if (earnedSet.has('arena_top')) earnedSet.add('ach_pvp_1');
+    profileEarnedAchievementIds = new Set();
+    list.replaceChildren();
+
+    PROFILE_ACHIEVEMENTS.forEach(achievement => {
+        const earned = earnedSet.has(achievement.id) || profileAchievementProgress(currentUser, achievement.type) >= achievement.target;
+        if (earned) profileEarnedAchievementIds.add(achievement.id);
+        const card = document.createElement('article');
+        card.className = `achievement-modal-item${earned ? ' is-earned' : ''}`;
+        card.innerHTML = '<div class="achievement-modal-icon"></div><strong></strong><small></small><span class="achievement-modal-state"></span>';
+        card.querySelector('.achievement-modal-icon').textContent = achievement.icon;
+        card.querySelector('strong').textContent = achievement.title;
+        card.querySelector('small').textContent = achievement.description;
+        card.querySelector('.achievement-modal-state').textContent = earned ? 'Đã mở khóa' : 'Chưa mở khóa';
+        list.appendChild(card);
+    });
+    summary.textContent = `Đã mở khóa ${profileEarnedAchievementIds.size}/${PROFILE_ACHIEVEMENTS.length} thành tựu`;
+}
+
+function openAchievementModal() {
+    const modal = document.getElementById('achievementModal');
+    if (!modal) return;
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('achievement-modal-open');
+    document.getElementById('achievementModalClose')?.focus();
+}
+
+function closeAchievementModal() {
+    const modal = document.getElementById('achievementModal');
+    if (!modal) return;
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('achievement-modal-open');
+}
+
 async function syncAchievementBadges(currentUser) {
     const client = window.supabaseClient || window.supabase;
     const email = String(currentUser?.email || sessionUser?.email || '').trim();
@@ -73,7 +145,26 @@ async function syncAchievementBadges(currentUser) {
     const total = earnedIds.length || Array.from(badges).filter(badge => badge.classList.contains('is-earned')).length;
     const summary = document.querySelector('.achievement-card strong');
     if (summary) summary.textContent = String(total);
+    renderAchievementModal(currentUser, earnedIds);
+    if (summary) summary.textContent = String(profileEarnedAchievementIds.size);
 }
+
+document.querySelectorAll('[data-open-achievements]').forEach(trigger => {
+    trigger.addEventListener('click', openAchievementModal);
+    trigger.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openAchievementModal();
+        }
+    });
+});
+document.getElementById('achievementModalClose')?.addEventListener('click', closeAchievementModal);
+document.getElementById('achievementModal')?.addEventListener('click', event => {
+    if (event.target.closest('[data-close-achievements]')) closeAchievementModal();
+});
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeAchievementModal();
+});
 
 // 1. Kiểm tra session
 const sessionData = localStorage.getItem('lm_session');
@@ -86,6 +177,7 @@ function getGameState() {
     return JSON.parse(state);
 }
 const gameState = getGameState();
+renderAchievementModal({}, []);
 
 function profileClient() {
     const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
@@ -233,6 +325,7 @@ async function loadProfile() {
         if (profileProgressValue) profileProgressValue.textContent = '0%';
         if (profileProgressFill) profileProgressFill.style.width = '0%';
         renderNotifications([]);
+        renderAchievementModal({}, []);
     }
 }
 

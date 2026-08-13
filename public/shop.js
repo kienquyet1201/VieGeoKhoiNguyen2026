@@ -19,6 +19,7 @@ var logoutButton=document.getElementById("logoutButton");
 var backButton=document.getElementById("backButton");
 var supportButton=document.getElementById("supportButton");
 var toast=document.getElementById("toast");
+var SHOP_MAX_HEARTS=3;
 
 function setShopText(element,value){
     if(element){
@@ -52,7 +53,7 @@ function getShopItems(){
     }
 
     return [
-        {id:"infinite_hearts",title:"Trái tim vô hạn",desc:"Không bao giờ mất mạng trong 15 phút.",price:50,icon:"fa-heart",color:"#ff5364"},
+        {id:"infinite_hearts",title:"Hồi đầy trái tim",desc:"Hồi ngay toàn bộ trái tim về mức tối đa.",price:50,icon:"fa-heart",color:"#ff5364"},
         {id:"freeze",title:"Khiên đóng băng",desc:"Bảo vệ Chuỗi ngày nếu bạn quên học 1 ngày.",price:200,icon:"fa-shield-halved",color:"#22b7ef"},
         {id:"p_double_xp",title:"Bùa x2 XP (Đấu Trường)",desc:"Nhân đôi điểm số trong 1 câu hỏi đấu trường.",price:30,icon:"fa-bolt",color:"#ffc928"},
         {id:"p_5050",title:"Bùa 50/50 (Đấu Trường)",desc:"Loại bỏ 2 đáp án sai trong đấu trường.",price:40,icon:"fa-wand-magic-sparkles",color:"#c768ef"}
@@ -115,16 +116,8 @@ function updateShopHeader(){
 }
 
 function updateInventoryPanel(){
-    var expiry=Number(shopState.inventory.infiniteHeartsExpiry)||0;
-    var remain=Math.max(0,expiry-Date.now());
-    var minutes;
-
-    if(remain>0){
-        minutes=Math.ceil(remain/60000);
-        inventoryInfinite.textContent="Còn "+minutes+" phút";
-    }else{
-        inventoryInfinite.textContent="Chưa kích hoạt";
-    }
+    var maxHearts=Math.max(1,Number(shopState.maxHearts)||SHOP_MAX_HEARTS);
+    inventoryInfinite.textContent=(Number(shopState.hearts)||0)+"/"+maxHearts+" trái tim";
 
     inventoryFreeze.textContent=shopState.inventory.streakFreeze||0;
     inventoryDoubleXp.textContent=shopState.inventory.powerupDoubleXp||0;
@@ -173,7 +166,9 @@ function applyPurchasedItem(itemId){
     ensureInventory();
 
     if(itemId==="infinite_hearts"){
-        shopState.inventory.infiniteHeartsExpiry=Date.now()+15*60*1000;
+        shopState.maxHearts=Math.max(1,Number(shopState.maxHearts)||SHOP_MAX_HEARTS);
+        shopState.hearts=shopState.maxHearts;
+        shopState.inventory.infiniteHeartsExpiry=null;
     }
 
     if(itemId==="freeze"){
@@ -189,9 +184,43 @@ function applyPurchasedItem(itemId){
     }
 }
 
-function purchaseItem(itemId,price){
+async function syncShopPurchaseToSupabase(gems,hearts){
+    var client=window.supabaseClient||window.supabase||(window.VieGeoSupabase&&window.VieGeoSupabase.client);
+    var session={};
+    var authResult;
+    var email="";
+    var response;
+
+    try{
+        session=JSON.parse(localStorage.getItem("lm_session")||"{}");
+    }catch(error){
+        session={};
+    }
+
+    if(!client||typeof client.from!=="function"){
+        throw new Error("Supabase chưa sẵn sàng.");
+    }
+
+    if(client.auth&&typeof client.auth.getUser==="function"){
+        authResult=await client.auth.getUser();
+        email=String(authResult&&authResult.data&&authResult.data.user&&authResult.data.user.email||"").trim().toLowerCase();
+    }
+    email=email||String(session.email||"").trim().toLowerCase();
+    if(!email){
+        throw new Error("Không xác định được tài khoản đang đăng nhập.");
+    }
+
+    response=await client.from("users").update({gems:gems,hearts:hearts}).eq("email",email);
+    if(response.error){
+        throw response.error;
+    }
+}
+
+async function purchaseItem(itemId,price){
     var item=findShopItem(itemId);
     var approved;
+    var remainingGems;
+    var maxHearts;
 
     if(!item){
         showToast("Không tìm thấy vật phẩm.",true);
@@ -205,22 +234,33 @@ function purchaseItem(itemId,price){
     }
 
     if((Number(shopState.gems)||0)<price){
-        showToast("Bạn không đủ Đá quý!",true);
-        window.alert("Bạn không đủ Gem để mua vật phẩm này.");
+        showToast("Bạn không đủ Gem để mua vật phẩm này.","error");
         return;
     }
 
-    shopState.gems=(Number(shopState.gems)||0)-price;
+    remainingGems=(Number(shopState.gems)||0)-price;
+    maxHearts=Math.max(1,Number(shopState.maxHearts)||SHOP_MAX_HEARTS);
+
+    try{
+        await syncShopPurchaseToSupabase(remainingGems,itemId==="infinite_hearts"?maxHearts:Number(shopState.hearts)||0);
+    }catch(error){
+        console.error("Không thể đồng bộ giao dịch cửa hàng:",error);
+        showToast(error.message||"Không thể đồng bộ giao dịch lên Supabase.","error");
+        return;
+    }
+
+    shopState.gems=remainingGems;
     applyPurchasedItem(itemId);
     saveShopState();
     updateShopHeader();
     updateInventoryPanel();
+    setShopText(document.getElementById("sharedHeart"),shopState.hearts);
+    setShopText(document.getElementById("sharedGem"),shopState.gems);
     createConfetti();
-    showToast("Đã mua "+item.title+" thành công!",false);
-    window.alert("Mua thành công! Bạn còn "+shopState.gems+" Gem.");
+    showToast("Đã mua "+item.title+". Bạn còn "+shopState.gems+" Gem.","success");
 }
 
-function handleShopClick(event){
+async function handleShopClick(event){
     var button=event.target.closest(".shop-buy-button");
     var itemId;
     var price;
@@ -231,7 +271,12 @@ function handleShopClick(event){
 
     itemId=button.getAttribute("data-item-id");
     price=parseInt(button.getAttribute("data-item-price"),10)||0;
-    purchaseItem(itemId,price);
+    button.disabled=true;
+    try{
+        await purchaseItem(itemId,price);
+    }finally{
+        button.disabled=false;
+    }
 }
 
 function createConfetti(){
@@ -261,18 +306,32 @@ function createConfetti(){
     }
 }
 
-function showToast(message,isError){
-    toast.textContent=message;
-    toast.className="toast show";
+function showToast(message,type){
+    var normalizedType=type===true?"error":(type===false?"success":String(type||"info").toLowerCase());
+    var container=document.getElementById("viegeoToastContainer");
+    var toastItem;
 
-    if(isError){
-        toast.classList.add("error");
+    if(!container){
+        container=document.createElement("div");
+        container.id="viegeoToastContainer";
+        container.className="viegeo-toast-container";
+        container.setAttribute("aria-live","polite");
+        document.body.appendChild(container);
     }
 
+    toastItem=document.createElement("div");
+    toastItem.className="viegeo-toast viegeo-toast--"+normalizedType;
+    toastItem.setAttribute("role",normalizedType==="error"?"alert":"status");
+    toastItem.textContent=String(message||"");
+    container.appendChild(toastItem);
+    window.requestAnimationFrame(function(){toastItem.classList.add("is-visible");});
     window.setTimeout(function(){
-        toast.className="toast";
-    },2400);
+        toastItem.classList.remove("is-visible");
+        toastItem.classList.add("is-leaving");
+        window.setTimeout(function(){toastItem.remove();},300);
+    },3000);
 }
+window.showToast=showToast;
 
 function applyTheme(theme){
     document.documentElement.setAttribute("data-theme",theme);

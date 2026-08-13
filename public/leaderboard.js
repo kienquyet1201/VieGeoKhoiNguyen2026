@@ -71,45 +71,28 @@
         return {
             id: source.id || source.user_id || source.email || source.user_email || 'rank-' + index,
             email: String(source.email || source.user_email || '').trim().toLowerCase(),
-            name: String(source.name || source.full_name || source.display_name || source.user_name || source.email || source.user_email || 'Học viên'),
+            name: String(source.user_name || source.name || source.full_name || source.display_name || source.email || source.user_email || 'Học viên'),
             score: score,
             streak: Number(source.current_streak ?? source.streak ?? 0) || 0
         };
     }
 
     async function fetchLeaderboardRows() {
-        var client = getClient();
-        if (!client) throw new Error('Supabase client chưa sẵn sàng.');
+        const supabase = getClient();
+        if (!supabase) throw new Error('Supabase client chưa sẵn sàng.');
+        const { data, error } = await supabase.from('users').select('user_name, score, current_streak').order('score', { ascending: false });
+        if (!error) return Array.isArray(data) ? data : [];
 
-        var results = await Promise.all([
-            client.from('leaderboard').select('*').limit(500),
-            client.from('users').select('*').limit(500)
-        ]);
-        var boardResult = results[0];
-        var usersResult = results[1];
-        if (!boardResult.error && Array.isArray(boardResult.data) && boardResult.data.length) {
-            var users = Array.isArray(usersResult.data) ? usersResult.data : [];
-            var usersById = new Map();
-            users.forEach(function (user) {
-                if (user.id !== undefined && user.id !== null) usersById.set(String(user.id), user);
-                if (user.email) usersById.set(String(user.email).trim().toLowerCase(), user);
-            });
-            return boardResult.data.map(function (row) {
-                var user = usersById.get(String(row.user_id ?? row.id ?? ''))
-                    || usersById.get(String(row.user_email || row.email || '').trim().toLowerCase())
-                    || {};
-                return Object.assign({}, user, row, {
-                    current_streak: row.current_streak ?? user.current_streak ?? 0,
-                    score: row.score ?? user.score ?? user.xp ?? 0
-                });
-            });
-        }
-        if (boardResult.error) {
-            console.warn('[VieGeo Leaderboard] Không đọc được public.leaderboard:', boardResult.error.message || boardResult.error);
-        }
-
-        if (usersResult.error) throw usersResult.error;
-        return Array.isArray(usersResult.data) ? usersResult.data : [];
+        console.warn('[VieGeo Leaderboard] Query chuẩn chưa sẵn sàng, dùng cột users tương thích:', error.message || error);
+        const fallback = await supabase.from('users').select('name,full_name,xp,current_streak').order('xp', { ascending: false });
+        if (fallback.error) throw fallback.error;
+        return (Array.isArray(fallback.data) ? fallback.data : []).map(function (user) {
+            return {
+                user_name: user.name || user.full_name || 'Học viên',
+                score: Number(user.xp) || 0,
+                current_streak: Number(user.current_streak) || 0
+            };
+        });
     }
 
     async function fetchCurrentUser() {

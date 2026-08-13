@@ -21,22 +21,14 @@ function getSupabaseAuthClient() {
 
 // Shared UI notifications, consolidated here from the removed patch script.
 window.VieGeoUI = window.VieGeoUI || {
-    alert(message, options = {}) {
-        try {
-            if (window.Swal && typeof window.Swal.fire === 'function') {
-                return window.Swal.fire({
-                    title: 'Thông báo', text: String(message || ''), icon: 'info',
-                    confirmButtonColor: '#1cb0f6', background: '#13253a', color: '#f0f4f8',
-                    heightAuto: false, ...options
-                });
-            }
-            console.warn('[VieGeo]', message);
-        } catch (error) { console.error('Notification error:', error); }
+    toast(message, options = {}) {
+        const type = options.icon || options.type || 'info';
+        showToast(message, type);
         return Promise.resolve({ isConfirmed: true });
     },
-    success(message, options = {}) { return this.alert(message, { title: 'Thành công', icon: 'success', ...options }); },
-    warning(message, options = {}) { return this.alert(message, { title: 'Lưu ý', icon: 'warning', ...options }); },
-    error(message, options = {}) { return this.alert(message, { title: 'Đã xảy ra lỗi', icon: 'error', ...options }); }
+    success(message, options = {}) { return this.toast(message, { type: 'success', ...options }); },
+    warning(message, options = {}) { return this.toast(message, { type: 'warning', ...options }); },
+    error(message, options = {}) { return this.toast(message, { type: 'error', ...options }); }
 };
 
 const ROLE_META = Object.freeze({
@@ -344,17 +336,37 @@ function setupRealtimeAuth() {
 setupRealtimeAuth();
 
 
-function showToast(msg, isError = false) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.style.background = isError ? 'var(--holo-1)' : 'var(--holo-3)';
-    toast.style.opacity = '1';
-    toast.style.bottom = '40px';
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.bottom = '-50px';
+function showToast(message, type = 'info') {
+    const normalizedType = type === true ? 'error' : (type === false ? 'success' : String(type || 'info').toLowerCase());
+    const allowedTypes = new Set(['success', 'error', 'warning', 'info']);
+    const toastType = allowedTypes.has(normalizedType) ? normalizedType : 'info';
+    let container = document.getElementById('viegeoToastContainer');
+
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'viegeoToastContainer';
+        container.className = 'viegeo-toast-container';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `viegeo-toast viegeo-toast--${toastType}`;
+    toast.setAttribute('role', toastType === 'error' ? 'alert' : 'status');
+    toast.textContent = String(message || '');
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+    window.setTimeout(() => {
+        toast.classList.remove('is-visible');
+        toast.classList.add('is-leaving');
+        window.setTimeout(() => toast.remove(), 300);
     }, 3000);
+
+    return toast;
 }
+window.showToast = showToast;
 
 // ── ONLINE HEARTBEAT ──
 setInterval(() => {
@@ -808,7 +820,7 @@ async function renderLeaderboard() {
             return {
                 id: row.id ?? row.email ?? `leaderboard-${index}`,
                 email: row.email ?? row.user_email ?? '',
-                name: cleanText(row.name || row.full_name || row.display_name || row.email || 'Thám hiểm gia', 120),
+                name: cleanText(row.user_name || row.name || row.full_name || row.display_name || row.email || 'Thám hiểm gia', 120),
                 avatar: cleanText(row.avatar || row.avatar_icon || row.icon || 'fa-user', 80),
                 avatarIsBase64: Boolean(row.avatarIsBase64 || row.avatar_is_base64),
                 xp,
@@ -817,38 +829,20 @@ async function renderLeaderboard() {
         };
 
         const fetchLeaderboardRows = async () => {
-            const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
-            if (!client || typeof client.from !== 'function') {
+            const supabase = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+            if (!supabase || typeof supabase.from !== 'function') {
                 throw new Error('Supabase client chưa sẵn sàng.');
             }
-
-            const attempts = [
-                { table: 'leaderboard', limit: 100 },
-                { table: 'users', limit: 100 }
-            ];
-
-            for (const attempt of attempts) {
-                let { data, error } = await client
-                    .from(attempt.table)
-                    .select('*')
-                    .limit(attempt.limit);
-
-                if (error) {
-                    console.warn(`[VieGeo Leaderboard] Không tải được bảng ${attempt.table}:`, {
-                        code: error.code,
-                        message: error.message,
-                        details: error.details,
-                        hint: error.hint
-                    });
-                    continue;
-                }
-
-                if (Array.isArray(data) && data.length > 0) {
-                    return data;
-                }
-            }
-
-            return [];
+            const { data, error } = await supabase.from('users').select('user_name, score, current_streak').order('score', { ascending: false });
+            if (!error) return Array.isArray(data) ? data : [];
+            console.warn('[VieGeo Leaderboard] Query users chuẩn chưa sẵn sàng:', error.message || error);
+            const fallback = await supabase.from('users').select('name,full_name,xp,current_streak').order('xp', { ascending: false });
+            if (fallback.error) throw fallback.error;
+            return (Array.isArray(fallback.data) ? fallback.data : []).map(row => ({
+                user_name: row.name || row.full_name || 'Học viên',
+                score: Number(row.xp) || 0,
+                current_streak: Number(row.current_streak) || 0
+            }));
         };
 
         const rows = await fetchLeaderboardRows();
@@ -1198,7 +1192,9 @@ window.buyItem = function(itemId, price) {
         gameState.gems -= price;
         
         if (itemId === "infinite_hearts") {
-            gameState.inventory.infiniteHeartsExpiry = Date.now() + 15 * 60 * 1000;
+            gameState.hearts = HEARTS_MAX;
+            gameState.maxHearts = HEARTS_MAX;
+            gameState.inventory.infiniteHeartsExpiry = null;
         } else if (itemId === "p_double_xp") {
             gameState.inventory.powerupDoubleXp = (gameState.inventory.powerupDoubleXp || 0) + 1;
         } else if (itemId === "p_5050") {

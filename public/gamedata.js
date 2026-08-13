@@ -438,7 +438,7 @@ const DAILY_QUESTS = [
 
 // ── SHOP ITEMS ──
 const SHOP_ITEMS = [
-    { id: "infinite_hearts", title: "Trái tim vô hạn", desc: "Không bao giờ mất mạng trong 15 phút.", price: 50, icon: "fa-heart", color: "#ff4b4b" },
+    { id: "infinite_hearts", title: "Hồi đầy trái tim", desc: "Hồi ngay toàn bộ trái tim về mức tối đa.", price: 50, icon: "fa-heart", color: "#ff4b4b" },
     { id: "freeze", title: "Khiên đóng băng", desc: "Bảo vệ Chuỗi ngày nếu bạn quên học 1 ngày.", price: 200, icon: "fa-shield-halved", color: "#1cb0f6" },
     { id: "p_double_xp", title: "Bùa x2 XP (Đấu Trường)", desc: "Nhân đôi điểm số trong 1 câu hỏi đấu trường.", price: 30, icon: "fa-bolt", color: "#ffc800" },
     { id: "p_5050", title: "Bùa 50/50 (Đấu Trường)", desc: "Loại bỏ 2 đáp án sai trong đấu trường.", price: 40, icon: "fa-wand-magic-sparkles", color: "#ce82ff" }

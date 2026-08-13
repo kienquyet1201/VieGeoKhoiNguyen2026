@@ -1,5 +1,36 @@
 var globalThemeKey="VieGeo_theme";
 
+function showToast(message,type){
+    var normalizedType=type===true?"error":(type===false?"success":String(type||"info").toLowerCase());
+    var allowedTypes=["success","error","warning","info"];
+    var container=document.getElementById("viegeoToastContainer");
+    var toast;
+
+    if(allowedTypes.indexOf(normalizedType)===-1){normalizedType="info";}
+    if(!container){
+        container=document.createElement("div");
+        container.id="viegeoToastContainer";
+        container.className="viegeo-toast-container";
+        container.setAttribute("aria-live","polite");
+        container.setAttribute("aria-atomic","true");
+        document.body.appendChild(container);
+    }
+
+    toast=document.createElement("div");
+    toast.className="viegeo-toast viegeo-toast--"+normalizedType;
+    toast.setAttribute("role",normalizedType==="error"?"alert":"status");
+    toast.textContent=String(message||"");
+    container.appendChild(toast);
+    window.requestAnimationFrame(function(){toast.classList.add("is-visible");});
+    window.setTimeout(function(){
+        toast.classList.remove("is-visible");
+        toast.classList.add("is-leaving");
+        window.setTimeout(function(){toast.remove();},300);
+    },3000);
+    return toast;
+}
+window.showToast=showToast;
+
 function getGlobalTheme(){
     var savedTheme=localStorage.getItem(globalThemeKey);
     if(savedTheme==="light"){

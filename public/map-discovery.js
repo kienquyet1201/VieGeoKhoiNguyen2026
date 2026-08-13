@@ -52,6 +52,75 @@ var quizStartedAt=0;
 var mapProgressByProvince=Object.create(null);
 var mapProgressReady=false;
 var currentMapUserEmail="";
+var islandResultModal=document.getElementById("islandResultModal");
+var islandResultCloseButton=document.getElementById("islandResultCloseButton");
+var islandResultContinueButton=document.getElementById("islandResultContinueButton");
+var islandResultStars=document.getElementById("islandResultStars");
+var islandResultTitle=document.getElementById("islandResultTitle");
+var islandResultScore=document.getElementById("islandResultScore");
+var islandResultXp=document.getElementById("islandResultXp");
+var islandResultGems=document.getElementById("islandResultGems");
+
+function calculateIslandStars(correctAnswers){
+    var correct=Math.max(0,Math.min(ISLAND_QUESTION_LIMIT,Number(correctAnswers)||0));
+    if(correct===ISLAND_QUESTION_LIMIT){return 3;}
+    if(correct>=3){return 2;}
+    if(correct>=1){return 1;}
+    return 0;
+}
+
+function updateLocalIslandRewards(xp,gems,streak){
+    var state={};
+    try{state=JSON.parse(localStorage.getItem("VieGeo_state")||"{}");}catch(error){state={};}
+    state.xp=Number(xp)||0;
+    state.gems=Number(gems)||0;
+    state.streak=Number(streak)||0;
+    localStorage.setItem("VieGeo_state",JSON.stringify(state));
+    var sharedXp=document.getElementById("sharedXp");
+    var sharedGem=document.getElementById("sharedGem");
+    var sharedStreak=document.getElementById("sharedStreak");
+    if(sharedXp){sharedXp.textContent=state.xp+" XP";}
+    if(sharedGem){sharedGem.textContent=String(state.gems);}
+    if(sharedStreak){sharedStreak.textContent=String(state.streak);}
+    window.dispatchEvent(new CustomEvent("viegeo:state-hydrated"));
+}
+
+function getVietnamDateKey(value){
+    var date=value?new Date(value):new Date();
+    if(Number.isNaN(date.getTime())&&typeof value==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(value)){return value;}
+    var parts=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date);
+    var values={};
+    parts.forEach(function(part){if(part.type!=="literal"){values[part.type]=part.value;}});
+    return values.year+"-"+values.month+"-"+values.day;
+}
+
+function showIslandResultModal(result){
+    var stars=Math.max(0,Math.min(3,Number(result?.stars)||0));
+    if(!islandResultModal){return;}
+    islandResultStars.textContent="★".repeat(stars)+"☆".repeat(3-stars);
+    islandResultStars.setAttribute("aria-label",stars+" trên 3 sao");
+    islandResultTitle.textContent=stars>0?"Chúc mừng! Bạn đạt "+stars+" sao":"Bạn đã hoàn thành đảo";
+    islandResultScore.textContent="Trả lời đúng "+quizCorrectAnswers+"/"+ISLAND_QUESTION_LIMIT+" câu hỏi";
+    islandResultXp.textContent="+"+String(result?.xpReward||0)+" XP";
+    islandResultGems.textContent="+"+String(result?.gemsReward||0)+" Gem";
+    islandResultModal.hidden=false;
+    islandResultModal.setAttribute("aria-hidden","false");
+    document.body.classList.add("island-result-open");
+    islandResultContinueButton?.focus();
+}
+
+function closeIslandResultModal(){
+    if(!islandResultModal){return;}
+    islandResultModal.hidden=true;
+    islandResultModal.setAttribute("aria-hidden","true");
+    document.body.classList.remove("island-result-open");
+}
+
+function continueAfterIslandResult(){
+    closeIslandResultModal();
+    renderRoadmap();
+    showRoadmapView();
+}
 
 function ensureIslandTheoryUi(){
     var runtimeStyle=document.getElementById("viegeoIslandTheoryRuntimeStyle");
@@ -334,6 +403,19 @@ async function markCurrentStageCompleted(){
     var email=currentMapUserEmail||await getCurrentMapUserEmail();
     if(!client||!email){throw new Error("Không thể xác định phiên Supabase hiện tại.");}
     var durationSeconds=Math.max(0,Math.round((Date.now()-quizStartedAt)/1000));
+    var stars=calculateIslandStars(quizCorrectAnswers);
+    var xpReward=stars*20;
+    var gemsReward=stars*10;
+    var userResult=await client.from("users").select("xp,score,gems,current_streak,last_active_date").eq("email",email).maybeSingle();
+    if(userResult.error){throw userResult.error;}
+    if(!userResult.data){throw new Error("Không tìm thấy tài khoản để cộng phần thưởng.");}
+    var nextXp=(Number(userResult.data.xp)||0)+xpReward;
+    var nextScore=(Number(userResult.data.score??userResult.data.xp)||0)+xpReward;
+    var nextGems=(Number(userResult.data.gems)||0)+gemsReward;
+    var today=getVietnamDateKey();
+    var lastActiveDate=userResult.data.last_active_date?getVietnamDateKey(userResult.data.last_active_date):"";
+    var nextStreak=Number(userResult.data.current_streak)||0;
+    if(lastActiveDate!==today){nextStreak+=1;}
     var payload={
         user_email:email,
         score:Math.round(quizCorrectAnswers/ISLAND_QUESTION_LIMIT*100)/10,
@@ -342,14 +424,17 @@ async function markCurrentStageCompleted(){
         topic:"Đảo nhỏ "+selectedStage,
         correct_count:quizCorrectAnswers,
         total_count:ISLAND_QUESTION_LIMIT,
-        details:{province:normalizeProvinceKey(selectedProvince),island_index:selectedStage,difficulty:getDifficulty(),duration_seconds:durationSeconds}
+        details:{province:normalizeProvinceKey(selectedProvince),island_index:selectedStage,difficulty:getDifficulty(),duration_seconds:durationSeconds,stars:stars,xp_reward:xpReward,gems_reward:gemsReward}
     };
     var result=await client.from("submissions").insert(payload).select("id").maybeSingle();
     if(result.error){throw result.error;}
+    var rewardResult=await client.from("users").update({xp:nextXp,score:nextScore,gems:nextGems,current_streak:nextStreak,last_active_date:today,updated_at:new Date().toISOString()}).eq("email",email);
+    if(rewardResult.error){throw rewardResult.error;}
+    updateLocalIslandRewards(nextXp,nextGems,nextStreak);
     var key=normalizeProvinceKey(selectedProvince);
     if(!mapProgressByProvince[key]){mapProgressByProvince[key]={total:new Set(),completed:new Set()};}
     mapProgressByProvince[key].completed.add(selectedStage);
-    return true;
+    return {stars:stars,xpReward:xpReward,gemsReward:gemsReward,xp:nextXp,score:nextScore,gems:nextGems,streak:nextStreak};
 }
 
 function renderRoadmap(){
@@ -889,10 +974,11 @@ async function nextQuestion(){
         answerFeedback.textContent="Đang lưu kết quả lên Supabase...";
         nextQuestionButton.disabled=true;
         try{
-            await markCurrentStageCompleted();
-            answerFeedback.textContent="Kết quả đã được lưu vào lịch sử học tập Supabase.";
+            var completionResult=await markCurrentStageCompleted();
+            answerFeedback.textContent="Kết quả và phần thưởng đã được lưu vào Supabase.";
             nextQuestionButton.textContent="QUAY LẠI LỘ TRÌNH";
             nextQuestionButton.disabled=false;
+            showIslandResultModal(completionResult);
         }catch(error){
             console.error("[VieGeo Map] Không thể lưu tiến độ:",error);
             quizCompleted=false;
@@ -934,6 +1020,18 @@ function initializeLearningFlow(){
     answerGrid.addEventListener("click",selectAnswer);
     nextQuestionButton.addEventListener("click",nextQuestion);
 
+    if(islandResultCloseButton){
+        islandResultCloseButton.addEventListener("click",closeIslandResultModal);
+    }
+    if(islandResultContinueButton){
+        islandResultContinueButton.addEventListener("click",continueAfterIslandResult);
+    }
+    if(islandResultModal){
+        islandResultModal.addEventListener("click",function(event){
+            if(event.target.closest("[data-close-island-result]")){closeIslandResultModal();}
+        });
+    }
+
     if(supportButton){
         supportButton.addEventListener("click",openSupport);
     }
@@ -953,6 +1051,10 @@ function initializeLearningFlow(){
     }
     ensureIslandTheoryUi();
     document.addEventListener("keydown",function(event){
+        if(event.key==="Escape"&&islandResultModal&&!islandResultModal.hidden){
+            closeIslandResultModal();
+            return;
+        }
         if(event.key==="Escape"&&islandTheoryModal&&!islandTheoryModal.hidden){
             closeIslandTheory();
             return;

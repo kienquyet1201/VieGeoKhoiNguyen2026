@@ -24,9 +24,12 @@ alter table public.users add column if not exists last_active_client bigint not 
 alter table public.users add column if not exists force_logout boolean not null default false;
 alter table public.users add column if not exists account_status text not null default 'free';
 alter table public.users add column if not exists xp integer not null default 0;
+alter table public.users add column if not exists score integer not null default 0;
 alter table public.users add column if not exists gems integer not null default 500;
 alter table public.users add column if not exists hearts integer not null default 3;
 alter table public.users add column if not exists current_streak integer not null default 0;
+alter table public.users add column if not exists last_active_date date;
+alter table public.users add column if not exists user_name text;
 alter table public.users add column if not exists grade text;
 alter table public.users add column if not exists selected_grade text;
 alter table public.users add column if not exists selected_difficulty text default 'easy';
@@ -36,6 +39,42 @@ alter table public.users add column if not exists updated_at timestamptz not nul
 
 create index if not exists idx_users_email on public.users (email);
 create index if not exists idx_users_role on public.users (role);
+create index if not exists idx_users_score on public.users (score desc);
+
+update public.users
+set user_name = coalesce(nullif(trim(user_name), ''), nullif(trim(name), ''), nullif(trim(full_name), ''), split_part(email, '@', 1))
+where user_name is null or trim(user_name) = '';
+
+update public.users
+set score = xp
+where score = 0 and xp > 0;
+
+create or replace function public.sync_user_ranking_fields()
+returns trigger
+language plpgsql
+as $$
+begin
+    if new.user_name is null or trim(new.user_name) = '' then
+        new.user_name := coalesce(nullif(trim(new.name), ''), nullif(trim(new.full_name), ''), split_part(new.email, '@', 1));
+    end if;
+    if tg_op = 'INSERT' and coalesce(new.score, 0) = 0 then
+        new.score := coalesce(new.xp, 0);
+    elsif tg_op = 'UPDATE' and new.xp is distinct from old.xp and new.score is not distinct from old.score then
+        new.score := coalesce(new.xp, 0);
+    end if;
+    return new;
+end;
+$$;
+
+do $$
+begin
+    if not exists (select 1 from pg_trigger where tgname = 'trg_sync_user_ranking_fields') then
+        create trigger trg_sync_user_ranking_fields
+        before insert or update on public.users
+        for each row execute function public.sync_user_ranking_fields();
+    end if;
+end
+$$;
 
 -- 2) Premium requests
 create table if not exists public.premium_requests (
