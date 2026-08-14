@@ -227,7 +227,12 @@ async function purchaseItem(itemId,price){
         return;
     }
 
-    approved=window.confirm("Mua "+item.title+" với "+price+" Gem?");
+    approved=await window.showConfirmToast("Mua "+item.title+" với "+price+" Gem?",{
+        title:"Xác nhận mua vật phẩm",
+        type:"info",
+        confirmText:"Mua ngay",
+        cancelText:"Để sau"
+    });
 
     if(!approved){
         return;

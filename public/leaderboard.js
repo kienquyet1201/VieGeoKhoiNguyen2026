@@ -80,19 +80,13 @@
     async function fetchLeaderboardRows() {
         const supabase = getClient();
         if (!supabase) throw new Error('Supabase client chưa sẵn sàng.');
-        const { data, error } = await supabase.from('users').select('user_name, score, current_streak').order('score', { ascending: false });
-        if (!error) return Array.isArray(data) ? data : [];
-
-        console.warn('[VieGeo Leaderboard] Query chuẩn chưa sẵn sàng, dùng cột users tương thích:', error.message || error);
-        const fallback = await supabase.from('users').select('name,full_name,xp,current_streak').order('xp', { ascending: false });
-        if (fallback.error) throw fallback.error;
-        return (Array.isArray(fallback.data) ? fallback.data : []).map(function (user) {
-            return {
-                user_name: user.name || user.full_name || 'Học viên',
-                score: Number(user.xp) || 0,
-                current_streak: Number(user.current_streak) || 0
-            };
-        });
+        const usersResult = await supabase.from('users').select('*');
+        if (!usersResult.error && Array.isArray(usersResult.data) && usersResult.data.length) {
+            return usersResult.data;
+        }
+        const leaderboardResult = await supabase.from('leaderboard').select('*').order('score', { ascending: false });
+        if (leaderboardResult.error) throw usersResult.error || leaderboardResult.error;
+        return Array.isArray(leaderboardResult.data) ? leaderboardResult.data : [];
     }
 
     async function fetchCurrentUser() {
@@ -104,10 +98,21 @@
             authUser = authResult && authResult.data && authResult.data.user;
         }
         var email = String((authUser && authUser.email) || session.email || '').trim().toLowerCase();
-        if (!email || !client) return Object.assign({}, session, authUser || {});
-        var result = await client.from('users').select('*').eq('email', email).maybeSingle();
-        if (result.error) throw result.error;
-        return result.data || Object.assign({}, session, authUser || {}, { email: email });
+        return Object.assign({}, session, authUser || {}, {
+            id: (authUser && authUser.id) || session.id || session.user_id || '',
+            email: email,
+            name: session.name || session.user_name || (authUser && authUser.user_metadata && authUser.user_metadata.name) || ''
+        });
+    }
+
+    function isCurrentEntry(entry) {
+        var currentId = String(currentUser.id || currentUser.user_id || '').trim();
+        var entryId = String(entry.id || '').trim();
+        var currentEmail = String(currentUser.email || currentUser.user_email || '').trim().toLowerCase();
+        var currentName = String(currentUser.user_name || currentUser.name || '').trim().toLowerCase();
+        if (currentId && entryId && currentId === entryId) return true;
+        if (currentEmail && entry.email && currentEmail === entry.email) return true;
+        return Boolean(!currentEmail && currentName && String(entry.name || '').trim().toLowerCase() === currentName);
     }
 
     function avatarText(name) {
@@ -153,17 +158,17 @@
             rankingList.innerHTML = emptyLeaderboardHtml;
             return;
         }
-        var currentEmail = String(currentUser.email || '').trim().toLowerCase();
         rows.slice(0, 100).forEach(function (entry, index) {
             var row = document.createElement('div');
-            row.className = 'ranking-row' + (entry.email && entry.email === currentEmail ? ' current-user' : '');
+            var current = isCurrentEntry(entry);
+            row.className = 'ranking-row' + (current ? ' current-user' : '');
             row.innerHTML = '<span class="rank-number"></span><div class="rank-avatar blue-avatar"></div>'
                 + '<div class="rank-user"><strong></strong><span></span></div><div class="rank-streak"></div>'
                 + '<div class="rank-xp"></div><div class="rank-change neutral-change">—</div>';
             row.querySelector('.rank-number').textContent = String(index + 1);
             row.querySelector('.rank-avatar').textContent = avatarText(entry.name);
             row.querySelector('.rank-user strong').textContent = entry.name;
-            row.querySelector('.rank-user span').textContent = entry.email === currentEmail ? 'Bạn' : 'Học viên';
+            row.querySelector('.rank-user span').textContent = current ? 'Bạn' : 'Học viên';
             row.querySelector('.rank-streak').textContent = '🔥 ' + entry.streak;
             row.querySelector('.rank-xp').textContent = entry.score.toLocaleString('vi-VN') + ' điểm';
             rankingList.appendChild(row);
@@ -174,8 +179,7 @@
         var value = document.getElementById('personalRankValue');
         var hint = document.getElementById('personalRankHint');
         var progress = document.getElementById('personalRankProgress');
-        var email = String(currentUser.email || '').trim().toLowerCase();
-        var index = rows.findIndex(function (row) { return row.email && row.email === email; });
+        var index = rows.findIndex(isCurrentEntry);
         if (index < 0) {
             if (value) value.textContent = '—';
             if (hint) hint.textContent = 'Tài khoản chưa có điểm xếp hạng.';
@@ -186,7 +190,7 @@
         var gap = Math.max(0, target - rows[index].score + (index > 0 ? 1 : 0));
         var percent = target > 0 ? Math.min(100, Math.round((rows[index].score / target) * 100)) : 100;
         if (value) value.textContent = '#' + (index + 1);
-        if (hint) hint.textContent = index === 0 ? 'Bạn đang dẫn đầu bảng xếp hạng.' : 'Cần thêm ' + gap.toLocaleString('vi-VN') + ' điểm để lên hạng ' + index + '.';
+        if (hint) hint.textContent = index === 0 ? 'Bạn đang dẫn đầu bảng xếp hạng.' : 'Cần thêm ' + gap.toLocaleString('vi-VN') + ' điểm để lên hạng #' + index + '.';
         if (progress) progress.style.width = percent + '%';
     }
 

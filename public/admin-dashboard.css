@@ -98,6 +98,7 @@ html[data-theme="light"] .back-to-home-btn{color:#ffffff;background:rgba(255,255
 .action-group{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .mini-button{white-space:nowrap}
 .user-role-select{min-width:112px;height:34px;border:1px solid var(--border-color);border-radius:10px;padding:0 9px;color:var(--text-primary);background:var(--surface);font-size:11px;font-weight:700;outline:none}
+.role-badge-list{display:flex;flex-wrap:wrap;gap:5px;min-width:150px}.user-role-editor{display:grid;grid-template-columns:repeat(2,minmax(105px,1fr));gap:7px;min-width:245px;padding:9px;border:1px solid var(--border-color);border-radius:13px;background:var(--surface-soft)}.user-role-editor label{display:flex;align-items:center;gap:6px;color:var(--text-secondary);font-size:10px;font-weight:750;white-space:nowrap}.user-role-editor input{width:15px;height:15px;accent-color:#299dcc}.user-role-editor .mini-button{grid-column:1/-1;width:100%;margin-top:2px}
 @media(max-width:900px){
     .stat-card{min-height:125px}
     .stat-card>div:last-child strong{font-size:26px}

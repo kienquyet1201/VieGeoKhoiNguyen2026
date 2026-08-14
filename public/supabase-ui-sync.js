@@ -125,17 +125,26 @@
                 email = String(result?.data?.user?.email || email).trim().toLowerCase();
             }
             if (email && client) {
-                const { data, error } = await client.from('users').select('*').eq('email', email).maybeSingle();
-                if (!error && data) {
-                    cacheRows('users', [data]);
-                    return data;
+                let result = await client.from('users').select('*').eq('email', email).maybeSingle();
+                if (result.error && /email|column|schema/i.test(String(result.error.message || ''))) {
+                    const compatible = await client.from('users').select('*');
+                    if (!compatible.error) {
+                        result = {
+                            data: (compatible.data || []).find(row => String(row.email || row.user_email || '').trim().toLowerCase() === email) || null,
+                            error: null
+                        };
+                    }
                 }
-                if (error) console.warn('[VieGeo UI] Không tải được người dùng hiện tại:', error.message);
+                if (!result.error && result.data) {
+                    cacheRows('users', [result.data]);
+                    return result.data;
+                }
+                if (result.error) console.warn('[VieGeo UI] Không tải được người dùng hiện tại:', result.error.message);
             }
         } catch (error) {
             console.warn('[VieGeo UI] Dùng phiên cục bộ cho người dùng hiện tại:', error);
         }
-        const cached = readCache('users').find(row => String(row.email || '').toLowerCase() === email);
+        const cached = readCache('users').find(row => String(row.email || row.user_email || '').toLowerCase() === email);
         return cached || { ...session, email, roles: session.roles || [session.role || 'user'] };
     }
 
@@ -156,16 +165,17 @@
             state.xp = Number(user.xp ?? user.exp ?? state.xp ?? 0);
             localStorage.setItem('VieGeo_state', JSON.stringify(state));
 
-            const session = { ...readSession(), email: user.email || readSession().email };
+            const session = { ...readSession(), email: user.email || user.user_email || readSession().email };
             const sessionRoleValue = session.activeRole || session.role;
             const sessionRole = sessionRoleValue ? roleList(sessionRoleValue, 'user')[0] : '';
             const remoteRoles = roleList(user.roles, user.active_role || user.role);
-            const activeRole = sessionRole || roleList(user.active_role || user.role, 'user')[0] || 'user';
-            session.roles = [...new Set([...remoteRoles, activeRole])];
+            const activeRole = remoteRoles.includes(sessionRole) ? sessionRole : (remoteRoles[0] || 'user');
+            session.roles = [...new Set(remoteRoles)];
             session.role = activeRole;
             session.activeRole = activeRole;
             session.name = user.name || user.full_name || session.name || '';
             localStorage.setItem('lm_session', JSON.stringify(session));
+            window.dispatchEvent(new CustomEvent('viegeo:user-hydrated', { detail: session }));
         } catch (error) {
             console.warn('[VieGeo UI] Không thể đồng bộ phiên cục bộ:', error);
         }
@@ -191,7 +201,7 @@
 
             const select = document.getElementById('sharedRole');
             if (!select) return;
-            const labels = { user: 'Học viên', parent: 'Phụ huynh', cs: 'Chăm sóc KH', admin: 'Quản trị viên' };
+            const labels = { user: 'Học sinh', parent: 'Phụ huynh', cs: 'CSKH', admin: 'Quản trị viên' };
             const session = readSession();
             const active = roleList(session.activeRole || session.role || user.active_role || user.role, 'user')[0] || 'user';
             const roles = [...new Set([...roleList(user.roles, user.active_role || user.role), active])];

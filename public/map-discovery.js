@@ -106,16 +106,22 @@ function showIslandResultModal(result){
     islandResultXp.textContent="+"+String(result?.xpReward||0)+" XP";
     islandResultGems.textContent="+"+String(result?.gemsReward||0)+" Gem";
     islandResultModal.hidden=false;
+    islandResultModal.style.setProperty("display","grid","important");
+    islandResultModal.style.setProperty("position","fixed","important");
+    islandResultModal.style.setProperty("inset","0","important");
     islandResultModal.setAttribute("aria-hidden","false");
     document.body.classList.add("island-result-open");
+    document.documentElement.classList.add("island-result-open");
     islandResultContinueButton?.focus();
 }
 
 function closeIslandResultModal(){
     if(!islandResultModal){return;}
     islandResultModal.hidden=true;
+    islandResultModal.style.removeProperty("display");
     islandResultModal.setAttribute("aria-hidden","true");
     document.body.classList.remove("island-result-open");
+    document.documentElement.classList.remove("island-result-open");
 }
 
 function continueAfterIslandResult(){
@@ -248,7 +254,22 @@ function getProvinceProgress(province){
 }
 
 function getProvinceProgressInfo(province){
-    return mapProgressByProvince[normalizeProvinceKey(province)]||{total:new Set(),completed:new Set()};
+    return mapProgressByProvince[normalizeProvinceKey(province)]||{total:new Set(),completed:new Set(),stars:new Map()};
+}
+
+function getStageStars(province,stage){
+    var info=getProvinceProgressInfo(province);
+    var value=info.stars instanceof Map?Number(info.stars.get(Number(stage))):0;
+    return Math.max(0,Math.min(3,Number.isFinite(value)?Math.round(value):0));
+}
+
+function getSubmissionStars(row){
+    var details=row?.details||{};
+    var explicit=Number(details.stars??row?.stars);
+    var correct=Number(row?.correct_count??details.correct_count??details.correctAnswers);
+    if(Number.isFinite(explicit)&&explicit>=0){return Math.max(0,Math.min(3,Math.round(explicit)));}
+    if(Number.isFinite(correct)){return calculateIslandStars(correct);}
+    return 0;
 }
 
 function renderRegionProgress(){
@@ -385,7 +406,7 @@ async function syncMapProgressFromSupabase(){
         var province=normalizeProvinceKey(row?.province||row?.province_slug||row?.provinceName);
         var stage=questionIslandNumber(row);
         if(!province||stage<=0){return;}
-        if(!progress[province]){progress[province]={total:new Set(),completed:new Set()};}
+        if(!progress[province]){progress[province]={total:new Set(),completed:new Set(),stars:new Map()};}
         progress[province].total.add(stage);
     });
     result[1].forEach(function(row){
@@ -393,8 +414,9 @@ async function syncMapProgressFromSupabase(){
         var province=normalizeProvinceKey(row?.province||details.province);
         var stage=questionIslandNumber({...details,...row});
         if(!province||stage<=0){return;}
-        if(!progress[province]){progress[province]={total:new Set(),completed:new Set()};}
+        if(!progress[province]){progress[province]={total:new Set(),completed:new Set(),stars:new Map()};}
         progress[province].completed.add(stage);
+        progress[province].stars.set(stage,Math.max(Number(progress[province].stars.get(stage))||0,getSubmissionStars(row)));
     });
     mapProgressByProvince=progress;
     mapProgressReady=true;
@@ -526,8 +548,10 @@ async function persistCurrentStageCompleted(){
         var localStreak=Number(localOnly.streak)||0;
         if(!previousSubmission||getVietnamDateKey(previousSubmission.created_at)!==today){localStreak+=1;}
         updateLocalIslandRewards(localXp,localGems,localStreak);
-        if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set()};}
+        if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set(),stars:new Map()};}
         mapProgressByProvince[provinceKey].completed.add(selectedStage);
+        if(!(mapProgressByProvince[provinceKey].stars instanceof Map)){mapProgressByProvince[provinceKey].stars=new Map();}
+        mapProgressByProvince[provinceKey].stars.set(selectedStage,Math.max(Number(mapProgressByProvince[provinceKey].stars.get(selectedStage))||0,stars));
         return {stars:stars,xpReward:xpReward,gemsReward:gemsReward,xp:localXp,score:Number(localOnly.score)||0,gems:localGems,streak:localStreak,rewardSynced:false,progressSynced:true};
     }
 
@@ -557,8 +581,10 @@ async function persistCurrentStageCompleted(){
     }
 
     updateLocalIslandRewards(nextXp,nextGems,nextStreak);
-    if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set()};}
+    if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set(),stars:new Map()};}
     mapProgressByProvince[provinceKey].completed.add(selectedStage);
+    if(!(mapProgressByProvince[provinceKey].stars instanceof Map)){mapProgressByProvince[provinceKey].stars=new Map();}
+    mapProgressByProvince[provinceKey].stars.set(selectedStage,Math.max(Number(mapProgressByProvince[provinceKey].stars.get(selectedStage))||0,stars));
     return {stars:stars,xpReward:xpReward,gemsReward:gemsReward,xp:nextXp,score:nextScore,gems:nextGems,streak:nextStreak,rewardSynced:rewardSynced,progressSynced:true};
 }
 
@@ -578,6 +604,8 @@ function renderRoadmap(){
     var title;
     var pathClass;
     var summaryUnlocked;
+    var stageStars;
+    var starClass;
 
     roadmapProvinceTitle.textContent=selectedProvince;
 
@@ -603,9 +631,11 @@ function renderRoadmap(){
             title="Đảo tri thức "+stage;
         }
 
-        html+='<div class="learning-node '+getNodeSide(index)+' '+status+'">';
+        stageStars=status==="completed"?getStageStars(selectedProvince,stage):0;
+        starClass=status==="completed"?' stars-'+stageStars:'';
+        html+='<div class="learning-node '+getNodeSide(index)+' '+status+starClass+'" data-stars="'+stageStars+'">';
         html+='<button class="node-circle" type="button" data-stage="'+stage+'"'+disabled+'>★</button>';
-        html+='<div class="node-card"><span>Chặng '+stage+'</span><strong>'+title+'</strong><small>'+(status==="active"?"Bắt đầu học":status==="completed"?"Đã hoàn thành":"Hoàn thành chặng trước")+'</small></div>';
+        html+='<div class="node-card"><span>Chặng '+stage+'</span><strong>'+title+'</strong><small>'+(status==="active"?"Bắt đầu học":status==="completed"?"Đã hoàn thành · "+stageStars+" ★":"Hoàn thành chặng trước")+'</small></div>';
         html+='</div>';
 
         if(index<33){

@@ -91,6 +91,7 @@ function initializeSupportUser(){
     applyGlobalTheme(getGlobalTheme());
     currentSupportTicket=supportEnsureTicket();
     renderSupportMessages(currentSupportTicket);
+    supportSyncLocalTicket(currentSupportTicket).catch(function(error){console.error("[VieGeo Support] Không thể gửi lại hội thoại cũ:",error);});
     refreshSupportTicket();
 
     supportThemeButton.addEventListener("click",function(){

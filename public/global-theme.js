@@ -30,6 +30,82 @@ function showToast(message,type){
     return toast;
 }
 window.showToast=showToast;
+window.VieGeoToast=showToast;
+
+function showConfirmToast(message,options){
+    var settings=options||{};
+    var normalizedType=String(settings.type||"warning").toLowerCase();
+    var allowedTypes=["success","error","warning","info"];
+    var container=document.getElementById("viegeoToastContainer");
+
+    if(allowedTypes.indexOf(normalizedType)===-1){normalizedType="warning";}
+    if(!container){
+        container=document.createElement("div");
+        container.id="viegeoToastContainer";
+        container.className="viegeo-toast-container";
+        container.setAttribute("aria-live","polite");
+        document.body.appendChild(container);
+    }
+
+    return new Promise(function(resolve){
+        var toast=document.createElement("section");
+        var copy=document.createElement("div");
+        var title=document.createElement("strong");
+        var body=document.createElement("p");
+        var actions=document.createElement("div");
+        var confirmButton=document.createElement("button");
+        var cancelButton=document.createElement("button");
+        var settled=false;
+        var timer=0;
+
+        toast.className="viegeo-toast viegeo-toast--"+normalizedType+" viegeo-toast--confirm";
+        toast.setAttribute("role","alertdialog");
+        toast.setAttribute("aria-modal","false");
+        title.textContent=String(settings.title||"Xác nhận");
+        body.textContent=String(message||"");
+        copy.className="viegeo-toast__copy";
+        actions.className="viegeo-toast__actions";
+        confirmButton.type="button";
+        confirmButton.className="viegeo-toast__button viegeo-toast__button--confirm";
+        confirmButton.textContent=String(settings.confirmText||"Đồng ý");
+        cancelButton.type="button";
+        cancelButton.className="viegeo-toast__button viegeo-toast__button--cancel";
+        cancelButton.textContent=String(settings.cancelText||"Hủy");
+        copy.appendChild(title);
+        copy.appendChild(body);
+        actions.appendChild(confirmButton);
+        if(settings.showCancel!==false&&settings.cancelText!==false){actions.appendChild(cancelButton);}
+        toast.appendChild(copy);
+        toast.appendChild(actions);
+        container.appendChild(toast);
+
+        function finish(value){
+            if(settled){return;}
+            settled=true;
+            if(timer){window.clearTimeout(timer);}
+            toast.classList.remove("is-visible");
+            toast.classList.add("is-leaving");
+            window.setTimeout(function(){toast.remove();resolve(value);},260);
+        }
+
+        confirmButton.addEventListener("click",function(){finish(true);});
+        cancelButton.addEventListener("click",function(){finish(false);});
+        window.requestAnimationFrame(function(){toast.classList.add("is-visible");confirmButton.focus();});
+        if(Number(settings.timeout)>0){timer=window.setTimeout(function(){finish(false);},Number(settings.timeout));}
+    });
+}
+window.showConfirmToast=showConfirmToast;
+
+window.VieGeoUI=window.VieGeoUI||{};
+window.VieGeoUI.toast=function(message,options){
+    var settings=options||{};
+    showToast(message,settings.type||settings.icon||"info");
+    return Promise.resolve({isConfirmed:true});
+};
+window.VieGeoUI.success=function(message,options){return window.VieGeoUI.toast(message,Object.assign({},options||{},{type:"success"}));};
+window.VieGeoUI.warning=function(message,options){return window.VieGeoUI.toast(message,Object.assign({},options||{},{type:"warning"}));};
+window.VieGeoUI.error=function(message,options){return window.VieGeoUI.toast(message,Object.assign({},options||{},{type:"error"}));};
+window.VieGeoUI.confirm=function(message,options){return showConfirmToast(message,options).then(function(value){return {isConfirmed:value};});};
 
 function getGlobalTheme(){
     var savedTheme=localStorage.getItem(globalThemeKey);

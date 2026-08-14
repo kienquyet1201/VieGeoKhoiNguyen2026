@@ -39,6 +39,10 @@ function initializeRolePageSwitcher(){
     var currentRole=session.activeRole||session.role||allowedRoles[0];
     var index;
 
+    [document.getElementById("roleButton"),document.getElementById("settingsRoleButton")].forEach(function(button){
+        if(button){button.hidden=allowedRoles.length<2;button.style.display=allowedRoles.length<2?"none":"";}
+    });
+
     for(index=0;index<selects.length;index+=1){
         var select=selects[index];
         Array.prototype.slice.call(select.options).forEach(function(option){
@@ -47,8 +51,12 @@ function initializeRolePageSwitcher(){
         });
         select.value=allowedRoles.indexOf(currentRole)>=0?currentRole:allowedRoles[0];
         if(select.closest(".role-page-switcher")){select.closest(".role-page-switcher").hidden=allowedRoles.length<2;}
-        select.addEventListener("change",changeRolePage);
+        if(select.dataset.roleSwitchBound!=="true"){
+            select.dataset.roleSwitchBound="true";
+            select.addEventListener("change",changeRolePage);
+        }
     }
 }
 
 document.addEventListener("DOMContentLoaded",initializeRolePageSwitcher);
+window.addEventListener("viegeo:user-hydrated",initializeRolePageSwitcher);

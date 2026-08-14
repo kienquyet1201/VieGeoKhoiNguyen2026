@@ -547,26 +547,17 @@ function showOutOfHeartsPopup() {
         window.location.href = '/map?tab=shop';
     };
 
-    if (window.Swal && typeof window.Swal.fire === 'function') {
-        window.Swal.fire({
+    if (typeof window.showConfirmToast === 'function') {
+        window.showConfirmToast(message, {
             title: 'Bạn đã hết trái tim!',
-            text: message,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Mở Cửa hàng',
-            cancelButtonText: 'Để sau',
-            confirmButtonColor: '#0284c7',
-            cancelButtonColor: '#475569',
-            background: '#13253a',
-            color: '#f8fafc',
-            heightAuto: false
-        }).then((result) => {
-            if (result.isConfirmed) openShop();
-        });
+            type: 'warning',
+            confirmText: 'Mở Cửa hàng',
+            cancelText: 'Để sau'
+        }).then((confirmed) => { if (confirmed) openShop(); });
         return;
     }
 
-    window.VieGeoUI.warning(message).then(openShop);
+    window.VieGeoUI.warning(message);
 }
 
 async function consumeHeart() {

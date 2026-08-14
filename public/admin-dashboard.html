@@ -10,12 +10,11 @@
     <link rel="stylesheet" href="admin-dashboard.css?v=20260812-1">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
-    <script src="supabase-ui-sync.js"></script>
+    <script src="supabase-ui-sync.js?v=20260814-2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="global-theme.css?v=20260813-2">
-    <script src="global-theme.js?v=20260813-1"></script>
-    <link rel="stylesheet" href="role-switcher.css">
+    <link rel="stylesheet" href="global-theme.css?v=20260814-3">
+    <script src="global-theme.js?v=20260814-3"></script>
+    <link rel="stylesheet" href="role-switcher.css?v=20260814-1">
 </head>
 <body>
     <div class="global-animated-background" aria-hidden="true">
@@ -127,8 +126,8 @@
                         <div class="panel-heading"><div><span class="panel-eyebrow">Phân quyền</span><h2>Vai trò hệ thống</h2></div></div>
                         <div class="role-guide"><strong>Học sinh</strong><span>Học tập và thi đấu</span></div>
                         <div class="role-guide"><strong>Phụ huynh</strong><span>Theo dõi tiến độ</span></div>
-                        <div class="role-guide" style="display: none !important;"><strong>CSKH</strong><span>Hỗ trợ người dùng</span></div>
-                        <div class="role-guide"><strong>Admin</strong><span>Quản trị hệ thống</span></div>
+                        <div class="role-guide"><strong>CSKH</strong><span>Hỗ trợ người dùng</span></div>
+                        <div class="role-guide"><strong>Quản trị viên</strong><span>Quản trị hệ thống</span></div>
                     </aside>
                 </section>
 
@@ -139,15 +138,16 @@
                             <input id="searchInput" type="search" placeholder="Tìm tên hoặc email">
                             <select id="roleFilter">
                                 <option value="all">Tất cả quyền</option>
-                                <option value="student">Học viên</option>
-                                <option value="premium">Premium</option>
-                                <option value="admin">Admin</option>
+                                <option value="user">Học sinh</option>
+                                <option value="parent">Phụ huynh</option>
+                                <option value="admin">Quản trị viên</option>
+                                <option value="cs">CSKH</option>
                             </select>
                         </div>
                     </div>
                     <div class="table-wrap">
                         <table class="user-table">
-                            <thead><tr><th>Email</th><th>Tên hiển thị</th><th>Chức vụ (Role)</th><th>Điểm số</th><th>Chuỗi ngày học</th><th>Thay đổi Role</th></tr></thead>
+                            <thead><tr><th>Email</th><th>Tên hiển thị</th><th>Các vai trò</th><th>Điểm số</th><th>Chuỗi ngày học</th><th>Phân quyền</th></tr></thead>
                             <tbody id="userTableBody"><tr><td colspan="6"><div class="empty-state">Đang tải danh sách người dùng...</div></td></tr></tbody>
                         </table>
                     </div>
@@ -330,7 +330,7 @@
 
     <div class="toast" id="toast"></div>
     <script src="support-store.js"></script>
-    <script src="admin-dashboard.js?v=20260813-2"></script>
-    <script src="role-switcher.js"></script>
+    <script src="admin-dashboard.js?v=20260814-2"></script>
+    <script src="role-switcher.js?v=20260814-2"></script>
 </body>
 </html>

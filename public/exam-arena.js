@@ -227,7 +227,7 @@
             startTimer();
         } catch (error) {
             console.error('Không thể khởi tạo đề thi:', error);
-            if (window.Swal) Swal.fire({ icon: 'error', title: 'Chưa thể khởi tạo đề', text: 'Vui lòng thử lại.' });
+            window.showToast?.('Chưa thể khởi tạo đề. Vui lòng thử lại.', 'error');
         } finally {
             if (startButton) {
                 startButton.disabled = false;
@@ -336,14 +336,14 @@
         recordCurrentQuestionTime();
 
         const unanswered = questions.length - answers.size;
-        if (!autoSubmitted && unanswered > 0 && window.Swal) {
-            const confirmation = await Swal.fire({
+        if (!autoSubmitted && unanswered > 0) {
+            const confirmed = await window.showConfirmToast(`Còn ${unanswered} câu chưa chọn đáp án. Bạn vẫn muốn nộp bài?`, {
                 title: 'Bạn còn câu chưa trả lời',
-                text: `Còn ${unanswered} câu chưa chọn đáp án. Bạn vẫn muốn nộp bài?`,
-                icon: 'question', showCancelButton: true,
-                confirmButtonText: 'Nộp bài', cancelButtonText: 'Làm tiếp'
+                type: 'warning',
+                confirmText: 'Nộp bài',
+                cancelText: 'Làm tiếp'
             });
-            if (!confirmation.isConfirmed) {
+            if (!confirmed) {
                 submitted = false;
                 startTimer();
                 return;
@@ -382,9 +382,12 @@
         }
 
         const message = `Bạn trả lời đúng ${correct}/${questions.length} câu.${unanswered ? ` Còn ${unanswered} câu chưa trả lời.` : ''}`;
-        if (window.Swal) {
-            await Swal.fire({ title: autoSubmitted ? 'Đã hết giờ' : 'Đã nộp bài', text: message, icon: correct >= 28 ? 'success' : 'info', confirmButtonText: 'Về lộ trình' });
-        }
+        await window.showConfirmToast(message, {
+            title: autoSubmitted ? 'Đã hết giờ' : 'Đã nộp bài',
+            type: correct >= 28 ? 'success' : 'info',
+            confirmText: 'Về lộ trình',
+            showCancel: false
+        });
         window.location.href = '/map';
     }
 

@@ -16,6 +16,15 @@ const profileLevel = document.getElementById('profileLevel');
 const profileProgressValue = document.getElementById('profileProgressValue');
 const profileProgressFill = document.getElementById('profileProgressFill');
 const profileNotificationList = document.getElementById('profileNotificationList');
+const profileToast = document.getElementById('toast');
+
+function showProfileToast(message, type = 'success') {
+    if (!profileToast) return;
+    profileToast.textContent = message;
+    profileToast.className = `toast show ${type}`;
+    window.clearTimeout(showProfileToast.timer);
+    showProfileToast.timer = window.setTimeout(() => { profileToast.className = 'toast'; }, 3200);
+}
 
 // Các field nhập liệu
 const profName = document.getElementById('profName');
@@ -281,17 +290,26 @@ async function loadProfile() {
         const email = String(authUser?.email || sessionUser.email || '').trim().toLowerCase();
         if (!email) throw new Error('Không xác định được tài khoản hiện tại.');
 
-        const userResult = await client.from('users').select('*').eq('email', email).maybeSingle();
+        let userResult = await client.from('users').select('*').eq('email', email).maybeSingle();
+        if (userResult.error && /email|column|schema/i.test(String(userResult.error.message || ''))) {
+            const compatibleResult = await client.from('users').select('*');
+            if (compatibleResult.error) throw compatibleResult.error;
+            userResult = {
+                data: (compatibleResult.data || []).find(row => String(row.email || row.user_email || '').trim().toLowerCase() === email) || null,
+                error: null
+            };
+        }
         if (userResult.error) throw userResult.error;
         const currentUser = userResult.data || {
             email,
             name: authUser?.user_metadata?.name || sessionUser.name || sessionUser.displayName || 'Người chơi',
             phone: '', gender: '', role: 'user', score: 0, current_streak: 0
         };
-        const [leaderboardResult, questionRows, submissionRows] = await Promise.all([
+        const [leaderboardResult, questionRows, submissionRows, premiumRequestResult] = await Promise.all([
             client.from('leaderboard').select('*').limit(500),
             fetchProfilePages('questions', 'province,island'),
-            fetchProfilePages('submissions', '*', email)
+            fetchProfilePages('submissions', '*', email),
+            client.from('premium_requests').select('*').eq('user_email', email).order('created_at', { ascending: false }).limit(1)
         ]);
         const leaderboardRows = leaderboardResult.error ? [] : (Array.isArray(leaderboardResult.data) ? leaderboardResult.data : []);
         
@@ -301,7 +319,21 @@ async function loadProfile() {
         profStreak.textContent = Number(currentUser.current_streak || 0);
         profXp.textContent = Number(currentUser.xp ?? currentUser.score ?? 0) || 0;
         renderProfileMetrics(currentUser, leaderboardRows, questionRows, submissionRows);
-        renderNotifications(normalizeNotifications(currentUser));
+        const notifications = normalizeNotifications(currentUser);
+        const latestPremiumRequest = !premiumRequestResult.error && Array.isArray(premiumRequestResult.data) ? premiumRequestResult.data[0] : null;
+        const premiumApproved = latestPremiumRequest?.status === 'approved';
+        if (premiumApproved && !notifications.some(item => item.id === `premium-approved-${latestPremiumRequest.id}`)) {
+            notifications.unshift({ id: `premium-approved-${latestPremiumRequest.id}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: latestPremiumRequest.reviewed_at || latestPremiumRequest.updated_at || latestPremiumRequest.created_at });
+        }
+        renderNotifications(notifications);
+        const premiumActive = premiumApproved || String(currentUser.account_status || currentUser.accountStatus || currentUser.role || '').toLowerCase() === 'premium' || currentUser.is_premium === true || currentUser.isPremium === true;
+        if (btnPremium && premiumActive) {
+            btnPremium.disabled = true;
+            btnPremium.innerHTML = '<i class="fa-solid fa-crown"></i> Premium đã kích hoạt';
+        } else if (btnPremium && latestPremiumRequest?.status === 'pending') {
+            btnPremium.disabled = true;
+            btnPremium.innerHTML = '<i class="fa-solid fa-clock"></i> Đang chờ duyệt';
+        }
         
         let evalText = "Chưa test";
         if (gameState && gameState.assessmentScore !== undefined) {
@@ -351,20 +383,20 @@ if (profileForm) {
         // Logic đổi mật khẩu
         if (inputOldPass || inputNewPass) {
             if (!inputOldPass || !inputNewPass) {
-                Swal.fire({ icon: 'warning', title: 'Lưu ý', text: 'Vui lòng nhập cả mật khẩu cũ và mật khẩu mới để đổi mật khẩu!' });
+                showProfileToast('Vui lòng nhập cả mật khẩu cũ và mật khẩu mới để đổi mật khẩu!', 'warning');
                 return;
             }
             if (window.currentUserData.password && inputOldPass !== window.currentUserData.password) {
-                Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Mật khẩu cũ không chính xác!' });
+                showProfileToast('Mật khẩu cũ không chính xác!', 'error');
                 return;
             }
             if (inputNewPass.length < 8 || inputNewPass.length > 128) {
-                Swal.fire({ icon: 'warning', title: 'Lưu ý', text: 'Mật khẩu mới phải từ 6 ký tự trở lên.' });
+                showProfileToast('Mật khẩu mới phải từ 8 đến 128 ký tự.', 'warning');
                 return;
             }
             const authClient = getAuthClient();
             if (!authClient) {
-                Swal.fire({ icon: 'warning', title: 'Chưa thể đổi mật khẩu', text: 'Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.' });
+                showProfileToast('Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.', 'warning');
                 return;
             }
             const { error } = await authClient.auth.updateUser({ password: inputNewPass });
@@ -383,7 +415,7 @@ if (profileForm) {
             // Cập nhật session nếu đổi tên
             localStorage.setItem('lm_session', JSON.stringify({ ...sessionUser, name: newName, gender: newGender }));
             
-            Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã lưu thông tin thành công!' });
+            showProfileToast('Đã lưu thông tin thành công!', 'success');
             
             oldPass.value = '';
             newPass.value = '';
@@ -392,7 +424,7 @@ if (profileForm) {
             btn.textContent = "Lưu Thay Đổi";
         } catch (error) {
             console.error("Lỗi cập nhật:", error);
-            Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Lỗi khi lưu thông tin. Thử lại sau.' });
+            showProfileToast('Lỗi khi lưu thông tin. Vui lòng thử lại sau.', 'error');
         }
     });
 }
@@ -412,11 +444,11 @@ if (btnPremium) {
                 status: 'pending',
                 created_at: new Date().toISOString()
             });
-            Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã gửi yêu cầu Mua Premium đến quản trị viên. Vui lòng chờ hệ thống xác nhận!' });
-            btnPremium.innerHTML = '<i class="fa-solid fa-check"></i> Đã gửi yêu cầu';
+            showProfileToast('Đã gửi yêu cầu Premium. Bạn sẽ nhận thông báo ngay khi được duyệt.', 'success');
+            btnPremium.innerHTML = '<i class="fa-solid fa-clock"></i> Đang chờ duyệt';
         } catch (error) {
             console.error("Lỗi premium:", error);
-            Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Lỗi khi gửi yêu cầu.' });
+            showProfileToast('Chưa thể gửi yêu cầu Premium. Vui lòng thử lại.', 'error');
             btnPremium.disabled = false;
             btnPremium.innerHTML = '<i class="fa-solid fa-crown"></i> Yêu cầu Mua Premium';
         }

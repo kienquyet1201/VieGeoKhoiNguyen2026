@@ -52,11 +52,11 @@
     }
 
     function displayName(user) {
-        return String(user?.user_name || user?.name || user?.full_name || user?.display_name || user?.email || 'Người dùng');
+        return String(user?.user_name || user?.name || user?.full_name || user?.display_name || user?.email || user?.user_email || 'Người dùng');
     }
 
     function roleName(role) {
-        return ({ user: 'Học viên', student: 'Học viên', premium: 'Premium', parent: 'Phụ huynh', cs: 'CSKH', admin: 'Admin' })[String(role || 'user').toLowerCase()] || 'Học viên';
+        return ({ user: 'Học sinh', student: 'Học sinh', premium: 'Premium', parent: 'Phụ huynh', cs: 'CSKH', admin: 'Quản trị viên' })[String(role || 'user').toLowerCase()] || 'Học sinh';
     }
 
     function roleClass(role) {
@@ -70,6 +70,36 @@
         } catch (error) {
             return [];
         }
+    }
+
+    const managedRoles = ['user', 'parent', 'admin', 'cs'];
+
+    function canonicalRole(value) {
+        const role = String(value || '').trim().toLowerCase();
+        return ({ student: 'user', map: 'user', cskh: 'cs', support: 'cs', premium: 'user' })[role] || role;
+    }
+
+    function userEmail(user) {
+        return String(user?.email || user?.user_email || user?.legacy_data?.email || '').trim().toLowerCase();
+    }
+
+    function rolesOfUser(user) {
+        const roles = normalizeRoles(user?.roles).map(canonicalRole).filter(role => managedRoles.includes(role));
+        const primary = canonicalRole(user?.active_role || user?.role || 'user');
+        if (managedRoles.includes(primary) && !roles.includes(primary)) roles.push(primary);
+        return roles.length ? [...new Set(roles)] : ['user'];
+    }
+
+    function identifyUserQuery(query, user) {
+        if (user?.id !== undefined && user?.id !== null && user?.id !== '') return query.eq('id', user.id);
+        if (user?.email) return query.eq('email', user.email);
+        return query.eq('user_email', user?.user_email || userEmail(user));
+    }
+
+    function sameUser(first, second) {
+        if (first?.id !== undefined && second?.id !== undefined && String(first.id) === String(second.id)) return true;
+        const firstEmail = userEmail(first);
+        return Boolean(firstEmail && firstEmail === userEmail(second));
     }
 
     async function fetchUsers() {
@@ -91,32 +121,31 @@
         return Number(count || 0);
     }
 
-    async function updateUserRole(user, selectedRole, button) {
+    async function updateUserRoles(user, selectedRoles, button) {
         const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
-        const role = String(selectedRole || '').trim().toLowerCase();
-        if (!client || !['student', 'admin', 'premium'].includes(role)) {
-            showToast('Vai trò không hợp lệ.', 'error');
+        const roles = [...new Set((Array.isArray(selectedRoles) ? selectedRoles : []).map(canonicalRole).filter(role => managedRoles.includes(role)))];
+        if (!client || !roles.length) {
+            showToast('Mỗi tài khoản cần có ít nhất một vai trò.', 'error');
             return;
         }
         if (button) button.disabled = true;
         try {
+            const previousActive = canonicalRole(user.active_role || user.role);
+            const primaryRole = roles.includes(previousActive) ? previousActive : roles[0];
             const payload = {
-                role,
-                active_role: role,
-                roles: [role],
-                account_status: role === 'premium' ? 'premium' : 'free',
+                role: primaryRole,
+                active_role: primaryRole,
+                roles,
                 updated_at: new Date().toISOString()
             };
-            let query = client.from('users').update(payload);
-            query = user.id !== undefined && user.id !== null ? query.eq('id', user.id) : query.eq('email', user.email);
+            let query = identifyUserQuery(client.from('users').update(payload), user);
             const { data, error } = await query.select('*').maybeSingle();
             if (error) throw error;
-            const index = allUsers.findIndex(item => String(item.id || item.email) === String(user.id || user.email));
+            const index = allUsers.findIndex(item => sameUser(item, user));
             if (index >= 0) allUsers[index] = data || { ...user, ...payload };
             renderUsers(allUsers);
-            showToast(`Đã cập nhật ${displayName(user)} thành ${roleName(role)}.`, 'success');
+            showToast(`Đã cập nhật ${roles.length} vai trò cho ${displayName(user)}.`, 'success');
         } catch (error) {
-            console.error('[VieGeo Admin] Không thể cập nhật vai trò:', error);
             console.error('[VieGeo Admin] Không thể cập nhật vai trò:', error);
             showToast('Không thể cập nhật vai trò lúc này.', 'error');
             if (button) button.disabled = false;
@@ -142,9 +171,10 @@
             const keyword = String(byId('searchInput')?.value || '').trim().toLowerCase();
             const role = String(byId('roleFilter')?.value || 'all');
             const filtered = (Array.isArray(rows) ? rows : []).filter(user => {
-                const matchesKeyword = !keyword || `${displayName(user)} ${user.email || ''}`.toLowerCase().includes(keyword);
-                const currentRole = String(user.role || user.active_role || 'student').toLowerCase();
-                const matchesRole = role === 'all' || currentRole === role || (role === 'student' && currentRole === 'user');
+                const matchesKeyword = !keyword || `${displayName(user)} ${userEmail(user)}`.toLowerCase().includes(keyword);
+                const userRoles = rolesOfUser(user);
+                const filterRole = canonicalRole(role);
+                const matchesRole = role === 'all' || userRoles.includes(filterRole);
                 return matchesKeyword && matchesRole;
             });
             body.replaceChildren();
@@ -154,14 +184,20 @@
             }
             filtered.forEach(user => {
                 const name = displayName(user);
-                const primaryRole = user.role || user.active_role || 'user';
+                const userRoles = rolesOfUser(user);
                 const score = Math.max(0, Number(user.score ?? user.xp ?? 0) || 0);
                 const streak = Math.max(0, Number(user.current_streak ?? user.streak ?? 0) || 0);
                 const row = document.createElement('tr');
-                row.dataset.userId = String(user.id || user.email || '');
-                row.innerHTML = `<td>${escapeText(user.email || 'Chưa có email')}</td><td>${escapeText(name)}</td><td><span class="role-badge ${roleClass(primaryRole)}"></span></td><td>${score.toLocaleString('vi-VN')}</td><td>🔥 ${streak}</td><td><div class="action-group"><select class="user-role-select" aria-label="Chọn vai trò"><option value="student">Học viên</option><option value="admin">Admin</option><option value="premium">Premium</option></select><button class="mini-button" type="button" data-save-user-role>Lưu role</button></div></td>`;
-                row.querySelector('.role-badge').textContent = roleName(primaryRole);
-                row.querySelector('.user-role-select').value = ['admin', 'premium'].includes(String(primaryRole).toLowerCase()) ? String(primaryRole).toLowerCase() : 'student';
+                row.dataset.userIndex = String(allUsers.indexOf(user));
+                row.innerHTML = `<td>${escapeText(userEmail(user) || 'Chưa có email')}</td><td>${escapeText(name)}</td><td><div class="role-badge-list"></div></td><td>${score.toLocaleString('vi-VN')}</td><td>🔥 ${streak}</td><td><div class="user-role-editor" role="group" aria-label="Vai trò của ${escapeText(name)}"><label><input type="checkbox" value="user"> Học sinh</label><label><input type="checkbox" value="parent"> Phụ huynh</label><label><input type="checkbox" value="admin"> Quản trị viên</label><label><input type="checkbox" value="cs"> CSKH</label><button class="mini-button" type="button" data-save-user-role>Lưu vai trò</button></div></td>`;
+                const badgeList = row.querySelector('.role-badge-list');
+                userRoles.forEach(currentRole => {
+                    const badge = document.createElement('span');
+                    badge.className = `role-badge ${roleClass(currentRole)}`;
+                    badge.textContent = roleName(currentRole);
+                    badgeList.appendChild(badge);
+                });
+                row.querySelectorAll('.user-role-editor input').forEach(input => { input.checked = userRoles.includes(input.value); });
                 body.appendChild(row);
             });
         } catch (error) {
@@ -209,7 +245,7 @@
                 node.querySelector('strong').textContent = request.name || displayName(request);
                 node.querySelector('span').textContent = `${request.user_email || request.email || 'Không có email'} · ${formatTime(request.created_at)}`;
                 node.querySelectorAll('[data-premium-action]').forEach(button => {
-                    button.addEventListener('click', () => reviewPremiumRequest(request, button.dataset.premiumAction));
+                    button.addEventListener('click', () => reviewPremiumRequest(request, button.dataset.premiumAction, button));
                 });
                 container.appendChild(node);
             });
@@ -223,71 +259,79 @@
         if (!client || typeof client.from !== 'function') return [];
         const { data, error } = await client
             .from('premium_requests')
-            .select('id,user_email,email,name,status,created_at')
+            .select('*')
             .eq('status', 'pending')
             .order('created_at', { ascending: false });
         if (error) throw error;
         return Array.isArray(data) ? data : [];
     }
 
-    async function reviewPremiumRequest(request, status) {
+    async function reviewPremiumRequest(request, status, sourceButton) {
         const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
         const email = String(request?.user_email || request?.email || '').trim().toLowerCase();
         if (!client || !email || !['approved', 'rejected'].includes(status)) {
             showToast('Không đủ dữ liệu để xử lý yêu cầu Premium.', 'error');
             return;
         }
-        const buttons = document.querySelectorAll('[data-premium-action]');
+        const buttons = sourceButton?.closest('.notice-item')?.querySelectorAll('[data-premium-action]') || [];
         buttons.forEach(button => { button.disabled = true; });
         try {
-            let userId = request?.user_id ?? request?.userId ?? null;
             if (status === 'approved') {
-                if (userId === null || userId === undefined || userId === '') {
-                    const { data: linkedUser, error: linkedUserError } = await client
-                        .from('users')
-                        .select('id,email')
-                        .ilike('email', email)
-                        .limit(1)
-                        .maybeSingle();
-                    if (linkedUserError) throw linkedUserError;
-                    userId = linkedUser?.id;
+                let linkedUser = allUsers.find(user => userEmail(user) === email) || null;
+                if (!linkedUser) {
+                    const { data: users, error: usersError } = await client.from('users').select('*');
+                    if (usersError) throw usersError;
+                    if (Array.isArray(users)) allUsers = users;
+                    linkedUser = allUsers.find(user => userEmail(user) === email) || null;
                 }
                 const now = new Date().toISOString();
-                if (userId === null || userId === undefined || userId === '') {
+                if (!linkedUser) {
                     const displayName = String(request?.name || email.split('@')[0] || 'Học viên').trim();
+                    const sample = allUsers[0] || {};
+                    const emailField = Object.prototype.hasOwnProperty.call(sample, 'user_email') && !Object.prototype.hasOwnProperty.call(sample, 'email') ? 'user_email' : 'email';
+                    const createPayload = { [emailField]: email, role: 'user', account_status: 'premium' };
+                    if (Object.prototype.hasOwnProperty.call(sample, 'name')) createPayload.name = displayName;
+                    if (Object.prototype.hasOwnProperty.call(sample, 'user_name')) createPayload.user_name = displayName;
+                    if (Object.prototype.hasOwnProperty.call(sample, 'roles')) createPayload.roles = ['user'];
+                    if (Object.prototype.hasOwnProperty.call(sample, 'active_role')) createPayload.active_role = 'user';
+                    if (Object.prototype.hasOwnProperty.call(sample, 'game_state')) {
+                        createPayload.game_state = { notifications: [{ id: `premium-approved-${request.id}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: now }] };
+                    }
                     const { data: createdUser, error: createUserError } = await client
                         .from('users')
-                        .insert([{
-                            email,
-                            name: displayName,
-                            user_name: displayName,
-                            role: 'premium',
-                            roles: ['user'],
-                            active_role: 'user',
-                            account_status: 'premium',
-                            updated_at: now
-                        }])
-                        .select('id,email')
+                        .insert([createPayload])
+                        .select('*')
                         .single();
                     if (createUserError) throw createUserError;
-                    userId = createdUser?.id;
+                    linkedUser = createdUser;
+                    allUsers.push(createdUser);
                 } else {
-                    const { data: updatedUsers, error: userError } = await client
-                        .from('users')
-                        .update({ role: 'premium', account_status: 'premium', updated_at: now })
-                        .eq('id', userId)
-                        .select('id');
-                    if (userError) throw userError;
-                    if (!Array.isArray(updatedUsers) || updatedUsers.length === 0) {
+                    const currentState = linkedUser.game_state && typeof linkedUser.game_state === 'object' ? linkedUser.game_state : {};
+                    const notifications = Array.isArray(currentState.notifications) ? [...currentState.notifications] : [];
+                    if (!notifications.some(item => item?.id === `premium-approved-${request.id}`)) {
+                        notifications.unshift({ id: `premium-approved-${request.id}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: now });
+                    }
+                    const userPayload = {};
+                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'account_status')) userPayload.account_status = 'premium';
+                    else if (Object.prototype.hasOwnProperty.call(linkedUser, 'is_premium')) userPayload.is_premium = true;
+                    else userPayload.role = 'premium';
+                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'game_state')) userPayload.game_state = { ...currentState, notifications };
+                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'updated_at')) userPayload.updated_at = now;
+                    const updateResult = await identifyUserQuery(client.from('users').update(userPayload), linkedUser).select('*');
+                    if (updateResult.error) throw updateResult.error;
+                    if (!Array.isArray(updateResult.data) || updateResult.data.length === 0) {
                         throw new Error('Không tìm thấy tài khoản tương ứng với yêu cầu Premium.');
                     }
                 }
             }
-            const { error: requestError } = await client
+            let requestResult = await client
                 .from('premium_requests')
                 .update({ status, reviewed_at: new Date().toISOString() })
                 .eq('id', request.id);
-            if (requestError) throw requestError;
+            if (requestResult.error && /reviewed_at|column|schema/i.test(String(requestResult.error.message || ''))) {
+                requestResult = await client.from('premium_requests').update({ status }).eq('id', request.id);
+            }
+            if (requestResult.error) throw requestResult.error;
             showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu Premium.', 'success');
             await loadDashboard();
         } catch (error) {
@@ -741,9 +785,9 @@
                 const button = event.target.closest('[data-save-user-role]');
                 const row = button?.closest('tr');
                 if (!button || !row) return;
-                const user = allUsers.find(item => String(item.id || item.email) === String(row.dataset.userId || ''));
-                const select = row.querySelector('.user-role-select');
-                if (user && select) updateUserRole(user, select.value, button);
+                const user = allUsers[Number(row.dataset.userIndex)];
+                const selectedRoles = Array.from(row.querySelectorAll('.user-role-editor input:checked')).map(input => input.value);
+                if (user) updateUserRoles(user, selectedRoles, button);
             });
             byId('refreshMonitoringButton')?.addEventListener('click', loadDashboard);
             byId('refreshSupportAdminButton')?.addEventListener('click', loadDashboard);

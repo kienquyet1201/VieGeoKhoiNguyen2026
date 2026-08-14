@@ -467,7 +467,7 @@ async function endIslandQuizForGameOver() {
         color: '#f8fafc',
         heightAuto: false
     };
-    if (window.Swal && typeof window.Swal.fire === 'function') await window.Swal.fire(options);
+    if (window.VieGeoToast) window.VieGeoToast(`${options.title} ${options.text}`, 'error');
     else if (window.VieGeoUI?.error) await window.VieGeoUI.error(options.text, options);
     renderMap();
 }

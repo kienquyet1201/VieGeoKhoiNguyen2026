@@ -13,15 +13,14 @@
     
     <link rel="stylesheet" href="bento.css">
     <link rel="stylesheet" href="style.css?v=20260813-2">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="viegeo-navigation-controls.css">
     <link rel="stylesheet" href="parent-dashboard-redesign.css">
-    <link rel="stylesheet" href="global-theme.css?v=20260813-2">
-    <script src="global-theme.js?v=20260813-1"></script>
+    <link rel="stylesheet" href="global-theme.css?v=20260814-3">
+    <script src="global-theme.js?v=20260814-3"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
-    <script src="supabase-ui-sync.js"></script>
-    <link rel="stylesheet" href="role-switcher.css">
+    <script src="supabase-ui-sync.js?v=20260814-2"></script>
+    <link rel="stylesheet" href="role-switcher.css?v=20260814-1">
 </head>
 <body class="parent-role-page">
     <div class="global-animated-background" aria-hidden="true">
@@ -144,7 +143,7 @@
             const roleLinks = { user: 'map.html', parent: 'parent.html', cs: 'cs-dashboard.html', admin: 'admin.html' };
             const source = Array.isArray(session.roles) ? session.roles : [session.role || session.activeRole];
             const allowedRoles = [...new Set(source.map(item => aliases[String(item || '').toLowerCase()] || String(item || '').toLowerCase()).filter(item => Boolean(roleLinks[item])))];
-            if (!allowedRoles.includes(normalizedRole)) { if (window.Swal) Swal.fire({icon:'warning',title:'Không có quyền truy cập',text:'Vai trò này chưa được cấp cho tài khoản của bạn.'}); return false; }
+            if (!allowedRoles.includes(normalizedRole)) { window.showToast?.('Vai trò này chưa được cấp cho tài khoản của bạn.', 'warning'); return false; }
             session.roles = allowedRoles;
             session.role = normalizedRole;
             session.activeRole = normalizedRole;
@@ -180,6 +179,6 @@
             <option value="admin">Quản trị viên</option>
         </select>
     </label>
-    <script src="role-switcher.js"></script>
+    <script src="role-switcher.js?v=20260814-2"></script>
 </body>
 </html>

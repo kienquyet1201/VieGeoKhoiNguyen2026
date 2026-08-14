@@ -23,6 +23,7 @@ body > footer { margin-top: auto; }
 .viegeo-toast.is-visible { opacity: 1; transform: translateX(0); }
 .viegeo-toast.is-leaving { opacity: 0; transform: translateX(calc(100% + 32px)); }
 @media (max-width: 600px) { .viegeo-toast-container { top: 12px; right: 16px; left: 16px; width: auto; } }
+.viegeo-toast--confirm{display:grid;gap:12px;width:100%;padding:15px 16px 14px 46px;overflow:visible}.viegeo-toast__copy strong,.viegeo-toast__copy p{display:block}.viegeo-toast__copy strong{font-size:14px}.viegeo-toast__copy p{margin:4px 0 0;color:rgba(255,255,255,.9);font-size:12px;font-weight:500;line-height:1.55}.viegeo-toast__actions{display:flex;justify-content:flex-end;gap:8px}.viegeo-toast__button{min-height:34px;padding:7px 13px;border:1px solid rgba(255,255,255,.3);border-radius:9px;color:#fff;background:rgba(255,255,255,.12);cursor:pointer;font:700 11px/1.2 'Be Vietnam Pro',sans-serif}.viegeo-toast__button:hover{background:rgba(255,255,255,.22)}.viegeo-toast__button--confirm{color:#0f2940;background:#fff}.viegeo-toast__button--confirm:hover{background:#e0f2fe}@media(max-width:600px){.viegeo-toast--confirm{padding-right:14px}.viegeo-toast__actions{justify-content:stretch}.viegeo-toast__button{flex:1}}
 button, input, select, textarea { font: inherit !important; }
 img, video, canvas, svg { max-width: 100%; }
 

@@ -9,12 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="leaderboard.css?v=20260812-1">
-    <link rel="stylesheet" href="shared-topbar.css">
-    <link rel="stylesheet" href="global-theme.css?v=20260813-2">
-    <script src="global-theme.js?v=20260813-1"></script>
+    <link rel="stylesheet" href="shared-topbar.css?v=20260814-2">
+    <link rel="stylesheet" href="global-theme.css?v=20260814-3">
+    <script src="global-theme.js?v=20260814-3"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js"></script>
-    <script src="supabase-ui-sync.js"></script>
+    <script src="supabase-ui-sync.js?v=20260814-2"></script>
 </head>
 <body>
     <div class="global-animated-background" aria-hidden="true">
@@ -160,19 +160,20 @@
                         <span>Phần thưởng mùa</span>
                         <strong>Top 3</strong>
                     </div>
-                    <div class="reward-item">
-                        <span class="reward-icon">💎</span>
-                        <div>
-                            <strong>500 Gem</strong>
-                            <small>Thưởng cuối mùa</small>
-                        </div>
+                    <div class="reward-tier first-reward">
+                        <span class="reward-rank">🥇 Top 1</span>
+                        <strong>1.000 Gem · 2.000 EXP</strong>
+                        <small>Huy hiệu Explorer</small>
                     </div>
-                    <div class="reward-item">
-                        <span class="reward-icon">🏅</span>
-                        <div>
-                            <strong>Huy hiệu Explorer</strong>
-                            <small>Phiên bản giới hạn</small>
-                        </div>
+                    <div class="reward-tier second-reward">
+                        <span class="reward-rank">🥈 Top 2</span>
+                        <strong>1.500 Gem · 1.000 EXP</strong>
+                        <small>Huy hiệu The king of second place</small>
+                    </div>
+                    <div class="reward-tier third-reward">
+                        <span class="reward-rank">🥉 Top 3</span>
+                        <strong>1.000 Gem · 1.000 EXP</strong>
+                        <small>Huy hiệu Stories about three great figures</small>
                     </div>
                 </article>
 
@@ -187,8 +188,8 @@
     </main>
 
     <div class="toast" id="toast"></div>
-    <script src="leaderboard.js?v=20260813-1"></script>
-    <script src="shared-topbar.js"></script>
+    <script src="leaderboard.js?v=20260814-2"></script>
+    <script src="shared-topbar.js?v=20260814-1"></script>
 <button class="support-button" id="supportButton" type="button">
         <span class="support-avatar">CS</span>
         <span class="support-copy">

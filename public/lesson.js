@@ -49,18 +49,10 @@ function starsForScore(correctAnswers) {
 }
 
 function presentIslandResult(stars, correctAnswers) {
-    if (activeIslandNodeKind !== 'small' || !window.Swal) return;
+    if (activeIslandNodeKind !== 'small') return;
     const starText = stars ? '⭐'.repeat(stars) : 'Chưa đạt sao';
     window.setTimeout(() => {
-        Swal.fire({
-            title: 'Kết quả Đảo nhỏ',
-            html: `<div style="font-size:2rem;letter-spacing:4px;margin:8px 0">${starText}</div><p>Bạn trả lời đúng <strong>${correctAnswers}/5</strong> câu.</p><p style="color:#64748b;font-size:.9rem">Hệ thống đã lưu số sao cao nhất của bạn trên đảo này.</p>`,
-            confirmButtonText: 'Tuyệt vời',
-            confirmButtonColor: '#16a34a',
-            background: '#102238',
-            color: '#f8fafc',
-            heightAuto: false
-        });
+        window.VieGeoToast?.(`Kết quả Đảo nhỏ: ${starText} · Đúng ${correctAnswers}/5 câu. Hệ thống đã lưu thành tích cao nhất.`, 'success');
     }, 220);
 }
 
@@ -125,8 +117,8 @@ async function initNormal() {
     }
 
     if (!foundNode) {
-        Swal.fire({ icon: 'error', title: 'Đã xảy ra lỗi', text: 'Lỗi tải bài học!' });
-        window.location.href = '/map';
+        window.VieGeoToast?.('Không thể tải bài học. Đang quay lại lộ trình.', 'error');
+        window.setTimeout(() => { window.location.href = '/map'; }, 1200);
         return;
     }
 
@@ -645,8 +637,8 @@ function finishLesson() {
 }
 
 function showToast(msg) {
-    // Simple alert for lesson page since we don't have the toast container here
-    Swal.fire({ icon: 'info', title: 'Thông báo', text: String(msg) }); 
+    if (window.VieGeoToast) window.VieGeoToast(String(msg), 'info');
+    else console.info(String(msg));
 }
 
 function createConfetti() {

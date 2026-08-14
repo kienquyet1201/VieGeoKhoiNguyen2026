@@ -114,6 +114,58 @@ function supportWriteRemote(ticket){
     });
 }
 
+function supportWriteFeedbackFallback(ticket,message){
+    var database=supportGetClient();
+    if(!database||!message||message.fallbackStored){return Promise.resolve(Boolean(message&&message.fallbackStored));}
+    var richPayload={
+        user_email:String(ticket.email||ticket.user_email||"guest@viegeo.local"),
+        content:String(message.text||message.message||""),
+        subject:"Tin nhắn CSKH",
+        message:String(message.text||message.message||""),
+        sender_id:String(ticket.userId||ticket.user_id||"")||null,
+        sender_name:String(ticket.name||ticket.user_name||"Người dùng"),
+        status:"pending",
+        created_at_client:Number(message.createdAt||message.created_at_client||Date.now())
+    };
+    return database.from("user_feedbacks").insert([richPayload]).then(function(result){
+        if(!result.error){return result;}
+        return database.from("user_feedbacks").insert([{user_email:richPayload.user_email,content:richPayload.content}]);
+    }).then(function(result){
+        if(result.error){throw result.error;}
+        message.fallbackStored=true;
+        supportUpsertLocalTicket(ticket);
+        return true;
+    }).catch(function(error){
+        console.error("[VieGeo Support] Không thể lưu tin nhắn dự phòng:",error);
+        return false;
+    });
+}
+
+function supportWriteMessageRemote(ticket,message){
+    var database=supportGetClient();
+    if(!database||!message){return Promise.resolve(false);}
+    if(message.remoteStored||message.fallbackStored){return Promise.resolve(true);}
+    return supportWriteRemote(ticket).then(function(ticketSaved){
+        if(!ticketSaved){return supportWriteFeedbackFallback(ticket,message);}
+        return database.from("support_messages").upsert([supportMessagePayload(ticket,message)],{onConflict:"id"}).then(function(result){
+            if(result.error){throw result.error;}
+            message.remoteStored=true;
+            supportUpsertLocalTicket(ticket);
+            return true;
+        }).catch(function(error){
+            console.error("[VieGeo Support] Không thể lưu hội thoại trực tiếp:",error);
+            return supportWriteFeedbackFallback(ticket,message);
+        });
+    });
+}
+
+function supportSyncLocalTicket(ticket){
+    var messages=Array.isArray(ticket&&ticket.messages)?ticket.messages:[];
+    return messages.reduce(function(chain,message){
+        return chain.then(function(){return supportWriteMessageRemote(ticket,message);});
+    },Promise.resolve(true)).then(function(){return ticket;});
+}
+
 function supportAppendMessage(ticketId,sender,text){
     var ticket=supportFindLocalTicket(ticketId)||supportEnsureTicket();
     var now=Date.now();
@@ -137,13 +189,7 @@ function supportAppendMessage(ticketId,sender,text){
 
     var database=supportGetClient();
     if(!database){return Promise.resolve(ticket);}
-    return supportWriteRemote(ticket).then(function(ticketSaved){
-        if(!ticketSaved){return ticket;}
-        return database.from("support_messages").upsert([supportMessagePayload(ticket,message)],{onConflict:"id"}).then(function(result){
-            if(result.error){console.error("[VieGeo Support] Không thể đồng bộ tin nhắn:",result.error);}
-            return ticket;
-        });
-    });
+    return supportWriteMessageRemote(ticket,message).then(function(){return ticket;});
 }
 
 function supportNormalizeRemoteTicket(row,messages){
@@ -170,6 +216,7 @@ function supportNormalizeRemoteTicket(row,messages){
                 text:String(message.message||""),
                 status:String(message.status||"sent"),
                 isInternal:Boolean(message.is_internal),
+                remoteStored:true,
                 createdAt:Number(message.created_at_client||Date.parse(message.created_at)||0)
             };
         })
@@ -196,7 +243,12 @@ function supportLoadTickets(){
             });
         }
         var tickets=(ticketResult.data||[]).map(function(row){
-            var ticket=supportNormalizeRemoteTicket(row,messagesByTicket[String(row.id)]||[]);
+            var remoteMessages=messagesByTicket[String(row.id)]||[];
+            var localTicket=supportFindLocalTicket(row.id);
+            var ticket=supportNormalizeRemoteTicket(row,remoteMessages);
+            if(!remoteMessages.length&&localTicket&&Array.isArray(localTicket.messages)){
+                ticket.messages=localTicket.messages;
+            }
             supportUpsertLocalTicket(ticket);
             return ticket;
         });

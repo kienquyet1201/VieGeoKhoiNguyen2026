@@ -9,6 +9,46 @@ var sharedRole=document.getElementById("sharedRole");
 var sharedLinks=document.querySelectorAll(".shared-link");
 var supportButton=document.getElementById("supportButton");
 
+function getSharedRoles(session){
+    var aliases={student:"user",map:"user",cskh:"cs",support:"cs",premium:"user"};
+    var source=[];
+    var append=function(value){
+        if(Array.isArray(value)){value.forEach(append);return;}
+        if(typeof value==="string"&&value.trim().startsWith("[")){
+            try{JSON.parse(value).forEach(append);return;}catch(error){}
+        }
+        if(value){source.push(value);}
+    };
+    append(session&&session.roles);
+    append(session&&session.activeRole);
+    append(session&&session.role);
+    var roles=[];
+    source.forEach(function(value){
+        var role=aliases[String(value||"").trim().toLowerCase()]||String(value||"").trim().toLowerCase();
+        if(["user","parent","cs","admin"].indexOf(role)>=0&&roles.indexOf(role)<0){roles.push(role);}
+    });
+    return roles.length?roles:["user"];
+}
+
+function updateSharedRoleControl(){
+    if(!sharedRole){return;}
+    var session=getSharedSession();
+    var roles=getSharedRoles(session);
+    var labels={user:"Học sinh",parent:"Phụ huynh",cs:"CSKH",admin:"Quản trị viên"};
+    var current=session.activeRole||session.role||roles[0];
+    current=({student:"user",cskh:"cs",support:"cs",premium:"user"})[String(current).toLowerCase()]||String(current).toLowerCase();
+    sharedRole.replaceChildren();
+    roles.forEach(function(role){
+        var option=document.createElement("option");
+        option.value=role;
+        option.textContent=labels[role];
+        sharedRole.appendChild(option);
+    });
+    sharedRole.value=roles.indexOf(current)>=0?current:roles[0];
+    var wrapper=sharedRole.closest(".shared-role-control");
+    if(wrapper){wrapper.hidden=roles.length<2;}
+}
+
 function getSharedState(){
     var raw=localStorage.getItem("VieGeo_state");
     if(!raw){
@@ -52,9 +92,7 @@ function updateSharedStats(){
     if(sharedDifficulty){
         sharedDifficulty.value=state.selectedDifficulty||"easy";
     }
-    if(sharedRole){
-        sharedRole.value=session.activeRole||session.role||"user";
-    }
+    updateSharedRoleControl();
 }
 
 function setSharedTheme(theme){
@@ -99,6 +137,7 @@ function changeSharedRole(){
         admin:"admin-dashboard.html"
     };
 
+    if(getSharedRoles(session).indexOf(role)<0){updateSharedRoleControl();return;}
     session.role=role;
     session.activeRole=role;
     localStorage.setItem("lm_session",JSON.stringify(session));
@@ -134,6 +173,10 @@ function initializeSharedNavbar(){
     if(supportButton){
         supportButton.addEventListener("click",openSharedSupport);
     }
+}
+
+if(sharedRole&&sharedRole.closest(".shared-role-control")){
+    sharedRole.closest(".shared-role-control").hidden=true;
 }
 
 document.addEventListener("DOMContentLoaded",initializeSharedNavbar);
