@@ -17,6 +17,8 @@ const profileProgressValue = document.getElementById('profileProgressValue');
 const profileProgressFill = document.getElementById('profileProgressFill');
 const profileNotificationList = document.getElementById('profileNotificationList');
 const profileToast = document.getElementById('toast');
+const premiumStatus = document.getElementById('premiumStatus');
+const premiumCard = document.querySelector('.premium-card');
 
 function showProfileToast(message, type = 'success') {
     if (!profileToast) return;
@@ -48,9 +50,9 @@ function normalizeAchievementIds(source) {
 }
 
 const PROFILE_ACHIEVEMENTS = [
-    { id: 'ach_pvp_1', title: 'Tân binh Đấu trường', description: 'Chiến thắng 1 trận PvP', type: 'pvpWins', target: 1, icon: '⚔️' },
-    { id: 'ach_pvp_10', title: 'Chiến binh Đấu trường', description: 'Chiến thắng 10 trận PvP', type: 'pvpWins', target: 10, icon: '🛡️' },
-    { id: 'ach_pvp_99', title: 'Huyền thoại Đấu trường', description: 'Chiến thắng 99 trận PvP', type: 'pvpWins', target: 99, icon: '🏆' },
+    { id: 'ach_pvp_1', title: 'Tân binh Luyện thi', description: 'Chiến thắng 1 trận PvP', type: 'pvpWins', target: 1, icon: '⚔️' },
+    { id: 'ach_pvp_10', title: 'Chiến binh Luyện thi', description: 'Chiến thắng 10 trận PvP', type: 'pvpWins', target: 10, icon: '🛡️' },
+    { id: 'ach_pvp_99', title: 'Huyền thoại Luyện thi', description: 'Chiến thắng 99 trận PvP', type: 'pvpWins', target: 99, icon: '🏆' },
     { id: 'ach_lesson_1', title: 'Bước chân đầu tiên', description: 'Hoàn thành xuất sắc 1 bài học', type: 'perfectLessons', target: 1, icon: '📖' },
     { id: 'ach_lesson_10', title: 'Học bá Địa lý', description: 'Hoàn thành xuất sắc 10 bài học', type: 'perfectLessons', target: 10, icon: '🎓' },
     { id: 'ach_lesson_50', title: 'Học giả uyên bác', description: 'Hoàn thành xuất sắc 50 bài học', type: 'perfectLessons', target: 50, icon: '🏅' },
@@ -193,6 +195,122 @@ function profileClient() {
     return client && typeof client.from === 'function' ? client : null;
 }
 
+function isPremiumProfile(user) {
+    if (window.VieGeoPremium?.isActive) return window.VieGeoPremium.isActive(user);
+    const source = user || {};
+    const status = String(source.account_status ?? source.accountStatus ?? '').trim().toLowerCase();
+    const roles = Array.isArray(source.roles) ? source.roles : [source.role, source.active_role];
+    return ['premium', 'active', 'approved'].includes(status)
+        || source.is_premium === true
+        || source.isPremium === true
+        || roles.some(role => String(role || '').trim().toLowerCase() === 'premium');
+}
+
+async function fetchLatestPremiumRequest(client, email) {
+    const fetchByColumn = async column => {
+        const result = await client
+            .from('premium_requests')
+            .select('*')
+            .eq(column, email)
+            .order('created_at', { ascending: false })
+            .limit(5);
+        return result.error ? [] : (Array.isArray(result.data) ? result.data : []);
+    };
+    const [byUserEmail, byEmail] = await Promise.all([
+        fetchByColumn('user_email'),
+        fetchByColumn('email')
+    ]);
+    const requests = [...byUserEmail, ...byEmail]
+        .filter((request, index, rows) => index === rows.findIndex(item => String(item.id) === String(request.id)))
+        .sort((left, right) => new Date(right.created_at || 0) - new Date(left.created_at || 0));
+    return requests[0] || null;
+}
+
+async function reconcileApprovedPremium(client, currentUser, latestRequest, email) {
+    const accountStatus = String(currentUser?.account_status ?? currentUser?.accountStatus ?? '').trim().toLowerCase();
+    const roles = Array.isArray(currentUser?.roles) ? currentUser.roles : [currentUser?.role, currentUser?.active_role];
+    const hasLegacyPremiumSignal = currentUser?.is_premium === true
+        || currentUser?.isPremium === true
+        || roles.some(role => String(role || '').trim().toLowerCase() === 'premium');
+    const shouldActivate = latestRequest?.status === 'approved' || hasLegacyPremiumSignal;
+    if (!shouldActivate || ['premium', 'active', 'approved'].includes(accountStatus)) return currentUser;
+    const now = new Date().toISOString();
+    let result = await client
+        .from('users')
+        .update({ account_status: 'premium', updated_at: now })
+        .eq('email', email)
+        .select('*')
+        .maybeSingle();
+    if (result.error && /updated_at|column|schema/i.test(String(result.error.message || ''))) {
+        result = await client
+            .from('users')
+            .update({ account_status: 'premium' })
+            .eq('email', email)
+            .select('*')
+            .maybeSingle();
+    }
+    if (result.error) {
+        console.warn('[VieGeo Premium] Chưa thể ghi lại trạng thái Premium vào users:', result.error.message || result.error);
+        currentUser.account_status = 'premium';
+        currentUser.accountStatus = 'premium';
+        return currentUser;
+    }
+    return { ...currentUser, ...(result.data || {}), account_status: 'premium', accountStatus: 'premium' };
+}
+
+function persistPremiumState(premium) {
+    try {
+        if (window.VieGeoCurrentUser && typeof window.VieGeoCurrentUser === 'object') {
+            window.VieGeoCurrentUser.account_status = premium ? 'premium' : 'free';
+            window.VieGeoCurrentUser.accountStatus = premium ? 'premium' : 'free';
+            window.VieGeoCurrentUser.isPremium = premium;
+        }
+        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+        session.accountStatus = premium ? 'premium' : 'free';
+        session.isPremium = premium;
+        localStorage.setItem('lm_session', JSON.stringify(session));
+
+        const state = JSON.parse(localStorage.getItem('VieGeo_state') || '{}');
+        state.accountStatus = premium ? 'premium' : 'free';
+        localStorage.setItem('VieGeo_state', JSON.stringify(state));
+        window.dispatchEvent(new CustomEvent('viegeo:premium-changed', { detail: { premium } }));
+    } catch (error) {
+        console.warn('[VieGeo Premium] Không thể cập nhật trạng thái cục bộ:', error);
+    }
+}
+
+function renderPremiumState(currentUser, latestRequest) {
+    const active = isPremiumProfile(currentUser) || latestRequest?.status === 'approved';
+    const pending = !active && latestRequest?.status === 'pending';
+    if (premiumStatus) {
+        premiumStatus.textContent = active ? 'Tài khoản Premium' : 'Tài khoản Free';
+        premiumStatus.classList.toggle('is-premium', active);
+    }
+    if (document.getElementById('sharedHeart') && active) document.getElementById('sharedHeart').textContent = '∞';
+
+    if (premiumCard) {
+        premiumCard.classList.toggle('is-active', active);
+        premiumCard.classList.toggle('is-pending', pending);
+        const heading = premiumCard.querySelector('h3');
+        const description = premiumCard.querySelector('p');
+        if (heading) heading.textContent = active ? 'Premium đã được kích hoạt' : (pending ? 'Yêu cầu đang chờ duyệt' : 'Mở khóa hành trình nâng cao');
+        if (description) {
+            description.textContent = active
+                ? 'Bạn đang sử dụng đầy đủ quyền lợi Premium của VieGeo.'
+                : (pending ? 'Quản trị viên đang xem xét yêu cầu nâng cấp của bạn.' : 'Truy cập thêm nội dung, thống kê chuyên sâu và trải nghiệm học tập cá nhân hóa.');
+        }
+    }
+
+    if (btnPremium) {
+        btnPremium.disabled = active || pending;
+        btnPremium.innerHTML = active
+            ? '<i class="fa-solid fa-circle-check"></i> Premium đang hoạt động'
+            : (pending ? '<i class="fa-solid fa-clock"></i> Đang chờ duyệt' : '<i class="fa-solid fa-crown"></i> Yêu cầu mua Premium');
+    }
+    persistPremiumState(active);
+    return active;
+}
+
 function normalizeLearningKey(value) {
     try {
         return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
@@ -300,17 +418,18 @@ async function loadProfile() {
             };
         }
         if (userResult.error) throw userResult.error;
-        const currentUser = userResult.data || {
+        let currentUser = userResult.data || {
             email,
             name: authUser?.user_metadata?.name || sessionUser.name || sessionUser.displayName || 'Người chơi',
             phone: '', gender: '', role: 'user', score: 0, current_streak: 0
         };
-        const [leaderboardResult, questionRows, submissionRows, premiumRequestResult] = await Promise.all([
+        const [leaderboardResult, questionRows, submissionRows, latestPremiumRequest] = await Promise.all([
             client.from('leaderboard').select('*').limit(500),
             fetchProfilePages('questions', 'province,island'),
             fetchProfilePages('submissions', '*', email),
-            client.from('premium_requests').select('*').eq('user_email', email).order('created_at', { ascending: false }).limit(1)
+            fetchLatestPremiumRequest(client, email)
         ]);
+        currentUser = await reconcileApprovedPremium(client, currentUser, latestPremiumRequest, email);
         const leaderboardRows = leaderboardResult.error ? [] : (Array.isArray(leaderboardResult.data) ? leaderboardResult.data : []);
         
         dispName.textContent = currentUser.name || currentUser.full_name || currentUser.display_name || 'Người chơi';
@@ -320,20 +439,12 @@ async function loadProfile() {
         profXp.textContent = Number(currentUser.xp ?? currentUser.score ?? 0) || 0;
         renderProfileMetrics(currentUser, leaderboardRows, questionRows, submissionRows);
         const notifications = normalizeNotifications(currentUser);
-        const latestPremiumRequest = !premiumRequestResult.error && Array.isArray(premiumRequestResult.data) ? premiumRequestResult.data[0] : null;
         const premiumApproved = latestPremiumRequest?.status === 'approved';
         if (premiumApproved && !notifications.some(item => item.id === `premium-approved-${latestPremiumRequest.id}`)) {
             notifications.unshift({ id: `premium-approved-${latestPremiumRequest.id}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: latestPremiumRequest.reviewed_at || latestPremiumRequest.updated_at || latestPremiumRequest.created_at });
         }
         renderNotifications(notifications);
-        const premiumActive = premiumApproved || String(currentUser.account_status || currentUser.accountStatus || currentUser.role || '').toLowerCase() === 'premium' || currentUser.is_premium === true || currentUser.isPremium === true;
-        if (btnPremium && premiumActive) {
-            btnPremium.disabled = true;
-            btnPremium.innerHTML = '<i class="fa-solid fa-crown"></i> Premium đã kích hoạt';
-        } else if (btnPremium && latestPremiumRequest?.status === 'pending') {
-            btnPremium.disabled = true;
-            btnPremium.innerHTML = '<i class="fa-solid fa-clock"></i> Đang chờ duyệt';
-        }
+        renderPremiumState(currentUser, latestPremiumRequest);
         
         let evalText = "Chưa test";
         if (gameState && gameState.assessmentScore !== undefined) {
@@ -445,7 +556,7 @@ if (btnPremium) {
                 created_at: new Date().toISOString()
             });
             showProfileToast('Đã gửi yêu cầu Premium. Bạn sẽ nhận thông báo ngay khi được duyệt.', 'success');
-            btnPremium.innerHTML = '<i class="fa-solid fa-clock"></i> Đang chờ duyệt';
+            renderPremiumState(window.currentUserData || {}, { status: 'pending' });
         } catch (error) {
             console.error("Lỗi premium:", error);
             showProfileToast('Chưa thể gửi yêu cầu Premium. Vui lòng thử lại.', 'error');

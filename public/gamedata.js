@@ -63,9 +63,9 @@ const defaultGameState = {
 
 // ── ACHIEVEMENTS LIST ──
 const ACHIEVEMENTS_LIST = [
-    { id: "ach_pvp_1", title: "Tân Binh Đấu Trường", desc: "Chiến thắng 1 trận PvP", target: 1, type: "pvpWins", icon: "fa-khanda", color: "#ff4b4b" },
-    { id: "ach_pvp_10", title: "Chiến Binh Đấu Trường", desc: "Chiến thắng 10 trận PvP", target: 10, type: "pvpWins", icon: "fa-khanda", color: "#ff7676" },
-    { id: "ach_pvp_99", title: "Kẻ Hủy Diệt Đấu Trường", desc: "Chiến thắng 99 trận PvP", target: 99, type: "pvpWins", icon: "fa-skull", color: "#ff0000" },
+    { id: "ach_pvp_1", title: "Tân Binh Luyện Thi", desc: "Chiến thắng 1 trận PvP", target: 1, type: "pvpWins", icon: "fa-khanda", color: "#ff4b4b" },
+    { id: "ach_pvp_10", title: "Chiến Binh Luyện Thi", desc: "Chiến thắng 10 trận PvP", target: 10, type: "pvpWins", icon: "fa-khanda", color: "#ff7676" },
+    { id: "ach_pvp_99", title: "Kẻ Hủy Diệt Luyện Thi", desc: "Chiến thắng 99 trận PvP", target: 99, type: "pvpWins", icon: "fa-skull", color: "#ff0000" },
     
     { id: "ach_lesson_1", title: "Bước Chân Đầu Tiên", desc: "Hoàn thành xuất sắc 1 bài học", target: 1, type: "perfectLessons", icon: "fa-book-open-reader", color: "#1cb0f6" },
     { id: "ach_lesson_10", title: "Học Bá Địa Lý", desc: "Hoàn thành xuất sắc 10 bài học", target: 10, type: "perfectLessons", icon: "fa-graduation-cap", color: "#4bcaff" },
@@ -431,7 +431,7 @@ const DAILY_QUESTS = [
     { id: "q2", title: "Hoàn mỹ", desc: "Đạt điểm tối đa 1 lần trong bài học", target: 1, reward: 50, type: "daily" },
     { id: "q3", title: "Cày cuốc XP", desc: "Kiếm được 150 XP", target: 150, reward: 100, type: "epic" },
     { id: "q4", title: "Kỷ luật thép", desc: "Giữ chuỗi học tập 7 ngày liên tiếp", target: 7, reward: 500, type: "epic" },
-    { id: "q5", title: "Vua Đấu Trường", desc: "Tham gia 5 trận Đấu Trường Sinh Tử", target: 5, reward: 300, type: "epic" },
+    { id: "q5", title: "Vua Luyện Thi", desc: "Tham gia 5 lượt luyện tập, luyện thi", target: 5, reward: 300, type: "epic" },
     { id: "q6", title: "Nhà Thám Hiểm Lão Làng", desc: "Đạt mốc Cấp 10", target: 10, reward: 1000, type: "achievement" },
     { id: "q7", title: "Đại Gia Tiền Tỷ", desc: "Thu thập 10,000 Xu", target: 10000, reward: 2000, type: "achievement" }
 ];
@@ -440,8 +440,8 @@ const DAILY_QUESTS = [
 const SHOP_ITEMS = [
     { id: "infinite_hearts", title: "Hồi đầy trái tim", desc: "Hồi ngay toàn bộ trái tim về mức tối đa.", price: 50, icon: "fa-heart", color: "#ff4b4b" },
     { id: "freeze", title: "Khiên đóng băng", desc: "Bảo vệ Chuỗi ngày nếu bạn quên học 1 ngày.", price: 200, icon: "fa-shield-halved", color: "#1cb0f6" },
-    { id: "p_double_xp", title: "Bùa x2 XP (Đấu Trường)", desc: "Nhân đôi điểm số trong 1 câu hỏi đấu trường.", price: 30, icon: "fa-bolt", color: "#ffc800" },
-    { id: "p_5050", title: "Bùa 50/50 (Đấu Trường)", desc: "Loại bỏ 2 đáp án sai trong đấu trường.", price: 40, icon: "fa-wand-magic-sparkles", color: "#ce82ff" }
+    { id: "p_double_xp", title: "Bùa x2 XP (Luyện thi)", desc: "Nhân đôi điểm số trong 1 câu hỏi luyện thi.", price: 30, icon: "fa-bolt", color: "#ffc800" },
+    { id: "p_5050", title: "Bùa 50/50 (Luyện thi)", desc: "Loại bỏ 2 đáp án sai trong bài luyện thi.", price: 40, icon: "fa-wand-magic-sparkles", color: "#ce82ff" }
 ];
 
 // ── ARENA MATCHES (1vs1) ──

@@ -72,6 +72,7 @@
         document.querySelector('.exam-topbar')?.setAttribute('hidden', '');
         document.querySelector('.exam-control-panel')?.setAttribute('hidden', '');
         workspace.scrollTop = 0;
+        window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' }));
     }
 
     function exitExamToSetup() {
@@ -102,7 +103,7 @@
     }
 
     function titleForDifficulty(difficulty) {
-        return `Đấu trường luyện tập · ${difficultyLabel(difficulty)}`;
+        return `Luyện tập, luyện thi · ${difficultyLabel(difficulty)}`;
     }
 
     function updateSetupTitle() {
@@ -364,7 +365,7 @@
         const correct = telemetry.filter((item) => item.isCorrect).length;
         const result = {
             source: 'exam-arena',
-            title: selectedExamConfig?.title || 'Đấu trường Luyện thi',
+            title: selectedExamConfig?.title || 'Luyện tập, luyện thi',
             topic: selectedExamConfig?.topic || null,
             difficulty: selectedExamConfig?.difficulty || null,
             score: correct,

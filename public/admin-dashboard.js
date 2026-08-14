@@ -311,10 +311,8 @@
                     if (!notifications.some(item => item?.id === `premium-approved-${request.id}`)) {
                         notifications.unshift({ id: `premium-approved-${request.id}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: now });
                     }
-                    const userPayload = {};
-                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'account_status')) userPayload.account_status = 'premium';
-                    else if (Object.prototype.hasOwnProperty.call(linkedUser, 'is_premium')) userPayload.is_premium = true;
-                    else userPayload.role = 'premium';
+                    const userPayload = { account_status: 'premium' };
+                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'is_premium')) userPayload.is_premium = true;
                     if (Object.prototype.hasOwnProperty.call(linkedUser, 'game_state')) userPayload.game_state = { ...currentState, notifications };
                     if (Object.prototype.hasOwnProperty.call(linkedUser, 'updated_at')) userPayload.updated_at = now;
                     const updateResult = await identifyUserQuery(client.from('users').update(userPayload), linkedUser).select('*');

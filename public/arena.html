@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đấu Trường Sinh Tử | VieGeo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="arena.css?v=20260814-1">
+</head>
+<body>
+    <div class="arena-background" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <header class="arena-battle-header">
+        <div class="arena-header-row">
+            <a class="arena-back" href="student-dashboard.html"><i class="fa-solid fa-arrow-left"></i><span>Trang học viên</span></a>
+            <div class="arena-mode-title">
+                <i class="fa-solid fa-khanda"></i>
+                <strong>Đấu Trường Sinh Tử</strong>
+                <span id="arenaConnectionBadge">Đang kết nối</span>
+            </div>
+            <button class="arena-leave" id="arenaLeaveButton" type="button"><i class="fa-solid fa-right-from-bracket"></i><span>Rời trận</span></button>
+        </div>
+
+        <section class="tug-panel" aria-label="Thanh chiến đấu kéo co">
+            <div class="tug-player-label tug-player-one-label">
+                <strong id="tugPlayerOneName">Player 1</strong>
+                <span id="tugPlayerOnePercent">50%</span>
+            </div>
+            <div class="tug-track" id="tugTrack">
+                <div class="tug-side tug-side-one" id="tugPlayerOneBar" style="width:50%"></div>
+                <div class="tug-side tug-side-two" id="tugPlayerTwoBar" style="width:50%"></div>
+                <div class="tug-center-mark" id="tugCenterMark"><i class="fa-solid fa-bolt"></i></div>
+            </div>
+            <div class="tug-player-label tug-player-two-label">
+                <strong id="tugPlayerTwoName">Player 2</strong>
+                <span id="tugPlayerTwoPercent">50%</span>
+            </div>
+        </section>
+    </header>
+
+    <main class="arena-main">
+        <section class="matchmaking-card" id="matchmakingView">
+            <div class="matchmaking-icon"><i class="fa-solid fa-tower-broadcast"></i></div>
+            <p class="arena-kicker">REAL-TIME MULTIPLAYER</p>
+            <h1>Tìm đối thủ xứng tầm</h1>
+            <p id="matchmakingMessage">Chọn độ khó và bắt đầu ghép trận với một học viên đang online.</p>
+            <label class="arena-difficulty" for="arenaDifficulty">Độ khó
+                <select id="arenaDifficulty">
+                    <option value="easy">Dễ</option>
+                    <option value="medium">Trung bình</option>
+                    <option value="hard">Khó</option>
+                </select>
+            </label>
+            <button class="arena-find-button" id="arenaFindButton" type="button"><i class="fa-solid fa-magnifying-glass"></i> Tìm trận ngay</button>
+            <button class="arena-cancel-button" id="arenaCancelButton" type="button" hidden>Hủy tìm kiếm</button>
+            <div class="matchmaking-dots" id="matchmakingDots" hidden aria-hidden="true"><i></i><i></i><i></i></div>
+        </section>
+
+        <section class="battle-stage" id="battleView" hidden>
+            <article class="fighter-card fighter-one" id="playerOneCard">
+                <div class="fighter-avatar" id="playerOneAvatar">P1</div>
+                <p class="fighter-label">NGƯỜI CHƠI 1</p>
+                <h2 id="playerOneName">Đang chờ...</h2>
+                <div class="fighter-stats">
+                    <span><i class="fa-solid fa-ranking-star"></i> <b id="playerOneElo">1000</b> Elo</span>
+                    <span><i class="fa-solid fa-fire"></i> Combo <b id="playerOneCombo">0</b></span>
+                </div>
+                <div class="fighter-answer-state" id="playerOneState">Sẵn sàng</div>
+                <div class="powerup-tray" aria-label="Vật phẩm hỗ trợ Player 1">
+                    <button class="powerup-button" data-player="p1" data-power="shield" type="button"><i class="fa-solid fa-shield-halved"></i><span>Khiên</span><small>1</small></button>
+                    <button class="powerup-button" data-player="p1" data-power="boost" type="button"><i class="fa-solid fa-bolt"></i><span>x2 lực</span><small>1</small></button>
+                </div>
+            </article>
+
+            <section class="question-arena">
+                <div class="round-meta">
+                    <span id="arenaRoundLabel">Câu 1 / 10</span>
+                    <span class="round-timer"><i class="fa-regular fa-clock"></i><b id="arenaQuestionTimer">20</b>s</span>
+                    <span id="arenaDifficultyLabel">Dễ</span>
+                </div>
+                <h2 id="arenaQuestionText">Câu hỏi sẽ xuất hiện khi cả hai người chơi sẵn sàng.</h2>
+                <div class="arena-options" id="arenaOptions" role="radiogroup" aria-label="Các đáp án"></div>
+                <div class="round-feedback" id="arenaRoundFeedback" aria-live="polite">Hãy chọn đáp án nhanh và chính xác.</div>
+            </section>
+
+            <article class="fighter-card fighter-two" id="playerTwoCard">
+                <div class="fighter-avatar" id="playerTwoAvatar">P2</div>
+                <p class="fighter-label">NGƯỜI CHƠI 2</p>
+                <h2 id="playerTwoName">Đang chờ...</h2>
+                <div class="fighter-stats">
+                    <span><i class="fa-solid fa-ranking-star"></i> <b id="playerTwoElo">1000</b> Elo</span>
+                    <span><i class="fa-solid fa-fire"></i> Combo <b id="playerTwoCombo">0</b></span>
+                </div>
+                <div class="fighter-answer-state" id="playerTwoState">Sẵn sàng</div>
+                <div class="powerup-tray" aria-label="Vật phẩm hỗ trợ Player 2">
+                    <button class="powerup-button" data-player="p2" data-power="shield" type="button"><i class="fa-solid fa-shield-halved"></i><span>Khiên</span><small>1</small></button>
+                    <button class="powerup-button" data-player="p2" data-power="boost" type="button"><i class="fa-solid fa-bolt"></i><span>x2 lực</span><small>1</small></button>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <div class="arena-result-overlay" id="arenaResultOverlay" hidden>
+        <div class="arena-explosion" id="arenaExplosion" aria-hidden="true"></div>
+        <section class="arena-result-card" role="dialog" aria-modal="true" aria-labelledby="arenaResultTitle">
+            <div class="arena-result-icon" id="arenaResultIcon"><i class="fa-solid fa-trophy"></i></div>
+            <p id="arenaResultEyebrow">KẾT THÚC TRẬN ĐẤU</p>
+            <h2 id="arenaResultTitle">Victory</h2>
+            <p id="arenaResultText"></p>
+            <div class="arena-rewards">
+                <span><i class="fa-solid fa-ranking-star"></i><b id="arenaEloReward">+25</b> Elo</span>
+                <span><i class="fa-solid fa-gem"></i><b id="arenaGemReward">+50</b> Gem</span>
+            </div>
+            <button id="arenaResultContinue" type="button">Về trang học viên</button>
+        </section>
+    </div>
+
+    <div class="arena-toast" id="arenaToast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabaseClient.js?v=20260814-7"></script>
+    <script src="auth-guard.js?v=20260814-12"></script>
+    <script src="arena.js?v=20260814-1"></script>
+</body>
+</html>

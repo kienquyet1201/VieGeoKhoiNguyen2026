@@ -25,6 +25,7 @@ alter table public.users add column if not exists force_logout boolean not null 
 alter table public.users add column if not exists account_status text not null default 'free';
 alter table public.users add column if not exists xp integer not null default 0;
 alter table public.users add column if not exists score integer not null default 0;
+alter table public.users add column if not exists elo integer not null default 1000;
 alter table public.users add column if not exists gems integer not null default 500;
 alter table public.users add column if not exists hearts integer not null default 3;
 alter table public.users add column if not exists current_streak integer not null default 0;

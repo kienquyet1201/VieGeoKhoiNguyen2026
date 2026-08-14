@@ -55,8 +55,8 @@ function getShopItems(){
     return [
         {id:"infinite_hearts",title:"Hồi đầy trái tim",desc:"Hồi ngay toàn bộ trái tim về mức tối đa.",price:50,icon:"fa-heart",color:"#ff5364"},
         {id:"freeze",title:"Khiên đóng băng",desc:"Bảo vệ Chuỗi ngày nếu bạn quên học 1 ngày.",price:200,icon:"fa-shield-halved",color:"#22b7ef"},
-        {id:"p_double_xp",title:"Bùa x2 XP (Đấu Trường)",desc:"Nhân đôi điểm số trong 1 câu hỏi đấu trường.",price:30,icon:"fa-bolt",color:"#ffc928"},
-        {id:"p_5050",title:"Bùa 50/50 (Đấu Trường)",desc:"Loại bỏ 2 đáp án sai trong đấu trường.",price:40,icon:"fa-wand-magic-sparkles",color:"#c768ef"}
+        {id:"p_double_xp",title:"Bùa x2 XP (Luyện thi)",desc:"Nhân đôi điểm số trong 1 câu hỏi luyện thi.",price:30,icon:"fa-bolt",color:"#ffc928"},
+        {id:"p_5050",title:"Bùa 50/50 (Luyện thi)",desc:"Loại bỏ 2 đáp án sai trong bài luyện thi.",price:40,icon:"fa-wand-magic-sparkles",color:"#c768ef"}
     ];
 }
 

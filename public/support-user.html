@@ -12,7 +12,8 @@
     <script src="global-theme.js?v=20260814-3"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js?v=20260814-7"></script>
-    <script src="supabase-ui-sync.js?v=20260814-7"></script>
+    <script src="auth-guard.js?v=20260814-12"></script>
+    <script src="supabase-ui-sync.js?v=20260814-12"></script>
 </head>
 <body>
     <div class="global-animated-background" aria-hidden="true">
@@ -67,7 +68,14 @@
 
                 <div class="support-message-list" id="supportMessageList"></div>
 
+                <div class="support-attachment-preview" id="supportAttachmentPreview" hidden>
+                    <img id="supportAttachmentImage" alt="Ảnh chuẩn bị gửi">
+                    <span id="supportAttachmentName"></span>
+                    <button id="supportRemoveAttachment" type="button" aria-label="Bỏ ảnh đã chọn">✕</button>
+                </div>
                 <div class="support-composer">
+                    <button class="support-attach-button" id="supportAttachButton" type="button" aria-label="Chọn ảnh đính kèm">📷</button>
+                    <input id="supportImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                     <textarea id="supportMessageInput" rows="2" placeholder="Mô tả vấn đề bạn cần VieGeo hỗ trợ..."></textarea>
                     <button id="supportSendButton" type="button">Gửi tin nhắn</button>
                 </div>
@@ -76,7 +84,8 @@
     </main>
 
     <div class="support-toast" id="supportToast"></div>
-    <script src="support-store.js?v=20260814-8"></script>
-    <script src="support-user.js?v=20260814-8"></script>
+    <script src="support-media.js?v=20260814-10"></script>
+    <script src="support-store.js?v=20260814-10"></script>
+    <script src="support-user.js?v=20260814-10"></script>
 </body>
 </html>

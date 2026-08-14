@@ -405,6 +405,7 @@ function activateMenu(){
     if(section==="home"){window.location.href="student-dashboard.html";return;}
     if(section==="courses"){window.location.href="map.html";return;}
     if(section==="arena"){window.location.href="exam-arena.html";return;}
+    if(section==="deathmatch"){window.location.href="arena.html";return;}
     if(section==="leaderboard"){window.location.href="leaderboard.html";return;}
     if(section==="shop"){window.location.href="shop.html";return;}
 }

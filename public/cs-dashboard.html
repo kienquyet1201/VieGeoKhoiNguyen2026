@@ -7,13 +7,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="support-chat.css?v=20260813-2">
+    <link rel="stylesheet" href="support-chat.css?v=20260814-10">
     <link rel="stylesheet" href="global-theme.css?v=20260814-3">
     <link rel="stylesheet" href="role-switcher.css?v=20260814-1">
     <script src="global-theme.js?v=20260814-3"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js?v=20260814-7"></script>
-    <script src="supabase-ui-sync.js?v=20260814-7"></script>
+    <script src="auth-guard.js?v=20260814-12"></script>
+    <script src="supabase-ui-sync.js?v=20260814-12"></script>
 </head>
 <body>
     <div class="global-animated-background" aria-hidden="true">
@@ -140,7 +141,14 @@
 
                 <div class="typing-status visible" id="conversationHint">Phản hồi sẽ được lưu tự động.</div>
 
+                <div class="cs-attachment-preview" id="csAttachmentPreview" hidden>
+                    <img id="csAttachmentImage" alt="Ảnh chuẩn bị gửi">
+                    <span id="csAttachmentName"></span>
+                    <button id="csRemoveAttachment" type="button" aria-label="Bỏ ảnh đã chọn">✕</button>
+                </div>
                 <div class="message-composer">
+                    <button class="composer-tool" id="csAttachButton" type="button" aria-label="Chọn ảnh đính kèm" disabled>📷</button>
+                    <input id="csImageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                     <textarea id="messageInput" rows="1" placeholder="Nhập phản hồi cho người dùng..." disabled></textarea>
                     <button class="send-button" id="sendButton" type="button" disabled>Gửi phản hồi</button>
                 </div>
@@ -160,7 +168,8 @@
     </div>
 
     <div class="toast" id="toast" role="status"></div>
-    <script src="cs-dashboard.js?v=20260813-2"></script>
+    <script src="support-media.js?v=20260814-10"></script>
+    <script src="cs-dashboard.js?v=20260814-10"></script>
     <script src="role-switcher.js?v=20260814-7"></script>
 </body>
 </html>

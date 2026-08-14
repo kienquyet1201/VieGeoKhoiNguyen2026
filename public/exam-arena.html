@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đấu trường Luyện tập | VieGeo</title>
+    <title>Luyện tập, luyện thi | VieGeo</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,12 +12,12 @@
     <link rel="stylesheet" href="bento.css">
     <link rel="stylesheet" href="viegeo-navigation-controls.css">
     <link rel="stylesheet" href="learning-cute-redesign.css">
-    <link rel="stylesheet" href="arena-redesign.css">
     <link rel="stylesheet" href="shared-topbar.css?v=20260814-2">
     <link rel="stylesheet" href="global-theme.css?v=20260814-3">
+    <link rel="stylesheet" href="arena-redesign.css?v=20260814-12">
     <script src="global-theme.js?v=20260814-3"></script>
 </head>
-<body class="exam-arena-page arena-standalone min-h-screen w-full overflow-y-auto pb-32">
+<body class="exam-arena-page arena-standalone">
     <div class="global-animated-background" aria-hidden="true">
         <div class="global-sun"></div>
         <div class="global-cloud global-cloud-one"></div>
@@ -52,7 +52,7 @@
     <nav class="shared-center">
         <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
         <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
-        <a class="shared-link" href="exam-arena.html"><span class="shared-label">Đấu trường</span></a>
+        <a class="shared-link" href="exam-arena.html"><span class="shared-label">Luyện tập, luyện thi</span></a>
         <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
         <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
         <a class="shared-link" href="profile.html"><span class="shared-label">Hồ sơ</span></a>
@@ -84,12 +84,17 @@
 
 
     
-    <main class="exam-arena-shell" aria-label="Đấu trường Luyện tập">
+    <main class="exam-arena-shell" aria-label="Luyện tập, luyện thi">
         <header class="exam-topbar">
-            <div>
+            <div class="exam-hero-copy">
                 <p class="exam-eyebrow"><i class="fa-solid fa-graduation-cap"></i> VieGeo Exam Prep</p>
-                <h1 id="examArenaTitle">Đấu trường Luyện thi</h1>
+                <h1 id="examArenaTitle">Luyện tập, luyện thi</h1>
                 <p id="examArenaSubtitle">Chọn cấu hình đề trước khi bắt đầu 40 câu hỏi trong 50 phút</p>
+                <div class="exam-hero-pills" aria-label="Thông tin bài luyện thi">
+                    <span><i class="fa-regular fa-circle-question"></i> 40 câu hỏi</span>
+                    <span><i class="fa-regular fa-clock"></i> 50 phút</span>
+                    <span><i class="fa-solid fa-chart-line"></i> Theo dõi kết quả</span>
+                </div>
             </div>
             <div class="exam-topbar-actions">
                 <a class="exam-back-link" href="map.html"><i class="fa-solid fa-arrow-left"></i><span>Về lộ trình</span></a>
@@ -104,7 +109,7 @@
             <div class="exam-control-intro">
                 <p class="exam-eyebrow"><i class="fa-solid fa-sliders"></i> Thiết lập đề luyện</p>
                 <h2 id="examControlTitle">Chọn cấu hình đề</h2>
-                <p>Chọn mức độ và chủ đề để VieGeo chuẩn bị đúng đề 40 câu hỏi cho bạn.</p>
+                <p>Chọn mức độ và chủ đề phù hợp. Đồng hồ chỉ bắt đầu chạy sau khi đề đã sẵn sàng.</p>
             </div>
             <form id="examSetupForm" class="exam-setup-form">
                 <label for="examSetupDifficulty">Mức độ
@@ -128,8 +133,15 @@
         </section>
 
         <div id="examWorkspace" class="exam-workspace" hidden>
-            <div class="exam-session-bar"><span><i class="fa-solid fa-graduation-cap"></i> Đang làm đề luyện thi</span><div class="exam-timer" aria-live="polite"><i class="fa-solid fa-stopwatch"></i><span id="examTimer">50:00</span></div></div>
-            <button id="examExit" class="exam-exit-btn" type="button" title="Thoát và hủy bài làm"><i class="fa-solid fa-xmark"></i> Thoát / Hủy làm bài</button>
+            <div class="exam-session-header">
+                <div class="exam-session-bar">
+                    <span class="exam-session-title"><i class="fa-solid fa-graduation-cap"></i><span>Đang làm đề luyện thi</span></span>
+                    <div class="exam-session-actions">
+                        <div class="exam-timer" aria-live="polite"><i class="fa-solid fa-stopwatch"></i><span id="examTimer">50:00</span></div>
+                        <button id="examExit" class="exam-exit-btn" type="button" title="Thoát và hủy bài làm"><i class="fa-solid fa-xmark"></i><span>Thoát bài</span></button>
+                    </div>
+                </div>
+            </div>
             <section class="exam-question-card" aria-live="polite">
                 <div class="exam-question-meta">
                     <span id="examQuestionCounter">Câu 1 / 40</span>
@@ -165,11 +177,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js?v=20260814-7"></script>
-    <script src="supabase-ui-sync.js?v=20260814-7"></script>
-    <script src="gamedata.js"></script>
+    <script src="auth-guard.js?v=20260814-12"></script>
+    <script src="supabase-ui-sync.js?v=20260814-12"></script>
+    <script src="gamedata.js?v=20260814-13"></script>
     <script src="telemetry.js"></script>
     <script src="learning-theme-toggle.js"></script>
-    <script src="exam-arena.js?v=20260814-3"></script>
+    <script src="exam-arena.js?v=20260814-13"></script>
     <script src="role-theme.js"></script>
     <script src="shared-topbar.js?v=20260814-7"></script>
 <button class="support-button" id="supportButton" type="button">

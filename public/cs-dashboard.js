@@ -8,7 +8,10 @@
         selectedKey: '',
         selectedTicket: null,
         agent: { id: '', email: '', name: 'Nhân viên CSKH', role: 'cs' },
+        supportTableAvailable: true,
         messageTableAvailable: true,
+        unavailableTables: new Set(),
+        pendingImage: null,
         refreshTimer: null,
         realtimeChannel: null,
         messageRequest: 0
@@ -48,7 +51,15 @@
     }
 
     function sourceLabel(value) {
-        return ({ support_tickets: 'Hỗ trợ trực tiếp', user_feedbacks: 'Góp ý người dùng', error_reports: 'Báo cáo lỗi' })[value] || 'Yêu cầu hỗ trợ';
+        return ({ support_tickets: 'Hỗ trợ trực tiếp', user_feedbacks: 'Tin nhắn CSKH', error_reports: 'Báo cáo lỗi' })[value] || 'Yêu cầu hỗ trợ';
+    }
+
+    function mediaDecode(value) {
+        return window.VieGeoSupportMedia ? window.VieGeoSupportMedia.decode(value) : { text: String(value || ''), imageUrl: '', imageName: '' };
+    }
+
+    function mediaEncode(text, image) {
+        return window.VieGeoSupportMedia ? window.VieGeoSupportMedia.encode(text, image?.url, image?.name) : String(text || '');
     }
 
     function initials(value) {
@@ -118,11 +129,13 @@
     async function fetchRows(table, options = {}) {
         const database = client();
         if (!database) return { data: [], error: new Error('Chưa kết nối được Supabase.') };
+        if (state.unavailableTables.has(table)) return { data: [], error: null };
         let query = database.from(table).select('*').limit(options.limit || 200);
         if (options.orderBy) query = query.order(options.orderBy, { ascending: Boolean(options.ascending) });
         if (options.eq) Object.entries(options.eq).forEach(([column, value]) => { query = query.eq(column, value); });
         let result = await query;
-        if (result.error && options.orderBy && /column|does not exist|schema/i.test(String(result.error.message || ''))) {
+        if (result.error && isMissingTable(result.error)) state.unavailableTables.add(table);
+        if (result.error && !isMissingTable(result.error) && options.orderBy && /column|does not exist|schema/i.test(String(result.error.message || ''))) {
             result = await database.from(table).select('*').limit(options.limit || 200);
         }
         return { data: Array.isArray(result.data) ? result.data : [], error: result.error || null };
@@ -203,6 +216,7 @@
     function normalizeFeedback(row) {
         const person = personFor(row);
         const id = String(row.id ?? '');
+        const decoded = mediaDecode(row.message || row.content || '');
         return {
             key: `user_feedbacks:${id}`,
             threadId: `feedback:${id}`,
@@ -213,13 +227,71 @@
             email: person.email,
             role: person.role,
             subject: String(row.subject || 'Góp ý người dùng'),
-            content: String(row.message || row.content || 'Không có nội dung.'),
+            content: decoded.text || (decoded.imageUrl ? 'Đã gửi một hình ảnh' : 'Không có nội dung.'),
             category: 'Góp ý',
             priority: 'normal',
             status: normalizeStatus(row.status),
             createdAt: asTime(row.created_at, row.created_at_client),
             updatedAt: asTime(row.updated_at, row.created_at_client),
             raw: row
+        };
+    }
+
+    function feedbackThreadId(row) {
+        const subject = String(row?.subject || '');
+        const marker = subject.match(/^VieGeo CSKH\|(user|cs|note)\|(.+)$/i);
+        if (marker) return marker[2];
+        return String(row?.user_email || row?.email || `feedback_${row?.id || ''}`).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+    }
+
+    function feedbackSender(row) {
+        const subject = String(row?.subject || '').toLowerCase();
+        if (/^viegeo cskh\|note\|/.test(subject)) return 'note';
+        if (/^viegeo cskh\|cs\|/.test(subject) || subject === 'phản hồi cskh') return 'cs';
+        return 'user';
+    }
+
+    function groupFeedbackTickets(rows) {
+        const groups = new Map();
+        (Array.isArray(rows) ? rows : []).forEach(row => {
+            const threadId = feedbackThreadId(row);
+            if (!groups.has(threadId)) groups.set(threadId, []);
+            groups.get(threadId).push(row);
+        });
+        return Array.from(groups.entries()).map(([threadId, messages]) => {
+            messages.sort((a, b) => asTime(a.created_at, a.created_at_client) - asTime(b.created_at, b.created_at_client));
+            const userRows = messages.filter(row => feedbackSender(row) === 'user');
+            const base = userRows[userRows.length - 1] || messages[messages.length - 1];
+            const latest = messages[messages.length - 1];
+            const ticket = normalizeFeedback(base);
+            ticket.key = `user_feedbacks:${threadId}`;
+            ticket.threadId = threadId;
+            ticket.sourceId = base.id;
+            ticket.code = `GY-${base.id}`;
+            ticket.subject = 'Tin nhắn CSKH';
+            ticket.category = 'Hỗ trợ trực tiếp';
+            const latestDecoded = mediaDecode(latest.message || latest.content || '');
+            ticket.content = latestDecoded.text || (latestDecoded.imageUrl ? 'Đã gửi một hình ảnh' : ticket.content);
+            ticket.status = normalizeStatus(latest.status || base.status);
+            ticket.updatedAt = asTime(latest.created_at, latest.created_at_client);
+            ticket.feedbackRows = messages;
+            return ticket;
+        });
+    }
+
+    function feedbackMessage(row) {
+        const sender = feedbackSender(row);
+        const decoded = mediaDecode(row.message || row.content || '');
+        return {
+            id: `feedback:${row.id}`,
+            sender: sender === 'note' ? 'cs' : sender,
+            sender_name: row.sender_name || (sender === 'user' ? '' : state.agent.name),
+            message: decoded.text,
+            imageUrl: decoded.imageUrl,
+            imageName: decoded.imageName,
+            is_internal: sender === 'note',
+            created_at: row.created_at,
+            created_at_client: row.created_at_client
         };
     }
 
@@ -316,14 +388,14 @@
     }
 
     function setConversationEnabled(enabled) {
-        ['noteButton', 'resolveButton', 'closeButton', 'messageInput', 'sendButton'].forEach(id => {
+        ['noteButton', 'resolveButton', 'closeButton', 'messageInput', 'sendButton', 'csAttachButton'].forEach(id => {
             const element = byId(id);
             if (element) element.disabled = !enabled;
         });
     }
 
     function setMessagingEnabled(enabled) {
-        ['noteButton', 'messageInput', 'sendButton'].forEach(id => {
+        ['noteButton', 'messageInput', 'sendButton', 'csAttachButton'].forEach(id => {
             const element = byId(id);
             if (element) element.disabled = !enabled;
         });
@@ -349,6 +421,8 @@
         const sender = String(message.sender || message.sender_role || 'user').toLowerCase();
         const internal = message.is_internal === true;
         const isAgent = ['cs', 'admin', 'staff', 'support', 'ai'].includes(sender) || internal;
+        const decoded = mediaDecode(message.message || message.text || message.content || '');
+        const imageUrl = window.VieGeoSupportMedia?.safeImageUrl(message.imageUrl || decoded.imageUrl) || '';
         const row = document.createElement('div');
         row.className = `message-row ${isAgent ? 'agent-row' : 'customer-row'}${internal ? ' internal-note-row' : ''}`;
         const avatar = document.createElement('div');
@@ -358,7 +432,20 @@
         group.className = 'message-group';
         const bubble = document.createElement('div');
         bubble.className = `message-bubble ${isAgent ? 'agent-bubble' : 'customer-bubble'}${internal ? ' internal-note-bubble' : ''}`;
-        bubble.textContent = String(message.message || message.text || message.content || '');
+        const text = String(message.text ?? decoded.text ?? '');
+        if (text) bubble.append(document.createTextNode(text));
+        if (imageUrl) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            const image = document.createElement('img');
+            image.className = 'message-attachment';
+            image.src = imageUrl;
+            image.alt = `Ảnh đính kèm ${message.imageName || decoded.imageName || ''}`.trim();
+            link.append(image);
+            bubble.append(link);
+        }
         const time = document.createElement('span');
         time.className = 'message-time';
         time.textContent = `${internal ? 'Ghi chú nội bộ · ' : ''}${formatMessageTime(message.created_at || message.created_at_client || message.createdAt)}`;
@@ -380,7 +467,7 @@
         const list = byId('messageList');
         list.replaceChildren();
         const rows = Array.isArray(messages) ? [...messages] : [];
-        if (ticket.sourceTable !== 'support_tickets' || !rows.length) rows.unshift(originalMessage(ticket));
+        if (!rows.length) rows.unshift(originalMessage(ticket));
 
         if (!rows.length) {
             const empty = document.createElement('div');
@@ -417,7 +504,18 @@
         const request = ++state.messageRequest;
         const list = byId('messageList');
         list.innerHTML = '<div class="ticket-state conversation-loading"><span class="state-spinner"></span><strong>Đang tải hội thoại</strong></div>';
-        const result = await fetchRows('support_messages', { limit: 500, orderBy: 'created_at_client', ascending: true, eq: { ticket_id: ticket.threadId } });
+        let result;
+        if (ticket.sourceTable === 'user_feedbacks') {
+            const feedbacks = await fetchRows('user_feedbacks', { limit: 500, orderBy: 'created_at_client', ascending: true, eq: { user_email: ticket.email } });
+            result = {
+                data: feedbacks.data.filter(row => feedbackThreadId(row) === ticket.threadId).map(feedbackMessage),
+                error: feedbacks.error
+            };
+        } else if (ticket.sourceTable === 'support_tickets' && state.messageTableAvailable) {
+            result = await fetchRows('support_messages', { limit: 500, orderBy: 'created_at_client', ascending: true, eq: { ticket_id: ticket.threadId } });
+        } else {
+            result = { data: [], error: null };
+        }
         if (request !== state.messageRequest || state.selectedKey !== ticket.key) return;
         renderMessages(ticket, result.data, result.error);
     }
@@ -425,6 +523,7 @@
     async function selectTicket(key, options = {}) {
         const ticket = state.tickets.find(item => item.key === key);
         if (!ticket) return;
+        if (state.selectedKey && state.selectedKey !== key) clearCsAttachment();
         state.selectedKey = key;
         state.selectedTicket = ticket;
         renderTicketList();
@@ -447,7 +546,7 @@
 
         const [users, supportTickets, feedbacks, errors] = await Promise.all([
             fetchRows('users', { limit: 500 }),
-            fetchRows('support_tickets', { limit: 300, orderBy: 'updated_at_client', ascending: false }),
+            state.supportTableAvailable ? fetchRows('support_tickets', { limit: 300, orderBy: 'updated_at_client', ascending: false }) : Promise.resolve({ data: [], error: null }),
             fetchRows('user_feedbacks', { limit: 200, orderBy: 'created_at', ascending: false }),
             fetchRows('error_reports', { limit: 200, orderBy: 'created_at', ascending: false })
         ]);
@@ -455,7 +554,7 @@
         buildUserIndex(users.data);
         state.tickets = [
             ...supportTickets.data.map(normalizeSupportTicket),
-            ...feedbacks.data.map(normalizeFeedback),
+            ...groupFeedbackTickets(feedbacks.data),
             ...errors.data.map(normalizeErrorReport)
         ].filter(ticket => ticket.sourceId !== undefined && ticket.sourceId !== null).sort(ticketSort);
 
@@ -463,6 +562,7 @@
         renderTicketList();
         const criticalErrors = [feedbacks.error, errors.error].filter(Boolean);
         const supportMissing = supportTickets.error && isMissingTable(supportTickets.error);
+        if (supportMissing) state.supportTableAvailable = false;
         if (criticalErrors.length === 2) {
             setSyncStatus('Không thể tải dữ liệu CSKH', 'error');
         } else if (supportMissing) {
@@ -507,7 +607,7 @@
         await loadDashboard({ quiet: true });
     }
 
-    function messagePayload(ticket, text, internal) {
+    function messagePayload(ticket, text, internal, image) {
         return {
             id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
             ticket_id: ticket.threadId,
@@ -516,17 +616,36 @@
             sender_email: state.agent.email || null,
             sender_name: state.agent.name,
             sender_role: state.agent.role || 'cs',
-            message: text,
+            message: mediaEncode(text, image),
             is_internal: Boolean(internal),
             created_at_client: Date.now()
         };
     }
 
-    async function saveMessage(text, internal) {
+    async function saveMessage(text, internal, image) {
         const ticket = state.selectedTicket;
         const database = client();
-        if (!ticket || !database || !text) return false;
-        const { error } = await database.from('support_messages').insert([messagePayload(ticket, text, internal)]);
+        if (!ticket || !database || (!text && !image)) return false;
+        const encoded = mediaEncode(text, image);
+        let error = null;
+        if (ticket.sourceTable === 'user_feedbacks') {
+            const fallbackPayload = {
+                user_email: ticket.email,
+                content: encoded,
+                message: encoded,
+                subject: `VieGeo CSKH|${internal ? 'note' : 'cs'}|${ticket.threadId}`,
+                sender_id: state.agent.id || null,
+                sender_name: state.agent.name,
+                status: internal ? ticket.status : 'processing',
+                created_at_client: Date.now()
+            };
+            const result = await database.from('user_feedbacks').insert([fallbackPayload]);
+            error = result.error;
+        } else {
+            const result = await database.from('support_messages').insert([messagePayload(ticket, text, internal, image)]);
+            error = result.error;
+            if (error && isMissingTable(error)) state.messageTableAvailable = false;
+        }
         if (error) {
             console.error('[VieGeo CS] Không thể lưu phản hồi:', error);
             showToast('Chưa thể lưu phản hồi lúc này. Vui lòng thử lại sau.', 'error');
@@ -535,7 +654,7 @@
         if (!internal) {
             const statusPayload = { status: 'processing' };
             if (ticket.sourceTable === 'support_tickets') {
-                statusPayload.last_message = text;
+                statusPayload.last_message = text || 'Đã gửi một hình ảnh';
                 statusPayload.updated_at = new Date().toISOString();
                 statusPayload.updated_at_client = Date.now();
             }
@@ -545,16 +664,45 @@
         return true;
     }
 
+    function clearCsAttachment() {
+        state.pendingImage = null;
+        const input = byId('csImageInput');
+        const preview = byId('csAttachmentPreview');
+        if (input) input.value = '';
+        if (preview) preview.hidden = true;
+        byId('csAttachmentImage')?.removeAttribute('src');
+        if (byId('csAttachmentName')) byId('csAttachmentName').textContent = '';
+    }
+
+    async function selectCsAttachment(file) {
+        if (!file) return clearCsAttachment();
+        const button = byId('csAttachButton');
+        try {
+            button.disabled = true;
+            state.pendingImage = await window.VieGeoSupportMedia.prepareImage(file);
+            byId('csAttachmentImage').src = state.pendingImage.url;
+            byId('csAttachmentName').textContent = state.pendingImage.name;
+            byId('csAttachmentPreview').hidden = false;
+        } catch (error) {
+            clearCsAttachment();
+            showToast(error.message || 'Không thể xử lý ảnh đã chọn.', 'error');
+        } finally {
+            button.disabled = !state.selectedTicket;
+        }
+    }
+
     async function sendReply() {
         const input = byId('messageInput');
         const text = String(input.value || '').trim();
-        if (!text) return showToast('Hãy nhập nội dung phản hồi.', 'warning');
+        const image = state.pendingImage;
+        if (!text && !image) return showToast('Hãy nhập nội dung hoặc chọn một ảnh.', 'warning');
         const button = byId('sendButton');
         setBusy(button, true, 'Đang gửi...');
-        const saved = await saveMessage(text, false);
+        const saved = await saveMessage(text, false, image);
         setBusy(button, false);
         if (saved) {
             input.value = '';
+            clearCsAttachment();
             showToast('Đã gửi phản hồi.', 'success');
             await loadDashboard({ quiet: true });
         }
@@ -573,7 +721,7 @@
         if (!text) return showToast('Hãy nhập nội dung ghi chú.', 'warning');
         const button = byId('saveNoteButton');
         setBusy(button, true, 'Đang lưu...');
-        const saved = await saveMessage(text, true);
+        const saved = await saveMessage(text, true, null);
         setBusy(button, false);
         if (saved) {
             setNoteModal(false);
@@ -617,6 +765,9 @@
         byId('resolveButton').addEventListener('click', () => updateSelectedStatus('resolved'));
         byId('closeButton').addEventListener('click', () => updateSelectedStatus('closed'));
         byId('sendButton').addEventListener('click', sendReply);
+        byId('csAttachButton').addEventListener('click', () => byId('csImageInput').click());
+        byId('csImageInput').addEventListener('change', event => selectCsAttachment(event.target.files?.[0]));
+        byId('csRemoveAttachment').addEventListener('click', clearCsAttachment);
         byId('messageInput').addEventListener('keydown', event => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();

@@ -108,6 +108,19 @@ const regMsg = document.getElementById('registerMessage'); // Đã khớp ID HTM
 const adminLoginForm = document.getElementById('adminLoginForm');
 const adminLoginMsg = document.getElementById('adminLoginMessage');
 
+const authGuardReason = new URLSearchParams(window.location.search).get('reason');
+const authGuardMessages = {
+    auth_required: 'Vui lòng đăng nhập hoặc đăng ký tài khoản để tiếp tục.',
+    profile_required: 'Tài khoản chưa có hồ sơ người dùng trong hệ thống. Vui lòng đăng ký hoặc liên hệ quản trị viên.',
+    session_expired: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+    session_revoked: 'Phiên đăng nhập đã bị thu hồi. Vui lòng đăng nhập lại.',
+    check_failed: 'Chưa thể xác minh tài khoản. Vui lòng đăng nhập lại.'
+};
+if (loginMsg && authGuardMessages[authGuardReason]) {
+    loginMsg.textContent = authGuardMessages[authGuardReason];
+    loginMsg.style.display = 'block';
+}
+
 const QUIZ_PAGE = '/index';
 // Clean URL served by Vercel for the physical public/map.html page.
 const MAP_PAGE = '/map';

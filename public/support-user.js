@@ -2,11 +2,18 @@ var supportThemeButton=document.getElementById("supportThemeButton");
 var supportMessageList=document.getElementById("supportMessageList");
 var supportMessageInput=document.getElementById("supportMessageInput");
 var supportSendButton=document.getElementById("supportSendButton");
+var supportAttachButton=document.getElementById("supportAttachButton");
+var supportImageInput=document.getElementById("supportImageInput");
+var supportAttachmentPreview=document.getElementById("supportAttachmentPreview");
+var supportAttachmentImage=document.getElementById("supportAttachmentImage");
+var supportAttachmentName=document.getElementById("supportAttachmentName");
+var supportRemoveAttachment=document.getElementById("supportRemoveAttachment");
 var ticketCode=document.getElementById("ticketCode");
 var ticketStatus=document.getElementById("ticketStatus");
 var supportToast=document.getElementById("supportToast");
 var currentSupportTicket=null;
 var supportAiReplyPending=false;
+var pendingSupportImage=null;
 
 function showSupportToast(message){
     supportToast.textContent=message;
@@ -45,7 +52,12 @@ function renderSupportMessages(ticket){
         }else if(message.sender==="admin"||message.sender==="cs"){
             html+='<b class="support-message-author">'+escapeSupportText(message.senderName||"CSKH VieGeo")+'</b>';
         }
-        html+=escapeSupportText(message.text)+'<small>'+formatSupportTime(message.createdAt)+'</small></div>';
+        html+=escapeSupportText(message.text);
+        var imageUrl=window.VieGeoSupportMedia?window.VieGeoSupportMedia.safeImageUrl(message.imageUrl):"";
+        if(imageUrl){
+            html+='<a href="'+escapeSupportAttribute(imageUrl)+'" target="_blank" rel="noopener noreferrer"><img class="support-message-image" src="'+escapeSupportAttribute(imageUrl)+'" alt="Ảnh đính kèm '+escapeSupportAttribute(message.imageName||"")+'"></a>';
+        }
+        html+='<small>'+formatSupportTime(message.createdAt)+'</small></div>';
     }
 
     supportMessageList.innerHTML=html;
@@ -55,6 +67,34 @@ function renderSupportMessages(ticket){
 
 function escapeSupportText(text){
     return String(text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function escapeSupportAttribute(text){
+    return escapeSupportText(text).replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function clearSupportAttachment(){
+    pendingSupportImage=null;
+    if(supportImageInput){supportImageInput.value="";}
+    if(supportAttachmentPreview){supportAttachmentPreview.hidden=true;}
+    if(supportAttachmentImage){supportAttachmentImage.removeAttribute("src");}
+    if(supportAttachmentName){supportAttachmentName.textContent="";}
+}
+
+async function selectSupportAttachment(file){
+    if(!file){clearSupportAttachment();return;}
+    try{
+        supportAttachButton.disabled=true;
+        pendingSupportImage=await window.VieGeoSupportMedia.prepareImage(file);
+        supportAttachmentImage.src=pendingSupportImage.url;
+        supportAttachmentName.textContent=pendingSupportImage.name;
+        supportAttachmentPreview.hidden=false;
+    }catch(error){
+        clearSupportAttachment();
+        showSupportToast(error.message||"Không thể xử lý ảnh đã chọn.");
+    }finally{
+        supportAttachButton.disabled=false;
+    }
 }
 
 function refreshSupportTicket(){
@@ -149,21 +189,27 @@ function requestSupportAutoReply(ticket,userMessage){
 function sendSupportMessage(){
     var text=supportMessageInput.value.trim();
 
-    if(!text){
-        showSupportToast("Hãy nhập nội dung cần hỗ trợ.");
+    if(!text&&!pendingSupportImage){
+        showSupportToast("Hãy nhập nội dung hoặc chọn một ảnh.");
         return;
     }
+
+    var submittedImage=pendingSupportImage;
 
     supportSendButton.disabled=true;
     supportSendButton.textContent="Đang gửi...";
 
-    supportAppendMessage(currentSupportTicket.id,"user",text).then(function(ticket){
+    supportAppendMessage(currentSupportTicket.id,"user",text,{
+        imageUrl:submittedImage&&submittedImage.url,
+        imageName:submittedImage&&submittedImage.name
+    }).then(function(ticket){
         supportMessageInput.value="";
+        clearSupportAttachment();
         renderSupportMessages(ticket);
         showSupportToast("Đã gửi tin nhắn tới CSKH.");
         supportSendButton.disabled=false;
         supportSendButton.textContent="Gửi tin nhắn";
-        requestSupportAutoReply(ticket,text);
+        requestSupportAutoReply(ticket,text||"Tôi vừa gửi một ảnh cần hỗ trợ.");
     }).catch(function(error){
         console.error("[VieGeo Support] Không thể gửi tin nhắn:",error);
         showSupportToast("Chưa thể gửi tin nhắn. Vui lòng thử lại.");
@@ -186,6 +232,10 @@ function initializeSupportUser(){
     });
 
     supportSendButton.addEventListener("click",sendSupportMessage);
+
+    supportAttachButton.addEventListener("click",function(){supportImageInput.click();});
+    supportImageInput.addEventListener("change",function(event){selectSupportAttachment(event.target.files&&event.target.files[0]);});
+    supportRemoveAttachment.addEventListener("click",clearSupportAttachment);
 
     supportMessageInput.addEventListener("keydown",function(event){
         if(event.key==="Enter"&&!event.shiftKey){

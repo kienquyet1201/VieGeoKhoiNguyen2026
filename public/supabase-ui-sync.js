@@ -116,6 +116,73 @@
         }
     }
 
+    function isPremiumAccount(user) {
+        try {
+            const source = user || {};
+            const status = String(source.account_status ?? source.accountStatus ?? '').trim().toLowerCase();
+            const rawRoles = Array.isArray(source.roles)
+                ? source.roles
+                : String(source.roles || source.role || source.active_role || '').split(',');
+            const hasPremiumRole = rawRoles.some(role => String(role || '').trim().toLowerCase() === 'premium');
+            return ['premium', 'active', 'approved'].includes(status)
+                || source.is_premium === true
+                || source.isPremium === true
+                || hasPremiumRole;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    window.VieGeoPremium = Object.assign(window.VieGeoPremium || {}, {
+        isActive: isPremiumAccount
+    });
+
+    async function reconcilePremiumAccount(client, user, email) {
+        const source = user || {};
+        const status = String(source.account_status ?? source.accountStatus ?? '').trim().toLowerCase();
+        if (['premium', 'active', 'approved'].includes(status)) return source;
+
+        const rawRoles = Array.isArray(source.roles) ? source.roles : [source.role, source.active_role];
+        let shouldActivate = source.is_premium === true
+            || source.isPremium === true
+            || rawRoles.some(role => String(role || '').trim().toLowerCase() === 'premium');
+        if (!shouldActivate) {
+            let request = await client
+                .from('premium_requests')
+                .select('id,status')
+                .eq('user_email', email)
+                .eq('status', 'approved')
+                .order('created_at', { ascending: false })
+                .limit(1);
+            if ((!Array.isArray(request.data) || !request.data.length) && !request.error) {
+                request = await client
+                    .from('premium_requests')
+                    .select('id,status')
+                    .eq('email', email)
+                    .eq('status', 'approved')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+            }
+            shouldActivate = !request.error && Array.isArray(request.data) && request.data.length > 0;
+        }
+        if (!shouldActivate) return source;
+
+        let update = await client
+            .from('users')
+            .update({ account_status: 'premium', updated_at: new Date().toISOString() })
+            .eq('email', email)
+            .select('*')
+            .maybeSingle();
+        if (update.error && /updated_at|column|schema/i.test(String(update.error.message || ''))) {
+            update = await client.from('users').update({ account_status: 'premium' }).eq('email', email).select('*').maybeSingle();
+        }
+        if (update.error) {
+            console.warn('[VieGeo Premium] Không thể đồng bộ account_status:', update.error.message || update.error);
+            return { ...source, account_status: 'premium', accountStatus: 'premium' };
+        }
+        return { ...source, ...(update.data || {}), account_status: 'premium', accountStatus: 'premium' };
+    }
+
     async function getCurrentUser() {
         const session = readSession();
         let email = String(session.email || session.user?.email || '').trim().toLowerCase();
@@ -137,8 +204,9 @@
                     }
                 }
                 if (!result.error && result.data) {
-                    cacheRows('users', [result.data]);
-                    return result.data;
+                    const synchronizedUser = await reconcilePremiumAccount(client, result.data, email);
+                    cacheRows('users', [synchronizedUser]);
+                    return synchronizedUser;
                 }
                 if (result.error) console.warn('[VieGeo UI] Không tải được người dùng hiện tại:', result.error.message);
             }
@@ -164,6 +232,7 @@
             state.streak = Number(user.current_streak ?? user.streak ?? state.streak ?? 0);
             state.gems = Number(user.gems ?? state.gems ?? 500);
             state.xp = Number(user.xp ?? user.exp ?? state.xp ?? 0);
+            state.accountStatus = isPremiumAccount(user) ? 'premium' : 'free';
             localStorage.setItem('VieGeo_state', JSON.stringify(state));
 
             const session = { ...readSession(), email: user.email || user.user_email || readSession().email };
@@ -181,6 +250,8 @@
                 delete session.activeRole;
             }
             session.name = user.name || user.full_name || session.name || '';
+            session.accountStatus = isPremiumAccount(user) ? 'premium' : 'free';
+            session.isPremium = isPremiumAccount(user);
             localStorage.setItem('lm_session', JSON.stringify(session));
             window.dispatchEvent(new CustomEvent('viegeo:user-hydrated', { detail: session }));
         } catch (error) {
@@ -200,7 +271,7 @@
     function hydrateTopbar(user) {
         try {
             const state = readState();
-            const premium = user.account_status === 'premium' || user.isPremium === true;
+            const premium = isPremiumAccount(user);
             setText('sharedHeart', premium ? '∞' : String(user.hearts ?? state.hearts ?? 3));
             setText('sharedStreak', String(user.current_streak ?? user.streak ?? state.streak ?? 0));
             setText('sharedGem', String(user.gems ?? state.gems ?? 500));
@@ -240,7 +311,10 @@
             setText('profStreak', String(user.current_streak ?? user.streak ?? state.streak ?? 0));
             setText('profXp', String(xp));
             setText('profStyle', xp >= 500 ? 'Học tập bền vững' : (xp > 0 ? 'Đang khám phá' : 'Chưa có dữ liệu'));
-            setText('premiumStatus', user.account_status === 'premium' ? 'Tài khoản Premium' : 'Tài khoản Free');
+            const premium = isPremiumAccount(user);
+            setText('premiumStatus', premium ? 'Tài khoản Premium' : 'Tài khoản Free');
+            const premiumStatus = document.getElementById('premiumStatus');
+            if (premiumStatus) premiumStatus.classList.toggle('is-premium', premium);
             const name = document.getElementById('profName');
             const phone = document.getElementById('profPhone');
             const gender = document.getElementById('profGender');

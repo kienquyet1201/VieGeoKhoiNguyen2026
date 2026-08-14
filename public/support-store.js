@@ -41,6 +41,14 @@ function supportGetClient(){
     return candidate&&typeof candidate.from==="function"?candidate:null;
 }
 
+function supportMediaEncode(text,imageUrl,imageName){
+    return window.VieGeoSupportMedia?window.VieGeoSupportMedia.encode(text,imageUrl,imageName):String(text||"");
+}
+
+function supportMediaDecode(value){
+    return window.VieGeoSupportMedia?window.VieGeoSupportMedia.decode(value):{text:String(value||""),imageUrl:"",imageName:""};
+}
+
 function supportCreateId(email){
     return String(email||"guest").trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g,"_");
 }
@@ -112,7 +120,7 @@ function supportMessagePayload(ticket,message){
         sender_email:String(message.senderEmail||message.sender_email||ticket.email||"")||null,
         sender_name:String(message.senderName||message.sender_name||ticket.name||"")||null,
         sender_role:String(message.senderRole||message.sender_role||ticket.role||"user"),
-        message:String(message.text||message.message||""),
+        message:supportMediaEncode(message.text||message.message||"",message.imageUrl,message.imageName),
         is_internal:Boolean(message.isInternal||message.is_internal),
         status:String(message.status||"sent"),
         created_at_client:Number(message.createdAt||message.created_at_client||Date.now())
@@ -135,11 +143,12 @@ function supportWriteRemote(ticket){
 function supportWriteFeedbackFallback(ticket,message){
     var database=supportGetClient();
     if(!database||!message||message.fallbackStored){return Promise.resolve(Boolean(message&&message.fallbackStored));}
+    var encodedMessage=supportMediaEncode(message.text||message.message||"",message.imageUrl,message.imageName);
     var richPayload={
         user_email:String(ticket.email||ticket.user_email||"guest@viegeo.local"),
-        content:String(message.text||message.message||""),
-        subject:"Tin nhắn CSKH",
-        message:String(message.text||message.message||""),
+        content:encodedMessage,
+        subject:"VieGeo CSKH|user|"+String(ticket.id),
+        message:encodedMessage,
         sender_id:String(ticket.userId||ticket.user_id||"")||null,
         sender_name:String(ticket.name||ticket.user_name||"Người dùng"),
         status:"pending",
@@ -156,6 +165,74 @@ function supportWriteFeedbackFallback(ticket,message){
     }).catch(function(error){
         console.error("[VieGeo Support] Không thể lưu tin nhắn dự phòng:",error);
         return false;
+    });
+}
+
+function supportFeedbackSender(row){
+    var subject=String(row&&row.subject||"").toLowerCase();
+    if(/^viegeo cskh\|note\|/.test(subject)){return "note";}
+    if(/^viegeo cskh\|cs\|/.test(subject)||subject==="phản hồi cskh"){return "cs";}
+    return "user";
+}
+
+function supportFeedbackMatchesTicket(row,ticket){
+    var subject=String(row&&row.subject||"");
+    var marker=subject.match(/^VieGeo CSKH\|(user|cs|note)\|(.+)$/i);
+    if(marker){return marker[2]===String(ticket.id);}
+    return /tin nhắn cskh|phản hồi cskh/i.test(subject);
+}
+
+function supportMergeFeedbackMessages(ticket,rows){
+    ticket.messages=Array.isArray(ticket.messages)?ticket.messages:[];
+    (Array.isArray(rows)?rows:[]).filter(function(row){return supportFeedbackMatchesTicket(row,ticket);}).forEach(function(row){
+        var sender=supportFeedbackSender(row);
+        if(sender==="note"){return;}
+        var decoded=supportMediaDecode(row.message||row.content||"");
+        var text=String(decoded.text||"").trim();
+        var createdAt=Number(row.created_at_client||Date.parse(row.created_at)||0);
+        var duplicate=ticket.messages.some(function(message){
+            return String(message.text||"").trim()===text&&String(message.imageUrl||"")===String(decoded.imageUrl||"")&&Math.abs(Number(message.createdAt||0)-createdAt)<2000;
+        });
+        if(duplicate||!text){return;}
+        ticket.messages.push({
+            id:"feedback_"+String(row.id),
+            sender:sender,
+            senderId:String(row.sender_id||""),
+            senderEmail:String(row.user_email||ticket.email||""),
+            senderName:String(row.sender_name||(sender==="cs"?"CSKH VieGeo":ticket.name)||""),
+            senderRole:sender==="cs"?"cs":ticket.role,
+            text:text,
+            imageUrl:decoded.imageUrl,
+            imageName:decoded.imageName,
+            status:"sent",
+            fallbackStored:true,
+            createdAt:createdAt||Date.now()
+        });
+    });
+    ticket.messages.sort(function(first,second){return Number(first.createdAt||0)-Number(second.createdAt||0);});
+    if(ticket.messages.length){
+        var last=ticket.messages[ticket.messages.length-1];
+        ticket.lastMessage=last.text;
+        ticket.updatedAt=last.createdAt;
+    }
+    supportUpsertLocalTicket(ticket);
+    return ticket;
+}
+
+function supportLoadFeedbackFallback(ticket){
+    var database=supportGetClient();
+    if(!database||!ticket||!ticket.email){return Promise.resolve(ticket);}
+    return database.from("user_feedbacks").select("*").eq("user_email",ticket.email).order("created_at_client",{ascending:true}).limit(500).then(function(result){
+        if(result.error&&/column|does not exist|schema/i.test(String(result.error.message||""))){
+            return database.from("user_feedbacks").select("*").eq("user_email",ticket.email).limit(500);
+        }
+        return result;
+    }).then(function(result){
+        if(result.error){throw result.error;}
+        return supportMergeFeedbackMessages(ticket,result.data||[]);
+    }).catch(function(){
+        console.warn("[VieGeo Support] Chưa thể tải phản hồi dự phòng.");
+        return ticket;
     });
 }
 
@@ -205,13 +282,15 @@ function supportAppendMessage(ticketId,sender,text,metadata){
         senderName:String(details.senderName||(sender==="ai"?"Trợ lý VieGeo":(isSupportSender?"CSKH VieGeo":ticket.name))||"Người dùng"),
         senderRole:String(details.senderRole||(isSupportSender?"cs":ticket.role)||"user"),
         text:String(text||"").trim(),
+        imageUrl:String(details.imageUrl||""),
+        imageName:String(details.imageName||""),
         status:"sent",
         createdAt:now
     };
     ticket.messages=Array.isArray(ticket.messages)?ticket.messages:[];
     ticket.messages.push(message);
     ticket.updatedAt=now;
-    ticket.lastMessage=message.text;
+    ticket.lastMessage=message.text||(message.imageUrl?"Đã gửi một hình ảnh":"");
     ticket.status="pending";
     supportUpsertLocalTicket(ticket);
 
@@ -234,6 +313,7 @@ function supportNormalizeRemoteTicket(row,messages){
         createdAt:Number(row.created_at_client||Date.parse(row.created_at)||0),
         updatedAt:Number(row.updated_at_client||Date.parse(row.updated_at)||0),
         messages:(messages||[]).map(function(message){
+            var decoded=supportMediaDecode(message.message||"");
             return {
                 id:String(message.id),
                 sender:String(message.sender||"user"),
@@ -241,7 +321,9 @@ function supportNormalizeRemoteTicket(row,messages){
                 senderEmail:String(message.sender_email||""),
                 senderName:String(message.sender_name||""),
                 senderRole:String(message.sender_role||""),
-                text:String(message.message||""),
+                text:decoded.text,
+                imageUrl:decoded.imageUrl,
+                imageName:decoded.imageName,
                 status:String(message.status||"sent"),
                 isInternal:Boolean(message.is_internal),
                 remoteStored:true,
@@ -253,7 +335,11 @@ function supportNormalizeRemoteTicket(row,messages){
 
 function supportLoadTickets(){
     var database=supportGetClient();
-    if(!database||!supportRemoteTablesAvailable){return Promise.resolve(supportGetLocalTickets());}
+    var localTicket=supportEnsureTicket();
+    if(!database){return Promise.resolve(supportGetLocalTickets());}
+    if(!supportRemoteTablesAvailable){
+        return supportLoadFeedbackFallback(localTicket).then(function(){return supportGetLocalTickets();});
+    }
 
     return database.from("support_tickets").select("*").order("updated_at_client",{ascending:false}).limit(100).then(function(ticketResult){
         if(ticketResult.error){
@@ -271,7 +357,9 @@ function supportLoadTickets(){
             return {tickets:ticketResult.data||[],messageResult:messageResult};
         });
     }).then(function(results){
-        if(!results.tickets){return supportGetLocalTickets();}
+        if(!results.tickets){
+            return supportLoadFeedbackFallback(localTicket).then(function(){return supportGetLocalTickets();});
+        }
         var messageResult=results.messageResult||{};
         var messagesByTicket={};
         if(!messageResult.error){
