@@ -245,7 +245,7 @@ async function purchaseItem(itemId,price){
         await syncShopPurchaseToSupabase(remainingGems,itemId==="infinite_hearts"?maxHearts:Number(shopState.hearts)||0);
     }catch(error){
         console.error("Không thể đồng bộ giao dịch cửa hàng:",error);
-        showToast(error.message||"Không thể đồng bộ giao dịch lên Supabase.","error");
+        showToast("Không thể hoàn tất giao dịch lúc này. Vui lòng thử lại.","error");
         return;
     }
 

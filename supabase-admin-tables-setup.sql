@@ -155,6 +155,68 @@ create index if not exists idx_error_reports_status on public.error_reports (sta
 create index if not exists idx_error_reports_created_at on public.error_reports (created_at desc);
 create index if not exists idx_error_reports_resolved_at on public.error_reports (resolved_at desc);
 
+-- 6) Customer-support tickets and messages
+create table if not exists public.support_tickets (
+    id text primary key,
+    user_id text,
+    user_email text not null,
+    user_name text,
+    user_role text not null default 'user',
+    subject text not null default 'Yêu cầu hỗ trợ',
+    category text not null default 'general',
+    priority text not null default 'normal',
+    status text not null default 'pending',
+    last_message text,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    created_at_client bigint,
+    updated_at_client bigint
+);
+
+alter table public.support_tickets add column if not exists user_id text;
+alter table public.support_tickets add column if not exists user_email text;
+alter table public.support_tickets add column if not exists user_name text;
+alter table public.support_tickets add column if not exists user_role text not null default 'user';
+alter table public.support_tickets add column if not exists subject text not null default 'Yêu cầu hỗ trợ';
+alter table public.support_tickets add column if not exists category text not null default 'general';
+alter table public.support_tickets add column if not exists priority text not null default 'normal';
+alter table public.support_tickets add column if not exists status text not null default 'pending';
+alter table public.support_tickets add column if not exists last_message text;
+alter table public.support_tickets add column if not exists created_at timestamptz not null default now();
+alter table public.support_tickets add column if not exists updated_at timestamptz not null default now();
+alter table public.support_tickets add column if not exists created_at_client bigint;
+alter table public.support_tickets add column if not exists updated_at_client bigint;
+
+create index if not exists idx_support_tickets_email on public.support_tickets (user_email);
+create index if not exists idx_support_tickets_status on public.support_tickets (status);
+create index if not exists idx_support_tickets_updated on public.support_tickets (updated_at desc);
+
+create table if not exists public.support_messages (
+    id text primary key,
+    ticket_id text not null references public.support_tickets(id) on delete cascade,
+    sender text not null,
+    sender_id text,
+    sender_email text,
+    sender_name text,
+    sender_role text,
+    message text not null,
+    is_internal boolean not null default false,
+    status text not null default 'sent',
+    created_at timestamptz not null default now(),
+    created_at_client bigint
+);
+
+alter table public.support_messages add column if not exists sender_id text;
+alter table public.support_messages add column if not exists sender_email text;
+alter table public.support_messages add column if not exists sender_name text;
+alter table public.support_messages add column if not exists sender_role text;
+alter table public.support_messages add column if not exists is_internal boolean not null default false;
+alter table public.support_messages add column if not exists status text not null default 'sent';
+alter table public.support_messages add column if not exists created_at timestamptz not null default now();
+alter table public.support_messages add column if not exists created_at_client bigint;
+
+create index if not exists idx_support_messages_ticket on public.support_messages (ticket_id, created_at asc);
+
 -- Development-friendly permissions for the current browser-based anon client.
 -- For production, replace these broad grants/RLS-disabled settings with proper
 -- authenticated policies.
@@ -163,6 +225,8 @@ alter table public.premium_requests disable row level security;
 alter table public.submissions disable row level security;
 alter table public.user_feedbacks disable row level security;
 alter table public.error_reports disable row level security;
+alter table public.support_tickets disable row level security;
+alter table public.support_messages disable row level security;
 
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on table public.users to anon, authenticated;
@@ -170,6 +234,8 @@ grant select, insert, update, delete on table public.premium_requests to anon, a
 grant select, insert, update, delete on table public.submissions to anon, authenticated;
 grant select, insert, update, delete on table public.user_feedbacks to anon, authenticated;
 grant select, insert, update, delete on table public.error_reports to anon, authenticated;
+grant select, insert, update, delete on table public.support_tickets to anon, authenticated;
+grant select, insert, update, delete on table public.support_messages to anon, authenticated;
 grant usage, select on all sequences in schema public to anon, authenticated;
 
 commit;

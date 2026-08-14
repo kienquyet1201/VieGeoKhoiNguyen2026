@@ -364,7 +364,7 @@ if (profileForm) {
             }
             const authClient = getAuthClient();
             if (!authClient) {
-                Swal.fire({ icon: 'warning', title: 'Chưa thể đổi mật khẩu', text: 'Supabase Auth chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.' });
+                Swal.fire({ icon: 'warning', title: 'Chưa thể đổi mật khẩu', text: 'Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.' });
                 return;
             }
             const { error } = await authClient.auth.updateUser({ password: inputNewPass });

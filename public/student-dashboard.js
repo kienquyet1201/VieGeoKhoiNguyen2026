@@ -235,7 +235,7 @@ function renderStudentLeaderboard(rows,user){
         };
     }).sort(function(first,second){return second.score-first.score||second.streak-first.streak;}).slice(0,3);
     list.replaceChildren();
-    if(!normalized.length){list.innerHTML='<div class="empty-state">Chưa có dữ liệu xếp hạng trên Supabase.</div>';return;}
+    if(!normalized.length){list.innerHTML='<div class="empty-state">Chưa có học viên nào trên bảng xếp hạng.</div>';return;}
     normalized.forEach(function(entry,index){
         var item=document.createElement("div");
         item.className="leaderboard-item"+(entry.email&&entry.email===email?" current-place":"")+(index===0?" first-place":"");

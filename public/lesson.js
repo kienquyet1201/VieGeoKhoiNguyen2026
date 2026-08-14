@@ -164,7 +164,7 @@ async function initNormal() {
         updateQuizBoosters();
         if (currentQuestions.length !== questionLimit) {
             progressFill.style.width = '0%';
-            questionText.textContent = `Đảo này cần đủ ${questionLimit} câu hỏi từ ngân hàng Admin để bắt đầu.`;
+            questionText.textContent = 'Nội dung bài học đang được bổ sung. Vui lòng quay lại sau.';
             optionsGrid.innerHTML = '';
             btnCheck.disabled = true;
             return;

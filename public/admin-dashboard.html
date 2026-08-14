@@ -13,7 +13,7 @@
     <script src="supabase-ui-sync.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="global-theme.css?v=20260813-1">
+    <link rel="stylesheet" href="global-theme.css?v=20260813-2">
     <script src="global-theme.js?v=20260813-1"></script>
     <link rel="stylesheet" href="role-switcher.css">
 </head>
@@ -97,7 +97,7 @@
                             <span class="live-badge">● Live</span>
                         </div>
                         <div class="activity-grid">
-                            <div class="activity-box"><span>Supabase</span><strong class="healthy-text">Ổn định</strong><small>Cơ sở dữ liệu</small></div>
+                            <div class="activity-box"><span>Hệ thống</span><strong class="healthy-text">Ổn định</strong><small>Kho dữ liệu</small></div>
                             <div class="activity-box"><span>Authentication</span><strong class="healthy-text">Ổn định</strong><small>Đăng nhập</small></div>
                             <div class="activity-box"><span>Server load</span><strong>34%</strong><small>Mô phỏng</small></div>
                         </div>
@@ -106,7 +106,7 @@
                     <aside class="panel-card quick-panel">
                         <div class="panel-heading"><div><span class="panel-eyebrow">Thao tác nhanh</span><h2>Vận hành nhanh</h2></div></div>
                         <button class="quick-action" data-open-section="users"><span>👥</span><span>Quản lý người dùng</span></button>
-                        <button class="quick-action" data-open-section="lessons"><span>📤</span><span>Upload câu hỏi</span></button>
+                        <button class="quick-action" data-open-section="lessons"><span>📤</span><span>Tải câu hỏi lên</span></button>
                         <button class="quick-action" data-open-section="monitoring"><span>📡</span><span>Xem phiên học</span></button>
                     </aside>
                 </section>
@@ -148,7 +148,7 @@
                     <div class="table-wrap">
                         <table class="user-table">
                             <thead><tr><th>Email</th><th>Tên hiển thị</th><th>Chức vụ (Role)</th><th>Điểm số</th><th>Chuỗi ngày học</th><th>Thay đổi Role</th></tr></thead>
-                            <tbody id="userTableBody"><tr><td colspan="6"><div class="empty-state">Đang tải người dùng từ Supabase...</div></td></tr></tbody>
+                            <tbody id="userTableBody"><tr><td colspan="6"><div class="empty-state">Đang tải danh sách người dùng...</div></td></tr></tbody>
                         </table>
                     </div>
                 </section>
@@ -156,11 +156,11 @@
 
             <section class="admin-section" data-panel="lessons">
                 <section class="panel-card upload-panel">
-                    <div class="panel-heading"><div><span class="panel-eyebrow">Kho học liệu</span><h2>Upload bộ câu hỏi</h2></div></div>
+                    <div class="panel-heading"><div><span class="panel-eyebrow">Kho học liệu</span><h2>Tải bộ câu hỏi lên</h2></div></div>
                     <section class="bulk-text-upload" id="bulkTextQuestionUploader" aria-label="Nhập câu hỏi bằng văn bản">
                         <div class="bulk-upload-intro">
                             <strong>Nhập bộ câu hỏi bằng văn bản</strong>
-                            <p>Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Dữ liệu sẽ được lưu vào Supabase <code>questions</code>.</p>
+                            <p>Chọn Tỉnh/Thành và Đảo dùng chung cho cả lô, sau đó dán mỗi câu hỏi trên một dòng. Các câu hợp lệ sẽ được lưu vào kho câu hỏi.</p>
                         </div>
                         <div class="bulk-upload-grid">
                             <div class="bulk-upload-controls">
@@ -233,8 +233,8 @@
                 <section class="panel-card table-panel question-bank-panel" aria-labelledby="questionBankTitle">
                     <div class="panel-heading table-heading question-bank-heading">
                         <div>
-                            <span class="panel-eyebrow">Dữ liệu Supabase</span>
-                            <h2 id="questionBankTitle">Ngân hàng câu hỏi đã upload</h2>
+                            <span class="panel-eyebrow">Kho câu hỏi</span>
+                            <h2 id="questionBankTitle">Ngân hàng câu hỏi đã tải lên</h2>
                             <p class="question-bank-summary" id="questionBankSummary">Đang tải danh sách câu hỏi...</p>
                         </div>
                         <div class="table-tools question-bank-filters">
@@ -330,7 +330,7 @@
 
     <div class="toast" id="toast"></div>
     <script src="support-store.js"></script>
-    <script src="admin-dashboard.js"></script>
+    <script src="admin-dashboard.js?v=20260813-2"></script>
     <script src="role-switcher.js"></script>
 </body>
 </html>

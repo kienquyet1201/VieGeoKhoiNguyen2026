@@ -393,7 +393,10 @@ if (adminLoginForm) {
         } catch (error) {
             console.error('[VieGeo Admin] Lỗi đăng nhập Admin Tổng:', error);
             if (adminLoginMsg) {
-                adminLoginMsg.textContent = error.message || 'Không thể đăng nhập Admin.';
+                const message = String(error?.message || '');
+                adminLoginMsg.textContent = message.startsWith('Bạn thao tác quá nhanh')
+                    ? message
+                    : 'Chưa thể đăng nhập quản trị. Vui lòng thử lại.';
                 adminLoginMsg.style.display = 'block';
             }
         } finally {
@@ -539,7 +542,7 @@ if (loginForm) {
             }
         } catch (error) {
             console.error("Lỗi đăng nhập:", error);
-            loginMsg.textContent = "Lỗi kết nối máy chủ!";
+            loginMsg.textContent = "Chưa thể đăng nhập. Vui lòng kiểm tra kết nối và thử lại.";
             loginMsg.style.display = "block";
         } finally {
             btn.disabled = false;
@@ -615,8 +618,8 @@ if (regForm) {
                     otp: currentOtpCode
                 });
             } catch (error) {
-                console.warn("EmailJS failed, using fallback mode for testing.", error);
-                Swal.fire({ icon: 'warning', title: 'Lưu ý', text: "Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode });
+                console.error("Không thể gửi mã xác thực đăng ký:", error);
+                throw new Error('OTP_DELIVERY_FAILED');
             }
 
             // Dù gửi thật hay fallback, vẫn mở bảng OTP cho phép nhập
@@ -748,7 +751,7 @@ if (forgotForm) {
                 const { error } = await authClient.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/loginout` });
                 if (error) throw error;
                 security.clearRateLimit(`auth_forgot_${email}`);
-                msg.textContent = "Đã gửi email đặt lại mật khẩu qua Supabase Auth. Vui lòng kiểm tra hộp thư.";
+                msg.textContent = "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư.";
                 msg.style.display = "block";
                 return;
             }
@@ -772,8 +775,8 @@ if (forgotForm) {
                     otp: currentOtpCode
                 });
             } catch (error) {
-                console.warn("EmailJS failed, using fallback mode for testing.");
-                Swal.fire({ icon: 'warning', title: 'Lưu ý', text: "Hệ thống EmailJS đang quá tải hoặc lỗi cấu hình. \n\n[CHẾ ĐỘ THỬ NGHIỆM] Mã OTP của bạn là: " + currentOtpCode });
+                console.error("Không thể gửi mã xác thực đặt lại mật khẩu:", error);
+                throw new Error('OTP_DELIVERY_FAILED');
             }
             
             otpEmailTarget.textContent = email;
@@ -783,7 +786,7 @@ if (forgotForm) {
             msg.style.display = 'none';
 
         } catch (error) {
-            msg.textContent = "Lỗi kết nối máy chủ!";
+            msg.textContent = "Chưa thể gửi mã xác thực. Vui lòng thử lại sau.";
             msg.style.display = "block";
         } finally {
             btn.disabled = false;
@@ -815,7 +818,7 @@ if (resetForm) {
         
         try {
             const authClient = getAuthClient();
-            if (!authClient || typeof authClient.auth.updateUser !== 'function') throw new Error('Supabase Auth chưa sẵn sàng để đổi mật khẩu.');
+            if (!authClient || typeof authClient.auth.updateUser !== 'function') throw new Error('Phiên đăng nhập chưa sẵn sàng để đổi mật khẩu.');
             const { error } = await authClient.auth.updateUser({ password: p1 });
             if (error) throw error;
             if (forgotTempEmail) await db.collection('users').doc(forgotTempEmail).update({ password: null, passwordUpdatedAt: new Date().toISOString() });
@@ -823,7 +826,7 @@ if (resetForm) {
             switchPanel(loginPanel);
             document.getElementById('loginEmail').value = forgotTempEmail;
         } catch (error) {
-            msg.textContent = "Lỗi máy chủ.";
+            msg.textContent = "Chưa thể đổi mật khẩu. Vui lòng thử lại sau.";
             msg.style.display = "block";
         } finally {
             btn.disabled = false;

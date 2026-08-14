@@ -287,7 +287,7 @@
         } catch (error) {
             console.error('Supabase island content load failed:', error);
             window.VieGeoQuestionLoadState = 'network-error';
-            notifyQuestionLoad('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!', true);
+            notifyQuestionLoad('Chưa thể tải nội dung bài học. Vui lòng kiểm tra kết nối và thử lại.', true);
         }
         const hasEnoughQuestions = sourceQuestions.length >= QUESTIONS_PER_ISLAND;
         const questions = hasEnoughQuestions ? randomFiveQuestions(sourceQuestions) : [];
@@ -295,7 +295,7 @@
             window.VieGeoQuestionLoadState = sourceQuestions.length ? 'insufficient' : 'empty';
         }
         if (sourceQuestions.length > 0 && !hasEnoughQuestions) {
-            notifyQuestionLoad(`Ngân hàng đảo này mới có ${sourceQuestions.length}/${QUESTIONS_PER_ISLAND} câu hợp lệ. Admin cần tải thêm câu hỏi.`);
+            notifyQuestionLoad('Nội dung bài học đang được bổ sung. Vui lòng quay lại sau.');
         }
         if (!questions.length && !sourceQuestions.length && window.VieGeoQuestionLoadState !== 'network-error') {
             notifyQuestionLoad('Hiện chưa có câu hỏi nào cho đảo này, vui lòng quay lại sau!');

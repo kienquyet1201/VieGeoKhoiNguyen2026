@@ -5,7 +5,7 @@
     const labels = {
         overview: ['Bảng điều khiển VieGeo', 'Theo dõi người dùng, nội dung học tập và hoạt động hệ thống trong một nơi.'],
         users: ['Quản lý người dùng', 'Theo dõi tài khoản, quyền truy cập và trạng thái sử dụng.'],
-        lessons: ['Kho học liệu', 'Nhập bộ câu hỏi vào kho dữ liệu Supabase.'],
+        lessons: ['Kho học liệu', 'Nhập và quản lý bộ câu hỏi học tập.'],
         monitoring: ['Giám sát học tập', 'Danh sách người dùng có hoạt động gần đây.'],
         support: ['Chăm sóc khách hàng', 'Phản hồi các góp ý của người dùng.'],
         settings: ['Cài đặt', 'Tùy chỉnh giao diện và phiên quản trị.']
@@ -117,7 +117,8 @@
             showToast(`Đã cập nhật ${displayName(user)} thành ${roleName(role)}.`, 'success');
         } catch (error) {
             console.error('[VieGeo Admin] Không thể cập nhật vai trò:', error);
-            showToast(error.message || 'Không thể cập nhật vai trò trên Supabase.', 'error');
+            console.error('[VieGeo Admin] Không thể cập nhật vai trò:', error);
+            showToast('Không thể cập nhật vai trò lúc này.', 'error');
             if (button) button.disabled = false;
         }
     }
@@ -231,53 +232,66 @@
 
     async function reviewPremiumRequest(request, status) {
         const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
-        const email = String(request?.user_email || request?.email || '').trim();
+        const email = String(request?.user_email || request?.email || '').trim().toLowerCase();
         if (!client || !email || !['approved', 'rejected'].includes(status)) {
             showToast('Không đủ dữ liệu để xử lý yêu cầu Premium.', 'error');
             return;
         }
         const buttons = document.querySelectorAll('[data-premium-action]');
         buttons.forEach(button => { button.disabled = true; });
-        let requestUpdated = false;
         try {
             let userId = request?.user_id ?? request?.userId ?? null;
             if (status === 'approved') {
                 if (userId === null || userId === undefined || userId === '') {
                     const { data: linkedUser, error: linkedUserError } = await client
                         .from('users')
-                        .select('id')
-                        .eq('email', email)
+                        .select('id,email')
+                        .ilike('email', email)
+                        .limit(1)
                         .maybeSingle();
                     if (linkedUserError) throw linkedUserError;
                     userId = linkedUser?.id;
                 }
-                if (userId === null || userId === undefined || userId === '') throw new Error('Không tìm thấy userId của yêu cầu Premium.');
+                const now = new Date().toISOString();
+                if (userId === null || userId === undefined || userId === '') {
+                    const displayName = String(request?.name || email.split('@')[0] || 'Học viên').trim();
+                    const { data: createdUser, error: createUserError } = await client
+                        .from('users')
+                        .insert([{
+                            email,
+                            name: displayName,
+                            user_name: displayName,
+                            role: 'premium',
+                            roles: ['user'],
+                            active_role: 'user',
+                            account_status: 'premium',
+                            updated_at: now
+                        }])
+                        .select('id,email')
+                        .single();
+                    if (createUserError) throw createUserError;
+                    userId = createdUser?.id;
+                } else {
+                    const { data: updatedUsers, error: userError } = await client
+                        .from('users')
+                        .update({ role: 'premium', account_status: 'premium', updated_at: now })
+                        .eq('id', userId)
+                        .select('id');
+                    if (userError) throw userError;
+                    if (!Array.isArray(updatedUsers) || updatedUsers.length === 0) {
+                        throw new Error('Không tìm thấy tài khoản tương ứng với yêu cầu Premium.');
+                    }
+                }
             }
             const { error: requestError } = await client
                 .from('premium_requests')
                 .update({ status, reviewed_at: new Date().toISOString() })
                 .eq('id', request.id);
             if (requestError) throw requestError;
-            requestUpdated = true;
-            if (status === 'approved') {
-                const { error: userError } = await client
-                    .from('users')
-                    .update({ role: 'premium' })
-                    .eq('id', userId);
-                if (userError) throw userError;
-                const { error: accountError } = await client
-                    .from('users')
-                    .update({ account_status: 'premium', updated_at: new Date().toISOString() })
-                    .eq('id', userId);
-                if (accountError) throw accountError;
-            }
             showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu Premium.', 'success');
             await loadDashboard();
         } catch (error) {
             console.error('[VieGeo Admin] Không thể xử lý Premium:', error);
-            if (requestUpdated && status === 'approved') {
-                await client.from('premium_requests').update({ status: 'pending', reviewed_at: null }).eq('id', request.id);
-            }
             showToast('Không thể cập nhật yêu cầu Premium.', 'error');
             buttons.forEach(button => { button.disabled = false; });
         }
@@ -410,11 +424,11 @@
         const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
         if (!client || typeof client.from !== 'function') {
             renderQuestionBank([]);
-            if (summary) summary.textContent = 'Supabase chưa sẵn sàng.';
+            if (summary) summary.textContent = 'Kho câu hỏi chưa sẵn sàng.';
             return;
         }
         if (body) body.innerHTML = '<tr><td colspan="8"><div class="empty-state">Đang tải ngân hàng câu hỏi...</div></td></tr>';
-        if (summary) summary.textContent = 'Đang đồng bộ từ Supabase...';
+        if (summary) summary.textContent = 'Đang cập nhật danh sách câu hỏi...';
         if (refreshButton) refreshButton.disabled = true;
         try {
             let query = client.from('questions').select('*');
@@ -441,7 +455,7 @@
             const dataApi = window.VieGeoData;
             if (!dataApi) throw new Error('Lớp dữ liệu Supabase chưa sẵn sàng');
             const connection = byId('connectionBadge');
-            if (connection) connection.textContent = 'Đang tải Supabase…';
+            if (connection) connection.textContent = 'Đang kết nối…';
             const [user, users, submissionCount, errors, feedbacks, premiumRequests] = await Promise.all([
                 dataApi.getCurrentUser(),
                 fetchUsers(),
@@ -457,7 +471,7 @@
             if (byId('metricUsers')) byId('metricUsers').textContent = String(allUsers.length);
             if (byId('metricErrors')) byId('metricErrors').textContent = String(errors.length);
             if (connection) {
-                connection.textContent = 'Supabase đã kết nối';
+                connection.textContent = 'Hệ thống đã kết nối';
                 connection.classList.remove('error');
                 connection.classList.add('connected');
             }
@@ -470,7 +484,7 @@
         } catch (error) {
             console.error('[VieGeo Admin] Không thể tải trang quản trị:', error);
             if (byId('connectionBadge')) {
-                byId('connectionBadge').textContent = 'Không thể kết nối Supabase';
+                byId('connectionBadge').textContent = 'Tạm thời mất kết nối';
                 byId('connectionBadge').classList.add('error');
             }
             renderUsers(allUsers);
@@ -510,15 +524,16 @@
                 return questions.length;
             };
             const count = await window.VieGeoData.withRequestState(button, insert);
-            if (preview) preview.textContent = `Đã thêm ${count} câu hỏi vào Supabase.`;
+            if (preview) preview.textContent = `Đã thêm ${count} câu hỏi vào kho câu hỏi.`;
             if (byId('fileUpload')) byId('fileUpload').value = '';
             if (byId('fileNameDisplay')) byId('fileNameDisplay').textContent = 'Chưa có tệp được chọn.';
             showToast(`Đã thêm ${count} câu hỏi.`, 'success');
             await loadQuestionBank();
         } catch (error) {
             console.error('[VieGeo Admin] Upload câu hỏi thất bại:', error);
-            if (preview) preview.textContent = `Không thể upload: ${error.message || error}`;
-            showToast(error.message || 'Không thể upload câu hỏi.', 'error');
+            console.error('[VieGeo Admin] Không thể tải câu hỏi lên:', error);
+            if (preview) preview.textContent = 'Không thể tải câu hỏi lên. Vui lòng kiểm tra nội dung và thử lại.';
+            showToast('Không thể tải câu hỏi lên lúc này.', 'error');
         }
     }
 
@@ -564,7 +579,7 @@
             return;
         }
         if (!client?.from) {
-            if (status) status.textContent = 'Supabase chưa sẵn sàng.';
+            if (status) status.textContent = 'Kho nội dung chưa sẵn sàng.';
             return;
         }
         textarea.disabled = true;
@@ -584,7 +599,8 @@
                 : 'Tỉnh này chưa có lý thuyết tổng kết BOSS.';
         } catch (error) {
             console.error('[VieGeo Admin] Không thể tải lý thuyết tổng kết BOSS:', error);
-            if (status) status.textContent = `Không thể tải nội dung: ${error.message || error}`;
+            console.error('[VieGeo Admin] Không thể tải nội dung tổng kết:', error);
+            if (status) status.textContent = 'Không thể tải nội dung tổng kết. Vui lòng thử lại.';
         } finally {
             textarea.disabled = false;
         }
@@ -601,7 +617,7 @@
             if (!theory) throw new Error('Hãy nhập nội dung lý thuyết tổng kết BOSS.');
             if (!client?.from) throw new Error('Supabase chưa sẵn sàng.');
             if (button) button.disabled = true;
-            if (status) status.textContent = 'Đang lưu lý thuyết tổng kết lên Supabase...';
+            if (status) status.textContent = 'Đang lưu lý thuyết tổng kết...';
             const { data, error } = await client
                 .from('questions')
                 .update({ island_theory: theory })
@@ -615,8 +631,9 @@
             showToast('Đã lưu lý thuyết tổng kết BOSS.', 'success');
         } catch (error) {
             console.error('[VieGeo Admin] Không thể lưu lý thuyết tổng kết BOSS:', error);
-            if (status) status.textContent = `Không thể lưu: ${error.message || error}`;
-            showToast(error.message || 'Không thể lưu lý thuyết tổng kết BOSS.', 'error');
+            console.error('[VieGeo Admin] Không thể lưu lý thuyết tổng kết:', error);
+            if (status) status.textContent = 'Không thể lưu nội dung tổng kết. Vui lòng thử lại.';
+            showToast('Không thể lưu lý thuyết tổng kết lúc này.', 'error');
         } finally {
             if (button) button.disabled = false;
         }
@@ -697,18 +714,19 @@
             const shared = bulkSharedFields();
             if (!shared.province || !shared.island || !shared.topic) throw new Error('Hãy chọn Tỉnh/Thành, Đảo nhỏ và nhập Chủ đề bài học.');
             const rows = parseBulkQuestionText(byId('bulkQuestionText')?.value || '', shared);
-            if (preview) preview.textContent = `Đang lưu ${rows.length} câu hỏi lên Supabase…`;
+            if (preview) preview.textContent = `Đang lưu ${rows.length} câu hỏi…`;
             const execute = () => insertBulkQuestions(rows);
             const count = window.VieGeoData?.withRequestState ? await window.VieGeoData.withRequestState(button, execute) : await execute();
             if (byId('bulkQuestionText')) byId('bulkQuestionText').value = '';
-            if (preview) preview.textContent = `Đã lưu thành công ${count} câu hỏi vào Supabase. Câu hỏi trùng đã được cập nhật thay vì gây lỗi.`;
+            if (preview) preview.textContent = `Đã lưu thành công ${count} câu hỏi. Các câu trùng đã được cập nhật.`;
             showToast(`Đã lưu ${count} câu hỏi.`, 'success');
             await loadQuestionBank();
             console.info('[VieGeo Admin] Bulk text import success', { count, province: shared.province, island: shared.island });
         } catch (error) {
             console.error('[VieGeo Admin] Bulk text import failed:', error);
-            if (preview) preview.textContent = `Không thể lưu: ${error.message || error}`;
-            showToast(error.message || 'Không thể lưu câu hỏi.', 'error');
+            console.error('[VieGeo Admin] Không thể lưu câu hỏi:', error);
+            if (preview) preview.textContent = 'Không thể lưu câu hỏi. Vui lòng kiểm tra nội dung và thử lại.';
+            showToast('Không thể lưu câu hỏi lúc này.', 'error');
         }
     }
 

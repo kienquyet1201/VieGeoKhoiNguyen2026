@@ -1493,7 +1493,7 @@ if (btnSaveProfileElem) {
                 }
                 const authClient = getSupabaseAuthClient();
                 if (!authClient) {
-                    showToast("Supabase Auth chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.", false);
+                    showToast("Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại rồi thử tiếp.", false);
                     btn.disabled = false;
                     btn.textContent = "Lưu Thay Đổi";
                     return;

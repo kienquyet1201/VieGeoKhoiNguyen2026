@@ -137,7 +137,7 @@ html[data-theme="light"] .nav-button[aria-current="page"],html[data-theme="light
     .nav-button{padding:0 6px!important}
 }
 @media(max-width:900px){
-    .user-top-navbar{position:relative!important;flex-wrap:wrap!important}
+    .user-top-navbar{position:sticky!important;top:0!important;z-index:99999!important;flex-wrap:wrap!important}
     .user-topbar-brand{width:100%!important;justify-content:space-between!important}
     .user-topbar-navigation{order:3!important;width:100%!important;overflow-x:auto!important;justify-content:flex-start!important;padding-bottom:2px!important}
     .user-navigation-animated{min-width:max-content!important}

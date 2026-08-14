@@ -714,7 +714,7 @@ async function openIslandQuizPreview() {
     islandQuizPenaltyPending = false;
     islandQuizSubmitted = false;
     islandQuizTitle.textContent = `Trắc nghiệm: ${activeIslandLearning.lesson.title || 'Đảo tri thức'}`;
-    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi từ Supabase`;
+    islandQuizMeta.textContent = `${activeIslandLearning.lesson.province || selectedProvince?.name || 'Việt Nam'} · ${activeIslandLearning.questions.length} câu hỏi`;
     if (btnLaunchIslandQuiz) btnLaunchIslandQuiz.style.display = 'none';
     if (!mountIslandQuizStepper()) return;
     forceShowIslandModal(quizModal);
@@ -837,9 +837,9 @@ async function openIslandTheory(lesson) {
         islandTheoryMeta.textContent = `${lesson.title || 'Đảo tri thức'} · ${lesson.province || selectedProvince?.name || 'Việt Nam'} · ${questionCount} câu hỏi sẵn sàng`;
         if (questionCount !== questionLimit) {
             const notice = loaded?.status === 'insufficient'
-                ? `Ngân hàng đảo này mới có ${Number(loaded?.bankSize) || 0}/${questionLimit} câu hợp lệ. Admin cần tải thêm câu hỏi.`
+                ? 'Nội dung bài học đang được bổ sung. Vui lòng quay lại sau.'
                 : loaded?.status === 'network-error'
-                ? 'Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!'
+                ? 'Chưa thể tải nội dung bài học. Vui lòng kiểm tra kết nối và thử lại.'
                 : 'Hiện chưa có câu hỏi nào cho khu vực này, vui lòng quay lại sau!';
             islandTheoryContent.insertAdjacentHTML('beforeend', `<p><strong>Thông báo:</strong> ${notice}</p>`);
         }
@@ -850,8 +850,8 @@ async function openIslandTheory(lesson) {
         activeIslandLearning = { lesson, theory: safeTheoryHtml(theoryHtmlFor(lesson)), questions: [] };
         islandTheoryContent.classList.remove('is-loading');
         islandTheoryContent.setAttribute('aria-busy', 'false');
-        islandTheoryContent.innerHTML = `${safeTheoryHtml(activeIslandLearning.theory)}<p><strong>Lỗi đường truyền hoặc máy chủ Supabase.</strong> Vui lòng kiểm tra lại mạng!</p>`;
-        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Lỗi đường truyền hoặc máy chủ Supabase. Vui lòng kiểm tra lại mạng!');
+        islandTheoryContent.innerHTML = `${safeTheoryHtml(activeIslandLearning.theory)}<p><strong>Chưa thể tải nội dung bài học.</strong> Vui lòng kiểm tra kết nối và thử lại.</p>`;
+        if (window.VieGeoUI?.warning) window.VieGeoUI.warning('Chưa thể tải nội dung bài học. Vui lòng kiểm tra kết nối và thử lại.');
     } finally {
         if (requestId === islandTheoryRequest && islandTheoryModal && !islandTheoryModal.hidden) {
             updateIslandTheoryStartButton();
@@ -1321,8 +1321,8 @@ async function saveLearnerSurvey() {
     } catch (error) {
         console.error('Không thể lưu khảo sát:', error);
         if (surveyModal) surveyModal.style.display = 'none';
-        if (typeof showToast === 'function') showToast('Đã lưu khảo sát trên thiết bị. Supabase sẽ đồng bộ lại khi kết nối ổn định.', false);
-        else VieGeoUI.warning('Đã lưu khảo sát trên thiết bị. Supabase sẽ đồng bộ lại khi kết nối ổn định.');
+        if (typeof showToast === 'function') showToast('Hồ sơ học tập đã được ghi nhận và sẽ cập nhật khi kết nối ổn định.', false);
+        else VieGeoUI.warning('Hồ sơ học tập đã được ghi nhận và sẽ cập nhật khi kết nối ổn định.');
     } finally {
         if (surveySubmitButton) {
             surveySubmitButton.disabled = false;

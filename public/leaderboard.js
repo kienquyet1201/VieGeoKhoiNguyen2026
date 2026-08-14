@@ -200,7 +200,7 @@
     }
 
     async function loadLeaderboard() {
-        if (rankingList) rankingList.innerHTML = '<div class="empty-state">Đang tải dữ liệu từ Supabase...</div>';
+        if (rankingList) rankingList.innerHTML = '<div class="empty-state">Đang cập nhật bảng xếp hạng...</div>';
         if (podium) podium.replaceChildren();
         try {
             var results = await Promise.all([fetchLeaderboardRows(), fetchCurrentUser()]);

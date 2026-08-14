@@ -14,7 +14,9 @@
         ErrorReports: 'error_reports',
         error_reports: 'error_reports',
         UserFeedbacks: 'user_feedbacks',
-        user_feedbacks: 'user_feedbacks'
+        user_feedbacks: 'user_feedbacks',
+        support_tickets: 'support_tickets',
+        support_messages: 'support_messages'
     };
     const REMOTE_TABLES = new Set(Object.values(TABLE_ALIASES));
 

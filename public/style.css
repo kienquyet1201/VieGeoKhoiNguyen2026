@@ -8,9 +8,9 @@
     font-family: 'Be Vietnam Pro', sans-serif !important;
 }
 
-html { width: 100%; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; text-size-adjust: 100%; }
+html { width: 100%; min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip !important; overflow-y: visible !important; text-size-adjust: 100%; }
 body, button, input, select, textarea { font-family: 'Be Vietnam Pro', sans-serif !important; }
-body { width: 100%; min-width: 0; min-height: 100vh; min-height: 100dvh; margin: 0; padding: 0; display: flex; flex-direction: column; overflow-x: hidden; line-height: 1.5; }
+body { width: 100%; min-width: 0; min-height: 100vh; min-height: 100dvh; margin: 0; padding: 0; display: flex; flex-direction: column; overflow-x: clip !important; overflow-y: visible !important; line-height: 1.5; }
 body > main, main { flex: 1 0 auto; max-width: 100%; margin-bottom: 0; }
 body > footer { margin-top: auto; }
 
@@ -1857,13 +1857,16 @@ body.light-mode button, body.light-mode a, body.light-mode span, body.light-mode
 
 /* Global fallback for pages that do not load global-theme.css. */
 html,body{margin:0!important;padding:0!important}
-.shared-topbar,.main-navbar,.navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.support-user-header,.chat-header,.exam-topbar{
+.shared-topbar,.main-navbar,.navbar,.user-top-navbar,.top-bar,.leaderboard-topbar,.arena-global-topbar,.admin-header,.student-header,.parent-dashboard-header,.support-user-header,.chat-header,.exam-topbar{
     position:sticky!important;
     top:0!important;
     margin-top:0!important;
     z-index:99999!important;
     width:100%!important;
     background-color:#fff!important;
+    flex-shrink:0!important;
+    align-self:stretch!important;
+    isolation:isolate;
 }
 .support-button,.support-btn,#supportButton,#studentSupportButton,.support-fab,.cskh-button{
     position:fixed!important;

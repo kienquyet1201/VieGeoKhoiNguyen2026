@@ -49,6 +49,8 @@ var questionLoadRequestId=0;
 var activeIslandTheory="";
 var quizCorrectAnswers=0;
 var quizStartedAt=0;
+var quizAttemptId="";
+var stageCompletionPromise=null;
 var mapProgressByProvince=Object.create(null);
 var mapProgressReady=false;
 var currentMapUserEmail="";
@@ -137,8 +139,8 @@ function ensureIslandTheoryUi(){
             '<span class="province-summary-eyebrow">Chuẩn bị trước khi làm bài</span>'+
             '<h2 id="islandTheoryTitle">Lý thuyết cần nhớ</h2>'+
             '<p id="islandTheorySubtitle" class="province-summary-subtitle"></p>'+
-            '<div id="islandTheoryBankStatus" class="island-theory-bank-status" aria-live="polite">Đang đồng bộ ngân hàng câu hỏi Supabase...</div>'+
-            '<div id="islandTheoryContent" class="province-summary-content island-theory-content">Đang tải nội dung lý thuyết từ Admin...</div>'+
+            '<div id="islandTheoryBankStatus" class="island-theory-bank-status" aria-live="polite">Đang chuẩn bị nội dung bài học...</div>'+
+            '<div id="islandTheoryContent" class="province-summary-content island-theory-content">Đang chuẩn bị nội dung lý thuyết...</div>'+
             '<button id="islandTheoryStartButton" class="province-summary-done island-theory-start" type="button" disabled>BẮT ĐẦU LÀM BÀI</button>'+
             '</section>';
         document.body.appendChild(islandTheoryModal);
@@ -273,12 +275,75 @@ async function getCurrentMapUserEmail(){
     var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
     var session={};
     try{session=JSON.parse(localStorage.getItem("lm_session")||"{}");}catch(error){session={};}
-    var email=String(session.email||"").trim().toLowerCase();
+    var email=String(session.email||session.user_email||"").trim().toLowerCase();
     if(client?.auth?.getUser){
         var authResult=await client.auth.getUser();
         email=String(authResult?.data?.user?.email||email).trim().toLowerCase();
     }
     return email;
+}
+
+function getCurrentMapSession(){
+    try{return JSON.parse(localStorage.getItem("lm_session")||"{}")||{};}catch(error){return {};}
+}
+
+function readLocalMapRewards(){
+    try{return JSON.parse(localStorage.getItem("VieGeo_state")||"{}")||{};}catch(error){return {};}
+}
+
+function logMapSupabaseError(context,error,extra){
+    console.error("[VieGeo Map] Lỗi chi tiết Supabase:",Object.assign({
+        context:context,
+        code:error?.code||"",
+        message:error?.message||String(error||""),
+        details:error?.details||"",
+        hint:error?.hint||""
+    },extra||{}));
+}
+
+async function findMapUserProfile(client,email){
+    var columns="id,email,user_email,user_name,role,score,current_streak";
+    var result=await client.from("users").select(columns).eq("email",email).limit(1).maybeSingle();
+    if(result.error){
+        logMapSupabaseError("users.select.email",result.error,{email:email});
+        throw result.error;
+    }
+    if(result.data){return result.data;}
+    result=await client.from("users").select(columns).eq("user_email",email).limit(1).maybeSingle();
+    if(result.error){
+        logMapSupabaseError("users.select.user_email",result.error,{email:email});
+        throw result.error;
+    }
+    return result.data||null;
+}
+
+async function ensureMapUserProfile(client,email){
+    var profile=await findMapUserProfile(client,email);
+    if(profile){return profile;}
+    var session=getCurrentMapSession();
+    var displayName=String(session.user_name||session.name||session.displayName||email.split("@")[0]||"Người dùng").trim();
+    var role=String(session.activeRole||session.active_role||session.role||"user").trim().toLowerCase();
+    var payload={email:email,user_email:email,user_name:displayName,role:role,score:0,current_streak:0};
+    var created=await client.from("users").insert([payload]).select("id,email,user_email,user_name,role,score,current_streak").single();
+    if(created.error){
+        if(String(created.error.code||"")==="23505"){return await findMapUserProfile(client,email);}
+        logMapSupabaseError("users.insert.profile",created.error,{email:email});
+        throw created.error;
+    }
+    return created.data;
+}
+
+async function fetchRecentMapSubmissions(client,email){
+    var result=await client.from("submissions")
+        .select("id,user_email,score,province,island,topic,correct_count,total_count,details,created_at")
+        .eq("user_email",email)
+        .order("created_at",{ascending:false})
+        .limit(50);
+    if(result.error){
+        logMapSupabaseError("submissions.select.recent",result.error,{email:email});
+        return [];
+    }
+    return Array.isArray(result.data)?result.data:[];
 }
 
 async function fetchSubmissionPages(client,email){
@@ -366,7 +431,7 @@ function renderProvinces(regionKey){
 
         html+='<button class="province-card" type="button" data-province="'+province+'">';
         html+='<div class="province-card-header"><span class="province-card-number">'+number+'</span><span class="province-card-status">'+(mapProgressReady?'✓ Sẵn sàng':'Đang tải')+'</span></div>';
-        html+='<div class="province-card-body"><div class="province-location">⌖</div><div class="province-info"><h3>'+province+'</h3><p>'+String(progressInfo.total.size)+' đảo từ Supabase</p></div></div>';
+        html+='<div class="province-card-body"><div class="province-location">⌖</div><div class="province-info"><h3>'+province+'</h3><p>'+String(progressInfo.total.size)+' chặng học</p></div></div>';
         html+='<div class="province-progress-meta"><span>Tiến độ</span><strong>'+progress+'%</strong></div>';
         html+='<div class="province-progress-track"><div class="province-progress-fill" style="width:'+progress+'%"></div></div>';
         html+='</button>';
@@ -398,7 +463,7 @@ function getCompletedStageCount(){
     return completed;
 }
 
-async function markCurrentStageCompleted(){
+async function persistCurrentStageCompleted(){
     var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
     var email=currentMapUserEmail||await getCurrentMapUserEmail();
     if(!client||!email){throw new Error("Không thể xác định phiên Supabase hiện tại.");}
@@ -406,35 +471,101 @@ async function markCurrentStageCompleted(){
     var stars=calculateIslandStars(quizCorrectAnswers);
     var xpReward=stars*20;
     var gemsReward=stars*10;
-    var userResult=await client.from("users").select("xp,score,gems,current_streak,last_active_date").eq("email",email).maybeSingle();
-    if(userResult.error){throw userResult.error;}
-    if(!userResult.data){throw new Error("Không tìm thấy tài khoản để cộng phần thưởng.");}
-    var nextXp=(Number(userResult.data.xp)||0)+xpReward;
-    var nextScore=(Number(userResult.data.score??userResult.data.xp)||0)+xpReward;
-    var nextGems=(Number(userResult.data.gems)||0)+gemsReward;
+    var provinceKey=normalizeProvinceKey(selectedProvince);
+    var islandLabel="Đảo nhỏ "+selectedStage;
+    if(!quizAttemptId){quizAttemptId="attempt_"+Date.now()+"_"+Math.random().toString(16).slice(2);}
+
+    var recentSubmissions=await fetchRecentMapSubmissions(client,email);
+    var existingSubmission=recentSubmissions.find(function(row){return String(row?.details?.attempt_id||"")===quizAttemptId;})||null;
+    var previousSubmission=recentSubmissions.find(function(row){return !existingSubmission||String(row.id)!==String(existingSubmission.id);})||null;
     var today=getVietnamDateKey();
-    var lastActiveDate=userResult.data.last_active_date?getVietnamDateKey(userResult.data.last_active_date):"";
-    var nextStreak=Number(userResult.data.current_streak)||0;
-    if(lastActiveDate!==today){nextStreak+=1;}
-    var payload={
-        user_email:email,
-        score:Math.round(quizCorrectAnswers/ISLAND_QUESTION_LIMIT*100)/10,
-        province:normalizeProvinceKey(selectedProvince),
-        island:"Đảo nhỏ "+selectedStage,
-        topic:"Đảo nhỏ "+selectedStage,
+    var submissionDetails={
+        attempt_id:quizAttemptId,
+        province:provinceKey,
+        island_id:provinceKey+"-"+String(selectedStage),
+        island_index:selectedStage,
+        island:islandLabel,
+        topic:islandLabel,
+        difficulty:getDifficulty(),
+        duration_seconds:durationSeconds,
         correct_count:quizCorrectAnswers,
         total_count:ISLAND_QUESTION_LIMIT,
-        details:{province:normalizeProvinceKey(selectedProvince),island_index:selectedStage,difficulty:getDifficulty(),duration_seconds:durationSeconds,stars:stars,xp_reward:xpReward,gems_reward:gemsReward}
+        stars:stars,
+        xp_reward:xpReward,
+        gems_reward:gemsReward,
+        reward_applied:false,
+        completed_at:new Date().toISOString()
     };
-    var result=await client.from("submissions").insert(payload).select("id").maybeSingle();
-    if(result.error){throw result.error;}
-    var rewardResult=await client.from("users").update({xp:nextXp,score:nextScore,gems:nextGems,current_streak:nextStreak,last_active_date:today,updated_at:new Date().toISOString()}).eq("email",email);
-    if(rewardResult.error){throw rewardResult.error;}
+    var submissionPayload={
+        user_email:email,
+        score:Math.round(quizCorrectAnswers/ISLAND_QUESTION_LIMIT*100)/10,
+        province:provinceKey,
+        island:islandLabel,
+        topic:islandLabel,
+        correct_count:quizCorrectAnswers,
+        total_count:ISLAND_QUESTION_LIMIT,
+        details:submissionDetails
+    };
+
+    if(!existingSubmission){
+        var insertion=await client.from("submissions").insert([submissionPayload]).select("id,details,created_at").single();
+        if(insertion.error){
+            logMapSupabaseError("submissions.insert",insertion.error,{email:email,province:provinceKey,island:selectedStage,payload:submissionPayload});
+            throw insertion.error;
+        }
+        existingSubmission=insertion.data;
+    }
+
+    var profile;
+    try{
+        profile=await ensureMapUserProfile(client,email);
+    }catch(profileError){
+        var localOnly=readLocalMapRewards();
+        var localXp=(Number(localOnly.xp)||0)+xpReward;
+        var localGems=(Number(localOnly.gems)||0)+gemsReward;
+        var localStreak=Number(localOnly.streak)||0;
+        if(!previousSubmission||getVietnamDateKey(previousSubmission.created_at)!==today){localStreak+=1;}
+        updateLocalIslandRewards(localXp,localGems,localStreak);
+        if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set()};}
+        mapProgressByProvince[provinceKey].completed.add(selectedStage);
+        return {stars:stars,xpReward:xpReward,gemsReward:gemsReward,xp:localXp,score:Number(localOnly.score)||0,gems:localGems,streak:localStreak,rewardSynced:false,progressSynced:true};
+    }
+
+    var rewardAlreadyApplied=Boolean(existingSubmission?.details?.reward_applied);
+    var localState=readLocalMapRewards();
+    var currentXp=Number(localState.xp??profile.score)||0;
+    var currentGems=Number(localState.gems)||0;
+    var currentScore=Number(profile.score)||0;
+    var nextXp=currentXp+(rewardAlreadyApplied?0:xpReward);
+    var nextGems=currentGems+(rewardAlreadyApplied?0:gemsReward);
+    var nextScore=currentScore+(rewardAlreadyApplied?0:xpReward);
+    var nextStreak=Number(profile.current_streak)||0;
+    if(!rewardAlreadyApplied&&(!previousSubmission||getVietnamDateKey(previousSubmission.created_at)!==today)){nextStreak+=1;}
+    var rewardSynced=true;
+
+    if(!rewardAlreadyApplied){
+        var rewardPayload={score:nextScore,current_streak:nextStreak};
+        var rewardResult=await client.from("users").update(rewardPayload).eq("id",profile.id);
+        if(rewardResult.error){
+            rewardSynced=false;
+            logMapSupabaseError("users.update.rewards",rewardResult.error,{email:email,userId:profile.id,payload:rewardPayload});
+        }else{
+            var completedDetails=Object.assign({},submissionDetails,existingSubmission?.details||{},{reward_applied:true});
+            var markReward=await client.from("submissions").update({details:completedDetails}).eq("id",existingSubmission.id);
+            if(markReward.error){logMapSupabaseError("submissions.update.reward_applied",markReward.error,{submissionId:existingSubmission.id});}
+        }
+    }
+
     updateLocalIslandRewards(nextXp,nextGems,nextStreak);
-    var key=normalizeProvinceKey(selectedProvince);
-    if(!mapProgressByProvince[key]){mapProgressByProvince[key]={total:new Set(),completed:new Set()};}
-    mapProgressByProvince[key].completed.add(selectedStage);
-    return {stars:stars,xpReward:xpReward,gemsReward:gemsReward,xp:nextXp,score:nextScore,gems:nextGems,streak:nextStreak};
+    if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set()};}
+    mapProgressByProvince[provinceKey].completed.add(selectedStage);
+    return {stars:stars,xpReward:xpReward,gemsReward:gemsReward,xp:nextXp,score:nextScore,gems:nextGems,streak:nextStreak,rewardSynced:rewardSynced,progressSynced:true};
+}
+
+function markCurrentStageCompleted(){
+    if(stageCompletionPromise){return stageCompletionPromise;}
+    stageCompletionPromise=persistCurrentStageCompleted();
+    return stageCompletionPromise.finally(function(){stageCompletionPromise=null;});
 }
 
 function renderRoadmap(){
@@ -526,7 +657,7 @@ async function openProvinceSummary(event){
     document.body.classList.add("province-summary-opened");
     provinceSummaryTitle.textContent="Lý thuyết tổng kết "+selectedProvince;
     provinceSummarySubtitle.textContent="Phần kiến thức tổng hợp được mở khóa sau khi hoàn thành BOSS của tỉnh.";
-    provinceSummaryContent.textContent="Đang tải nội dung từ ngân hàng Admin...";
+    provinceSummaryContent.textContent="Đang chuẩn bị nội dung tổng kết...";
 
     try{
         client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
@@ -542,9 +673,9 @@ async function openProvinceSummary(event){
             return String(row?.island_theory||"").trim();
         });
         summaryText=String(summaryRow?.island_theory||"").trim();
-        provinceSummaryContent.textContent=summaryText||"Admin chưa upload lý thuyết tổng kết cho BOSS của tỉnh này.";
+        provinceSummaryContent.textContent=summaryText||"Nội dung tổng kết của tỉnh này đang được cập nhật.";
     }catch(error){
-        provinceSummaryContent.textContent="Không thể tải lý thuyết tổng kết: "+String(error?.message||error);
+        provinceSummaryContent.textContent="Chưa thể tải nội dung tổng kết. Vui lòng thử lại sau.";
         console.error("[VieGeo Map] Lỗi tải lý thuyết tổng kết BOSS:",error);
     }
 }
@@ -760,9 +891,9 @@ function renderQuestion(){
     if(!questions.length||currentQuestionIndex>=ISLAND_QUESTION_LIMIT||currentQuestionIndex>=questions.length){
         questionNumber.textContent="Đã tìm thấy "+String(activeQuestionBankSize)+" / 5 câu";
         questionStatus.textContent="Không thể tiếp tục";
-        questionText.textContent="Đảo này cần đủ 5 câu hỏi từ ngân hàng Admin.";
+        questionText.textContent="Bài học này đang được bổ sung nội dung.";
         answerGrid.innerHTML="";
-        answerFeedback.textContent="Ngân hàng hiện có "+String(activeQuestionBankSize)+"/5 câu hợp lệ đúng Tỉnh/Thành và Đảo nhỏ.";
+        answerFeedback.textContent="Vui lòng quay lại sau để bắt đầu lượt học gồm 5 câu hỏi.";
         nextQuestionButton.disabled=true;
         return;
     }
@@ -889,6 +1020,8 @@ async function openQuiz(event){
     selectedAnswer=-1;
     quizCorrectAnswers=0;
     quizStartedAt=Date.now();
+    quizAttemptId="attempt_"+quizStartedAt+"_"+Math.random().toString(16).slice(2);
+    stageCompletionPromise=null;
     activeQuestionSet=[];
     activeQuestionBankSize=0;
     activeIslandTheory="";
@@ -902,9 +1035,9 @@ async function openQuiz(event){
         document.body.classList.add("province-summary-opened");
         islandTheoryTitle.textContent="Lý thuyết cần nhớ";
         islandTheorySubtitle.textContent=selectedProvince+" · Đảo nhỏ "+selectedStage;
-        islandTheoryContent.textContent="Đang tải nội dung lý thuyết từ Admin...";
+        islandTheoryContent.textContent="Đang chuẩn bị nội dung lý thuyết...";
         islandTheoryBankStatus.className="island-theory-bank-status";
-        islandTheoryBankStatus.textContent="Đang đồng bộ ngân hàng câu hỏi Supabase...";
+        islandTheoryBankStatus.textContent="Đang chuẩn bị nội dung bài học...";
         islandTheoryStartButton.disabled=true;
     }
 
@@ -918,15 +1051,15 @@ async function openQuiz(event){
             activeQuestionSet=[];
         }
         if(islandTheoryContent){
-            islandTheoryContent.textContent=activeIslandTheory||"Admin chưa upload nội dung lý thuyết cho đảo nhỏ này.";
+            islandTheoryContent.textContent=activeIslandTheory||"Nội dung lý thuyết của bài này đang được cập nhật.";
         }
         if(islandTheoryBankStatus){
             if(activeQuestionSet.length===ISLAND_QUESTION_LIMIT){
                 islandTheoryBankStatus.className="island-theory-bank-status ready";
-                islandTheoryBankStatus.textContent="Đã liên kết "+String(activeQuestionBankSize)+" câu hỏi từ Supabase. Hệ thống sẽ chọn ngẫu nhiên đúng 5 câu cho lượt làm bài này.";
+                islandTheoryBankStatus.textContent="Bài học đã sẵn sàng. Lượt làm bài này gồm 5 câu hỏi được chọn ngẫu nhiên.";
             }else{
                 islandTheoryBankStatus.className="island-theory-bank-status error";
-                islandTheoryBankStatus.textContent="Chỉ tìm thấy "+String(activeQuestionBankSize)+"/5 câu hợp lệ cho "+selectedProvince+" · Đảo nhỏ "+selectedStage+".";
+                islandTheoryBankStatus.textContent="Bài học này đang được bổ sung nội dung. Vui lòng quay lại sau.";
             }
         }
         if(islandTheoryStartButton){
@@ -940,11 +1073,11 @@ async function openQuiz(event){
         activeQuestionSet=[];
         activeQuestionBankSize=0;
         if(islandTheoryContent){
-            islandTheoryContent.textContent="Không thể tải lý thuyết của đảo từ Supabase.";
+            islandTheoryContent.textContent="Chưa thể tải nội dung lý thuyết. Vui lòng thử lại.";
         }
         if(islandTheoryBankStatus){
             islandTheoryBankStatus.className="island-theory-bank-status error";
-            islandTheoryBankStatus.textContent="Không thể đồng bộ ngân hàng câu hỏi: "+String(error?.message||error);
+            islandTheoryBankStatus.textContent="Chưa thể chuẩn bị bài học lúc này. Vui lòng kiểm tra kết nối và thử lại.";
         }
         if(islandTheoryStartButton){
             islandTheoryStartButton.disabled=true;
@@ -971,18 +1104,20 @@ async function nextQuestion(){
         questionStatus.textContent="Đã hoàn thành";
         questionText.textContent="Bạn đã hoàn thành đảo này!";
         answerGrid.innerHTML="";
-        answerFeedback.textContent="Đang lưu kết quả lên Supabase...";
+        answerFeedback.textContent="Đang ghi nhận kết quả học tập...";
         nextQuestionButton.disabled=true;
         try{
             var completionResult=await markCurrentStageCompleted();
-            answerFeedback.textContent="Kết quả và phần thưởng đã được lưu vào Supabase.";
+            answerFeedback.textContent=completionResult.rewardSynced
+                ?"Kết quả và phần thưởng đã được ghi nhận."
+                :"Tiến độ đã được ghi nhận. Phần thưởng sẽ được cập nhật khi kết nối ổn định.";
             nextQuestionButton.textContent="QUAY LẠI LỘ TRÌNH";
             nextQuestionButton.disabled=false;
             showIslandResultModal(completionResult);
         }catch(error){
-            console.error("[VieGeo Map] Không thể lưu tiến độ:",error);
+            logMapSupabaseError("nextQuestion.save",error,{email:currentMapUserEmail,province:normalizeProvinceKey(selectedProvince),island:selectedStage});
             quizCompleted=false;
-            answerFeedback.textContent="Chưa thể lưu kết quả lên Supabase. Bấm nút bên dưới để thử lại.";
+            answerFeedback.textContent="Chưa thể ghi nhận kết quả. Vui lòng bấm nút bên dưới để thử lại.";
             nextQuestionButton.textContent="THỬ LƯU LẠI";
             nextQuestionButton.disabled=false;
         }

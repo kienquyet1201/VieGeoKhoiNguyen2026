@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VieGeo | Support Chat</title>
+    <title>VieGeo | Trung tâm CSKH</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="support-chat.css">
-    <link rel="stylesheet" href="global-theme.css?v=20260813-1">
+    <link rel="stylesheet" href="support-chat.css?v=20260813-2">
+    <link rel="stylesheet" href="global-theme.css?v=20260813-3">
+    <link rel="stylesheet" href="role-switcher.css?v=20260813-2">
     <script src="global-theme.js?v=20260813-1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabaseClient.js"></script>
+    <script src="supabaseClient.js?v=20260813-2"></script>
     <script src="supabase-ui-sync.js"></script>
-    <link rel="stylesheet" href="role-switcher.css">
 </head>
 <body>
     <div class="global-animated-background" aria-hidden="true">
@@ -41,242 +41,126 @@
         <aside class="ticket-sidebar">
             <div class="sidebar-header">
                 <div class="brand-block">
-                    <div class="brand-icon">🌏</div>
+                    <div class="brand-icon" aria-hidden="true">🌏</div>
                     <div>
                         <strong>VieGeo</strong>
-                        <span>Support Center</span>
+                        <span>Trung tâm CSKH</span>
                     </div>
                 </div>
-                <button class="theme-button" id="themeButton">
-                    <span id="themeIcon">🌙</span>
+                <button class="theme-button" id="themeButton" type="button" aria-label="Đổi giao diện">
+                    <span id="themeIcon" aria-hidden="true">🌙</span>
                 </button>
             </div>
 
-
-            <nav class="sidebar-navigation">
-                <a class="nav-link" href="student-dashboard.html">
-                    <span class="nav-icon">🏠</span>
-                    <span>Back to Home</span>
-                </a>
-                <a class="nav-link" href="admin-dashboard.html">
-                    <span class="nav-icon">🛡️</span>
-                    <span>Quản trị hệ thống</span>
-                </a>
+            <nav class="sidebar-navigation" aria-label="Điều hướng CSKH">
+                <a class="nav-link" href="student-dashboard.html"><span class="nav-icon">🏠</span><span>Trang học viên</span></a>
+                <a class="nav-link" href="admin-dashboard.html"><span class="nav-icon">🛡️</span><span>Quản trị hệ thống</span></a>
             </nav>
 
+            <div class="sync-status is-loading" id="syncStatus" role="status">
+                <span class="sync-dot" aria-hidden="true"></span>
+                <span>Đang cập nhật yêu cầu...</span>
+            </div>
+
             <div class="support-summary">
-                <div>
-                    <span>Đang chờ</span>
-                    <strong>8</strong>
-                </div>
-                <div>
-                    <span>Đang xử lý</span>
-                    <strong>5</strong>
-                </div>
+                <div><span>Đang chờ</span><strong id="pendingCount">0</strong></div>
+                <div><span>Đang xử lý</span><strong id="processingCount">0</strong></div>
             </div>
 
             <div class="ticket-tools">
-                <input id="ticketSearch" type="search" placeholder="Tìm khách hàng">
-                <select id="ticketFilter">
-                    <option value="all">Tất cả ticket</option>
-                    <option value="urgent">Ưu tiên cao</option>
-                    <option value="normal">Bình thường</option>
+                <input id="ticketSearch" type="search" placeholder="Tìm tên, email, nội dung" autocomplete="off">
+                <select id="ticketFilter" aria-label="Lọc yêu cầu">
+                    <option value="all">Tất cả yêu cầu</option>
+                    <option value="pending">Đang chờ</option>
+                    <option value="processing">Đang xử lý</option>
+                    <option value="resolved">Đã hoàn tất</option>
+                    <option value="closed">Đã đóng</option>
                 </select>
             </div>
 
-            <div class="ticket-list" id="ticketList">
-                <button class="ticket-item active" data-ticket="1" data-priority="urgent">
-                    <div class="customer-avatar pink-avatar">MA</div>
-                    <div class="ticket-content">
-                        <div class="ticket-topline">
-                            <strong>Minh Anh</strong>
-                            <span>2 phút</span>
-                        </div>
-                        <p>Em không vào được bài học Hà Nội...</p>
-                        <div class="ticket-meta">
-                            <span class="priority-badge urgent-badge">Ưu tiên</span>
-                            <span>Ticket #1248</span>
-                        </div>
-                    </div>
-                </button>
-
-                <button class="ticket-item" data-ticket="2" data-priority="normal">
-                    <div class="customer-avatar blue-avatar">QT</div>
-                    <div class="ticket-content">
-                        <div class="ticket-topline">
-                            <strong>Quốc Thịnh</strong>
-                            <span>8 phút</span>
-                        </div>
-                        <p>Điểm Arena của em chưa cập nhật.</p>
-                        <div class="ticket-meta">
-                            <span class="priority-badge normal-badge">Bình thường</span>
-                            <span>Ticket #1247</span>
-                        </div>
-                    </div>
-                </button>
-
-                <button class="ticket-item" data-ticket="3" data-priority="normal">
-                    <div class="customer-avatar green-avatar">HL</div>
-                    <div class="ticket-content">
-                        <div class="ticket-topline">
-                            <strong>Hương Lan</strong>
-                            <span>15 phút</span>
-                        </div>
-                        <p>Tôi muốn kiểm tra gói Premium.</p>
-                        <div class="ticket-meta">
-                            <span class="priority-badge normal-badge">Bình thường</span>
-                            <span>Ticket #1246</span>
-                        </div>
-                    </div>
-                </button>
-
-                <button class="ticket-item" data-ticket="4" data-priority="urgent">
-                    <div class="customer-avatar orange-avatar">TN</div>
-                    <div class="ticket-content">
-                        <div class="ticket-topline">
-                            <strong>Thu Ngân</strong>
-                            <span>24 phút</span>
-                        </div>
-                        <p>Tài khoản bị đăng xuất liên tục.</p>
-                        <div class="ticket-meta">
-                            <span class="priority-badge urgent-badge">Ưu tiên</span>
-                            <span>Ticket #1245</span>
-                        </div>
-                    </div>
-                </button>
+            <div class="ticket-list" id="ticketList" aria-live="polite">
+                <div class="ticket-state"><span class="state-spinner"></span><strong>Đang tải yêu cầu</strong><small>Vui lòng chờ trong giây lát.</small></div>
             </div>
 
             <div class="sidebar-footer">
                 <div class="support-agent">
-                    <div class="agent-avatar">CS</div>
+                    <div class="agent-avatar" id="agentAvatar">CS</div>
                     <div>
-                        <strong>CSKH VieGeo</strong>
+                        <strong id="agentName">Nhân viên CSKH</strong>
                         <span><i></i> Đang trực tuyến</span>
                     </div>
                 </div>
+                <label class="role-page-switcher">
+                    <span>Chuyển tài khoản</span>
+                    <select data-role-page-select>
+                        <option value="user">Học viên</option>
+                        <option value="parent">Phụ huynh</option>
+                        <option value="cs">Chăm sóc KH</option>
+                        <option value="admin">Quản trị viên</option>
+                    </select>
+                </label>
             </div>
         </aside>
 
         <main class="chat-main">
             <header class="chat-header">
                 <div class="chat-user">
-                    <div class="customer-avatar pink-avatar large-avatar">MA</div>
+                    <div class="customer-avatar blue-avatar large-avatar" id="chatCustomerAvatar">?</div>
                     <div>
                         <div class="chat-title-row">
-                            <h1 id="chatCustomerName">Minh Anh</h1>
-                            <span class="online-badge">Đang online</span>
+                            <h1 id="chatCustomerName">Chọn một yêu cầu</h1>
+                            <span class="ticket-status-badge" id="chatStatusBadge">Chưa chọn</span>
                         </div>
-                        <p id="chatTicketInfo">Ticket #1248 · Hỗ trợ bài học</p>
+                        <p id="chatTicketInfo">Chọn một yêu cầu để bắt đầu hỗ trợ.</p>
                     </div>
                 </div>
                 <div class="chat-actions">
-                    <button class="header-action" id="noteButton">📝 Ghi chú</button>
-                    <button class="header-action success-action" id="resolveButton">✓ Hoàn tất</button>
-                    <button class="header-action danger-action" id="closeButton">✕ Đóng</button>
+                    <button class="header-action" id="refreshButton" type="button">↻ Làm mới</button>
+                    <button class="header-action" id="noteButton" type="button" disabled>📝 Ghi chú</button>
+                    <button class="header-action success-action" id="resolveButton" type="button" disabled>✓ Hoàn tất</button>
+                    <button class="header-action danger-action" id="closeButton" type="button" disabled>✕ Đóng</button>
                 </div>
             </header>
 
-            <section class="customer-info">
-                <div class="info-card">
-                    <span>Email</span>
-                    <strong id="customerEmail">minhanh@viegeo.vn</strong>
-                </div>
-                <div class="info-card">
-                    <span>Vai trò</span>
-                    <strong id="customerRole">Học sinh</strong>
-                </div>
-                <div class="info-card">
-                    <span>Thiết bị</span>
-                    <strong id="customerDevice">Chrome · macOS</strong>
-                </div>
-                <div class="info-card">
-                    <span>Trạng thái</span>
-                    <strong class="status-text">Đang cần hỗ trợ</strong>
-                </div>
+            <section class="customer-info" aria-label="Thông tin người dùng">
+                <div class="info-card"><span>Email</span><strong id="customerEmail">—</strong></div>
+                <div class="info-card"><span>Vai trò</span><strong id="customerRole">—</strong></div>
+                <div class="info-card"><span>Nguồn yêu cầu</span><strong id="customerSource">—</strong></div>
+                <div class="info-card"><span>Trạng thái</span><strong class="status-text" id="customerStatus">—</strong></div>
             </section>
 
             <section class="chat-box">
-                <div class="message-list" id="messageList">
-                    <div class="message-day">Hôm nay</div>
-
-                    <div class="message-row customer-row">
-                        <div class="message-avatar">MA</div>
-                        <div class="message-group">
-                            <div class="message-bubble customer-bubble">
-                                Chào anh/chị, em đang học phần Hà Nội nhưng bấm vào bài thì không mở được ạ.
-                            </div>
-                            <span class="message-time">20:14</span>
-                        </div>
-                    </div>
-
-                    <div class="message-row agent-row">
-                        <div class="message-group">
-                            <div class="message-bubble agent-bubble">
-                                Chào Minh Anh 👋 VieGeo đã nhận được yêu cầu của em. Em đang gặp lỗi ở bài nào để mình kiểm tra nhé?
-                            </div>
-                            <span class="message-time">20:15</span>
-                        </div>
-                        <div class="message-avatar agent-message-avatar">CS</div>
-                    </div>
-
-                    <div class="message-row customer-row">
-                        <div class="message-avatar">MA</div>
-                        <div class="message-group">
-                            <div class="message-bubble customer-bubble">
-                                Dạ bài “Vị trí địa lí Hà Nội”. Khi bấm nút bắt đầu thì nó cứ đứng im.
-                            </div>
-                            <span class="message-time">20:16</span>
-                        </div>
-                    </div>
-
-                    <div class="message-row agent-row">
-                        <div class="message-group">
-                            <div class="message-bubble agent-bubble">
-                                Mình đang kiểm tra cho em. Em thử tải lại trang một lần bằng Cmd + Shift + R nhé. Nếu vẫn lỗi mình sẽ xử lý tiếp ngay.
-                            </div>
-                            <span class="message-time">20:17</span>
-                        </div>
-                        <div class="message-avatar agent-message-avatar">CS</div>
+                <div class="message-list" id="messageList" aria-live="polite">
+                    <div class="conversation-empty">
+                        <div class="empty-icon">💬</div>
+                        <strong>Chưa chọn cuộc hội thoại</strong>
+                        <p>Chọn một yêu cầu ở danh sách bên trái để xem nội dung.</p>
                     </div>
                 </div>
 
-                <div class="typing-status" id="typingStatus">Khách hàng đang nhập...</div>
+                <div class="typing-status visible" id="conversationHint">Phản hồi sẽ được lưu tự động.</div>
 
                 <div class="message-composer">
-                    <button class="composer-tool" id="emojiButton" type="button">😊</button>
-                    <button class="composer-tool" id="attachmentButton" type="button">📎</button>
-                    <textarea id="messageInput" rows="1" placeholder="Nhập tin nhắn hỗ trợ..."></textarea>
-                    <button class="send-button" id="sendButton" type="button">Gửi ➤</button>
+                    <textarea id="messageInput" rows="1" placeholder="Nhập phản hồi cho người dùng..." disabled></textarea>
+                    <button class="send-button" id="sendButton" type="button" disabled>Gửi phản hồi</button>
                 </div>
             </section>
         </main>
     </div>
 
-    <div class="modal-overlay" id="noteModal">
-        <div class="note-modal">
+    <div class="modal-overlay" id="noteModal" aria-hidden="true">
+        <div class="note-modal" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
             <div class="modal-heading">
-                <div>
-                    <span>Ghi chú nội bộ</span>
-                    <h2>Thêm ghi chú cho ticket</h2>
-                </div>
-                <button id="closeNoteButton" type="button">✕</button>
+                <div><span>Ghi chú nội bộ</span><h2 id="noteModalTitle">Thêm ghi chú cho yêu cầu</h2></div>
+                <button id="closeNoteButton" type="button" aria-label="Đóng">✕</button>
             </div>
             <textarea id="noteInput" rows="5" placeholder="Chỉ nhân viên CSKH nhìn thấy ghi chú này..."></textarea>
             <button class="save-note-button" id="saveNoteButton" type="button">Lưu ghi chú</button>
         </div>
     </div>
 
-    <div class="toast" id="toast"></div>
-    <script src="support-chat.js"></script>
-<label class="role-page-switcher">
-        <span>Chuyển tài khoản</span>
-        <select data-role-page-select>
-            <option value="user">Học sinh</option>
-            <option value="parent">Phụ huynh</option>
-            <option value="cs">Chăm sóc KH</option>
-            <option value="admin">Quản trị viên</option>
-        </select>
-    </label>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="cs-dashboard.js?v=20260813-2"></script>
     <script src="role-switcher.js"></script>
 </body>
 </html>

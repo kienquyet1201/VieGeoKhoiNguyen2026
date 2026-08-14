@@ -355,7 +355,7 @@
                 if (error) throw error;
             } else {
                 if (typeof db === 'undefined') {
-                    notify('Chưa thể gửi yêu cầu khi Supabase/localStorage chưa sẵn sàng.', 'warning');
+                    notify('Chưa thể gửi yêu cầu lúc này. Vui lòng thử lại sau.', 'warning');
                     return;
                 }
                 const collectionName = type === 'report' ? 'ErrorReports' : 'UserFeedbacks';
