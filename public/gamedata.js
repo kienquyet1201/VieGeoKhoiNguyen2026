@@ -79,7 +79,10 @@ const ACHIEVEMENTS_LIST = [
     { id: "ach_gems_10k", title: "Triệu Phú VieGeo", desc: "Tích lũy 10,000 Xu", target: 10000, type: "gems", icon: "fa-gem", color: "#1cb0f6" },
     
     { id: "ach_chest_1", title: "Chạm Vào May Mắn", desc: "Mở 1 rương báu", target: 1, type: "chestsOpened", icon: "fa-box-open", color: "#964B00" },
-    { id: "ach_chest_5", title: "Thợ Săn Kho Báu", desc: "Mở 5 rương báu", target: 5, type: "chestsOpened", icon: "fa-gem", color: "#ce82ff" }
+    { id: "ach_chest_5", title: "Thợ Săn Kho Báu", desc: "Mở 5 rương báu", target: 5, type: "chestsOpened", icon: "fa-gem", color: "#ce82ff" },
+    { id: "season_explorer", title: "Explorer", desc: "Huy hiệu phần thưởng mùa dành cho Top 1", target: 1, type: "seasonTop1", icon: "fa-compass", color: "#38bdf8" },
+    { id: "season_second_place", title: "The King of Second Place", desc: "Huy hiệu phần thưởng mùa dành cho Top 2", target: 1, type: "seasonTop2", icon: "fa-crown", color: "#c084fc" },
+    { id: "season_three_figures", title: "Stories About Three Great Figures", desc: "Huy hiệu phần thưởng mùa dành cho Top 3", target: 1, type: "seasonTop3", icon: "fa-landmark", color: "#f59e0b" }
 ];
 
 const SUPPORTED_DIFFICULTIES = Object.freeze(['easy', 'medium', 'hard']);
@@ -106,7 +109,10 @@ function getAchievementProgress(state, type) {
         perfectLessons: 'perfectLessons',
         streak: 'streak',
         gems: 'gems',
-        chestsOpened: 'chestsOpened'
+        chestsOpened: 'chestsOpened',
+        seasonTop1: 'seasonTop1',
+        seasonTop2: 'seasonTop2',
+        seasonTop3: 'seasonTop3'
     };
     return Math.max(0, Number(state?.[progressFields[type]]) || 0);
 }

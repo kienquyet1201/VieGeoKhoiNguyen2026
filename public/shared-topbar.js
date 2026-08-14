@@ -117,12 +117,13 @@ function toggleSharedTheme(){
 }
 
 function markSharedActive(){
-    var file=window.location.pathname.substring(window.location.pathname.lastIndexOf("/")+1)||"student-dashboard.html";
+    var normalizePage=function(value){return String(value||"").split("?")[0].replace(/\.html$/i,"");};
+    var file=normalizePage(window.location.pathname.substring(window.location.pathname.lastIndexOf("/")+1)||"student-dashboard");
     var index;
     var linkFile;
 
     for(index=0;index<sharedLinks.length;index+=1){
-        linkFile=sharedLinks[index].getAttribute("href").split("?")[0];
+        linkFile=normalizePage(sharedLinks[index].getAttribute("href"));
         sharedLinks[index].classList.remove("active");
         if(linkFile===file){
             sharedLinks[index].classList.add("active");

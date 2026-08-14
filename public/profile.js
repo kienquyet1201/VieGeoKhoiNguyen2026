@@ -62,7 +62,10 @@ const PROFILE_ACHIEVEMENTS = [
     { id: 'ach_gems_1k', title: 'Khởi nghiệp', description: 'Tích lũy 1.000 Gem', type: 'gems', target: 1000, icon: '💎' },
     { id: 'ach_gems_10k', title: 'Triệu phú VieGeo', description: 'Tích lũy 10.000 Gem', type: 'gems', target: 10000, icon: '👑' },
     { id: 'ach_chest_1', title: 'Chạm vào may mắn', description: 'Mở 1 rương báu', type: 'chestsOpened', target: 1, icon: '🎁' },
-    { id: 'ach_chest_5', title: 'Thợ săn kho báu', description: 'Mở 5 rương báu', type: 'chestsOpened', target: 5, icon: '🗝️' }
+    { id: 'ach_chest_5', title: 'Thợ săn kho báu', description: 'Mở 5 rương báu', type: 'chestsOpened', target: 5, icon: '🗝️' },
+    { id: 'season_explorer', title: 'Explorer', description: 'Phần thưởng mùa dành cho người chơi Top 1', type: 'seasonTop1', target: 1, icon: '🧭', seasonal: true, aliases: ['explorer', 'badge_explorer', 'season_top_1', 'top_1'] },
+    { id: 'season_second_place', title: 'The King of Second Place', description: 'Phần thưởng mùa dành cho người chơi Top 2', type: 'seasonTop2', target: 1, icon: '👑', seasonal: true, aliases: ['the_king_of_second_place', 'king_of_second_place', 'season_top_2', 'top_2'] },
+    { id: 'season_three_figures', title: 'Stories About Three Great Figures', description: 'Phần thưởng mùa dành cho người chơi Top 3', type: 'seasonTop3', target: 1, icon: '🏛️', seasonal: true, aliases: ['stories_about_three_great_figures', 'three_great_figures', 'season_top_3', 'top_3'] }
 ];
 let profileEarnedAchievementIds = new Set();
 
@@ -73,9 +76,22 @@ function profileAchievementProgress(currentUser, type) {
         perfectLessons: currentUser?.perfect_lessons ?? currentUser?.perfectLessons ?? storedState.perfectLessons,
         streak: currentUser?.current_streak ?? currentUser?.streak ?? storedState.streak,
         gems: currentUser?.gems ?? storedState.gems,
-        chestsOpened: currentUser?.chests_opened ?? currentUser?.chestsOpened ?? storedState.chestsOpened
+        chestsOpened: currentUser?.chests_opened ?? currentUser?.chestsOpened ?? storedState.chestsOpened,
+        seasonTop1: currentUser?.season_top_1 ?? storedState.seasonTop1,
+        seasonTop2: currentUser?.season_top_2 ?? storedState.seasonTop2,
+        seasonTop3: currentUser?.season_top_3 ?? storedState.seasonTop3
     };
     return Math.max(0, Number(fields[type]) || 0);
+}
+
+function achievementKey(value) {
+    return String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+}
+
+function isAchievementAwarded(earnedIds, achievement) {
+    const earnedKeys = new Set(normalizeAchievementIds(earnedIds).map(achievementKey));
+    return [achievement.id, ...(achievement.aliases || [])]
+        .some(id => earnedKeys.has(achievementKey(id)));
 }
 
 function renderAchievementModal(currentUser, earnedIds) {
@@ -83,17 +99,17 @@ function renderAchievementModal(currentUser, earnedIds) {
     const summary = document.getElementById('achievementModalSummary');
     if (!list || !summary) return;
     const earnedSet = new Set(normalizeAchievementIds(earnedIds));
-    if (earnedSet.has('explorer')) earnedSet.add('ach_lesson_1');
     if (earnedSet.has('streak_7')) earnedSet.add('ach_streak_7');
     if (earnedSet.has('arena_top')) earnedSet.add('ach_pvp_1');
     profileEarnedAchievementIds = new Set();
     list.replaceChildren();
 
     PROFILE_ACHIEVEMENTS.forEach(achievement => {
-        const earned = earnedSet.has(achievement.id) || profileAchievementProgress(currentUser, achievement.type) >= achievement.target;
+        const earned = isAchievementAwarded([...earnedSet], achievement) || profileAchievementProgress(currentUser, achievement.type) >= achievement.target;
         if (earned) profileEarnedAchievementIds.add(achievement.id);
         const card = document.createElement('article');
         card.className = `achievement-modal-item${earned ? ' is-earned' : ''}`;
+        if (achievement.seasonal) card.classList.add('is-seasonal');
         card.innerHTML = '<div class="achievement-modal-icon"></div><strong></strong><small></small><span class="achievement-modal-state"></span>';
         card.querySelector('.achievement-modal-icon').textContent = achievement.icon;
         card.querySelector('strong').textContent = achievement.title;
@@ -142,14 +158,17 @@ async function syncAchievementBadges(currentUser) {
         }
     }
 
-    const badgeIds = ['explorer', 'streak_7', 'arena_top'];
+    const badgeIds = ['ach_lesson_1', 'ach_streak_7', 'ach_pvp_1', 'season_explorer', 'season_second_place', 'season_three_figures'];
     const badges = document.querySelectorAll('.achievement-panel .achievement-badge');
     badges.forEach((badge, index) => {
-        const key = badgeIds[index];
-        const earned = earnedIds.includes(key)
-            || (key === 'explorer' && earnedIds.some(id => /explor|kham-pha|th[aá]m-hiem/i.test(id)))
-            || (key === 'streak_7' && (Number(currentUser?.current_streak ?? gameState?.streak ?? 0) >= 7 || earnedIds.some(id => /streak|chuoi/i.test(id))))
-            || (key === 'arena_top' && earnedIds.some(id => /arena|top/i.test(id)));
+        const key = badge.dataset.achievementId || badgeIds[index];
+        const achievement = PROFILE_ACHIEVEMENTS.find(item => item.id === key);
+        const earned = Boolean(achievement && (
+            isAchievementAwarded(earnedIds, achievement)
+            || profileAchievementProgress(currentUser, achievement.type) >= achievement.target
+            || (key === 'ach_streak_7' && earnedIds.some(id => /streak|chuoi/i.test(id)))
+            || (key === 'ach_pvp_1' && earnedIds.some(id => /arena_top/i.test(id)))
+        ));
         badge.classList.toggle('is-earned', earned);
         badge.setAttribute('aria-label', `${badge.textContent.trim()}${earned ? ' - đã đạt' : ' - chưa đạt'}`);
     });

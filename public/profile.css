@@ -37,3 +37,5 @@ body.achievement-modal-open{overflow:hidden}
 .premium-card.is-active .premium-button{color:#064e3b;background:linear-gradient(135deg,#a7f3d0,#5eead4)}
 .premium-card.is-pending{border-color:#b39136}.premium-card.is-pending .premium-button{color:#71530a;background:linear-gradient(135deg,#fef3c7,#fde68a)}
 .premium-button:disabled{cursor:default;opacity:1}
+.achievement-badge.season-badge,.achievement-modal-item.is-seasonal{position:relative;background:linear-gradient(145deg,rgba(56,189,248,.12),rgba(168,85,247,.11));border-color:rgba(125,211,252,.32)}
+.achievement-modal-item.is-seasonal::after{content:"Phần thưởng mùa";position:absolute;top:12px;right:12px;padding:5px 8px;border-radius:999px;color:#8bdcff;background:rgba(56,189,248,.12);font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}

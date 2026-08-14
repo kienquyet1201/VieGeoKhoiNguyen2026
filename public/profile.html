@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="profile.css?v=20260814-12">
+    <link rel="stylesheet" href="profile.css?v=20260814-13">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabaseClient.js?v=20260814-7"></script>
     <script src="auth-guard.js?v=20260814-19"></script>
@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="shared-topbar.css?v=20260814-2">
     <link rel="stylesheet" href="global-theme.css?v=20260814-3">
     <script src="global-theme.js?v=20260814-3"></script>
+    <link rel="stylesheet" href="responsive-system.css?v=20260814-2">
 </head>
 <body>
     <div class="global-animated-background" aria-hidden="true">
@@ -53,6 +54,7 @@
         <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
         <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
         <a class="shared-link" href="exam-arena.html"><span class="shared-label">Luyện tập, luyện thi</span></a>
+        <a class="shared-link" href="arena.html"><span class="shared-label">Đấu trường</span></a>
         <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
         <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
         <a class="shared-link" href="profile.html"><span class="shared-label">Hồ sơ</span></a>
@@ -258,9 +260,12 @@
                             </div>
                         </div>
                         <div class="badge-grid">
-                            <div class="achievement-badge"><span>🗺️</span><small>Nhà thám hiểm</small></div>
-                            <div class="achievement-badge"><span>🔥</span><small>Streak 7 ngày</small></div>
-                            <div class="achievement-badge"><span>🏆</span><small>Top Arena</small></div>
+                            <div class="achievement-badge" data-achievement-id="ach_lesson_1"><span>🗺️</span><small>Nhà thám hiểm</small></div>
+                            <div class="achievement-badge" data-achievement-id="ach_streak_7"><span>🔥</span><small>Streak 7 ngày</small></div>
+                            <div class="achievement-badge" data-achievement-id="ach_pvp_1"><span>🏆</span><small>Top Arena</small></div>
+                            <div class="achievement-badge season-badge" data-achievement-id="season_explorer"><span>🧭</span><small>Explorer</small></div>
+                            <div class="achievement-badge season-badge" data-achievement-id="season_second_place"><span>👑</span><small>The King of Second Place</small></div>
+                            <div class="achievement-badge season-badge" data-achievement-id="season_three_figures"><span>🏛️</span><small>Stories About Three Great Figures</small></div>
                         </div>
                     </article>
 
@@ -293,8 +298,8 @@
     </div>
 
     <div class="toast" id="toast"></div>
-    <script src="profile.js?v=20260814-13"></script>
-    <script src="shared-topbar.js?v=20260814-19"></script>
+    <script src="profile.js?v=20260814-14"></script>
+    <script src="shared-topbar.js?v=20260814-20"></script>
 <button class="support-button" id="supportButton" type="button">
         <span class="support-avatar">CS</span>
         <span class="support-copy">
