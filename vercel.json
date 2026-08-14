@@ -1,6 +1,11 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "functions": {
+    "api/support-ai.js": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     { "source": "/cs", "destination": "/cs-dashboard.html" }
   ]

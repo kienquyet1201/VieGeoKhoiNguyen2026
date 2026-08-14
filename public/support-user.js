@@ -93,6 +93,29 @@ function supportConversation(ticket){
     });
 }
 
+function supportLocalAutoReply(message){
+    var text=String(message||"").toLowerCase();
+    if(/đăng nhập|mật khẩu|tài khoản/.test(text)){
+        return "Tôi đã nhận được yêu cầu về tài khoản. Bạn vui lòng cho biết thông báo lỗi đang thấy; không gửi mật khẩu hoặc mã OTP trong khung chat.";
+    }
+    if(/premium|nâng cấp|thanh toán/.test(text)){
+        return "Tôi đã ghi nhận yêu cầu Premium. Nhân viên CSKH sẽ kiểm tra trạng thái và phản hồi tại đây; bạn không cần gửi thông tin thanh toán nhạy cảm.";
+    }
+    if(/câu hỏi|đảo|bài học|tiến độ/.test(text)){
+        return "Tôi đã ghi nhận vấn đề học tập của bạn. Hãy cho biết tên tỉnh, đảo nhỏ và bước đang gặp lỗi để CSKH kiểm tra nhanh hơn.";
+    }
+    return "Tôi đã nhận được tin nhắn của bạn. Bạn hãy mô tả thêm màn hình hoặc thao tác đang gặp vấn đề; nhân viên CSKH sẽ tiếp tục hỗ trợ tại đây.";
+}
+
+function appendSupportAiReply(ticket,reply){
+    return supportAppendMessage(ticket.id,"ai",reply,{
+        senderId:"viegeo-gemini",
+        senderEmail:"ai-support@viegeo.local",
+        senderName:"Trợ lý VieGeo",
+        senderRole:"cs"
+    });
+}
+
 function requestSupportAutoReply(ticket,userMessage){
     if(supportAiReplyPending||!ticket){return Promise.resolve(ticket);}
     supportAiReplyPending=true;
@@ -107,19 +130,16 @@ function requestSupportAutoReply(ticket,userMessage){
     }).then(function(result){
         var reply=String(result.data&&result.data.reply||"").trim();
         if(!reply){throw new Error("Trợ lý chưa trả về nội dung.");}
-        return supportAppendMessage(ticket.id,"ai",reply,{
-            senderId:"viegeo-gemini",
-            senderEmail:"ai-support@viegeo.local",
-            senderName:"Trợ lý VieGeo",
-            senderRole:"cs"
-        });
+        return appendSupportAiReply(ticket,reply);
     }).then(function(updatedTicket){
         renderSupportMessages(updatedTicket);
         return updatedTicket;
     }).catch(function(error){
-        console.error("[VieGeo Support] Không thể nhận phản hồi tự động:",error);
-        showSupportToast("Tin nhắn đã được gửi. Nhân viên CSKH sẽ phản hồi sớm.");
-        return ticket;
+        console.warn("[VieGeo Support] Đang dùng phản hồi hỗ trợ dự phòng.");
+        return appendSupportAiReply(ticket,supportLocalAutoReply(userMessage)).then(function(updatedTicket){
+            renderSupportMessages(updatedTicket);
+            return updatedTicket;
+        });
     }).finally(function(){
         supportAiReplyPending=false;
         setSupportAiTyping(false);

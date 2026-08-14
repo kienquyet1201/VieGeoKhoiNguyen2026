@@ -1,4 +1,21 @@
 var supportStorageKey="VieGeo_support_tickets";
+var supportRemoteTablesAvailable=true;
+var supportRemoteSchemaWarningShown=false;
+
+function supportIsMissingTableError(error){
+    var code=String(error&&error.code||"").toUpperCase();
+    var message=String(error&&error.message||"").toLowerCase();
+    return code==="PGRST205"||message.indexOf("support_tickets")>=0&&message.indexOf("schema cache")>=0||message.indexOf("support_messages")>=0&&message.indexOf("schema cache")>=0;
+}
+
+function supportDisableRemoteTables(error){
+    supportRemoteTablesAvailable=false;
+    if(!supportRemoteSchemaWarningShown){
+        supportRemoteSchemaWarningShown=true;
+        console.warn("[VieGeo Support] Chế độ lưu hội thoại trực tiếp chưa được bật; đang dùng lưu trữ dự phòng.");
+    }
+    return error;
+}
 
 function supportGetSession(){
     var raw=localStorage.getItem("lm_session");
@@ -104,11 +121,12 @@ function supportMessagePayload(ticket,message){
 
 function supportWriteRemote(ticket){
     var database=supportGetClient();
-    if(!database){return Promise.resolve(false);}
+    if(!database||!supportRemoteTablesAvailable){return Promise.resolve(false);}
     return database.from("support_tickets").upsert([supportTicketPayload(ticket)],{onConflict:"id"}).then(function(result){
         if(result.error){throw result.error;}
         return true;
     }).catch(function(error){
+        if(supportIsMissingTableError(error)){supportDisableRemoteTables(error);return false;}
         console.error("[VieGeo Support] Không thể đồng bộ ticket:",error);
         return false;
     });
@@ -145,6 +163,10 @@ function supportWriteMessageRemote(ticket,message){
     var database=supportGetClient();
     if(!database||!message){return Promise.resolve(false);}
     if(message.remoteStored||message.fallbackStored){return Promise.resolve(true);}
+    if(!supportRemoteTablesAvailable){
+        if(message.sender==="ai"||message.sender==="admin"||message.sender==="cs"){return Promise.resolve(true);}
+        return supportWriteFeedbackFallback(ticket,message);
+    }
     return supportWriteRemote(ticket).then(function(ticketSaved){
         if(!ticketSaved){return supportWriteFeedbackFallback(ticket,message);}
         return database.from("support_messages").upsert([supportMessagePayload(ticket,message)],{onConflict:"id"}).then(function(result){
@@ -153,6 +175,10 @@ function supportWriteMessageRemote(ticket,message){
             supportUpsertLocalTicket(ticket);
             return true;
         }).catch(function(error){
+            if(supportIsMissingTableError(error)){
+                supportDisableRemoteTables(error);
+                return message.sender==="user"?supportWriteFeedbackFallback(ticket,message):true;
+            }
             console.error("[VieGeo Support] Không thể lưu hội thoại trực tiếp:",error);
             return supportWriteFeedbackFallback(ticket,message);
         });
@@ -227,15 +253,26 @@ function supportNormalizeRemoteTicket(row,messages){
 
 function supportLoadTickets(){
     var database=supportGetClient();
-    if(!database){return Promise.resolve(supportGetLocalTickets());}
+    if(!database||!supportRemoteTablesAvailable){return Promise.resolve(supportGetLocalTickets());}
 
-    return Promise.all([
-        database.from("support_tickets").select("*").order("updated_at_client",{ascending:false}).limit(100),
-        database.from("support_messages").select("*").order("created_at_client",{ascending:true}).limit(1000)
-    ]).then(function(results){
-        var ticketResult=results[0];
-        var messageResult=results[1];
-        if(ticketResult.error){throw ticketResult.error;}
+    return database.from("support_tickets").select("*").order("updated_at_client",{ascending:false}).limit(100).then(function(ticketResult){
+        if(ticketResult.error){
+            if(supportIsMissingTableError(ticketResult.error)){
+                supportDisableRemoteTables(ticketResult.error);
+                return {tickets:null,messageResult:null};
+            }
+            throw ticketResult.error;
+        }
+        return database.from("support_messages").select("*").order("created_at_client",{ascending:true}).limit(1000).then(function(messageResult){
+            if(messageResult.error&&supportIsMissingTableError(messageResult.error)){
+                supportDisableRemoteTables(messageResult.error);
+                return {tickets:null,messageResult:null};
+            }
+            return {tickets:ticketResult.data||[],messageResult:messageResult};
+        });
+    }).then(function(results){
+        if(!results.tickets){return supportGetLocalTickets();}
+        var messageResult=results.messageResult||{};
         var messagesByTicket={};
         if(!messageResult.error){
             (messageResult.data||[]).forEach(function(message){
@@ -244,7 +281,7 @@ function supportLoadTickets(){
                 messagesByTicket[key].push(message);
             });
         }
-        var tickets=(ticketResult.data||[]).map(function(row){
+        var tickets=results.tickets.map(function(row){
             var remoteMessages=messagesByTicket[String(row.id)]||[];
             var localTicket=supportFindLocalTicket(row.id);
             var ticket=supportNormalizeRemoteTicket(row,remoteMessages);
@@ -256,7 +293,7 @@ function supportLoadTickets(){
         });
         return tickets;
     }).catch(function(error){
-        console.error("[VieGeo Support] Không thể tải ticket từ Supabase:",error);
+        if(!supportIsMissingTableError(error)){console.error("[VieGeo Support] Không thể tải ticket từ Supabase:",error);}
         return supportGetLocalTickets();
     });
 }
