@@ -91,9 +91,10 @@
     }
 
     function identifyUserQuery(query, user) {
-        if (user?.id !== undefined && user?.id !== null && user?.id !== '') return query.eq('id', user.id);
-        if (user?.email) return query.eq('email', user.email);
-        return query.eq('user_email', user?.user_email || userEmail(user));
+        const email = userEmail(user);
+        if (email && Object.prototype.hasOwnProperty.call(user || {}, 'email')) return query.eq('email', email);
+        if (email && Object.prototype.hasOwnProperty.call(user || {}, 'user_email')) return query.eq('user_email', email);
+        return query.eq('id', user?.id);
     }
 
     function sameUser(first, second) {
@@ -132,19 +133,20 @@
         try {
             const previousActive = canonicalRole(user.active_role || user.role);
             const primaryRole = roles.includes(previousActive) ? previousActive : roles[0];
-            const payload = {
-                role: primaryRole,
-                active_role: primaryRole,
-                roles,
-                updated_at: new Date().toISOString()
-            };
+            const supportsRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
+            const payload = { role: primaryRole };
+            if (supportsRoles) payload.roles = roles;
+            if (Object.prototype.hasOwnProperty.call(user || {}, 'active_role')) payload.active_role = primaryRole;
+            if (Object.prototype.hasOwnProperty.call(user || {}, 'updated_at')) payload.updated_at = new Date().toISOString();
             let query = identifyUserQuery(client.from('users').update(payload), user);
             const { data, error } = await query.select('*').maybeSingle();
             if (error) throw error;
             const index = allUsers.findIndex(item => sameUser(item, user));
             if (index >= 0) allUsers[index] = data || { ...user, ...payload };
             renderUsers(allUsers);
-            showToast(`Đã cập nhật ${roles.length} vai trò cho ${displayName(user)}.`, 'success');
+            showToast(supportsRoles
+                ? `Đã cập nhật ${roles.length} vai trò cho ${displayName(user)}.`
+                : `Đã cập nhật vai trò ${roleName(primaryRole)} cho ${displayName(user)}.`, 'success');
         } catch (error) {
             console.error('[VieGeo Admin] Không thể cập nhật vai trò:', error);
             showToast('Không thể cập nhật vai trò lúc này.', 'error');
@@ -188,6 +190,7 @@
                 const score = Math.max(0, Number(user.score ?? user.xp ?? 0) || 0);
                 const streak = Math.max(0, Number(user.current_streak ?? user.streak ?? 0) || 0);
                 const row = document.createElement('tr');
+                const supportsMultipleRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
                 row.dataset.userIndex = String(allUsers.indexOf(user));
                 row.innerHTML = `<td>${escapeText(userEmail(user) || 'Chưa có email')}</td><td>${escapeText(name)}</td><td><div class="role-badge-list"></div></td><td>${score.toLocaleString('vi-VN')}</td><td>🔥 ${streak}</td><td><div class="user-role-editor" role="group" aria-label="Vai trò của ${escapeText(name)}"><label><input type="checkbox" value="user"> Học sinh</label><label><input type="checkbox" value="parent"> Phụ huynh</label><label><input type="checkbox" value="admin"> Quản trị viên</label><label><input type="checkbox" value="cs"> CSKH</label><button class="mini-button" type="button" data-save-user-role>Lưu vai trò</button></div></td>`;
                 const badgeList = row.querySelector('.role-badge-list');
@@ -197,7 +200,14 @@
                     badge.textContent = roleName(currentRole);
                     badgeList.appendChild(badge);
                 });
-                row.querySelectorAll('.user-role-editor input').forEach(input => { input.checked = userRoles.includes(input.value); });
+                row.querySelectorAll('.user-role-editor input').forEach(input => {
+                    input.checked = userRoles.includes(input.value);
+                    if (!supportsMultipleRoles) {
+                        input.type = 'radio';
+                        input.name = `primary-role-${user.id || row.dataset.userIndex}`;
+                    }
+                });
+                if (!supportsMultipleRoles) row.querySelector('.user-role-editor').title = 'Hệ thống hiện lưu một vai trò chính cho mỗi tài khoản.';
                 body.appendChild(row);
             });
         } catch (error) {

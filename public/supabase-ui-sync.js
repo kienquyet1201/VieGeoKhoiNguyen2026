@@ -167,6 +167,10 @@
         }
         if (!shouldActivate) return source;
 
+        if (!Object.prototype.hasOwnProperty.call(source, 'account_status')) {
+            return { ...source, account_status: 'premium', accountStatus: 'premium' };
+        }
+
         let update = await client
             .from('users')
             .update({ account_status: 'premium', updated_at: new Date().toISOString() })
