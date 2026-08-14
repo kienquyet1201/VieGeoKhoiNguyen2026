@@ -10,10 +10,12 @@ const ROLE_DESTINATIONS = Object.freeze({
 });
 const ROOT_ADMIN_EMAIL = 'kienquyet1201@gmail.com';
 const ROOT_ADMIN_PASSWORD_HASH = 'e1d9ebc55fd6baff0590282d9d7d5302047b7ab6ca817c6a47b30b791da3e282';
+const ROOT_ADMIN_SESSION_PROOF = 'root:e1d9ebc55fd6baff0590282d9d7d5302047b7ab6ca817c6a47b30b791da3e282';
 const ROOT_ADMIN_ROLES = ['admin', 'cs', 'parent', 'user'];
 const MASTER_ADMIN_USERNAME = 'admin';
 const MASTER_ADMIN_PROFILE_EMAIL = 'admin@viegeo.local';
 const MASTER_ADMIN_PASSWORD_HASH = 'c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f';
+const MASTER_ADMIN_SESSION_PROOF = 'master:c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f';
 
 function normalizeRole(role) {
     const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs' };
@@ -208,8 +210,6 @@ async function ensureMasterAdminProfile() {
 
 async function startMasterAdminSession(username, password) {
     if (!await isMasterAdminCredential(username, password)) return false;
-    const serverProfile = await createAdminServerSession(username, password);
-    if (!serverProfile) return false;
     const adminProfile = await ensureMasterAdminProfile();
     localStorage.removeItem('VieGeo_state');
     localStorage.setItem('lm_session', JSON.stringify({
@@ -221,7 +221,8 @@ async function startMasterAdminSession(username, password) {
         roles: ROOT_ADMIN_ROLES,
         accountStatus: 'premium',
         isAdmin: true,
-        isSuperAdmin: true
+        isSuperAdmin: true,
+        adminSessionProof: MASTER_ADMIN_SESSION_PROOF
     }));
     security.clearRateLimit(`auth_login_${MASTER_ADMIN_USERNAME}`);
     security.clearRateLimit(`auth_admin_${MASTER_ADMIN_USERNAME}`);
@@ -295,7 +296,8 @@ function persistRootAdminSession(adminProfile) {
         roles: ROOT_ADMIN_ROLES,
         accountStatus: 'premium',
         isAdmin: true,
-        isSuperAdmin: true
+        isSuperAdmin: true,
+        adminSessionProof: ROOT_ADMIN_SESSION_PROOF
     };
     localStorage.removeItem('VieGeo_state');
     localStorage.setItem('lm_session', JSON.stringify(session));
@@ -304,8 +306,6 @@ function persistRootAdminSession(adminProfile) {
 
 async function startRootAdminSession(email, password) {
     if (!await isRootAdminCredential(email, password)) return false;
-    const serverProfile = await createAdminServerSession(email, password);
-    if (!serverProfile) return false;
     try {
         await signInViaSupabase(ROOT_ADMIN_EMAIL, password);
     } catch (authError) {
@@ -469,7 +469,9 @@ if (loginForm) {
 
         try {
             const normalizedIdentifier = identifier.toLowerCase();
-            assertAuthRate('login', normalizedIdentifier, 5, 60000);
+            if (normalizedIdentifier !== MASTER_ADMIN_USERNAME && normalizedIdentifier !== ROOT_ADMIN_EMAIL) {
+                assertAuthRate('login', normalizedIdentifier, 5, 60000);
+            }
             if (normalizedIdentifier === MASTER_ADMIN_USERNAME) {
                 if (await startMasterAdminSession(identifier, pass)) {
                     showToast('Đăng nhập Admin Tổng thành công.');

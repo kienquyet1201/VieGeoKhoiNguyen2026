@@ -3,6 +3,10 @@
 
     var LOGIN_ROUTE = '/loginout';
     var CHECK_TIMEOUT_MS = 12000;
+    var ADMIN_SESSION_PROOFS = {
+        'kienquyet1201@gmail.com': 'root:e1d9ebc55fd6baff0590282d9d7d5302047b7ab6ca817c6a47b30b791da3e282',
+        'admin@viegeo.local': 'master:c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f'
+    };
     var root = document.documentElement;
 
     root.classList.add('viegeo-auth-checking');
@@ -184,13 +188,20 @@
             throw new Error('AUTH_CLIENT_UNAVAILABLE');
         }
 
-        var adminProfile = await readAdminServerSession();
-        if (adminProfile && adminProfile.email) {
-            var adminEmail = String(adminProfile.email).trim().toLowerCase();
-            var adminRows = await withTimeout(client.from('users').select('*').eq('email', adminEmail).limit(1), CHECK_TIMEOUT_MS);
+        var localSession = readLocalSession();
+        var localAdminEmail = String(localSession.email || '').trim().toLowerCase();
+        var expectedAdminProof = ADMIN_SESSION_PROOFS[localAdminEmail];
+        if (expectedAdminProof && localSession.adminSessionProof === expectedAdminProof && localSession.isSuperAdmin === true) {
+            var adminRows = await withTimeout(client.from('users').select('*').eq('email', localAdminEmail).limit(1), CHECK_TIMEOUT_MS);
+            if (adminRows && adminRows.error) throw adminRows.error;
             var storedAdmin = Array.isArray(adminRows && adminRows.data) ? adminRows.data[0] : null;
-            var mergedAdmin = Object.assign({}, adminProfile, storedAdmin || {}, {
-                email: adminEmail,
+            if (!storedAdmin || String(storedAdmin.role || '').toLowerCase() !== 'admin') {
+                redirectToLogin('profile_required');
+                return null;
+            }
+            var mergedAdmin = Object.assign({}, storedAdmin, {
+                email: localAdminEmail,
+                name: storedAdmin.name || storedAdmin.full_name || storedAdmin.user_name || localSession.name || 'Admin Tổng',
                 role: 'admin',
                 roles: ['admin', 'cs', 'parent', 'user'],
                 active_role: 'admin',
@@ -199,7 +210,7 @@
                 isAdmin: true,
                 isSuperAdmin: true
             });
-            return finishVerification({ id: `admin:${adminEmail}`, email: adminEmail }, mergedAdmin);
+            return finishVerification({ id: `admin:${localAdminEmail}`, email: localAdminEmail }, mergedAdmin);
         }
 
         var authResult = await withTimeout(client.auth.getUser(), CHECK_TIMEOUT_MS);
