@@ -14,8 +14,14 @@ function getSharedRoles(session){
     var source=[];
     var append=function(value){
         if(Array.isArray(value)){value.forEach(append);return;}
-        if(typeof value==="string"&&value.trim().startsWith("[")){
-            try{JSON.parse(value).forEach(append);return;}catch(error){}
+        if(typeof value==="string"){
+            var trimmed=value.trim();
+            if(!trimmed){return;}
+            if((trimmed.startsWith("[")&&trimmed.endsWith("]"))||trimmed.indexOf(",")>=0){
+                try{var parsed=JSON.parse(trimmed);if(Array.isArray(parsed)){parsed.forEach(append);return;}}catch(error){}
+                trimmed.split(",").forEach(append);
+                return;
+            }
         }
         if(value){source.push(value);}
     };

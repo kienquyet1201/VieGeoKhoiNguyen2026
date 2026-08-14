@@ -131,7 +131,7 @@ button { color: inherit; }
 .arena-result-card > p:first-of-type { color: #7dd3fc; font-size: .72rem; font-weight: 900; letter-spacing: .14em; }
 .arena-result-card h2 { margin: 8px 0; font-size: clamp(2.4rem, 8vw, 4.5rem); text-transform: uppercase; }
 .arena-result-card > p { color: #cbd5e1; line-height: 1.65; }
-.arena-rewards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 24px 0; }
+.arena-rewards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 24px 0; }
 .arena-rewards span { padding: 16px; border: 1px solid var(--arena-line); border-radius: 14px; background: rgba(255,255,255,.04); color: #fde68a; }
 #arenaResultContinue { width: 100%; }
 .arena-explosion { position: absolute; inset: 50%; width: 0; height: 0; }

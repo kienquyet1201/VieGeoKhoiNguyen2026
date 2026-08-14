@@ -50,18 +50,33 @@
     }
 
     function normalizeRoles(profile) {
-        var values = profile && profile.roles;
-        if (typeof values === 'string') {
-            try {
-                var parsed = JSON.parse(values);
-                values = Array.isArray(parsed) ? parsed : values.split(',');
-            } catch (_) {
-                values = values.split(',');
+        var values = [];
+        var append = function (value) {
+            if (Array.isArray(value)) {
+                value.forEach(append);
+                return;
             }
-        }
-        if (!Array.isArray(values)) values = [];
-        if (!values.length && profile && (profile.role || profile.active_role)) {
-            values = [profile.active_role || profile.role];
+            if (typeof value !== 'string') return;
+            var trimmed = value.trim();
+            if (!trimmed) return;
+            if ((trimmed.charAt(0) === '[' && trimmed.charAt(trimmed.length - 1) === ']') || trimmed.indexOf(',') >= 0) {
+                try {
+                    var parsed = JSON.parse(trimmed);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(append);
+                        return;
+                    }
+                } catch (_) {}
+                trimmed.split(',').forEach(append);
+                return;
+            }
+            values.push(trimmed);
+        };
+        var hasExplicitRoles = Boolean(profile && Object.prototype.hasOwnProperty.call(profile, 'roles'));
+        append(profile && profile.roles);
+        if (!hasExplicitRoles) {
+            append(profile && profile.active_role);
+            append(profile && profile.role);
         }
         var aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs', premium: 'user' };
         return Array.from(new Set(values.map(function (role) {
@@ -195,7 +210,7 @@
             var adminRows = await withTimeout(client.from('users').select('*').eq('email', localAdminEmail).limit(1), CHECK_TIMEOUT_MS);
             if (adminRows && adminRows.error) throw adminRows.error;
             var storedAdmin = Array.isArray(adminRows && adminRows.data) ? adminRows.data[0] : null;
-            if (!storedAdmin || String(storedAdmin.role || '').toLowerCase() !== 'admin') {
+            if (!storedAdmin || !normalizeRoles(storedAdmin).includes('admin')) {
                 redirectToLogin('profile_required');
                 return null;
             }

@@ -417,6 +417,23 @@
         setConversationEnabled(true);
     }
 
+    function appendFormattedMessage(target, value) {
+        const lines = String(value || '').split(/\r?\n/);
+        lines.forEach((line, lineIndex) => {
+            const parts = line.split(/(\*\*[^*\n]+\*\*)/g).filter(Boolean);
+            parts.forEach(part => {
+                if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+                    const strong = document.createElement('strong');
+                    strong.textContent = part.slice(2, -2);
+                    target.append(strong);
+                } else {
+                    target.append(document.createTextNode(part));
+                }
+            });
+            if (lineIndex < lines.length - 1) target.append(document.createElement('br'));
+        });
+    }
+
     function messageRow(message, ticket) {
         const sender = String(message.sender || message.sender_role || 'user').toLowerCase();
         const internal = message.is_internal === true;
@@ -433,7 +450,7 @@
         const bubble = document.createElement('div');
         bubble.className = `message-bubble ${isAgent ? 'agent-bubble' : 'customer-bubble'}${internal ? ' internal-note-bubble' : ''}`;
         const text = String(message.text ?? decoded.text ?? '');
-        if (text) bubble.append(document.createTextNode(text));
+        if (text) appendFormattedMessage(bubble, text);
         if (imageUrl) {
             const link = document.createElement('a');
             link.href = imageUrl;
@@ -712,6 +729,7 @@
         const modal = byId('noteModal');
         modal.classList.toggle('show', open);
         modal.setAttribute('aria-hidden', String(!open));
+        document.body.classList.toggle('note-modal-open', open);
         if (open) byId('noteInput').focus(); else byId('noteInput').value = '';
     }
 

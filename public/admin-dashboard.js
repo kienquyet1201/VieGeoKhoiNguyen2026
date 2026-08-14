@@ -64,12 +64,33 @@
     }
 
     function normalizeRoles(value) {
-        try {
-            const source = Array.isArray(value) ? value : (typeof value === 'string' && value.trim().startsWith('[') ? JSON.parse(value) : [value]);
-            return [...new Set(source.map(item => String(item || '').trim().toLowerCase()).filter(Boolean))];
-        } catch (error) {
-            return [];
-        }
+        const source = [];
+        const append = item => {
+            if (Array.isArray(item)) {
+                item.forEach(append);
+                return;
+            }
+            if (typeof item !== 'string') {
+                if (item !== undefined && item !== null) source.push(String(item));
+                return;
+            }
+            const trimmed = item.trim();
+            if (!trimmed) return;
+            if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach(append);
+                        return;
+                    }
+                } catch (error) {}
+                trimmed.split(',').forEach(append);
+                return;
+            }
+            source.push(trimmed);
+        };
+        append(value);
+        return [...new Set(source.map(item => String(item || '').trim().toLowerCase()).filter(Boolean))];
     }
 
     const managedRoles = ['user', 'parent', 'admin', 'cs'];
@@ -84,8 +105,9 @@
     }
 
     function rolesOfUser(user) {
-        const roles = normalizeRoles(user?.roles).map(canonicalRole).filter(role => managedRoles.includes(role));
-        const primary = canonicalRole(user?.active_role || user?.role || 'user');
+        const hasRolesColumn = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
+        const roles = normalizeRoles(hasRolesColumn ? user?.roles : user?.role).map(canonicalRole).filter(role => managedRoles.includes(role));
+        const primary = canonicalRole(user?.active_role || roles[0] || user?.role || 'user');
         if (managedRoles.includes(primary) && !roles.includes(primary)) roles.push(primary);
         return roles.length ? [...new Set(roles)] : ['user'];
     }
@@ -131,10 +153,11 @@
         }
         if (button) button.disabled = true;
         try {
-            const previousActive = canonicalRole(user.active_role || user.role);
+            const existingRoles = rolesOfUser(user);
+            const previousActive = canonicalRole(user.active_role || existingRoles[0] || user.role);
             const primaryRole = roles.includes(previousActive) ? previousActive : roles[0];
             const supportsRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
-            const payload = { role: primaryRole };
+            const payload = { role: supportsRoles ? primaryRole : roles.join(',') };
             if (supportsRoles) payload.roles = roles;
             if (Object.prototype.hasOwnProperty.call(user || {}, 'active_role')) payload.active_role = primaryRole;
             if (Object.prototype.hasOwnProperty.call(user || {}, 'updated_at')) payload.updated_at = new Date().toISOString();
@@ -144,9 +167,7 @@
             const index = allUsers.findIndex(item => sameUser(item, user));
             if (index >= 0) allUsers[index] = data || { ...user, ...payload };
             renderUsers(allUsers);
-            showToast(supportsRoles
-                ? `Đã cập nhật ${roles.length} vai trò cho ${displayName(user)}.`
-                : `Đã cập nhật vai trò ${roleName(primaryRole)} cho ${displayName(user)}.`, 'success');
+            showToast(`Đã cập nhật ${roles.length} vai trò cho ${displayName(user)}.`, 'success');
         } catch (error) {
             console.error('[VieGeo Admin] Không thể cập nhật vai trò:', error);
             showToast('Không thể cập nhật vai trò lúc này.', 'error');
@@ -190,7 +211,6 @@
                 const score = Math.max(0, Number(user.score ?? user.xp ?? 0) || 0);
                 const streak = Math.max(0, Number(user.current_streak ?? user.streak ?? 0) || 0);
                 const row = document.createElement('tr');
-                const supportsMultipleRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
                 row.dataset.userIndex = String(allUsers.indexOf(user));
                 row.innerHTML = `<td>${escapeText(userEmail(user) || 'Chưa có email')}</td><td>${escapeText(name)}</td><td><div class="role-badge-list"></div></td><td>${score.toLocaleString('vi-VN')}</td><td>🔥 ${streak}</td><td><div class="user-role-editor" role="group" aria-label="Vai trò của ${escapeText(name)}"><label><input type="checkbox" value="user"> Học sinh</label><label><input type="checkbox" value="parent"> Phụ huynh</label><label><input type="checkbox" value="admin"> Quản trị viên</label><label><input type="checkbox" value="cs"> CSKH</label><button class="mini-button" type="button" data-save-user-role>Lưu vai trò</button></div></td>`;
                 const badgeList = row.querySelector('.role-badge-list');
@@ -202,12 +222,7 @@
                 });
                 row.querySelectorAll('.user-role-editor input').forEach(input => {
                     input.checked = userRoles.includes(input.value);
-                    if (!supportsMultipleRoles) {
-                        input.type = 'radio';
-                        input.name = `primary-role-${user.id || row.dataset.userIndex}`;
-                    }
                 });
-                if (!supportsMultipleRoles) row.querySelector('.user-role-editor').title = 'Hệ thống hiện lưu một vai trò chính cho mỗi tài khoản.';
                 body.appendChild(row);
             });
         } catch (error) {

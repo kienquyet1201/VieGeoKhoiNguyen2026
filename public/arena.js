@@ -8,8 +8,8 @@
     const SPEED_BONUS = 5;
     const WIN_ELO = 25;
     const LOSE_ELO = -15;
-    const WIN_GEMS = 50;
-    const LOSE_GEMS = -10;
+    const MATCH_GEMS = 10;
+    const MATCH_XP = 10;
     const ANSWER_LABELS = ['A', 'B', 'C', 'D'];
     let currentCombo = 0;
 
@@ -63,7 +63,7 @@
             'arenaRoundLabel', 'arenaQuestionTimer', 'arenaDifficultyLabel',
             'arenaQuestionText', 'arenaOptions', 'arenaRoundFeedback', 'arenaLeaveButton',
             'arenaResultOverlay', 'arenaExplosion', 'arenaResultIcon', 'arenaResultEyebrow',
-            'arenaResultTitle', 'arenaResultText', 'arenaEloReward', 'arenaGemReward',
+            'arenaResultTitle', 'arenaResultText', 'arenaEloReward', 'arenaGemReward', 'arenaXpReward',
             'arenaResultContinue', 'arenaToast'
         ].forEach(function (id) { elements[id] = byId(id); });
     }
@@ -696,56 +696,73 @@
         const isDraw = winner === 'draw';
         const isWinner = !isDraw && winner === state.playerSlot;
         const eloDelta = isDraw ? 0 : (isWinner ? WIN_ELO : LOSE_ELO);
-        const gemDelta = isDraw ? 10 : (isWinner ? WIN_GEMS : LOSE_GEMS);
-        const reward = await updateArenaRewards(eloDelta, gemDelta);
+        const reward = await updateArenaRewards(eloDelta, MATCH_GEMS, MATCH_XP);
         showResult({
             isDraw: isDraw,
             isWinner: isWinner,
             reason: payload.reason || 'Trận đấu kết thúc',
             eloDelta: reward.eloDelta,
-            gemDelta: reward.gemDelta
+            gemDelta: reward.gemDelta,
+            xpDelta: reward.xpDelta
         });
     }
 
-    async function updateArenaRewards(eloDelta, gemDelta) {
+    async function updateArenaRewards(eloDelta, gemDelta, xpDelta) {
         const rewardKey = `viegeo-arena-reward-${state.roomId}`;
-        if (sessionStorage.getItem(rewardKey)) return { eloDelta: 0, gemDelta: 0 };
+        if (sessionStorage.getItem(rewardKey)) return { eloDelta: 0, gemDelta: 0, xpDelta: 0 };
         sessionStorage.setItem(rewardKey, 'pending');
         try {
             const response = await state.client.from('users').select('*').eq('email', state.user.email).maybeSingle();
             if (response.error) throw response.error;
             const profile = response.data || {};
             const currentElo = readElo(profile);
-            const currentGems = Number(profile.gems) || 0;
+            const currentGems = Number(profile.gems ?? profile.diamonds ?? profile.legacy_data?.gems) || 0;
+            const currentXp = Number(profile.xp ?? profile.score ?? profile.exp) || 0;
             const nextElo = Math.max(0, currentElo + eloDelta);
             const nextGems = Math.max(0, currentGems + gemDelta);
+            const nextXp = Math.max(0, currentXp + xpDelta);
             const actualGemDelta = nextGems - currentGems;
-            const payload = { gems: nextGems, updated_at: new Date().toISOString() };
+            const actualXpDelta = nextXp - currentXp;
+            const payload = {};
+            if (Object.prototype.hasOwnProperty.call(profile, 'gems')) payload.gems = nextGems;
+            else if (Object.prototype.hasOwnProperty.call(profile, 'diamonds')) payload.diamonds = nextGems;
+            if (Object.prototype.hasOwnProperty.call(profile, 'xp')) payload.xp = nextXp;
+            else if (Object.prototype.hasOwnProperty.call(profile, 'score')) payload.score = nextXp;
+            else if (Object.prototype.hasOwnProperty.call(profile, 'exp')) payload.exp = nextXp;
             if (Object.prototype.hasOwnProperty.call(profile, 'elo')) {
                 payload.elo = nextElo;
-            } else {
-                payload.legacy_data = Object.assign({}, profile.legacy_data || {}, { arena_elo: nextElo });
+            } else if (Object.prototype.hasOwnProperty.call(profile, 'legacy_data')) {
+                payload.legacy_data = Object.assign({}, profile.legacy_data || {}, {
+                    arena_elo: nextElo,
+                    gems: nextGems
+                });
             }
-            const update = await state.client.from('users').update(payload).eq('email', state.user.email);
-            if (update.error) throw update.error;
+            if (Object.prototype.hasOwnProperty.call(profile, 'updated_at')) payload.updated_at = new Date().toISOString();
+            if (Object.keys(payload).length) {
+                const update = await state.client.from('users').update(payload).eq('email', state.user.email);
+                if (update.error) throw update.error;
+            }
             state.user.elo = nextElo;
             state.user.gems = nextGems;
-            syncLocalReward(nextElo, nextGems);
+            state.user.xp = nextXp;
+            state.user.score = nextXp;
+            syncLocalReward(nextElo, nextGems, nextXp);
             sessionStorage.setItem(rewardKey, 'done');
-            return { eloDelta: eloDelta, gemDelta: actualGemDelta };
+            return { eloDelta: eloDelta, gemDelta: actualGemDelta, xpDelta: actualXpDelta };
         } catch (error) {
             sessionStorage.removeItem(rewardKey);
             console.error('[VieGeo Arena] Không thể cập nhật phần thưởng:', error);
             notify('Kết quả đã ghi nhận, phần thưởng sẽ được cập nhật khi kết nối ổn định.');
-            return { eloDelta: 0, gemDelta: 0 };
+            return { eloDelta: 0, gemDelta: 0, xpDelta: 0 };
         }
     }
 
-    function syncLocalReward(elo, gems) {
+    function syncLocalReward(elo, gems, xp) {
         try {
             const local = JSON.parse(localStorage.getItem('VieGeo_state') || '{}');
             local.elo = elo;
             local.gems = gems;
+            local.xp = xp;
             localStorage.setItem('VieGeo_state', JSON.stringify(local));
         } catch (_) {}
     }
@@ -775,6 +792,7 @@
             : (result.isDraw ? '<i class="fa-solid fa-handshake"></i>' : '<i class="fa-solid fa-shield-halved"></i>');
         elements.arenaEloReward.textContent = result.eloDelta >= 0 ? `+${result.eloDelta}` : String(result.eloDelta);
         elements.arenaGemReward.textContent = result.gemDelta >= 0 ? `+${result.gemDelta}` : String(result.gemDelta);
+        elements.arenaXpReward.textContent = result.xpDelta >= 0 ? `+${result.xpDelta}` : String(result.xpDelta);
         createExplosion();
     }
 

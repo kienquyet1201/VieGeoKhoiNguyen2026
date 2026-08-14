@@ -108,8 +108,29 @@
         try {
             const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs', premium: 'user' };
             const source = value === undefined || value === null || value === '' ? fallbackRole : value;
-            let values = Array.isArray(source) ? source : (source ? [source] : []);
-            if (typeof value === 'string' && value.trim().startsWith('[')) values = JSON.parse(value);
+            const values = [];
+            const append = item => {
+                if (Array.isArray(item)) {
+                    item.forEach(append);
+                    return;
+                }
+                if (typeof item !== 'string') return;
+                const trimmed = item.trim();
+                if (!trimmed) return;
+                if ((trimmed.startsWith('[') && trimmed.endsWith(']')) || trimmed.includes(',')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) {
+                            parsed.forEach(append);
+                            return;
+                        }
+                    } catch (error) {}
+                    trimmed.split(',').forEach(append);
+                    return;
+                }
+                values.push(trimmed);
+            };
+            append(source);
             return [...new Set(values.map(role => aliases[String(role || '').trim().toLowerCase()] || String(role || '').trim().toLowerCase()).filter(role => ['user', 'parent', 'cs', 'admin'].includes(role)))];
         } catch (error) {
             return [];

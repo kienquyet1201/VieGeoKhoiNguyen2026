@@ -9,7 +9,21 @@ function getAllowedRolePages(session){
     var raw=session&&session.roles;
     var hasExplicitRoles=Boolean(session&&Object.prototype.hasOwnProperty.call(session,"roles"));
     var source=hasExplicitRoles?raw:(session.activeRole||session.role||"");
-    var values=Array.isArray(source)?source:(source?[source]:[]);
+    var values=[];
+    var append=function(value){
+        if(Array.isArray(value)){value.forEach(append);return;}
+        if(typeof value==="string"){
+            var trimmed=value.trim();
+            if(!trimmed){return;}
+            if((trimmed.startsWith("[")&&trimmed.endsWith("]"))||trimmed.indexOf(",")>=0){
+                try{var parsed=JSON.parse(trimmed);if(Array.isArray(parsed)){parsed.forEach(append);return;}}catch(error){}
+                trimmed.split(",").forEach(append);
+                return;
+            }
+            values.push(trimmed);
+        }
+    };
+    append(source);
     var roles=[];
     var index;
     for(index=0;index<values.length;index+=1){
