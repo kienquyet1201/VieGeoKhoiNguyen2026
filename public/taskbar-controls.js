@@ -103,6 +103,10 @@
     }
 
     async function signOutCurrentUser() {
+        if (typeof window.VieGeoLogout === 'function') {
+            await window.VieGeoLogout('/loginout');
+            return;
+        }
         localStorage.removeItem('lm_session');
         localStorage.removeItem('VieGeo_state');
         localStorage.removeItem('pending_action');

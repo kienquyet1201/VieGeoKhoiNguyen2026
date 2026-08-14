@@ -163,6 +163,23 @@ async function isMasterAdminCredential(username, password) {
     return (await sha256Hex(password)) === MASTER_ADMIN_PASSWORD_HASH;
 }
 
+async function createAdminServerSession(username, password) {
+    try {
+        const response = await fetch('/api/admin-session', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        if (!response.ok) return null;
+        const result = await response.json();
+        return result && result.ok ? result.profile : null;
+    } catch (error) {
+        console.warn('[VieGeo Admin] Chưa thể tạo phiên quản trị máy chủ:', error);
+        return null;
+    }
+}
+
 async function ensureMasterAdminProfile() {
     const adminProfile = {
         email: MASTER_ADMIN_PROFILE_EMAIL,
@@ -191,6 +208,8 @@ async function ensureMasterAdminProfile() {
 
 async function startMasterAdminSession(username, password) {
     if (!await isMasterAdminCredential(username, password)) return false;
+    const serverProfile = await createAdminServerSession(username, password);
+    if (!serverProfile) return false;
     const adminProfile = await ensureMasterAdminProfile();
     localStorage.removeItem('VieGeo_state');
     localStorage.setItem('lm_session', JSON.stringify({
@@ -285,6 +304,8 @@ function persistRootAdminSession(adminProfile) {
 
 async function startRootAdminSession(email, password) {
     if (!await isRootAdminCredential(email, password)) return false;
+    const serverProfile = await createAdminServerSession(email, password);
+    if (!serverProfile) return false;
     try {
         await signInViaSupabase(ROOT_ADMIN_EMAIL, password);
     } catch (authError) {
@@ -392,13 +413,15 @@ if (adminLoginForm) {
 
         try {
             const normalizedIdentifier = identifier.toLowerCase();
-            assertAuthRate('admin', normalizedIdentifier, 5, 60000);
+            if (normalizedIdentifier !== MASTER_ADMIN_USERNAME && normalizedIdentifier !== ROOT_ADMIN_EMAIL) {
+                assertAuthRate('admin', normalizedIdentifier, 5, 60000);
+            }
             const authenticated = normalizedIdentifier === MASTER_ADMIN_USERNAME
                 ? await startMasterAdminSession(identifier, pass)
                 : await startRootAdminSession(normalizeEmail(identifier), pass);
             if (!authenticated) {
                 if (adminLoginMsg) {
-                    adminLoginMsg.textContent = 'Tài khoản hoặc mật khẩu Admin Tổng không đúng.';
+                    adminLoginMsg.textContent = 'Sai tài khoản hoặc mật khẩu.';
                     adminLoginMsg.style.display = 'block';
                 }
                 return;
@@ -436,7 +459,7 @@ if (loginForm) {
             return;
         }
         if (pass.length > 128) {
-            loginMsg.textContent = "Tài khoản hoặc mật khẩu không hợp lệ.";
+            loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
             loginMsg.style.display = "block";
             return;
         }
@@ -453,12 +476,12 @@ if (loginForm) {
                     window.location.href = ROLE_DESTINATIONS.admin;
                     return;
                 }
-                loginMsg.textContent = "Sai mật khẩu Admin Tổng.";
+                loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
                 loginMsg.style.display = "block";
                 return;
             }
             if (!security.isValidEmail(email)) {
-                loginMsg.textContent = "Email hoặc mật khẩu không hợp lệ.";
+                loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
                 loginMsg.style.display = "block";
                 return;
             }
@@ -468,7 +491,7 @@ if (loginForm) {
                     window.location.href = ROLE_DESTINATIONS.admin;
                     return;
                 }
-                loginMsg.textContent = "Sai mật khẩu Admin Tổng.";
+                loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
                 loginMsg.style.display = "block";
                 return;
             }
@@ -548,11 +571,11 @@ if (loginForm) {
                         }
                     }
                 } else {
-                    loginMsg.textContent = "Sai mật khẩu.";
+                    loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
                     loginMsg.style.display = "block";
                 }
             } else {
-                loginMsg.textContent = "Tài khoản không tồn tại.";
+                loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
                 loginMsg.style.display = "block";
             }
         } catch (error) {

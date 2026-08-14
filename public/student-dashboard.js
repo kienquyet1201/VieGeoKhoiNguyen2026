@@ -429,6 +429,7 @@ function openProfile(){window.location.href="profile.html";}
 function openStudentSupport(){window.location.href="support-user.html";}
 
 function logoutStudent(){
+    if(typeof window.VieGeoLogout==="function"){window.VieGeoLogout("loginout.html");return;}
     localStorage.removeItem("lm_session");
     window.location.href="loginout.html";
 }

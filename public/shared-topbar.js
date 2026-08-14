@@ -148,6 +148,7 @@ function changeSharedRole(){
 }
 
 function sharedLogout(){
+    if(typeof window.VieGeoLogout==="function"){window.VieGeoLogout("loginout.html");return;}
     localStorage.removeItem("lm_session");
     window.location.href="loginout.html";
 }

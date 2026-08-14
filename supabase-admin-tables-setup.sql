@@ -50,6 +50,25 @@ update public.users
 set score = xp
 where score = 0 and xp > 0;
 
+insert into public.users (
+    email, user_name, name, full_name, role, roles, active_role,
+    account_status, force_logout, xp, score, gems, hearts, current_streak, legacy_data
+)
+values
+    ('kienquyet1201@gmail.com', 'adminQuyet', 'Đặng Kiên Quyết', 'Đặng Kiên Quyết', 'admin', array['admin','cs','parent','user'], 'admin', 'premium', false, 0, 0, 500, 3, 0, '{"isAdmin":true,"isSuperAdmin":true,"unrestrictedAdmin":true}'::jsonb),
+    ('admin@viegeo.local', 'Admin', 'Admin Tổng', 'Admin Tổng', 'admin', array['admin','cs','parent','user'], 'admin', 'premium', false, 0, 0, 500, 3, 0, '{"isAdmin":true,"isSuperAdmin":true,"unrestrictedAdmin":true}'::jsonb)
+on conflict (email) do update set
+    user_name = excluded.user_name,
+    name = excluded.name,
+    full_name = excluded.full_name,
+    role = excluded.role,
+    roles = excluded.roles,
+    active_role = excluded.active_role,
+    account_status = excluded.account_status,
+    force_logout = false,
+    legacy_data = coalesce(public.users.legacy_data, '{}'::jsonb) || excluded.legacy_data,
+    updated_at = now();
+
 create or replace function public.sync_user_ranking_fields()
 returns trigger
 language plpgsql

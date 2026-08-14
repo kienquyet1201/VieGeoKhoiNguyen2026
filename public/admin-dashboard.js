@@ -805,7 +805,10 @@
                 if (byId('fileNameDisplay')) byId('fileNameDisplay').textContent = name;
             });
             byId('backToHomeButton')?.addEventListener('click', () => { window.location.href = 'student-dashboard.html'; });
-            byId('logoutButton')?.addEventListener('click', () => { localStorage.removeItem('lm_session'); window.location.href = 'loginout.html'; });
+            byId('logoutButton')?.addEventListener('click', () => {
+                if (typeof window.VieGeoLogout === 'function') window.VieGeoLogout('loginout.html');
+                else { localStorage.removeItem('lm_session'); window.location.href = 'loginout.html'; }
+            });
             loadBossSummaryTheory();
             byId('settingsLogoutButton')?.addEventListener('click', () => byId('logoutButton')?.click());
             byId('themeButton')?.addEventListener('click', () => window.toggleGlobalTheme?.());

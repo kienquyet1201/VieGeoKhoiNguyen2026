@@ -123,10 +123,83 @@
         return client && client.auth && typeof client.from === 'function' ? client : null;
     }
 
+    async function readAdminServerSession() {
+        try {
+            var response = await withTimeout(fetch('/api/admin-session', {
+                method: 'GET',
+                credentials: 'same-origin',
+                cache: 'no-store'
+            }), CHECK_TIMEOUT_MS);
+            if (!response.ok) return null;
+            var result = await response.json();
+            return result && result.ok ? result.profile : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    async function clearAdminServerSession() {
+        try {
+            await fetch('/api/admin-session', { method: 'DELETE', credentials: 'same-origin' });
+        } catch (_) {}
+    }
+
+    window.VieGeoClearAdminSession = clearAdminServerSession;
+    window.VieGeoLogout = async function (destination) {
+        await clearAdminServerSession();
+        try {
+            var authClient = getClient();
+            if (authClient && authClient.auth && typeof authClient.auth.signOut === 'function') {
+                await authClient.auth.signOut();
+            }
+        } catch (_) {}
+        localStorage.removeItem('lm_session');
+        localStorage.removeItem('VieGeo_state');
+        window.location.href = destination || '/loginout';
+    };
+
+    function finishVerification(authUser, profile) {
+        var session = persistVerifiedSession(authUser, profile);
+        session.isAdmin = profile.isAdmin === true || profile.is_admin === true || session.roles.includes('admin');
+        session.isSuperAdmin = profile.isSuperAdmin === true || profile.legacy_data?.isSuperAdmin === true;
+        localStorage.setItem('lm_session', JSON.stringify(session));
+        window.VieGeoCurrentUser = Object.assign({}, profile, {
+            id: authUser.id,
+            auth_id: authUser.id,
+            email: String(authUser.email || profile.email || '').trim().toLowerCase(),
+            roles: session.roles,
+            activeRole: session.activeRole || ''
+        });
+        root.classList.remove('viegeo-auth-checking');
+        guardStyle.remove();
+        window.dispatchEvent(new CustomEvent('viegeo:auth-verified', {
+            detail: { user: window.VieGeoCurrentUser, session: session }
+        }));
+        return window.VieGeoCurrentUser;
+    }
+
     async function verifyCurrentUser() {
         var client = getClient();
         if (!client || typeof client.auth.getUser !== 'function') {
             throw new Error('AUTH_CLIENT_UNAVAILABLE');
+        }
+
+        var adminProfile = await readAdminServerSession();
+        if (adminProfile && adminProfile.email) {
+            var adminEmail = String(adminProfile.email).trim().toLowerCase();
+            var adminRows = await withTimeout(client.from('users').select('*').eq('email', adminEmail).limit(1), CHECK_TIMEOUT_MS);
+            var storedAdmin = Array.isArray(adminRows && adminRows.data) ? adminRows.data[0] : null;
+            var mergedAdmin = Object.assign({}, adminProfile, storedAdmin || {}, {
+                email: adminEmail,
+                role: 'admin',
+                roles: ['admin', 'cs', 'parent', 'user'],
+                active_role: 'admin',
+                account_status: 'premium',
+                force_logout: false,
+                isAdmin: true,
+                isSuperAdmin: true
+            });
+            return finishVerification({ id: `admin:${adminEmail}`, email: adminEmail }, mergedAdmin);
         }
 
         var authResult = await withTimeout(client.auth.getUser(), CHECK_TIMEOUT_MS);
@@ -159,20 +232,7 @@
             return null;
         }
 
-        var session = persistVerifiedSession(authUser, profile);
-        window.VieGeoCurrentUser = Object.assign({}, profile, {
-            id: authUser.id,
-            auth_id: authUser.id,
-            email: email,
-            roles: session.roles,
-            activeRole: session.activeRole || ''
-        });
-        root.classList.remove('viegeo-auth-checking');
-        guardStyle.remove();
-        window.dispatchEvent(new CustomEvent('viegeo:auth-verified', {
-            detail: { user: window.VieGeoCurrentUser, session: session }
-        }));
-        return window.VieGeoCurrentUser;
+        return finishVerification(authUser, profile);
     }
 
     window.VieGeoAuthReady = verifyCurrentUser().catch(function (error) {
@@ -185,7 +245,7 @@
     if (client && client.auth && typeof client.auth.onAuthStateChange === 'function') {
         client.auth.onAuthStateChange(function (event, session) {
             if (event === 'SIGNED_OUT' || (!session && event === 'TOKEN_REFRESHED')) {
-                redirectToLogin('session_expired');
+                clearAdminServerSession().finally(function () { redirectToLogin('session_expired'); });
             }
         });
     }
