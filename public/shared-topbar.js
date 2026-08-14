@@ -19,15 +19,18 @@ function getSharedRoles(session){
         }
         if(value){source.push(value);}
     };
+    var hasExplicitRoles=Boolean(session&&Object.prototype.hasOwnProperty.call(session,"roles"));
     append(session&&session.roles);
-    append(session&&session.activeRole);
-    append(session&&session.role);
+    if(!hasExplicitRoles){
+        append(session&&session.activeRole);
+        append(session&&session.role);
+    }
     var roles=[];
     source.forEach(function(value){
         var role=aliases[String(value||"").trim().toLowerCase()]||String(value||"").trim().toLowerCase();
         if(["user","parent","cs","admin"].indexOf(role)>=0&&roles.indexOf(role)<0){roles.push(role);}
     });
-    return roles.length?roles:["user"];
+    return roles;
 }
 
 function updateSharedRoleControl(){
@@ -45,6 +48,7 @@ function updateSharedRoleControl(){
         sharedRole.appendChild(option);
     });
     sharedRole.value=roles.indexOf(current)>=0?current:roles[0];
+    sharedRole.disabled=roles.length<2;
     var wrapper=sharedRole.closest(".shared-role-control");
     if(wrapper){wrapper.hidden=roles.length<2;}
 }
@@ -92,7 +96,6 @@ function updateSharedStats(){
     if(sharedDifficulty){
         sharedDifficulty.value=state.selectedDifficulty||"easy";
     }
-    updateSharedRoleControl();
 }
 
 function setSharedTheme(theme){
@@ -180,3 +183,4 @@ if(sharedRole&&sharedRole.closest(".shared-role-control")){
 }
 
 document.addEventListener("DOMContentLoaded",initializeSharedNavbar);
+window.addEventListener("viegeo:user-hydrated",updateSharedRoleControl);

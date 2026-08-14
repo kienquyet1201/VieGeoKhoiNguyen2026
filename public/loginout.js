@@ -48,13 +48,15 @@ function getUserRoles(user) {
         }
         source.push(String(value));
     };
+    const hasExplicitRoles = Boolean(user && Object.prototype.hasOwnProperty.call(user, 'roles'));
     appendRoles(user && user.roles);
-    appendRoles(user && user.activeRole);
-    appendRoles(user && user.active_role);
-    appendRoles(user && user.role);
-    if (user && (user.isAdmin || user.isSuperAdmin)) appendRoles('admin');
+    if (!hasExplicitRoles) {
+        appendRoles(user && user.activeRole);
+        appendRoles(user && user.active_role);
+        appendRoles(user && user.role);
+        if (user && (user.isAdmin || user.isSuperAdmin)) appendRoles('admin');
+    }
     const roles = [...new Set(source.map(normalizeRole).filter((role) => Boolean(ROLE_DESTINATIONS[role])))];
-    if (roles.includes('admin')) ['cs', 'parent', 'user'].forEach((role) => !roles.includes(role) && roles.push(role));
     return roles.length ? roles : ['user'];
 }
 

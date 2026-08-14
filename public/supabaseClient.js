@@ -206,13 +206,15 @@
             }
             collectedRoles.push(normalizeRoleValue(value));
         };
+        const hasExplicitRoles = Object.prototype.hasOwnProperty.call(data || {}, 'roles');
         appendRole(data.roles);
-        appendRole(data.role);
-        appendRole(data.activeRole);
-        appendRole(data.active_role);
-        if (data.isAdmin || data.isSuperAdmin) appendRole('admin');
+        if (!hasExplicitRoles) {
+            appendRole(data.role);
+            appendRole(data.activeRole);
+            appendRole(data.active_role);
+            if (data.isAdmin || data.isSuperAdmin) appendRole('admin');
+        }
         const validRoles = [...new Set(collectedRoles.filter(role => ['user', 'parent', 'cs', 'admin'].includes(role)))];
-        if (validRoles.includes('admin')) ['cs', 'parent', 'user'].forEach(role => !validRoles.includes(role) && validRoles.push(role));
         const primaryRole = validRoles.includes(normalizeRoleValue(data.role || data.activeRole || data.active_role))
             ? normalizeRoleValue(data.role || data.activeRole || data.active_role)
             : (validRoles[0] || 'user');

@@ -71,13 +71,15 @@ function authorizedRoles(source) {
         }
         collected.push(String(value));
     };
+    const hasExplicitRoles = Boolean(source && Object.prototype.hasOwnProperty.call(source, 'roles'));
     appendRoles(source && source.roles);
-    appendRoles(source && source.activeRole);
-    appendRoles(source && source.active_role);
-    appendRoles(source && source.role);
-    if (source && (source.isAdmin || source.isSuperAdmin)) appendRoles('admin');
+    if (!hasExplicitRoles) {
+        appendRoles(source && source.activeRole);
+        appendRoles(source && source.active_role);
+        appendRoles(source && source.role);
+        if (source && (source.isAdmin || source.isSuperAdmin)) appendRoles('admin');
+    }
     const result = [...new Set(collected.map(normalizeRole).filter((role) => Boolean(ROLE_META[role])))];
-    if (result.includes('admin')) ['cs', 'parent', 'user'].forEach((role) => !result.includes(role) && result.push(role));
     return result.length ? result : ['user'];
 }
 

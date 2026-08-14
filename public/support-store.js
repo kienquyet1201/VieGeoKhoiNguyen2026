@@ -166,16 +166,18 @@ function supportSyncLocalTicket(ticket){
     },Promise.resolve(true)).then(function(){return ticket;});
 }
 
-function supportAppendMessage(ticketId,sender,text){
+function supportAppendMessage(ticketId,sender,text,metadata){
     var ticket=supportFindLocalTicket(ticketId)||supportEnsureTicket();
     var now=Date.now();
+    var details=metadata||{};
+    var isSupportSender=sender==="ai"||sender==="admin"||sender==="cs";
     var message={
         id:"msg_"+now+"_"+Math.floor(Math.random()*100000),
         sender:sender,
-        senderId:ticket.userId||"",
-        senderEmail:ticket.email||"",
-        senderName:ticket.name||"Người dùng",
-        senderRole:ticket.role||"user",
+        senderId:String(details.senderId||(isSupportSender?"viegeo-support":ticket.userId)||""),
+        senderEmail:String(details.senderEmail||(isSupportSender?"support@viegeo.local":ticket.email)||""),
+        senderName:String(details.senderName||(sender==="ai"?"Trợ lý VieGeo":(isSupportSender?"CSKH VieGeo":ticket.name))||"Người dùng"),
+        senderRole:String(details.senderRole||(isSupportSender?"cs":ticket.role)||"user"),
         text:String(text||"").trim(),
         status:"sent",
         createdAt:now

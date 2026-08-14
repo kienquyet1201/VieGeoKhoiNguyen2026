@@ -107,11 +107,12 @@
     function roleList(value, fallbackRole) {
         try {
             const aliases = { student: 'user', map: 'user', cskh: 'cs', support: 'cs', premium: 'user' };
-            let values = Array.isArray(value) ? value : [value || fallbackRole || 'user'];
+            const source = value === undefined || value === null || value === '' ? fallbackRole : value;
+            let values = Array.isArray(source) ? source : (source ? [source] : []);
             if (typeof value === 'string' && value.trim().startsWith('[')) values = JSON.parse(value);
             return [...new Set(values.map(role => aliases[String(role || '').trim().toLowerCase()] || String(role || '').trim().toLowerCase()).filter(role => ['user', 'parent', 'cs', 'admin'].includes(role)))];
         } catch (error) {
-            return ['user'];
+            return [];
         }
     }
 
@@ -168,11 +169,17 @@
             const session = { ...readSession(), email: user.email || user.user_email || readSession().email };
             const sessionRoleValue = session.activeRole || session.role;
             const sessionRole = sessionRoleValue ? roleList(sessionRoleValue, 'user')[0] : '';
-            const remoteRoles = roleList(user.roles, user.active_role || user.role);
-            const activeRole = remoteRoles.includes(sessionRole) ? sessionRole : (remoteRoles[0] || 'user');
+            const hasExplicitRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
+            const remoteRoles = roleList(hasExplicitRoles ? user.roles : (user.active_role || user.role));
+            const activeRole = remoteRoles.includes(sessionRole) ? sessionRole : (remoteRoles[0] || '');
             session.roles = [...new Set(remoteRoles)];
-            session.role = activeRole;
-            session.activeRole = activeRole;
+            if (activeRole) {
+                session.role = activeRole;
+                session.activeRole = activeRole;
+            } else {
+                delete session.role;
+                delete session.activeRole;
+            }
             session.name = user.name || user.full_name || session.name || '';
             localStorage.setItem('lm_session', JSON.stringify(session));
             window.dispatchEvent(new CustomEvent('viegeo:user-hydrated', { detail: session }));
@@ -203,8 +210,10 @@
             if (!select) return;
             const labels = { user: 'Học sinh', parent: 'Phụ huynh', cs: 'CSKH', admin: 'Quản trị viên' };
             const session = readSession();
-            const active = roleList(session.activeRole || session.role || user.active_role || user.role, 'user')[0] || 'user';
-            const roles = [...new Set([...roleList(user.roles, user.active_role || user.role), active])];
+            const hasExplicitRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
+            const roles = roleList(hasExplicitRoles ? user.roles : (user.active_role || user.role));
+            const requested = roleList(session.activeRole || session.role || user.active_role || user.role)[0] || '';
+            const active = roles.includes(requested) ? requested : (roles[0] || '');
             select.replaceChildren();
             roles.forEach(role => {
                 const option = document.createElement('option');
@@ -215,6 +224,7 @@
             });
             const wrapper = select.closest('.shared-role-control');
             if (wrapper) wrapper.hidden = roles.length < 2;
+            select.disabled = roles.length < 2;
         } catch (error) {
             console.warn('[VieGeo UI] Không thể đồng bộ thanh điều hướng:', error);
         }

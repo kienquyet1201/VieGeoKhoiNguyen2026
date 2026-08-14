@@ -6,6 +6,7 @@ var ticketCode=document.getElementById("ticketCode");
 var ticketStatus=document.getElementById("ticketStatus");
 var supportToast=document.getElementById("supportToast");
 var currentSupportTicket=null;
+var supportAiReplyPending=false;
 
 function showSupportToast(message){
     supportToast.textContent=message;
@@ -37,11 +38,18 @@ function renderSupportMessages(ticket){
 
     for(index=0;index<ticket.messages.length;index+=1){
         message=ticket.messages[index];
-        className=message.sender==="admin"||message.sender==="cs"?"admin-message":"user-message";
-        html+='<div class="support-message '+className+'">'+escapeSupportText(message.text)+'<small>'+formatSupportTime(message.createdAt)+'</small></div>';
+        className=message.sender==="admin"||message.sender==="cs"||message.sender==="ai"?"admin-message":"user-message";
+        html+='<div class="support-message '+className+'">';
+        if(message.sender==="ai"){
+            html+='<b class="support-message-author">Trợ lý VieGeo</b>';
+        }else if(message.sender==="admin"||message.sender==="cs"){
+            html+='<b class="support-message-author">'+escapeSupportText(message.senderName||"CSKH VieGeo")+'</b>';
+        }
+        html+=escapeSupportText(message.text)+'<small>'+formatSupportTime(message.createdAt)+'</small></div>';
     }
 
     supportMessageList.innerHTML=html;
+    if(supportAiReplyPending){setSupportAiTyping(true);}
     supportMessageList.scrollTop=supportMessageList.scrollHeight;
 }
 
@@ -66,6 +74,58 @@ function refreshSupportTicket(){
     });
 }
 
+function setSupportAiTyping(active){
+    var existing=document.getElementById("supportAiTyping");
+    if(existing){existing.remove();}
+    if(!active){return;}
+    var typing=document.createElement("div");
+    typing.id="supportAiTyping";
+    typing.className="support-message admin-message support-ai-typing";
+    typing.innerHTML='<b class="support-message-author">Trợ lý VieGeo</b><span aria-label="Đang trả lời"><i></i><i></i><i></i></span>';
+    supportMessageList.appendChild(typing);
+    supportMessageList.scrollTop=supportMessageList.scrollHeight;
+}
+
+function supportConversation(ticket){
+    var messages=Array.isArray(ticket&&ticket.messages)?ticket.messages:[];
+    return messages.slice(-8).map(function(message){
+        return {sender:String(message.sender||"user"),text:String(message.text||"")};
+    });
+}
+
+function requestSupportAutoReply(ticket,userMessage){
+    if(supportAiReplyPending||!ticket){return Promise.resolve(ticket);}
+    supportAiReplyPending=true;
+    setSupportAiTyping(true);
+
+    return fetch("/api/support-ai",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({message:userMessage,conversation:supportConversation(ticket)})
+    }).then(function(response){
+        return response.json().then(function(data){return {ok:response.ok,data:data};});
+    }).then(function(result){
+        var reply=String(result.data&&result.data.reply||"").trim();
+        if(!reply){throw new Error("Trợ lý chưa trả về nội dung.");}
+        return supportAppendMessage(ticket.id,"ai",reply,{
+            senderId:"viegeo-gemini",
+            senderEmail:"ai-support@viegeo.local",
+            senderName:"Trợ lý VieGeo",
+            senderRole:"cs"
+        });
+    }).then(function(updatedTicket){
+        renderSupportMessages(updatedTicket);
+        return updatedTicket;
+    }).catch(function(error){
+        console.error("[VieGeo Support] Không thể nhận phản hồi tự động:",error);
+        showSupportToast("Tin nhắn đã được gửi. Nhân viên CSKH sẽ phản hồi sớm.");
+        return ticket;
+    }).finally(function(){
+        supportAiReplyPending=false;
+        setSupportAiTyping(false);
+    });
+}
+
 function sendSupportMessage(){
     var text=supportMessageInput.value.trim();
 
@@ -81,6 +141,12 @@ function sendSupportMessage(){
         supportMessageInput.value="";
         renderSupportMessages(ticket);
         showSupportToast("Đã gửi tin nhắn tới CSKH.");
+        supportSendButton.disabled=false;
+        supportSendButton.textContent="Gửi tin nhắn";
+        requestSupportAutoReply(ticket,text);
+    }).catch(function(error){
+        console.error("[VieGeo Support] Không thể gửi tin nhắn:",error);
+        showSupportToast("Chưa thể gửi tin nhắn. Vui lòng thử lại.");
         supportSendButton.disabled=false;
         supportSendButton.textContent="Gửi tin nhắn";
     });

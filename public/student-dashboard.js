@@ -10,11 +10,80 @@ var leaderboardButton=document.getElementById("leaderboardButton");
 var profileButton=document.getElementById("profileButton");
 var logoutButton=document.getElementById("logoutButton");
 var studentRoleSelect=document.getElementById("studentRoleSelect");
+var studentRoleSwitcher=document.getElementById("studentRoleSwitcher");
 var studentSupportButton=document.getElementById("studentSupportButton");
 var studentGreeting=document.getElementById("studentGreeting");
 var studentStreak=document.getElementById("studentStreak");
 var studentGemValue=document.getElementById("studentGemValue");
 var studentExpValue=document.getElementById("studentExpValue");
+var studentAllowedRoles=[];
+var studentRolesHydrated=false;
+
+function normalizeStudentRole(value){
+    var aliases={student:"user",map:"user",cskh:"cs",support:"cs",premium:"user"};
+    var role=String(value||"").trim().toLowerCase();
+    return aliases[role]||role;
+}
+
+function appendStudentRoles(target,value){
+    if(Array.isArray(value)){value.forEach(function(item){appendStudentRoles(target,item);});return;}
+    if(typeof value==="string"){
+        var trimmed=value.trim();
+        if(!trimmed){return;}
+        if((trimmed.charAt(0)==="["&&trimmed.charAt(trimmed.length-1)==="]")||trimmed.indexOf(",")>=0){
+            try{
+                var parsed=JSON.parse(trimmed);
+                if(Array.isArray(parsed)){appendStudentRoles(target,parsed);return;}
+            }catch(error){}
+            trimmed.split(",").forEach(function(item){appendStudentRoles(target,item);});
+            return;
+        }
+        var role=normalizeStudentRole(trimmed);
+        if(["user","parent","cs","admin"].indexOf(role)>=0&&target.indexOf(role)<0){target.push(role);}
+    }
+}
+
+function studentRolesFromUser(user){
+    var roles=[];
+    var hasExplicitRoles=Boolean(user&&Object.prototype.hasOwnProperty.call(user,"roles"));
+    if(hasExplicitRoles){
+        appendStudentRoles(roles,user.roles);
+    }else if(user){
+        appendStudentRoles(roles,user.active_role||user.activeRole||user.role);
+    }
+    return roles;
+}
+
+function renderStudentRoleSwitcher(user){
+    var labels={user:"Học viên",parent:"Phụ huynh",cs:"Chăm sóc KH",admin:"Quản trị viên"};
+    var session=getStudentSession();
+    var requested=normalizeStudentRole(session.activeRole||session.role);
+    studentAllowedRoles=studentRolesFromUser(user);
+    studentRolesHydrated=true;
+
+    if(studentRoleSelect){
+        studentRoleSelect.replaceChildren();
+        studentAllowedRoles.forEach(function(role){
+            var option=document.createElement("option");
+            option.value=role;
+            option.textContent=labels[role];
+            studentRoleSelect.appendChild(option);
+        });
+        studentRoleSelect.value=studentAllowedRoles.indexOf(requested)>=0?requested:(studentAllowedRoles[0]||"");
+        studentRoleSelect.disabled=studentAllowedRoles.length<2;
+    }
+    if(studentRoleSwitcher){studentRoleSwitcher.hidden=studentAllowedRoles.length<2;}
+
+    session.roles=studentAllowedRoles.slice();
+    if(studentAllowedRoles.length){
+        session.role=studentRoleSelect.value;
+        session.activeRole=studentRoleSelect.value;
+    }else{
+        delete session.role;
+        delete session.activeRole;
+    }
+    localStorage.setItem("lm_session",JSON.stringify(session));
+}
 
 function applyTheme(theme){
     applyGlobalTheme(theme);
@@ -96,11 +165,13 @@ async function syncStudentIdentity(){
                 .maybeSingle();
             if(result.error){throw result.error;}
             updateStudentIdentity(result.data||authenticatedUser||session);
+            renderStudentRoleSwitcher(result.data||{});
             return;
         }
     }catch(error){
         console.warn("Không thể đồng bộ thông tin học viên từ Supabase:",error.message||error);
     }
+    renderStudentRoleSwitcher(null);
     updateStudentIdentity(authenticatedUser||session);
 }
 
@@ -309,6 +380,12 @@ function changeStudentRole(){
         admin:"admin-dashboard.html"
     };
 
+    if(!studentRolesHydrated||studentAllowedRoles.indexOf(role)<0){
+        showToast("Tài khoản chưa được cấp vai trò này.");
+        studentRoleSelect.value=studentAllowedRoles.indexOf(normalizeStudentRole(session.activeRole||session.role))>=0?normalizeStudentRole(session.activeRole||session.role):(studentAllowedRoles[0]||"");
+        return;
+    }
+
     session.role=role;
     session.activeRole=role;
     localStorage.setItem("lm_session",JSON.stringify(session));
@@ -363,7 +440,6 @@ function initializeStudent(){
     syncStudentLearningData();
 
     if(studentRoleSelect){
-        studentRoleSelect.value=session.activeRole||session.role||"user";
         studentRoleSelect.addEventListener("change",changeStudentRole);
     }
 
