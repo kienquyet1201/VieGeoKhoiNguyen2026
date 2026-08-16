@@ -344,7 +344,16 @@ async function signUpViaSupabase({ email, password, name, gender }) {
     const { data, error } = await client.auth.signUp({
         email,
         password,
-        options: { data: { name, gender } }
+        options: {
+            data: {
+                email,
+                user_name: name,
+                name,
+                full_name: name,
+                gender,
+                role: 'student'
+            }
+        }
     });
     if (error) throw error;
     if (!data?.user) {
@@ -373,6 +382,9 @@ function registrationErrorMessage(error) {
     if (message.includes('password')) return 'Mật khẩu chưa đạt yêu cầu. Vui lòng dùng ít nhất 8 ký tự.';
     if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
         return 'Không thể kết nối dịch vụ tài khoản. Vui lòng kiểm tra mạng và thử lại.';
+    }
+    if (code === '23502' || message.includes('database error saving new user')) {
+        return 'Hệ thống chưa thể tạo hồ sơ tài khoản. Vui lòng thử lại sau ít phút.';
     }
     if (code === 'profile_save_failed') {
         return 'Tài khoản đã được tạo nhưng chưa lưu được hồ sơ. Vui lòng đăng nhập lại để hệ thống hoàn tất.';
