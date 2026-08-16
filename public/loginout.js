@@ -373,10 +373,13 @@ function registrationErrorMessage(error) {
     if (code === 'auth_email_exists' || message.includes('already registered') || message.includes('already exists')) {
         return 'Email này đã có tài khoản. Vui lòng đăng nhập hoặc dùng chức năng Quên mật khẩu.';
     }
+    if (code === 'email_address_invalid' || (message.includes('email address') && message.includes('invalid'))) {
+        return 'Địa chỉ email này không được hệ thống chấp nhận. Vui lòng dùng email thật của bạn.';
+    }
     if (message.includes('signup') && message.includes('disabled')) {
         return 'Hệ thống đang tạm ngừng nhận đăng ký mới. Vui lòng liên hệ CSKH.';
     }
-    if (message.includes('rate limit') || message.includes('too many requests') || String(error?.status || '') === '429') {
+    if (message.includes('rate limit') || message.includes('too many requests') || code === 'over_email_send_rate_limit' || String(error?.status || '') === '429') {
         return 'Bạn đã thử quá nhiều lần. Vui lòng chờ vài phút rồi đăng ký lại.';
     }
     if (message.includes('password')) return 'Mật khẩu chưa đạt yêu cầu. Vui lòng dùng ít nhất 8 ký tự.';

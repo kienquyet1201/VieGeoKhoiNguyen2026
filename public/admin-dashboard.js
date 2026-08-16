@@ -294,13 +294,32 @@
     async function reviewPremiumRequest(request, status, sourceButton) {
         const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
         const email = String(request?.user_email || request?.email || '').trim().toLowerCase();
-        if (!client || !email || !['approved', 'rejected'].includes(status)) {
+        const requestId = request?.id;
+        if (!client || !email || requestId === undefined || requestId === null || !['approved', 'rejected'].includes(status)) {
             showToast('Không đủ dữ liệu để xử lý yêu cầu Premium.', 'error');
             return;
         }
         const buttons = sourceButton?.closest('.notice-item')?.querySelectorAll('[data-premium-action]') || [];
         buttons.forEach(button => { button.disabled = true; });
         try {
+            const now = new Date().toISOString();
+            let requestResult = await client
+                .from('premium_requests')
+                .update({ status, reviewed_at: now, updated_at: now })
+                .eq('id', requestId)
+                .select('*');
+            if (requestResult.error && /reviewed_at|updated_at|column|schema/i.test(String(requestResult.error.message || ''))) {
+                requestResult = await client
+                    .from('premium_requests')
+                    .update({ status })
+                    .eq('id', requestId)
+                    .select('*');
+            }
+            if (requestResult.error) throw requestResult.error;
+            if (!Array.isArray(requestResult.data) || requestResult.data.length === 0) {
+                throw new Error('Không tìm thấy yêu cầu Premium cần xử lý.');
+            }
+
             if (status === 'approved') {
                 let linkedUser = allUsers.find(user => userEmail(user) === email) || null;
                 if (!linkedUser) {
@@ -309,52 +328,27 @@
                     if (Array.isArray(users)) allUsers = users;
                     linkedUser = allUsers.find(user => userEmail(user) === email) || null;
                 }
-                const now = new Date().toISOString();
                 if (!linkedUser) {
-                    const displayName = String(request?.name || email.split('@')[0] || 'Học viên').trim();
-                    const sample = allUsers[0] || {};
-                    const emailField = Object.prototype.hasOwnProperty.call(sample, 'user_email') && !Object.prototype.hasOwnProperty.call(sample, 'email') ? 'user_email' : 'email';
-                    const createPayload = { [emailField]: email, role: 'user', account_status: 'premium' };
-                    if (Object.prototype.hasOwnProperty.call(sample, 'name')) createPayload.name = displayName;
-                    if (Object.prototype.hasOwnProperty.call(sample, 'user_name')) createPayload.user_name = displayName;
-                    if (Object.prototype.hasOwnProperty.call(sample, 'roles')) createPayload.roles = ['user'];
-                    if (Object.prototype.hasOwnProperty.call(sample, 'active_role')) createPayload.active_role = 'user';
-                    if (Object.prototype.hasOwnProperty.call(sample, 'game_state')) {
-                        createPayload.game_state = { notifications: [{ id: `premium-approved-${request.id}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: now }] };
-                    }
-                    const { data: createdUser, error: createUserError } = await client
-                        .from('users')
-                        .insert([createPayload])
-                        .select('*')
-                        .single();
-                    if (createUserError) throw createUserError;
-                    linkedUser = createdUser;
-                    allUsers.push(createdUser);
+                    console.warn('[VieGeo Admin] Yêu cầu đã duyệt nhưng chưa tìm thấy hồ sơ users:', { email, requestId });
                 } else {
                     const currentState = linkedUser.game_state && typeof linkedUser.game_state === 'object' ? linkedUser.game_state : {};
                     const notifications = Array.isArray(currentState.notifications) ? [...currentState.notifications] : [];
-                    if (!notifications.some(item => item?.id === `premium-approved-${request.id}`)) {
-                        notifications.unshift({ id: `premium-approved-${request.id}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: now });
+                    if (!notifications.some(item => item?.id === `premium-approved-${requestId}`)) {
+                        notifications.unshift({ id: `premium-approved-${requestId}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: now });
                     }
-                    const userPayload = { account_status: 'premium' };
+                    const userPayload = {};
+                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'account_status')) userPayload.account_status = 'premium';
                     if (Object.prototype.hasOwnProperty.call(linkedUser, 'is_premium')) userPayload.is_premium = true;
                     if (Object.prototype.hasOwnProperty.call(linkedUser, 'game_state')) userPayload.game_state = { ...currentState, notifications };
                     if (Object.prototype.hasOwnProperty.call(linkedUser, 'updated_at')) userPayload.updated_at = now;
-                    const updateResult = await identifyUserQuery(client.from('users').update(userPayload), linkedUser).select('*');
-                    if (updateResult.error) throw updateResult.error;
-                    if (!Array.isArray(updateResult.data) || updateResult.data.length === 0) {
-                        throw new Error('Không tìm thấy tài khoản tương ứng với yêu cầu Premium.');
+                    if (Object.keys(userPayload).length > 0) {
+                        const updateResult = await identifyUserQuery(client.from('users').update(userPayload), linkedUser).select('*');
+                        if (updateResult.error) {
+                            console.warn('[VieGeo Admin] Yêu cầu đã duyệt; hồ sơ users sẽ đồng bộ từ premium_requests:', updateResult.error);
+                        }
                     }
                 }
             }
-            let requestResult = await client
-                .from('premium_requests')
-                .update({ status, reviewed_at: new Date().toISOString() })
-                .eq('id', request.id);
-            if (requestResult.error && /reviewed_at|column|schema/i.test(String(requestResult.error.message || ''))) {
-                requestResult = await client.from('premium_requests').update({ status }).eq('id', request.id);
-            }
-            if (requestResult.error) throw requestResult.error;
             showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu Premium.', 'success');
             await loadDashboard();
         } catch (error) {
