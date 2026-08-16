@@ -2,6 +2,8 @@ function firstConfiguredValue(...values) {
   return values.map((value) => String(value || '').trim()).find(Boolean) || '';
 }
 
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pamp2cWtma3p3cG1qcHdrYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTI3MzgsImV4cCI6MjEwMTc2ODczOH0.KKomdXKDi1sn7Ems1JxaFLrecq2oA_xVqMgo1jvUhiY';
+
 module.exports = function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.setHeader('Allow', 'GET, HEAD');
@@ -17,7 +19,8 @@ module.exports = function handler(req, res) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     process.env.SUPABASE_ANON_KEY,
-    process.env.SUPABASE_PUBLISHABLE_KEY
+    process.env.SUPABASE_PUBLISHABLE_KEY,
+    DEFAULT_SUPABASE_ANON_KEY
   );
 
   const script = [

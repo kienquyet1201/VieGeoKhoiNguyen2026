@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pamp2cWtma3p3cG1qcHdrYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTI3MzgsImV4cCI6MjEwMTc2ODczOH0.KKomdXKDi1sn7Ems1JxaFLrecq2oA_xVqMgo1jvUhiY';
+
 export async function GET() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     || process.env.SUPABASE_URL
@@ -11,7 +13,7 @@ export async function GET() {
     || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
     || process.env.SUPABASE_ANON_KEY
     || process.env.SUPABASE_PUBLISHABLE_KEY
-    || '';
+    || DEFAULT_SUPABASE_ANON_KEY;
   const source = [
     `window.ENV_SUPABASE_URL=${JSON.stringify(supabaseUrl)};`,
     `window.ENV_SUPABASE_ANON_KEY=${JSON.stringify(supabaseAnonKey)};`,
