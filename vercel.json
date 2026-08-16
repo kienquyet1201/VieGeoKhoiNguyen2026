@@ -2,6 +2,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
+    "api/public-config.js": {
+      "maxDuration": 10
+    },
     "api/support-ai.js": {
       "maxDuration": 30
     }
