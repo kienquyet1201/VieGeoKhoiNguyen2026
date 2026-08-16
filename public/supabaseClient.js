@@ -1,8 +1,8 @@
 (function () {
     'use strict';
 
-    const SUPABASE_URL = window.ENV_SUPABASE_URL || 'https://mijjvqkfkzwpmjpwkbgk.supabase.co';
-    const SUPABASE_ANON_KEY = window.ENV_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pamp2cWtma3p3cG1qcHdrYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTI3MzgsImV4cCI6MjEwMTc2ODczOH0.KKomdXKDi1sn7Ems1JxaFLrecq2oA_xVqMgo1jvUhiY';
+    const SUPABASE_URL = String(window.ENV_SUPABASE_URL || '').trim();
+    const SUPABASE_ANON_KEY = String(window.ENV_SUPABASE_ANON_KEY || '').trim();
     const TABLE_ALIASES = {
         Questions: 'questions',
         questions: 'questions',
@@ -23,6 +23,11 @@
     function createClientIfPossible() {
         if (window.supabaseClient && typeof window.supabaseClient.from === 'function') return window.supabaseClient;
         if (window.supabase && typeof window.supabase.from === 'function') return window.supabase;
+        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+            window.VieGeoSupabaseConfigError = 'SUPABASE_CONFIG_MISSING';
+            console.error('[VieGeo] Thiếu cấu hình kết nối Supabase công khai.');
+            return null;
+        }
         if (window.supabase && typeof window.supabase.createClient === 'function') {
             return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }

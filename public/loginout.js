@@ -336,14 +336,109 @@ async function signInViaSupabase(email, password) {
 
 async function signUpViaSupabase({ email, password, name, gender }) {
     const client = getAuthClient();
-    if (!client || typeof client.auth.signUp !== 'function') throw new Error('Supabase Auth chưa sẵn sàng.');
+    if (!client || typeof client.auth.signUp !== 'function') {
+        const configError = new Error('Supabase Auth chưa sẵn sàng.');
+        configError.code = window.VieGeoSupabaseConfigError || 'SUPABASE_NOT_READY';
+        throw configError;
+    }
     const { data, error } = await client.auth.signUp({
         email,
         password,
         options: { data: { name, gender } }
     });
     if (error) throw error;
-    return data?.user || null;
+    if (!data?.user) {
+        const emptyUserError = new Error('Supabase không trả về tài khoản vừa tạo.');
+        emptyUserError.code = 'SIGNUP_NO_USER';
+        throw emptyUserError;
+    }
+    return { user: data.user, session: data.session || null, recovered: false };
+}
+
+function registrationErrorMessage(error) {
+    const code = String(error?.code || '').toLowerCase();
+    const message = String(error?.message || error || '').toLowerCase();
+    if (code === 'supabase_config_missing' || code === 'supabase_not_ready' || message.includes('invalid api key')) {
+        return 'Kết nối tài khoản đang được bảo trì. Vui lòng thử lại sau ít phút.';
+    }
+    if (code === 'auth_email_exists' || message.includes('already registered') || message.includes('already exists')) {
+        return 'Email này đã có tài khoản. Vui lòng đăng nhập hoặc dùng chức năng Quên mật khẩu.';
+    }
+    if (message.includes('signup') && message.includes('disabled')) {
+        return 'Hệ thống đang tạm ngừng nhận đăng ký mới. Vui lòng liên hệ CSKH.';
+    }
+    if (message.includes('rate limit') || message.includes('too many requests') || String(error?.status || '') === '429') {
+        return 'Bạn đã thử quá nhiều lần. Vui lòng chờ vài phút rồi đăng ký lại.';
+    }
+    if (message.includes('password')) return 'Mật khẩu chưa đạt yêu cầu. Vui lòng dùng ít nhất 8 ký tự.';
+    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+        return 'Không thể kết nối dịch vụ tài khoản. Vui lòng kiểm tra mạng và thử lại.';
+    }
+    if (code === 'profile_save_failed') {
+        return 'Tài khoản đã được tạo nhưng chưa lưu được hồ sơ. Vui lòng đăng nhập lại để hệ thống hoàn tất.';
+    }
+    return 'Chưa thể hoàn tất đăng ký. Vui lòng thử lại hoặc liên hệ CSKH.';
+}
+
+async function createOrRecoverAuthAccount(registration) {
+    try {
+        return await signUpViaSupabase(registration);
+    } catch (error) {
+        const message = String(error?.message || '').toLowerCase();
+        if (!message.includes('already registered') && !message.includes('already exists')) throw error;
+        const client = getAuthClient();
+        const { data, error: signInError } = await client.auth.signInWithPassword({
+            email: registration.email,
+            password: registration.password
+        });
+        if (!signInError && data?.user) {
+            return { user: data.user, session: data.session || null, recovered: true };
+        }
+        const existsError = new Error('Email đã được đăng ký.');
+        existsError.code = 'AUTH_EMAIL_EXISTS';
+        throw existsError;
+    }
+}
+
+async function saveRegisteredUserProfile(authResult, registration) {
+    const client = getAuthClient();
+    const now = new Date().toISOString();
+    const modernProfile = {
+        email: registration.email,
+        user_name: registration.name,
+        name: registration.name,
+        full_name: registration.name,
+        gender: registration.gender,
+        role: 'user',
+        roles: ['user'],
+        active_role: 'user',
+        account_status: 'free',
+        xp: 0,
+        score: 0,
+        gems: 500,
+        hearts: 3,
+        current_streak: 0,
+        legacy_data: { auth_user_id: authResult.user.id },
+        updated_at: now
+    };
+    let result = await client.from('users').upsert(modernProfile, { onConflict: 'email' });
+    if (result.error) {
+        const compatibleProfile = {
+            email: registration.email,
+            user_name: registration.name,
+            role: 'user',
+            score: 0,
+            current_streak: 0
+        };
+        result = await client.from('users').upsert(compatibleProfile, { onConflict: 'email' });
+    }
+    if (result.error) {
+        console.error('[VieGeo Auth] Không thể lưu public.users:', result.error);
+        const profileError = new Error(result.error.message || 'Không thể lưu hồ sơ người dùng.');
+        profileError.code = 'PROFILE_SAVE_FAILED';
+        throw profileError;
+    }
+    return modernProfile;
 }
 
 // 1. ĐĂNG NHẬP
@@ -447,6 +542,7 @@ if (adminLoginForm) {
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        loginMsg.style.color = '#ff4b4b';
         const identifier = security.sanitizeText(document.getElementById('loginEmail').value, 180).trim();
         const email = normalizeEmail(identifier);
         const pass = document.getElementById('loginPassword').value; // Đã khớp ID HTML
@@ -592,7 +688,11 @@ if (loginForm) {
 }
 
 // ── CẤU HÌNH EMAILJS ──
-emailjs.init("Is8N-wrtdAZpySOJW");
+if (window.emailjs && typeof window.emailjs.init === 'function') {
+    window.emailjs.init("Is8N-wrtdAZpySOJW");
+} else {
+    console.error('[VieGeo Auth] Dịch vụ gửi OTP chưa tải được.');
+}
 
 // Biến lưu trữ tạm thời trong lúc xác thực OTP
 let tempRegData = null;
@@ -612,6 +712,7 @@ if (regForm) {
         const name = security.sanitizeText(document.getElementById('regName').value, 120);
         const email = normalizeEmail(document.getElementById('regEmail').value);
         const pass = document.getElementById('regPassword').value;
+        const passConfirm = document.getElementById('regPasswordConfirm')?.value || '';
         const gender = ['male', 'female', 'other', 'prefer_not_to_say'].includes(String(document.getElementById('regGender').value || '').toLowerCase()) ? String(document.getElementById('regGender').value).toLowerCase() : '';
         const btn = regForm.querySelector('button[type="submit"]');
         if (btn?.disabled) return;
@@ -623,6 +724,21 @@ if (regForm) {
         }
         if (pass.length < 8 || pass.length > 128 || !security.isValidEmail(email)) {
             regMsg.textContent = "Email không hợp lệ hoặc mật khẩu chưa đủ mạnh (8-128 ký tự).";
+            regMsg.style.display = "block";
+            return;
+        }
+        if (pass !== passConfirm) {
+            regMsg.textContent = "Mật khẩu xác nhận không khớp.";
+            regMsg.style.display = "block";
+            return;
+        }
+        if (!getAuthClient()) {
+            regMsg.textContent = registrationErrorMessage({ code: window.VieGeoSupabaseConfigError || 'SUPABASE_NOT_READY' });
+            regMsg.style.display = "block";
+            return;
+        }
+        if (!window.emailjs || typeof window.emailjs.send !== 'function') {
+            regMsg.textContent = "Dịch vụ gửi mã xác thực chưa sẵn sàng. Vui lòng tải lại trang và thử lại.";
             regMsg.style.display = "block";
             return;
         }
@@ -652,7 +768,7 @@ if (regForm) {
 
             try {
                 // Gọi API Gửi EmailJS
-                await emailjs.send("service_tfug92l", "template_qs28vrz", {
+                await window.emailjs.send("service_tfug92l", "template_qs28vrz", {
                     to_name: name,
                     to_email: email,
                     otp: currentOtpCode
@@ -673,7 +789,9 @@ if (regForm) {
 
         } catch (error) {
             console.error("Lỗi đăng ký:", error);
-            regMsg.textContent = "Lỗi hệ thống. Vui lòng thử lại sau.";
+            regMsg.textContent = error?.message === 'OTP_DELIVERY_FAILED'
+                ? "Chưa gửi được mã OTP. Vui lòng kiểm tra email và thử lại."
+                : registrationErrorMessage(error);
             regMsg.style.display = "block";
             btn.disabled = false;
             btn.textContent = "Đăng Ký Khám Phá";
@@ -709,45 +827,46 @@ if (btnConfirmOtp) {
         } else {
             // Xác thực thành công cho luồng Đăng ký
             try {
-                await signUpViaSupabase({
-                    email: tempRegData.email,
-                    password: tempRegData.pass,
-                    name: tempRegData.name,
-                    gender: tempRegData.gender
+                if (!tempRegData) throw new Error('Thông tin đăng ký đã hết hạn. Vui lòng thực hiện lại.');
+                const registration = { ...tempRegData };
+                const authResult = await createOrRecoverAuthAccount({
+                    email: registration.email,
+                    password: registration.pass,
+                    name: registration.name,
+                    gender: registration.gender
                 });
-                const newUser = {
-                    name: tempRegData.name,
-                    email: tempRegData.email,
-                    gender: tempRegData.gender,
-                    createdAt: new Date().toISOString(),
-                    lastLoginDate: null,
-                    xp: 0,
-                    hearts: 3,
-                    accountStatus: 'free',
-                    lastHeartRegenTime: Date.now(),
-                    lastHeartUpdate: Date.now(),
-                    streak: 0,
-                    currentStreak: 0,
-                    lastStudyDate: null,
-                    lastStreakAwardDate: null,
-                    gems: 500,
-                    avatar: "fa-user-astronaut",
-                    avatarIsBase64: false,
-                    roles: ['user'] // Mặc định role là user
-                };
-
-                await db.collection('users').doc(tempRegData.email).set(newUser);
-                security.clearRateLimit(`auth_register_${tempRegData.email}`);
+                await saveRegisteredUserProfile(authResult, registration);
+                security.clearRateLimit(`auth_register_${registration.email}`);
                 localStorage.removeItem('VieGeo_state');
-                localStorage.setItem('lm_session', JSON.stringify({ email: tempRegData.email, name: tempRegData.name, gender: tempRegData.gender, activeRole: 'user' }));
                 tempRegData = null;
-                showToast("🎉 Chúc mừng! Đăng ký thành công.");
-                
-                setTimeout(() => window.location.href = MAP_PAGE, 1500);
+
+                if (!authResult.session) {
+                    otpModalOverlay.style.display = 'none';
+                    switchPanel(loginPanel);
+                    loginMsg.textContent = 'Tài khoản đã được tạo. Vui lòng mở email xác nhận của Supabase rồi đăng nhập.';
+                    loginMsg.style.color = '#22c55e';
+                    loginMsg.style.display = 'block';
+                    showToast('Đăng ký thành công. Hãy xác nhận email để đăng nhập.');
+                    newBtnConfirmOtp.disabled = false;
+                    newBtnConfirmOtp.textContent = "Xác nhận tạo tài khoản";
+                    return;
+                }
+
+                localStorage.setItem('lm_session', JSON.stringify({
+                    id: authResult.user.id,
+                    email: registration.email,
+                    name: registration.name,
+                    gender: registration.gender,
+                    activeRole: 'user',
+                    role: 'user',
+                    roles: ['user']
+                }));
+                showToast(authResult.recovered ? 'Tài khoản đã được khôi phục thành công.' : '🎉 Chúc mừng! Đăng ký thành công.');
+                setTimeout(() => window.location.href = MAP_PAGE, 1200);
 
             } catch (error) {
                 console.error("Lỗi lưu tài khoản:", error);
-                otpMsg.textContent = "Lỗi kết nối máy chủ!";
+                otpMsg.textContent = registrationErrorMessage(error);
                 otpMsg.style.display = 'block';
                 newBtnConfirmOtp.disabled = false;
                 newBtnConfirmOtp.textContent = "Xác nhận tạo tài khoản";
