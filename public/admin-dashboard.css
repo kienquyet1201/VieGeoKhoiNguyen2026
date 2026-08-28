@@ -137,6 +137,7 @@ html[data-theme="light"] .back-to-home-btn{color:#ffffff;background:rgba(255,255
 .question-bank-table td{vertical-align:top;line-height:1.5}
 .question-bank-question{min-width:270px;max-width:430px;white-space:normal;font-weight:700}
 .question-bank-explanation{min-width:230px;max-width:360px;white-space:normal;color:var(--text-secondary)}
+.question-bank-citation{min-width:190px;max-width:320px;white-space:normal;color:var(--text-secondary);font-size:11px;font-style:italic}
 .question-bank-location{white-space:nowrap;font-weight:700}
 .question-bank-difficulty{display:inline-flex;padding:5px 9px;border-radius:999px;background:#e2f2ff;color:#1f6f95;font-size:10px;font-weight:800}
 html[data-theme="dark"] .question-bank-difficulty{background:#1f4559;color:#d9f2ff}

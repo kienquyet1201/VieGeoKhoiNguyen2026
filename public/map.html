@@ -8,12 +8,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="map-discovery.css?v=20260814-4">
-    <link rel="stylesheet" href="shared-topbar.css?v=20260814-2">
-    <link rel="stylesheet" href="global-theme.css?v=20260814-3">
-    <script src="global-theme.js?v=20260814-3"></script>
+    <link rel="stylesheet" href="shared-topbar.css?v=20260828-1">
+    <link rel="stylesheet" href="global-theme.css?v=20260816-24">
+    <link rel="stylesheet" href="footer-component.css?v=20260828-1">
+    <script src="global-theme.js?v=20260816-24"></script>
+    <script src="footer-component.js?v=20260828-1" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/api/public-config?v=20260816-2"></script>
     <script src="supabaseClient.js?v=20260816-8"></script>
+    <script src="streak-service.js?v=20260829-2"></script>
+    <script src="premium-learning-ai.js?v=20260829-1"></script>
     <script src="auth-guard.js?v=20260814-19"></script>
     <script src="supabase-ui-sync.js?v=20260814-19"></script>
     <link rel="stylesheet" href="responsive-system.css?v=20260814-3">
@@ -47,13 +51,14 @@
             <div class="shared-stat">❤️ <strong id="sharedHeart">3</strong></div>
             <div class="shared-stat">🔥 <strong id="sharedStreak">0</strong></div>
             <div class="shared-stat">💎 <strong id="sharedGem">500</strong></div>
-            <div class="shared-stat"><span class="shared-xp-mark">XP</span><strong id="sharedXp">0 XP</strong></div>
         </div>
     </div>
     <nav class="shared-center">
         <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
         <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
         <a class="shared-link" href="exam-arena.html"><span class="shared-label">Luyện tập, luyện thi</span></a>
+        <a class="shared-link" href="coming-soon.html?subject=history"><span class="shared-label">Chuyển môn Lịch sử</span></a>
+        <a class="shared-link" href="coming-soon.html?subject=integrated"><span class="shared-label">Dung hợp Sử – Địa</span></a>
         <a class="shared-link" href="arena.html"><span class="shared-label">Đấu trường</span></a>
         <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
         <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
@@ -80,6 +85,10 @@
         <button class="shared-action shared-theme" id="sharedThemeButton" type="button">Sáng/Tối</button>
         
         <button class="shared-action shared-logout" id="sharedLogoutButton" type="button">Thoát</button>
+        <button class="shared-user-profile" id="sharedUserProfile" type="button" aria-label="Mở hồ sơ">
+            <span class="shared-avatar-progress" id="sharedAvatarProgress"><span class="shared-user-avatar" id="sharedUserAvatar">HV</span></span>
+            <span class="shared-level-badge" id="sharedLevelBadge">Lv.1</span>
+        </button>
     </div>
 </header>
 
@@ -201,6 +210,10 @@
                     <button class="answer-card" type="button" data-answer="3">Châu Mĩ</button>
                 </div>
                 <div id="answerFeedback" class="answer-feedback">Hãy chọn một đáp án để tiếp tục.</div>
+                <div id="premiumHintPanel" class="premium-hint-panel" hidden>
+                    <button id="premiumHintButton" class="premium-hint-button" type="button">✨ Gợi ý Premium</button>
+                    <p id="premiumHintOutput" class="premium-hint-output" aria-live="polite"></p>
+                </div>
                 <button id="nextQuestionButton" class="next-question-button" type="button">Câu tiếp theo</button>
             </div>
         </div>
@@ -257,7 +270,7 @@
     </button>
 
     <div id="toast" class="toast"></div>
-    <script src="map-discovery.js?v=20260814-4"></script>
-    <script src="shared-topbar.js?v=20260814-20"></script>
+    <script src="map-discovery.js?v=20260829-2"></script>
+    <script src="shared-topbar.js?v=20260828-1"></script>
 </body>
 </html>

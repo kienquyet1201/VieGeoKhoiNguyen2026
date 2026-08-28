@@ -176,6 +176,8 @@
         if (data.account_status !== undefined) data.accountStatus = data.account_status;
         if (data.last_active_client !== undefined) data.lastActive = data.last_active_client;
         if (data.current_streak !== undefined) data.currentStreak = data.current_streak;
+        if (data.school_grade !== undefined) data.schoolGrade = data.school_grade;
+        if (data.textbook_curriculum !== undefined) data.textbookCurriculum = data.textbook_curriculum;
         if (data.selected_grade !== undefined) data.selectedGrade = data.selected_grade;
         if (data.selected_difficulty !== undefined) data.selectedDifficulty = data.selected_difficulty;
         if (data.game_state !== undefined) data.gameState = data.game_state;
@@ -237,6 +239,9 @@
             force_logout: Boolean(data.forceLogout ?? data.force_logout ?? false),
             account_status: data.accountStatus || data.account_status || 'free',
             selected_grade: data.selectedGrade ?? data.selected_grade ?? null,
+            age: Number(data.age ?? 0) || null,
+            school_grade: Number(data.schoolGrade ?? data.school_grade ?? 0) || null,
+            textbook_curriculum: sanitizeText(data.textbookCurriculum ?? data.textbook_curriculum ?? '', 160) || 'Chương trình GDPT 2018',
             selected_difficulty: data.selectedDifficulty ?? data.selected_difficulty ?? null,
             xp: Number(data.xp ?? 0) || 0,
             gems: Number(data.gems ?? 0) || 0,
@@ -333,6 +338,8 @@
             forceLogout: 'force_logout',
             accountStatus: 'account_status',
             currentStreak: 'current_streak',
+            schoolGrade: 'school_grade',
+            textbookCurriculum: 'textbook_curriculum',
             selectedGrade: 'selected_grade',
             selectedDifficulty: 'selected_difficulty',
             lessonId: 'lesson_id'

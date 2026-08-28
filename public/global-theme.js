@@ -36,19 +36,14 @@ function showConfirmToast(message,options){
     var settings=options||{};
     var normalizedType=String(settings.type||"warning").toLowerCase();
     var allowedTypes=["success","error","warning","info"];
-    var container=document.getElementById("viegeoToastContainer");
 
     if(allowedTypes.indexOf(normalizedType)===-1){normalizedType="warning";}
-    if(!container){
-        container=document.createElement("div");
-        container.id="viegeoToastContainer";
-        container.className="viegeo-toast-container";
-        container.setAttribute("aria-live","polite");
-        document.body.appendChild(container);
-    }
 
     return new Promise(function(resolve){
-        var toast=document.createElement("section");
+        var previousFocus=document.activeElement;
+        var existing=document.getElementById("viegeoConfirmOverlay");
+        var overlay=document.createElement("div");
+        var dialog=document.createElement("section");
         var copy=document.createElement("div");
         var title=document.createElement("strong");
         var body=document.createElement("p");
@@ -58,39 +53,56 @@ function showConfirmToast(message,options){
         var settled=false;
         var timer=0;
 
-        toast.className="viegeo-toast viegeo-toast--"+normalizedType+" viegeo-toast--confirm";
-        toast.setAttribute("role","alertdialog");
-        toast.setAttribute("aria-modal","false");
+        if(existing){existing.remove();}
+        overlay.id="viegeoConfirmOverlay";
+        overlay.className="viegeo-confirm-overlay";
+        dialog.className="viegeo-confirm-dialog viegeo-confirm-dialog--"+normalizedType;
+        dialog.setAttribute("role","alertdialog");
+        dialog.setAttribute("aria-modal","true");
+        dialog.setAttribute("aria-labelledby","viegeoConfirmTitle");
         title.textContent=String(settings.title||"Xác nhận");
+        title.id="viegeoConfirmTitle";
         body.textContent=String(message||"");
-        copy.className="viegeo-toast__copy";
-        actions.className="viegeo-toast__actions";
+        copy.className="viegeo-confirm-dialog__copy";
+        actions.className="viegeo-confirm-dialog__actions";
         confirmButton.type="button";
-        confirmButton.className="viegeo-toast__button viegeo-toast__button--confirm";
+        confirmButton.className="viegeo-confirm-dialog__button viegeo-confirm-dialog__button--confirm";
         confirmButton.textContent=String(settings.confirmText||"Đồng ý");
         cancelButton.type="button";
-        cancelButton.className="viegeo-toast__button viegeo-toast__button--cancel";
+        cancelButton.className="viegeo-confirm-dialog__button viegeo-confirm-dialog__button--cancel";
         cancelButton.textContent=String(settings.cancelText||"Hủy");
         copy.appendChild(title);
         copy.appendChild(body);
         actions.appendChild(confirmButton);
         if(settings.showCancel!==false&&settings.cancelText!==false){actions.appendChild(cancelButton);}
-        toast.appendChild(copy);
-        toast.appendChild(actions);
-        container.appendChild(toast);
+        dialog.appendChild(copy);
+        dialog.appendChild(actions);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        function handleKeydown(event){
+            if(event.key==="Escape"){finish(false);}
+        }
 
         function finish(value){
             if(settled){return;}
             settled=true;
             if(timer){window.clearTimeout(timer);}
-            toast.classList.remove("is-visible");
-            toast.classList.add("is-leaving");
-            window.setTimeout(function(){toast.remove();resolve(value);},260);
+            document.removeEventListener("keydown",handleKeydown);
+            overlay.classList.remove("is-visible");
+            overlay.classList.add("is-leaving");
+            window.setTimeout(function(){
+                overlay.remove();
+                if(previousFocus&&typeof previousFocus.focus==="function"){previousFocus.focus();}
+                resolve(value);
+            },220);
         }
 
         confirmButton.addEventListener("click",function(){finish(true);});
         cancelButton.addEventListener("click",function(){finish(false);});
-        window.requestAnimationFrame(function(){toast.classList.add("is-visible");confirmButton.focus();});
+        overlay.addEventListener("click",function(event){if(event.target===overlay){finish(false);}});
+        document.addEventListener("keydown",handleKeydown);
+        window.requestAnimationFrame(function(){overlay.classList.add("is-visible");confirmButton.focus();});
         if(Number(settings.timeout)>0){timer=window.setTimeout(function(){finish(false);},Number(settings.timeout));}
     });
 }

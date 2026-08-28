@@ -14,8 +14,8 @@
     <script src="auth-guard.js?v=20260814-19"></script>
     <script src="supabase-ui-sync.js?v=20260814-19"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    <link rel="stylesheet" href="global-theme.css?v=20260814-3">
-    <script src="global-theme.js?v=20260814-3"></script>
+    <link rel="stylesheet" href="global-theme.css?v=20260816-24">
+    <script src="global-theme.js?v=20260816-24"></script>
     <link rel="stylesheet" href="role-switcher.css?v=20260814-1">
     <link rel="stylesheet" href="responsive-system.css?v=20260814-3">
 </head>
@@ -190,6 +190,9 @@
                                 <label class="field-label">Lý thuyết của đảo <small>(chỉ hiển thị một lần trước bài)</small>
                                     <textarea class="field-input bulk-island-theory" id="bulkImportIslandTheory" rows="7" maxlength="12000" placeholder="Nhập nội dung lý thuyết chung để học sinh đọc trước khi làm bài..."></textarea>
                                 </label>
+                                <label class="field-label">Trích dẫn SGK <small>(nguồn tài liệu cho toàn bộ câu hỏi của lô)</small>
+                                    <input class="field-input" id="bulkImportTextbookQuote" type="text" maxlength="1200" placeholder="Ví dụ: SGK Địa lí 9, Chân trời sáng tạo, trang 24–25">
+                                </label>
                                 <section class="boss-summary-upload" aria-labelledby="bossSummaryUploadTitle">
                                     <strong id="bossSummaryUploadTitle">Lý thuyết tổng kết sau BOSS</strong>
                                     <p>Nội dung này xuất hiện dưới BOSS và chỉ mở khóa sau khi học sinh hoàn thành BOSS của Tỉnh/Thành đã chọn.</p>
@@ -259,10 +262,10 @@
                     <div class="table-wrap question-bank-table-wrap">
                         <table class="user-table question-bank-table">
                             <thead>
-                                <tr><th>STT</th><th>Tỉnh/Thành</th><th>Đảo</th><th>Chủ đề</th><th>Độ khó</th><th>Câu hỏi</th><th>Đáp án đúng</th><th>Giải thích</th></tr>
+                                <tr><th>STT</th><th>Tỉnh/Thành</th><th>Đảo</th><th>Chủ đề</th><th>Độ khó</th><th>Câu hỏi</th><th>Đáp án đúng</th><th>Giải thích</th><th>Trích dẫn SGK</th></tr>
                             </thead>
                             <tbody id="questionBankTableBody">
-                                <tr><td colspan="8"><div class="empty-state">Đang tải ngân hàng câu hỏi...</div></td></tr>
+                                <tr><td colspan="9"><div class="empty-state">Đang tải ngân hàng câu hỏi...</div></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -333,7 +336,7 @@
 
     <div class="toast" id="toast"></div>
     <script src="support-store.js"></script>
-    <script src="admin-dashboard.js?v=20260816-20"></script>
+    <script src="admin-dashboard.js?v=20260829-1"></script>
     <script src="role-switcher.js?v=20260814-19"></script>
 </body>
 </html>

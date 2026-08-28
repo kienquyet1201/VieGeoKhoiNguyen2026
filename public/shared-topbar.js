@@ -1,7 +1,10 @@
 var sharedHeart=document.getElementById("sharedHeart");
 var sharedStreak=document.getElementById("sharedStreak");
 var sharedGem=document.getElementById("sharedGem");
-var sharedXp=document.getElementById("sharedXp");
+var sharedUserProfile=document.getElementById("sharedUserProfile");
+var sharedUserAvatar=document.getElementById("sharedUserAvatar");
+var sharedAvatarProgress=document.getElementById("sharedAvatarProgress");
+var sharedLevelBadge=document.getElementById("sharedLevelBadge");
 var sharedThemeButton=document.getElementById("sharedThemeButton");
 var sharedLogoutButton=document.getElementById("sharedLogoutButton");
 var sharedDifficulty=document.getElementById("sharedDifficulty");
@@ -85,7 +88,6 @@ function getSharedSession(){
 
 function updateSharedStats(){
     var state=getSharedState();
-    var session=getSharedSession();
 
     if(sharedHeart){
         sharedHeart.textContent=state.hearts===undefined?3:state.hearts;
@@ -96,11 +98,46 @@ function updateSharedStats(){
     if(sharedGem){
         sharedGem.textContent=state.gems===undefined?500:state.gems;
     }
-    if(sharedXp){
-        sharedXp.textContent=(state.xp||0)+" XP";
-    }
     if(sharedDifficulty){
         sharedDifficulty.value=state.selectedDifficulty||"easy";
+    }
+    updateSharedUserProfile();
+}
+
+function getSharedInitials(value){
+    var parts=String(value||"Học viên").trim().split(/\s+/).filter(Boolean);
+    var initials=parts.slice(-2).map(function(part){return part.charAt(0);}).join("").toUpperCase();
+    return initials||"HV";
+}
+
+function updateSharedUserProfile(){
+    try{
+        if(!sharedUserProfile||!sharedUserAvatar||!sharedAvatarProgress||!sharedLevelBadge){return;}
+        var state=getSharedState();
+        var session=getSharedSession();
+        var user=window.VieGeoCurrentUser||{};
+        var name=String(user.user_name||user.name||user.full_name||session.name||session.displayName||"Học viên").trim();
+        var xp=Number(user.score??user.xp??state.xp??0);
+        if(!Number.isFinite(xp)||xp<0){xp=0;}
+        var level=Math.floor(xp/100)+1;
+        var progress=Math.min(100,Math.round((xp%100)/100*100));
+        var avatar=String(user.avatar_url||user.avatarUrl||user.avatar||session.avatar_url||session.avatarUrl||"").trim();
+
+        sharedAvatarProgress.style.setProperty("--xp-progress",String(progress)+"%");
+        sharedLevelBadge.textContent="Lv."+String(level);
+        sharedUserProfile.setAttribute("aria-label","Mở hồ sơ của "+name+", cấp "+String(level)+", tiến độ XP "+String(progress)+"%");
+        sharedUserAvatar.replaceChildren();
+        if(/^(https?:|data:image\/)/i.test(avatar)){
+            var image=document.createElement("img");
+            image.src=avatar;
+            image.alt="Ảnh đại diện của "+name;
+            image.addEventListener("error",function(){sharedUserAvatar.textContent=getSharedInitials(name);},{once:true});
+            sharedUserAvatar.appendChild(image);
+        }else{
+            sharedUserAvatar.textContent=getSharedInitials(name);
+        }
+    }catch(error){
+        console.warn("[VieGeo] Không thể cập nhật hồ sơ trên thanh menu:",error);
     }
 }
 
@@ -175,6 +212,9 @@ function initializeSharedNavbar(){
     if(sharedLogoutButton){
         sharedLogoutButton.addEventListener("click",sharedLogout);
     }
+    if(sharedUserProfile){
+        sharedUserProfile.addEventListener("click",function(){window.location.href="profile.html";});
+    }
     if(sharedDifficulty){
         sharedDifficulty.addEventListener("change",changeSharedDifficulty);
     }
@@ -191,4 +231,7 @@ if(sharedRole&&sharedRole.closest(".shared-role-control")){
 }
 
 document.addEventListener("DOMContentLoaded",initializeSharedNavbar);
-window.addEventListener("viegeo:user-hydrated",updateSharedRoleControl);
+window.addEventListener("viegeo:user-hydrated",function(){
+    updateSharedRoleControl();
+    updateSharedUserProfile();
+});

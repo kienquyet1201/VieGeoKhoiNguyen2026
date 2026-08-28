@@ -334,7 +334,7 @@ async function signInViaSupabase(email, password) {
     return data?.user || null;
 }
 
-async function signUpViaSupabase({ email, password, name, gender }) {
+async function signUpViaSupabase({ email, password, name, gender, age, schoolGrade }) {
     const client = getAuthClient();
     if (!client || typeof client.auth.signUp !== 'function') {
         const configError = new Error('Supabase Auth chưa sẵn sàng.');
@@ -351,6 +351,9 @@ async function signUpViaSupabase({ email, password, name, gender }) {
                 name,
                 full_name: name,
                 gender,
+                age,
+                school_grade: schoolGrade,
+                textbook_curriculum: 'Chương trình GDPT 2018',
                 role: 'student'
             }
         }
@@ -362,6 +365,23 @@ async function signUpViaSupabase({ email, password, name, gender }) {
         throw emptyUserError;
     }
     return { user: data.user, session: data.session || null, recovered: false };
+}
+
+async function syncEducationProfile(accessToken, registration) {
+    try {
+        if (!accessToken) return;
+        const response = await fetch('/api/profile/education', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${accessToken}`
+            },
+            body: JSON.stringify({ age: registration.age, schoolGrade: registration.schoolGrade })
+        });
+        if (!response.ok) throw new Error('Không thể đồng bộ thông tin học tập.');
+    } catch (error) {
+        console.warn('[VieGeo Auth] Thông tin tuổi/lớp sẽ được đồng bộ lại ở lần đăng nhập sau:', error);
+    }
 }
 
 function registrationErrorMessage(error) {
@@ -424,6 +444,9 @@ async function saveRegisteredUserProfile(authResult, registration) {
         name: registration.name,
         full_name: registration.name,
         gender: registration.gender,
+        age: registration.age,
+        school_grade: registration.schoolGrade,
+        textbook_curriculum: 'Chương trình GDPT 2018',
         role: 'user',
         roles: ['user'],
         active_role: 'user',
@@ -443,7 +466,8 @@ async function saveRegisteredUserProfile(authResult, registration) {
             user_name: registration.name,
             role: 'user',
             score: 0,
-            current_streak: 0
+            current_streak: 0,
+            legacy_data: { age: registration.age, school_grade: registration.schoolGrade }
         };
         result = await client.from('users').upsert(compatibleProfile, { onConflict: 'email' });
     }
@@ -729,10 +753,12 @@ if (regForm) {
         const pass = document.getElementById('regPassword').value;
         const passConfirm = document.getElementById('regPasswordConfirm')?.value || '';
         const gender = ['male', 'female', 'other', 'prefer_not_to_say'].includes(String(document.getElementById('regGender').value || '').toLowerCase()) ? String(document.getElementById('regGender').value).toLowerCase() : '';
+        const age = Number(document.getElementById('regAge')?.value || 0);
+        const schoolGrade = Number(document.getElementById('regSchoolGrade')?.value || 0);
         const btn = regForm.querySelector('button[type="submit"]');
         if (btn?.disabled) return;
 
-        if (!name || !email || !pass || !gender) {
+        if (!name || !email || !pass || !gender || !Number.isInteger(age) || age < 6 || age > 100 || !Number.isInteger(schoolGrade) || schoolGrade < 6 || schoolGrade > 12) {
             regMsg.textContent = "Vui lòng điền đủ thông tin.";
             regMsg.style.display = "block";
             return;
@@ -777,7 +803,7 @@ if (regForm) {
             currentOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
             
             // Lưu dữ liệu tạm để dùng sau khi xác thực thành công
-            tempRegData = { name, email, pass, gender };
+            tempRegData = { name, email, pass, gender, age, schoolGrade };
 
             btn.textContent = "Đang gửi OTP...";
 
@@ -848,9 +874,12 @@ if (btnConfirmOtp) {
                     email: registration.email,
                     password: registration.pass,
                     name: registration.name,
-                    gender: registration.gender
+                    gender: registration.gender,
+                    age: registration.age,
+                    schoolGrade: registration.schoolGrade
                 });
                 await saveRegisteredUserProfile(authResult, registration);
+                await syncEducationProfile(authResult.session?.access_token, registration);
                 security.clearRateLimit(`auth_register_${registration.email}`);
                 localStorage.removeItem('VieGeo_state');
                 tempRegData = null;
@@ -872,6 +901,8 @@ if (btnConfirmOtp) {
                     email: registration.email,
                     name: registration.name,
                     gender: registration.gender,
+                    age: registration.age,
+                    schoolGrade: registration.schoolGrade,
                     activeRole: 'user',
                     role: 'user',
                     roles: ['user']

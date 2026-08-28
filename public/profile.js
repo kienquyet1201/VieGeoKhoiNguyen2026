@@ -19,6 +19,10 @@ const profileNotificationList = document.getElementById('profileNotificationList
 const profileToast = document.getElementById('toast');
 const premiumStatus = document.getElementById('premiumStatus');
 const premiumCard = document.querySelector('.premium-card');
+const premiumLearningPanel = document.getElementById('premiumLearningPanel');
+const premiumLearningOutput = document.getElementById('premiumLearningOutput');
+const premiumStreakRestoreButton = document.getElementById('premiumStreakRestoreButton');
+const premiumStreakRestoreStatus = document.getElementById('premiumStreakRestoreStatus');
 
 function showProfileToast(message, type = 'success') {
     if (!profileToast) return;
@@ -327,7 +331,69 @@ function renderPremiumState(currentUser, latestRequest) {
             : (pending ? '<i class="fa-solid fa-clock"></i> Đang chờ duyệt' : '<i class="fa-solid fa-crown"></i> Yêu cầu mua Premium');
     }
     persistPremiumState(active);
+    renderPremiumLearningTools(active, currentUser);
     return active;
+}
+
+function currentVietnamMonth() {
+    try {
+        const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit' }).formatToParts(new Date());
+        const values = {};
+        parts.forEach(part => { if (part.type !== 'literal') values[part.type] = part.value; });
+        return `${values.year}-${values.month}-01`;
+    } catch (error) {
+        return new Date().toISOString().slice(0, 7) + '-01';
+    }
+}
+
+function renderPremiumLearningTools(active, currentUser) {
+    try {
+        if (premiumLearningPanel) premiumLearningPanel.hidden = !active;
+        if (!active) return;
+        const sameMonth = String(currentUser?.streak_restore_month || '') === currentVietnamMonth();
+        const used = sameMonth ? Math.max(0, Number(currentUser?.streak_restores_used) || 0) : 0;
+        const remaining = Math.max(0, 3 - used);
+        if (premiumStreakRestoreStatus) premiumStreakRestoreStatus.textContent = `Còn ${remaining}/3 lượt phục hồi trong tháng này.`;
+        if (premiumStreakRestoreButton) premiumStreakRestoreButton.disabled = remaining <= 0;
+    } catch (error) {
+        console.warn('[VieGeo Premium] Không thể hiển thị công cụ học tập:', error);
+    }
+}
+
+async function runPremiumLearningAction(action, button) {
+    try {
+        if (!isPremiumProfile(window.currentUserData || {})) throw new Error('Tính năng này dành cho tài khoản Premium.');
+        if (!window.VieGeoPremiumLearning?.request) throw new Error('Trợ lý học tập chưa sẵn sàng.');
+        if (button) { button.disabled = true; button.textContent = 'Đang chuẩn bị...'; }
+        if (premiumLearningOutput) premiumLearningOutput.textContent = 'Trợ lý Premium đang phân tích dữ liệu học tập...';
+        const response = await window.VieGeoPremiumLearning.request(action, {});
+        if (premiumLearningOutput) premiumLearningOutput.textContent = String(response?.reply || 'Chưa có gợi ý phù hợp.');
+    } catch (error) {
+        if (premiumLearningOutput) premiumLearningOutput.textContent = error?.message || 'Chưa thể dùng trợ lý Premium lúc này.';
+    } finally {
+        if (button) { button.disabled = false; button.textContent = action === 'analysis' ? 'Phân tích điểm yếu' : 'Tạo bài tập về nhà'; }
+    }
+}
+
+async function restorePremiumStreak() {
+    try {
+        const currentUser = window.currentUserData || {};
+        const email = String(currentUser.email || sessionUser.email || '').trim().toLowerCase();
+        if (!email || !window.VieGeoStreak?.restorePremiumStreak) throw new Error('Phiên học chưa sẵn sàng. Vui lòng đăng nhập lại.');
+        if (premiumStreakRestoreButton) { premiumStreakRestoreButton.disabled = true; premiumStreakRestoreButton.textContent = 'Đang phục hồi...'; }
+        const result = await window.VieGeoStreak.restorePremiumStreak({ email, profile: currentUser });
+        currentUser.current_streak = Math.max(0, Number(result?.streak) || 0);
+        currentUser.streak_restores_used = Number(result?.restoresUsed) || 0;
+        currentUser.streak_restore_month = currentVietnamMonth();
+        window.currentUserData = currentUser;
+        if (profStreak) profStreak.textContent = String(currentUser.current_streak);
+        renderPremiumLearningTools(true, currentUser);
+        showProfileToast(`Đã phục hồi chuỗi ${currentUser.current_streak} ngày.`, 'success');
+    } catch (error) {
+        showProfileToast(error?.message || 'Chưa thể phục hồi chuỗi ngày học.', 'warning');
+    } finally {
+        if (premiumStreakRestoreButton) premiumStreakRestoreButton.textContent = 'Phục hồi chuỗi đã mất';
+    }
 }
 
 function normalizeLearningKey(value) {
@@ -584,6 +650,11 @@ if (btnPremium) {
         }
     });
 }
+
+document.querySelectorAll('[data-premium-ai-action]').forEach(button => {
+    button.addEventListener('click', () => runPremiumLearningAction(button.dataset.premiumAiAction, button));
+});
+if (premiumStreakRestoreButton) premiumStreakRestoreButton.addEventListener('click', restorePremiumStreak);
 
 // 4. Đăng xuất (Fix lỗi rò rỉ dữ liệu)
 if (btnLogout) {

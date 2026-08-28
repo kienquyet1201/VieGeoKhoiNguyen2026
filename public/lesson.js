@@ -56,6 +56,32 @@ function presentIslandResult(stars, correctAnswers) {
     }, 220);
 }
 
+function syncLessonStreak(stars) {
+    try {
+        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
+        const email = String(session.email || '').trim().toLowerCase();
+        if (!email || !window.VieGeoStreak?.applyForLesson) return;
+        window.VieGeoStreak.applyForLesson({
+            email,
+            stars,
+            currentStreak: Number(state.streak) || 0,
+            profile: window.VieGeoCurrentUser || session,
+            lastEligibleDate: state.lastStreakAwardDate || ''
+        }).then(result => {
+            try {
+                if (!result || result.streak === undefined) return;
+                state.streak = Math.max(0, Number(result.streak) || 0);
+                if (result.awarded) state.lastStreakAwardDate = window.VieGeoStreak.vietnamDate();
+                saveGameState(state);
+            } catch (error) {
+                console.warn('[VieGeo Lesson] Không thể đồng bộ chuỗi ngày học:', error);
+            }
+        }).catch(error => console.warn('[VieGeo Lesson] Không thể đồng bộ chuỗi ngày học:', error));
+    } catch (error) {
+        console.warn('[VieGeo Lesson] Không thể chuẩn bị dữ liệu chuỗi ngày học:', error);
+    }
+}
+
 // DOM Elements
 const questionText = document.getElementById('questionText');
 const optionsGrid = document.getElementById('optionsGrid');
@@ -616,6 +642,7 @@ function finishLesson() {
         }
         if (typeof recordStudyActivity === 'function') recordStudyActivity(state);
         saveGameState(state);
+        syncLessonStreak(earnedStars);
         presentIslandResult(earnedStars, correctAnswers);
         const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
         if (typeof updateLearningProfile === 'function') {

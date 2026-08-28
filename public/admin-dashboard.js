@@ -428,7 +428,7 @@
         body.replaceChildren();
         if (summary) summary.textContent = `Đang hiển thị ${questions.length} câu hỏi phù hợp.`;
         if (!questions.length) {
-            body.innerHTML = '<tr><td colspan="8"><div class="empty-state">Không có câu hỏi phù hợp với bộ lọc đã chọn.</div></td></tr>';
+            body.innerHTML = '<tr><td colspan="9"><div class="empty-state">Không có câu hỏi phù hợp với bộ lọc đã chọn.</div></td></tr>';
             return;
         }
 
@@ -444,7 +444,8 @@
                 String(question.difficulty || 'easy'),
                 String(question.question || 'Câu hỏi không có nội dung'),
                 `${String.fromCharCode(65 + correctIndex)}. ${questionOptionText(question, correctIndex) || 'Chưa có đáp án'}`,
-                String(question.theory || question.explanation || 'Chưa có giải thích')
+                String(question.theory || question.explanation || 'Chưa có giải thích'),
+                String(question.textbook_quote || 'Chưa có trích dẫn SGK')
             ];
             cells.forEach((value, cellIndex) => {
                 const cell = document.createElement('td');
@@ -453,6 +454,7 @@
                 if (cellIndex === 4) cell.innerHTML = `<span class="question-bank-difficulty">${escapeText(value)}</span>`;
                 if (cellIndex === 5) cell.className = 'question-bank-question';
                 if (cellIndex === 7) cell.className = 'question-bank-explanation';
+                if (cellIndex === 8) cell.className = 'question-bank-citation';
                 row.appendChild(cell);
             });
             fragment.appendChild(row);
@@ -488,7 +490,7 @@
             if (summary) summary.textContent = 'Kho câu hỏi chưa sẵn sàng.';
             return;
         }
-        if (body) body.innerHTML = '<tr><td colspan="8"><div class="empty-state">Đang tải ngân hàng câu hỏi...</div></td></tr>';
+        if (body) body.innerHTML = '<tr><td colspan="9"><div class="empty-state">Đang tải ngân hàng câu hỏi...</div></td></tr>';
         if (summary) summary.textContent = 'Đang cập nhật danh sách câu hỏi...';
         if (refreshButton) refreshButton.disabled = true;
         try {
@@ -716,6 +718,7 @@
                 question: sanitizeImportText(question, 1000), option_a: sanitizeImportText(optionA, 500), option_b: sanitizeImportText(optionB, 500),
                 option_c: sanitizeImportText(optionC, 500), option_d: sanitizeImportText(optionD, 500), correct_option: correctOption,
                 province: shared.province, island: shared.island, topic: shared.topic, theory: sanitizeImportText(theory, 6000),
+                textbook_quote: shared.textbookQuote,
                 island_theory: shared.island === 'Đảo nhỏ 34'
                     ? (shared.provinceSummaryTheory || shared.islandTheory)
                     : shared.islandTheory,
@@ -730,7 +733,8 @@
             island: String(byId('bulkImportSubIsland')?.value || '').trim(),
             topic: sanitizeImportText(byId('bulkImportTopic')?.value || '', 160),
             islandTheory: sanitizeImportText(byId('bulkImportIslandTheory')?.value || '', 12000),
-            provinceSummaryTheory: sanitizeImportText(byId('bulkImportProvinceSummaryTheory')?.value || '', 12000)
+            provinceSummaryTheory: sanitizeImportText(byId('bulkImportProvinceSummaryTheory')?.value || '', 12000),
+            textbookQuote: sanitizeImportText(byId('bulkImportTextbookQuote')?.value || '', 1200)
         };
     }
 
@@ -759,8 +763,8 @@
             .select('id,question');
         const { data, error } = await saveRows(uniqueRows);
         if (!error) return Array.isArray(data) ? data.length : uniqueRows.length;
-        if (/island_theory|column|schema/i.test(String(error.message || error.details || ''))) {
-            const compatibleRows = uniqueRows.map(({ island_theory, ...row }) => row);
+        if (/island_theory|textbook_quote|column|schema/i.test(String(error.message || error.details || ''))) {
+            const compatibleRows = uniqueRows.map(({ island_theory, textbook_quote, ...row }) => row);
             const fallback = await saveRows(compatibleRows);
             if (!fallback.error) return Array.isArray(fallback.data) ? fallback.data.length : compatibleRows.length;
             throw fallback.error;
@@ -812,7 +816,7 @@
             populateQuestionBankFilters();
             byId('btnProcessUpload')?.addEventListener('click', processBulkTextImport);
             byId('bulkQuestionText')?.addEventListener('input', previewBulkQuestionText);
-            ['bulkImportProvince', 'bulkImportSubIsland', 'bulkImportTopic', 'bulkImportIslandTheory', 'bulkImportProvinceSummaryTheory']
+            ['bulkImportProvince', 'bulkImportSubIsland', 'bulkImportTopic', 'bulkImportIslandTheory', 'bulkImportProvinceSummaryTheory', 'bulkImportTextbookQuote']
                 .forEach((id) => byId(id)?.addEventListener('change', previewBulkQuestionText));
             byId('bulkImportProvince')?.addEventListener('change', loadBossSummaryTheory);
             byId('saveBossSummaryTheoryButton')?.addEventListener('click', saveBossSummaryTheory);

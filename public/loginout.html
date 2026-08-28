@@ -11,8 +11,8 @@
     <link rel="stylesheet" href="loginout.css">
     <link rel="stylesheet" href="style.css?v=20260813-2">
     <link rel="stylesheet" href="learning-cute-redesign.css">
-    <link rel="stylesheet" href="global-theme.css?v=20260814-3">
-    <script src="global-theme.js?v=20260814-3"></script>
+    <link rel="stylesheet" href="global-theme.css?v=20260816-24">
+    <script src="global-theme.js?v=20260816-24"></script>
     <link rel="stylesheet" href="responsive-system.css?v=20260814-3">
 </head>
 <body class="viegeo-auth-expedition">
@@ -139,6 +139,23 @@
                                 <option value="prefer_not_to_say">Không muốn tiết lộ</option>
                             </select>
                             <label class="field-label">Giới tính</label>
+                        </div>
+                        <div class="field-group">
+                            <input type="number" id="regAge" class="form-input" placeholder=" " min="6" max="100" inputmode="numeric" required>
+                            <label class="field-label">Tuổi</label>
+                        </div>
+                        <div class="field-group">
+                            <select id="regSchoolGrade" class="form-input" aria-label="Lớp học" required>
+                                <option value="" selected disabled>Chọn lớp đang học</option>
+                                <option value="6">Lớp 6</option>
+                                <option value="7">Lớp 7</option>
+                                <option value="8">Lớp 8</option>
+                                <option value="9">Lớp 9</option>
+                                <option value="10">Lớp 10</option>
+                                <option value="11">Lớp 11</option>
+                                <option value="12">Lớp 12</option>
+                            </select>
+                            <label class="field-label">Lớp học</label>
                         </div>
                         <div class="field-group">
                             <input type="email" id="regEmail" class="form-input" placeholder=" " required>
@@ -288,8 +305,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="/api/public-config?v=20260816-2"></script>
-    <script src="supabaseClient.js?v=20260816-8"></script>
+    <script src="supabaseClient.js?v=20260829-1"></script>
     <script src="supabase-ui-sync.js?v=20260814-19"></script>
-    <script src="loginout.js?v=20260816-22"></script>
+    <script src="loginout.js?v=20260829-1"></script>
 </body>
 </html>

@@ -21,6 +21,9 @@ var questionNumber=document.getElementById("questionNumber");
 var questionStatus=document.getElementById("questionStatus");
 var questionText=document.getElementById("questionText");
 var answerFeedback=document.getElementById("answerFeedback");
+var premiumHintPanel=document.getElementById("premiumHintPanel");
+var premiumHintButton=document.getElementById("premiumHintButton");
+var premiumHintOutput=document.getElementById("premiumHintOutput");
 var supportButton=document.getElementById("supportButton");
 var provinceSummaryModal=document.getElementById("provinceSummaryModal");
 var provinceSummaryTitle=document.getElementById("provinceSummaryTitle");
@@ -54,6 +57,7 @@ var stageCompletionPromise=null;
 var mapProgressByProvince=Object.create(null);
 var mapProgressReady=false;
 var currentMapUserEmail="";
+var currentMapProfile=null;
 var islandResultModal=document.getElementById("islandResultModal");
 var islandResultCloseButton=document.getElementById("islandResultCloseButton");
 var islandResultContinueButton=document.getElementById("islandResultContinueButton");
@@ -308,6 +312,57 @@ function getCurrentMapSession(){
     try{return JSON.parse(localStorage.getItem("lm_session")||"{}")||{};}catch(error){return {};}
 }
 
+function isPremiumMapProfile(profile){
+    try{
+        var source=profile||{};
+        var roles=Array.isArray(source.roles)?source.roles:[source.role,source.active_role];
+        var values=[source.account_status,source.accountStatus,source.role,source.active_role].concat(roles||[]);
+        return source.isPremium===true||source.is_premium===true||values.some(function(value){
+            return ["premium","active","approved"].indexOf(String(value||"").trim().toLowerCase())>=0;
+        });
+    }catch(error){
+        console.warn("[VieGeo Map] Không thể xác định quyền Premium:",error);
+        return false;
+    }
+}
+
+function updatePremiumHintAvailability(profile){
+    try{
+        var active=isPremiumMapProfile(profile);
+        if(premiumHintPanel){premiumHintPanel.hidden=!active;}
+        if(!active&&premiumHintOutput){premiumHintOutput.textContent="";}
+    }catch(error){
+        console.warn("[VieGeo Map] Không thể cập nhật gợi ý Premium:",error);
+    }
+}
+
+async function requestPremiumIslandHint(){
+    try{
+        var questions=getActiveQuestionList();
+        var question=questions[currentQuestionIndex];
+        if(!question||!window.VieGeoPremiumLearning?.request){return;}
+        if(premiumHintButton){premiumHintButton.disabled=true;premiumHintButton.textContent="Đang tạo gợi ý...";}
+        if(premiumHintOutput){premiumHintOutput.textContent="Trợ lý Premium đang đọc nội dung SGK...";}
+        var response=await window.VieGeoPremiumLearning.request("hint",{
+            questionId:question.id||"",
+            context:{
+                question:question.question||"",
+                options:Array.isArray(question.options)?question.options:[],
+                theory:question.theory||question.explanation||"",
+                textbookQuote:question.textbookQuote||"",
+                province:selectedProvince,
+                island:"Đảo nhỏ "+selectedStage,
+                topic:question.topic||""
+            }
+        });
+        if(premiumHintOutput){premiumHintOutput.textContent="Gợi ý Premium: "+String(response?.reply||"Hãy đọc lại lý thuyết của đảo và xác định từ khóa chính.");}
+    }catch(error){
+        if(premiumHintOutput){premiumHintOutput.textContent=error?.message||"Chưa thể tạo gợi ý lúc này.";}
+    }finally{
+        if(premiumHintButton){premiumHintButton.disabled=false;premiumHintButton.textContent="✨ Gợi ý Premium";}
+    }
+}
+
 function readLocalMapRewards(){
     try{return JSON.parse(localStorage.getItem("VieGeo_state")||"{}")||{};}catch(error){return {};}
 }
@@ -323,7 +378,7 @@ function logMapSupabaseError(context,error,extra){
 }
 
 async function findMapUserProfile(client,email){
-    var columns="id,email,user_email,user_name,role,score,current_streak";
+    var columns="id,email,user_email,user_name,role,roles,account_status,score,current_streak,last_active_date,streak_restored_on";
     var result=await client.from("users").select(columns).eq("email",email).limit(1).maybeSingle();
     if(result.error){
         logMapSupabaseError("users.select.email",result.error,{email:email});
@@ -345,7 +400,7 @@ async function ensureMapUserProfile(client,email){
     var displayName=String(session.user_name||session.name||session.displayName||email.split("@")[0]||"Người dùng").trim();
     var role=String(session.activeRole||session.active_role||session.role||"user").trim().toLowerCase();
     var payload={email:email,user_email:email,user_name:displayName,role:role,score:0,current_streak:0};
-    var created=await client.from("users").insert([payload]).select("id,email,user_email,user_name,role,score,current_streak").single();
+    var created=await client.from("users").insert([payload]).select("id,email,user_email,user_name,role,roles,account_status,score,current_streak,last_active_date,streak_restored_on").single();
     if(created.error){
         if(String(created.error.code||"")==="23505"){return await findMapUserProfile(client,email);}
         logMapSupabaseError("users.insert.profile",created.error,{email:email});
@@ -397,6 +452,24 @@ async function syncMapProgressFromSupabase(){
     var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
     if(!client||typeof client.from!=="function"){throw new Error("Supabase client chưa sẵn sàng.");}
     currentMapUserEmail=await getCurrentMapUserEmail();
+    if(currentMapUserEmail){
+        try{
+            currentMapProfile=await ensureMapUserProfile(client,currentMapUserEmail);
+            updatePremiumHintAvailability(currentMapProfile);
+        }catch(profileError){
+            console.warn("[VieGeo Map] Không thể tải quyền Premium:",profileError);
+            updatePremiumHintAvailability(null);
+        }
+    }
+    try{
+        var refreshedStreak=await window.VieGeoStreak?.refreshForCurrentUser({client:client,email:currentMapUserEmail});
+        if(Number.isFinite(Number(refreshedStreak))){
+            var localState=readLocalMapRewards();
+            updateLocalIslandRewards(Number(localState.xp)||0,Number(localState.gems)||0,Number(refreshedStreak)||0);
+        }
+    }catch(streakError){
+        console.warn("[VieGeo Map] Không thể làm mới chuỗi ngày học:",streakError);
+    }
     var result=await Promise.all([
         fetchProgressQuestionPages(client),
         currentMapUserEmail?fetchSubmissionPages(client,currentMapUserEmail):Promise.resolve([])
@@ -545,8 +618,13 @@ async function persistCurrentStageCompleted(){
         var localOnly=readLocalMapRewards();
         var localXp=(Number(localOnly.xp)||0)+xpReward;
         var localGems=(Number(localOnly.gems)||0)+gemsReward;
-        var localStreak=Number(localOnly.streak)||0;
-        if(!previousSubmission||getVietnamDateKey(previousSubmission.created_at)!==today){localStreak+=1;}
+        var localStreakResult=window.VieGeoStreak?.applyForLesson
+            ? await window.VieGeoStreak.applyForLesson({
+                client:client,email:email,stars:stars,currentStreak:Number(localOnly.streak)||0,
+                profile:getCurrentMapSession(),previousSubmissions:recentSubmissions,today:today
+            })
+            : {streak:Number(localOnly.streak)||0};
+        var localStreak=Math.max(0,Number(localStreakResult?.streak)||0);
         updateLocalIslandRewards(localXp,localGems,localStreak);
         if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set(),stars:new Map()};}
         mapProgressByProvince[provinceKey].completed.add(selectedStage);
@@ -563,12 +641,17 @@ async function persistCurrentStageCompleted(){
     var nextXp=currentXp+(rewardAlreadyApplied?0:xpReward);
     var nextGems=currentGems+(rewardAlreadyApplied?0:gemsReward);
     var nextScore=currentScore+(rewardAlreadyApplied?0:xpReward);
-    var nextStreak=Number(profile.current_streak)||0;
-    if(!rewardAlreadyApplied&&(!previousSubmission||getVietnamDateKey(previousSubmission.created_at)!==today)){nextStreak+=1;}
+    var streakResult=window.VieGeoStreak?.applyForLesson
+        ? await window.VieGeoStreak.applyForLesson({
+            client:client,email:email,stars:stars,currentStreak:Number(profile.current_streak)||0,
+            profile:profile,previousSubmissions:recentSubmissions,today:today
+        })
+        : {streak:Number(profile.current_streak)||0};
+    var nextStreak=Math.max(0,Number(streakResult?.streak)||0);
     var rewardSynced=true;
 
     if(!rewardAlreadyApplied){
-        var rewardPayload={score:nextScore,current_streak:nextStreak};
+        var rewardPayload={score:nextScore};
         var rewardResult=await client.from("users").update(rewardPayload).eq("id",profile.id);
         if(rewardResult.error){
             rewardSynced=false;
@@ -766,10 +849,14 @@ function normalizeBankQuestion(row){
     }
 
     return {
+        id:String(source.id||source.question_id||""),
         question:String(source.question||source.question_text||source.questionText||"").trim(),
         options:options,
         correctAnswer:Number.isFinite(correctAnswer)?correctAnswer:0,
-        explanation:String(source.explanation||source.theory||source.island_theory||"").trim()
+        explanation:String(source.explanation||source.theory||source.island_theory||"").trim(),
+        theory:String(source.theory||source.explanation||source.island_theory||"").trim(),
+        textbookQuote:String(source.textbook_quote||source.textbookQuote||"").trim(),
+        topic:String(source.topic||source.lesson_title||source.lessonTitle||"").trim()
     };
 }
 
@@ -935,6 +1022,8 @@ function renderQuestion(){
     questionStatus.textContent="Chưa trả lời";
     questionText.textContent=question.question;
     answerFeedback.textContent="Hãy chọn một đáp án để tiếp tục.";
+    if(premiumHintOutput){premiumHintOutput.textContent="";}
+    if(premiumHintButton){premiumHintButton.disabled=false;}
 
     for(index=0;index<question.options.length;index+=1){
         html+='<button class="answer-card" type="button" data-answer="'+index+'">'+question.options[index]+'</button>';
@@ -982,6 +1071,7 @@ function selectAnswer(event){
         questionStatus.textContent="Chưa đúng";
         answerFeedback.textContent="Đáp án đúng: "+String(question.options[question.correctAnswer]||"")+". Giải thích chi tiết: "+(question.explanation||"Hãy xem lại kiến thức trước khi tiếp tục.");
     }
+    if(premiumHintButton){premiumHintButton.disabled=true;}
 }
 
 function openRegion(event){
@@ -1184,6 +1274,7 @@ function initializeLearningFlow(){
     roadmapContainer.addEventListener("click",openProvinceSummary);
     answerGrid.addEventListener("click",selectAnswer);
     nextQuestionButton.addEventListener("click",nextQuestion);
+    if(premiumHintButton){premiumHintButton.addEventListener("click",requestPremiumIslandHint);}
 
     if(islandResultCloseButton){
         islandResultCloseButton.addEventListener("click",closeIslandResultModal);
