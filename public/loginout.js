@@ -274,17 +274,38 @@ async function ensureAuthenticatedUserProfile(authUser, email, existingData = {}
         createdAt: existingData.createdAt || existingData.created_at || authUser?.created_at || now,
         updatedAt: now
     };
-    try {
-        await db.collection('users').doc(safeEmail).set(profile, { merge: true });
-        console.log('[VieGeo Auth] Supabase Auth user đã lưu vào public.users.', {
+    const client = getAuthClient();
+    if (!client) return profile;
+
+    // First use the complete row for the current schema. Older deployments may
+    // not have every optional profile column yet, so retry with the stable core
+    // fields that are required by the authentication guard.
+    let result = await client.from('users').upsert({
+        email: safeEmail,
+        user_name: profile.name,
+        name: profile.name,
+        full_name: profile.full_name,
+        gender: profile.gender || null,
+        role: profile.role || 'user',
+        current_streak: Number(existingData.current_streak || existingData.currentStreak || 0),
+        updated_at: now
+    }, { onConflict: 'email' }).select('*').maybeSingle();
+
+    if (result.error) {
+        result = await client.from('users').upsert({
             email: safeEmail,
-            roles: profile.roles,
-            role: profile.role
-        });
-    } catch (error) {
-        console.warn('[VieGeo Auth] Không thể đồng bộ user vào public.users, tiếp tục bằng session cục bộ.', error);
+            user_name: profile.name,
+            role: profile.role || 'user',
+            current_streak: Number(existingData.current_streak || existingData.currentStreak || 0)
+        }, { onConflict: 'email' }).select('*').maybeSingle();
     }
-    return profile;
+
+    if (result.error) {
+        console.warn('[VieGeo Auth] Không thể tự đồng bộ hồ sơ người dùng:', result.error);
+        return profile;
+    }
+
+    return { ...profile, ...(result.data || {}) };
 }
 
 function persistRootAdminSession(adminProfile) {
@@ -328,7 +349,11 @@ function assertAuthRate(action, email, limit = 5, windowMs = 60000) {
 
 async function signInViaSupabase(email, password) {
     const client = getAuthClient();
-    if (!client) return null;
+    if (!client) {
+        const configError = new Error('Supabase Auth chưa sẵn sàng.');
+        configError.code = window.VieGeoSupabaseConfigError || 'SUPABASE_NOT_READY';
+        throw configError;
+    }
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data?.user || null;
@@ -413,6 +438,46 @@ function registrationErrorMessage(error) {
         return 'Tài khoản đã được tạo nhưng chưa lưu được hồ sơ. Vui lòng đăng nhập lại để hệ thống hoàn tất.';
     }
     return 'Chưa thể hoàn tất đăng ký. Vui lòng thử lại hoặc liên hệ CSKH.';
+}
+
+function loginErrorMessage(error) {
+    const code = String(error?.code || '').toLowerCase();
+    const message = String(error?.message || error || '').toLowerCase();
+    if (code === 'supabase_config_missing' || code === 'supabase_not_ready' || message.includes('invalid api key')) {
+        return 'Không thể kết nối hệ thống tài khoản. Vui lòng tải lại trang rồi thử lại.';
+    }
+    if (code === 'email_not_confirmed' || message.includes('email not confirmed')) {
+        return 'Email này chưa được xác nhận. Vui lòng kiểm tra hộp thư hoặc liên hệ quản trị viên để kích hoạt tài khoản.';
+    }
+    if (code === 'over_request_rate_limit' || code === 'over_email_send_rate_limit' || message.includes('rate limit') || String(error?.status || '') === '429') {
+        return 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng chờ vài phút rồi thử lại.';
+    }
+    if (message.includes('invalid login credentials') || message.includes('invalid credentials') || message.includes('user not found')) {
+        return 'Sai tài khoản hoặc mật khẩu.';
+    }
+    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+        return 'Không thể kết nối dịch vụ tài khoản. Vui lòng kiểm tra mạng và thử lại.';
+    }
+    return 'Chưa thể đăng nhập. Vui lòng thử lại sau ít phút.';
+}
+
+async function resolveLoginEmail(identifier) {
+    const sanitized = security.sanitizeText(identifier, 180).trim();
+    const directEmail = normalizeEmail(sanitized);
+    if (security.isValidEmail(directEmail)) return directEmail;
+
+    const client = getAuthClient();
+    if (!client || !sanitized) return '';
+    const { data, error } = await client
+        .from('users')
+        .select('email')
+        .eq('user_name', sanitized)
+        .limit(1);
+    if (error) {
+        console.warn('[VieGeo Auth] Không thể tìm email theo tên tài khoản:', error);
+        return '';
+    }
+    return normalizeEmail(data?.[0]?.email || '');
 }
 
 async function createOrRecoverAuthAccount(registration) {
@@ -583,7 +648,7 @@ if (loginForm) {
         e.preventDefault();
         loginMsg.style.color = '#ff4b4b';
         const identifier = security.sanitizeText(document.getElementById('loginEmail').value, 180).trim();
-        const email = normalizeEmail(identifier);
+        let email = normalizeEmail(identifier);
         const pass = document.getElementById('loginPassword').value; // Đã khớp ID HTML
         const btn = loginForm.querySelector('button[type="submit"]');
         if (btn?.disabled) return;
@@ -617,6 +682,7 @@ if (loginForm) {
                 loginMsg.style.display = "block";
                 return;
             }
+            email = await resolveLoginEmail(identifier);
             if (!security.isValidEmail(email)) {
                 loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
                 loginMsg.style.display = "block";
@@ -632,22 +698,20 @@ if (loginForm) {
                 loginMsg.style.display = "block";
                 return;
             }
-            let authenticated = false;
             let authUser = null;
             try {
                 authUser = await signInViaSupabase(email, pass);
-                authenticated = Boolean(authUser);
             } catch (authError) {
-                console.warn('Supabase Auth login failed; legacy profile fallback will be checked:', authError?.message || authError);
+                console.warn('[VieGeo Auth] Đăng nhập Supabase thất bại:', authError);
+                loginMsg.textContent = loginErrorMessage(authError);
+                loginMsg.style.display = "block";
+                return;
             }
-            const userDoc = await db.collection('users').doc(email).get();
-            
-            if (userDoc.exists || authenticated) {
+            if (authUser) {
+                const userDoc = await db.collection('users').doc(email).get();
                 let userData = userDoc.exists ? userDoc.data() : {};
-                if (authenticated) {
-                    userData = await ensureAuthenticatedUserProfile(authUser, email, userData);
-                }
-                if (authenticated || (userData.password && userData.password === pass)) {
+                userData = await ensureAuthenticatedUserProfile(authUser, email, userData);
+                {
                     security.clearRateLimit(`auth_login_${email}`);
                     await updateStreakOnLogin(email, userData);
                     
@@ -707,9 +771,6 @@ if (loginForm) {
                             window.location.href = destinationForRole(role);
                         }
                     }
-                } else {
-                    loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
-                    loginMsg.style.display = "block";
                 }
             } else {
                 loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";

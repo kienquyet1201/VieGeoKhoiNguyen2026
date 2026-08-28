@@ -12,6 +12,7 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      { source: '/loginout', destination: '/loginout.html' },
       { source: '/cs', destination: '/cs-dashboard.html' },
     ];
   },

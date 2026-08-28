@@ -24,26 +24,21 @@ begin
     end if;
 
     insert into public.users (
-        id,
         email,
-        user_email,
         user_name,
         score,
         current_streak,
         role,
         created_at
     ) values (
-        new.id,
-        profile_email,
         profile_email,
         profile_name,
         0,
         0,
-        'student',
+        'user',
         coalesce(new.created_at, now())
     )
     on conflict (email) do update set
-        user_email = excluded.user_email,
         user_name = coalesce(nullif(trim(public.users.user_name), ''), excluded.user_name);
 
     return new;
@@ -81,4 +76,3 @@ create trigger on_auth_user_created
     for each row execute function public.viegeo_create_user_profile();
 
 commit;
-
