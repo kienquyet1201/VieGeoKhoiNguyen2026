@@ -277,34 +277,31 @@ async function ensureAuthenticatedUserProfile(authUser, email, existingData = {}
     const client = getAuthClient();
     if (!client) return profile;
 
-    // First use the complete row for the current schema. Older deployments may
-    // not have every optional profile column yet, so retry with the stable core
-    // fields that are required by the authentication guard.
-    let result = await client.from('users').upsert({
+    // Do not use upsert(onConflict: 'email') here: older public.users tables
+    // may not have an email UNIQUE constraint. Read the profile first and only
+    // create a minimal recovery row when the Auth profile is genuinely absent.
+    const lookup = await client.from('users').select('*').eq('email', safeEmail).limit(1);
+    if (!lookup.error && lookup.data?.[0]) return { ...profile, ...lookup.data[0] };
+
+    const recoveryProfile = {
+        id: authUser?.id,
         email: safeEmail,
         user_name: profile.name,
-        name: profile.name,
-        full_name: profile.full_name,
-        gender: profile.gender || null,
         role: profile.role || 'user',
         current_streak: Number(existingData.current_streak || existingData.currentStreak || 0),
+        created_at: profile.createdAt,
         updated_at: now
-    }, { onConflict: 'email' }).select('*').maybeSingle();
-
+    };
+    let result = await client.from('users').insert([recoveryProfile]).select('*').maybeSingle();
     if (result.error) {
-        result = await client.from('users').upsert({
-            email: safeEmail,
-            user_name: profile.name,
-            role: profile.role || 'user',
-            current_streak: Number(existingData.current_streak || existingData.currentStreak || 0)
-        }, { onConflict: 'email' }).select('*').maybeSingle();
+        // A legacy table with a numeric identity id creates the value itself.
+        const { id: _authId, ...identityProfile } = recoveryProfile;
+        result = await client.from('users').insert([identityProfile]).select('*').maybeSingle();
     }
-
     if (result.error) {
         console.warn('[VieGeo Auth] Không thể tự đồng bộ hồ sơ người dùng:', result.error);
         return profile;
     }
-
     return { ...profile, ...(result.data || {}) };
 }
 
@@ -524,17 +521,23 @@ async function saveRegisteredUserProfile(authResult, registration) {
         legacy_data: { auth_user_id: authResult.user.id },
         updated_at: now
     };
-    let result = await client.from('users').upsert(modernProfile, { onConflict: 'email' });
+    const lookup = await client.from('users').select('*').eq('email', registration.email).limit(1);
+    if (!lookup.error && lookup.data?.[0]) return { ...modernProfile, ...lookup.data[0] };
+
+    const recoveryProfile = {
+        id: authResult.user.id,
+        email: registration.email,
+        user_name: registration.name,
+        role: 'user',
+        score: 0,
+        current_streak: 0,
+        created_at: authResult.user.created_at || now,
+        updated_at: now
+    };
+    let result = await client.from('users').insert([recoveryProfile]);
     if (result.error) {
-        const compatibleProfile = {
-            email: registration.email,
-            user_name: registration.name,
-            role: 'user',
-            score: 0,
-            current_streak: 0,
-            legacy_data: { age: registration.age, school_grade: registration.schoolGrade }
-        };
-        result = await client.from('users').upsert(compatibleProfile, { onConflict: 'email' });
+        const { id: _authId, ...identityProfile } = recoveryProfile;
+        result = await client.from('users').insert([identityProfile]);
     }
     if (result.error) {
         console.error('[VieGeo Auth] Không thể lưu public.users:', result.error);

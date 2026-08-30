@@ -5,7 +5,7 @@
     // fallback so authentication still works if the optional runtime-config
     // endpoint is unavailable during a deployment.
     const FALLBACK_SUPABASE_URL = 'https://mijjvqkfkzwpmjpwkbgk.supabase.co';
-    const FALLBACK_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pamp2cWtma3p3cG1qcHdrYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTI3MzgsImV4cCI6MjEwMTc2ODczOH0.KKomdXKDi1sn7Ems1JxaFLrecq2eA_xVqMgo1jvUhiY';
+    const FALLBACK_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pamp2cWtma3p3cG1qcHdrYmdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxOTI3MzgsImV4cCI6MjEwMTc2ODczOH0.KKomdXKDi1sn7Ems1JxaFLrecq2oA_xVqMgo1jvUhiY';
     const SUPABASE_URL = String(window.ENV_SUPABASE_URL || FALLBACK_SUPABASE_URL).trim();
     const SUPABASE_ANON_KEY = String(window.ENV_SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY).trim();
     const TABLE_ALIASES = {
