@@ -196,12 +196,31 @@ async function persistBootstrapAdminProfile(adminProfile, profileId) {
     if (existing.error) throw existing.error;
 
     if (existing.data?.[0]) {
-        let result = await client.from('users').update(fullPayload).eq('email', email).select('*').maybeSingle();
-        if (result.error) {
-            result = await client.from('users').update({ role: 'admin' }).eq('email', email).select('*').maybeSingle();
+        const currentProfile = existing.data[0];
+        const compatiblePayload = Object.fromEntries(
+            Object.entries(fullPayload).filter(([field]) => Object.prototype.hasOwnProperty.call(currentProfile, field))
+        );
+
+        // A legacy public.users schema can have fewer columns than the modern
+        // profile. Only PATCH fields returned by the current database row.
+        if (Object.keys(compatiblePayload).length === 0) {
+            return { ...currentProfile, ...adminProfile };
         }
-        if (result.error) throw result.error;
-        return { ...adminProfile, ...(result.data || {}) };
+
+        const { data, error } = await client
+            .from('users')
+            .update(compatiblePayload)
+            .eq('email', email)
+            .select('*')
+            .maybeSingle();
+
+        if (error) {
+            console.error("Lỗi Supabase chi tiết:", error.message, error.details, error.hint);
+            // Do not interrupt a verified Admin bootstrap session when an old
+            // schema rejects an optional profile field.
+            return { ...currentProfile, ...adminProfile };
+        }
+        return { ...currentProfile, ...adminProfile, ...(data || {}) };
     }
 
     let result = await client.from('users').insert([{ id: profileId, ...fullPayload, created_at: now }]).select('*').maybeSingle();
