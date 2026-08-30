@@ -142,25 +142,8 @@ function closeAchievementModal() {
 }
 
 async function syncAchievementBadges(currentUser) {
-    const client = window.supabaseClient || window.supabase;
-    const email = String(currentUser?.email || sessionUser?.email || '').trim();
     const storedState = currentUser?.game_state || currentUser?.gameState || {};
     let earnedIds = normalizeAchievementIds(currentUser?.unlocked_achievements || currentUser?.unlockedAchievements || storedState.unlockedAchievements);
-
-    if (client && email) {
-        try {
-            const { data, error } = await client
-                .from('user_achievements')
-                .select('*')
-                .eq('user_email', email);
-            if (error) throw error;
-            earnedIds = [...new Set([...earnedIds, ...normalizeAchievementIds(data)])];
-        } catch (error) {
-            // The users.game_state fallback keeps existing deployments working
-            // until the optional user_achievements table is enabled.
-            console.warn('Không thể tải user_achievements, dùng dữ liệu users:', error.message || error);
-        }
-    }
 
     const badgeIds = ['ach_lesson_1', 'ach_streak_7', 'ach_pvp_1', 'season_explorer', 'season_second_place', 'season_three_figures'];
     const badges = document.querySelectorAll('.achievement-panel .achievement-badge');
@@ -216,6 +199,18 @@ renderAchievementModal({}, []);
 function profileClient() {
     const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
     return client && typeof client.from === 'function' ? client : null;
+}
+
+async function getCurrentSupabaseAccessToken() {
+    const client = profileClient();
+    if (!client?.auth?.getSession) return '';
+    try {
+        const { data, error } = await client.auth.getSession();
+        if (error) return '';
+        return String(data?.session?.access_token || '').trim();
+    } catch (_) {
+        return '';
+    }
 }
 
 function isPremiumProfile(user) {
@@ -355,6 +350,14 @@ function renderPremiumLearningTools(active, currentUser) {
         const remaining = Math.max(0, 3 - used);
         if (premiumStreakRestoreStatus) premiumStreakRestoreStatus.textContent = `Còn ${remaining}/3 lượt phục hồi trong tháng này.`;
         if (premiumStreakRestoreButton) premiumStreakRestoreButton.disabled = remaining <= 0;
+        void getCurrentSupabaseAccessToken().then(token => {
+            const available = Boolean(token);
+            document.querySelectorAll('[data-premium-ai-action]').forEach(button => { button.disabled = !available; });
+            if (premiumStreakRestoreButton) premiumStreakRestoreButton.disabled = !available || remaining <= 0;
+            if (!available && premiumLearningOutput) {
+                premiumLearningOutput.textContent = 'Vui lòng đăng nhập bằng tài khoản Supabase để dùng các công cụ Premium.';
+            }
+        });
     } catch (error) {
         console.warn('[VieGeo Premium] Không thể hiển thị công cụ học tập:', error);
     }
@@ -364,6 +367,7 @@ async function runPremiumLearningAction(action, button) {
     try {
         if (!isPremiumProfile(window.currentUserData || {})) throw new Error('Tính năng này dành cho tài khoản Premium.');
         if (!window.VieGeoPremiumLearning?.request) throw new Error('Trợ lý học tập chưa sẵn sàng.');
+        if (!await getCurrentSupabaseAccessToken()) throw new Error('Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại.');
         if (button) { button.disabled = true; button.textContent = 'Đang chuẩn bị...'; }
         if (premiumLearningOutput) premiumLearningOutput.textContent = 'Trợ lý Premium đang phân tích dữ liệu học tập...';
         const response = await window.VieGeoPremiumLearning.request(action, {});
@@ -379,7 +383,9 @@ async function restorePremiumStreak() {
     try {
         const currentUser = window.currentUserData || {};
         const email = String(currentUser.email || sessionUser.email || '').trim().toLowerCase();
+        if (!isPremiumProfile(currentUser)) throw new Error('Tính năng này dành cho tài khoản Premium.');
         if (!email || !window.VieGeoStreak?.restorePremiumStreak) throw new Error('Phiên học chưa sẵn sàng. Vui lòng đăng nhập lại.');
+        if (!await getCurrentSupabaseAccessToken()) throw new Error('Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại.');
         if (premiumStreakRestoreButton) { premiumStreakRestoreButton.disabled = true; premiumStreakRestoreButton.textContent = 'Đang phục hồi...'; }
         const result = await window.VieGeoStreak.restorePremiumStreak({ email, profile: currentUser });
         currentUser.current_streak = Math.max(0, Number(result?.streak) || 0);

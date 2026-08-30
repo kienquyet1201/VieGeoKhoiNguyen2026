@@ -7,17 +7,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="map-discovery.css?v=20260814-4">
+    <link rel="stylesheet" href="map-discovery.css?v=20260831-1">
     <link rel="stylesheet" href="shared-topbar.css?v=20260828-1">
     <link rel="stylesheet" href="global-theme.css?v=20260816-24">
     <link rel="stylesheet" href="footer-component.css?v=20260828-1">
     <script src="global-theme.js?v=20260816-24"></script>
-    <script src="footer-component.js?v=20260828-1" defer></script>
+    <script src="footer-component.js?v=20260831-1" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/api/public-config?v=20260816-2"></script>
     <script src="supabaseClient.js?v=20260816-8"></script>
-    <script src="streak-service.js?v=20260829-2"></script>
-    <script src="premium-learning-ai.js?v=20260829-1"></script>
+    <script src="streak-service.js?v=20260831-2"></script>
+    <script src="premium-learning-ai.js?v=20260831-1"></script>
     <script src="auth-guard.js?v=20260831-1"></script>
     <script src="supabase-ui-sync.js?v=20260814-19"></script>
     <link rel="stylesheet" href="responsive-system.css?v=20260814-3">
@@ -57,8 +57,6 @@
         <a class="shared-link" href="student-dashboard.html"><span class="shared-label">Trang chủ</span></a>
         <a class="shared-link" href="map.html"><span class="shared-label">Lộ trình</span></a>
         <a class="shared-link" href="exam-arena.html"><span class="shared-label">Luyện tập, luyện thi</span></a>
-        <a class="shared-link" href="coming-soon.html?subject=history"><span class="shared-label">Chuyển môn Lịch sử</span></a>
-        <a class="shared-link" href="coming-soon.html?subject=integrated"><span class="shared-label">Dung hợp Sử – Địa</span></a>
         <a class="shared-link" href="arena.html"><span class="shared-label">Đấu trường</span></a>
         <a class="shared-link" href="leaderboard.html"><span class="shared-label">Xếp hạng</span></a>
         <a class="shared-link" href="shop.html"><span class="shared-label">Cửa hàng</span></a>
@@ -114,6 +112,10 @@
                 <span class="heading-badge">Hành trình Việt Nam ✨</span>
                 <h1>Khám phá 3 miền</h1>
                 <p>Chọn một miền để mở danh sách tỉnh thành và tiếp tục hành trình học tập.</p>
+                <div class="subject-switch-actions" aria-label="Khám phá môn học">
+                    <a class="subject-switch-button history" href="coming-soon.html?subject=history">📜 Chuyển môn Lịch sử</a>
+                    <a class="subject-switch-button integrated" href="coming-soon.html?subject=integrated">🧭 Dung hợp Sử – Địa</a>
+                </div>
             </div>
 
             <div class="region-grid">
@@ -270,7 +272,7 @@
     </button>
 
     <div id="toast" class="toast"></div>
-    <script src="map-discovery.js?v=20260829-2"></script>
+    <script src="map-discovery.js?v=20260831-1"></script>
     <script src="shared-topbar.js?v=20260828-1"></script>
 </body>
 </html>

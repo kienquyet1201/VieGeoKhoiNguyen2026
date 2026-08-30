@@ -367,6 +367,10 @@
         try {
             const list = document.getElementById('rankingList');
             if (!list) return;
+            // leaderboard.js owns the full ranking page and fetches users as a
+            // fallback when the optional leaderboard view is empty. Do not let
+            // this generic sync overwrite those real rows with an empty view.
+            if (document.getElementById('leaderboardPodium')) return;
             if (!rows || rows.length === 0) {
                 list.innerHTML = '<table style="width:100%;border-collapse:collapse;"><tbody><tr><td colspan="4" style="text-align: center; padding: 30px; color: #64748b;">Chưa có dữ liệu học viên nào trong thời gian này. Hãy trở thành người đầu tiên!</td></tr></tbody></table>';
                 return;

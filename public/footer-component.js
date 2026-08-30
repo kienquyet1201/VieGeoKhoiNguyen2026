@@ -31,8 +31,6 @@
                         <h2>Khám phá</h2>
                         <a href="https://moet.gov.vn/" target="_blank" rel="noopener noreferrer">Nguồn tài liệu chính thống</a>
                         <a href="coming-soon.html?section=about">Giới thiệu VieGeo</a>
-                        <a href="coming-soon.html?subject=history">Chuyển môn Lịch sử</a>
-                        <a href="coming-soon.html?subject=integrated">Dung hợp Sử – Địa</a>
                     </section>
 
                     <section class="viegeo-footer__column">

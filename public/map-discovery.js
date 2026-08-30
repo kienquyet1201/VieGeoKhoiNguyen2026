@@ -326,9 +326,19 @@ function isPremiumMapProfile(profile){
     }
 }
 
-function updatePremiumHintAvailability(profile){
+async function hasAuthenticatedMapSession(){
     try{
-        var active=isPremiumMapProfile(profile);
+        var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
+        var result=await client?.auth?.getSession?.();
+        return Boolean(result?.data?.session?.access_token);
+    }catch(error){
+        return false;
+    }
+}
+
+async function updatePremiumHintAvailability(profile){
+    try{
+        var active=isPremiumMapProfile(profile)&&await hasAuthenticatedMapSession();
         if(premiumHintPanel){premiumHintPanel.hidden=!active;}
         if(!active&&premiumHintOutput){premiumHintOutput.textContent="";}
     }catch(error){
@@ -341,6 +351,10 @@ async function requestPremiumIslandHint(){
         var questions=getActiveQuestionList();
         var question=questions[currentQuestionIndex];
         if(!question||!window.VieGeoPremiumLearning?.request){return;}
+        if(!await hasAuthenticatedMapSession()){
+            if(premiumHintOutput){premiumHintOutput.textContent="Vui lòng đăng nhập lại để dùng Gợi ý Premium.";}
+            return;
+        }
         if(premiumHintButton){premiumHintButton.disabled=true;premiumHintButton.textContent="Đang tạo gợi ý...";}
         if(premiumHintOutput){premiumHintOutput.textContent="Trợ lý Premium đang đọc nội dung SGK...";}
         var response=await window.VieGeoPremiumLearning.request("hint",{
@@ -455,10 +469,10 @@ async function syncMapProgressFromSupabase(){
     if(currentMapUserEmail){
         try{
             currentMapProfile=await ensureMapUserProfile(client,currentMapUserEmail);
-            updatePremiumHintAvailability(currentMapProfile);
+            await updatePremiumHintAvailability(currentMapProfile);
         }catch(profileError){
             console.warn("[VieGeo Map] Không thể tải quyền Premium:",profileError);
-            updatePremiumHintAvailability(null);
+            await updatePremiumHintAvailability(null);
         }
     }
     try{

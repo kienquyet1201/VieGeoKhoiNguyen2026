@@ -149,9 +149,15 @@
             const client = options?.client || getClient();
             const email = String(options?.email || '').trim().toLowerCase();
             if (!client || !email) return null;
+            const sessionResult = await client.auth?.getSession?.();
+            const authenticatedEmail = String(sessionResult?.data?.session?.user?.email || '').trim().toLowerCase();
+            // Never call a protected RPC using a local/bootstrap profile only.
+            if (!sessionResult?.data?.session?.access_token || authenticatedEmail !== email) return null;
             const { data, error } = await client.rpc('refresh_user_streak', { p_user_email: email });
             if (error) {
-                console.warn('[VieGeo Streak] Không thể làm mới Streak:', error);
+                if (String(error.code || '') !== 'P0001') {
+                    console.warn('[VieGeo Streak] Không thể làm mới Streak:', error);
+                }
                 return null;
             }
             const row = Array.isArray(data) ? data[0] : data;
@@ -167,6 +173,13 @@
             const client = options?.client || getClient();
             const email = String(options?.email || '').trim().toLowerCase();
             if (!client || !email) throw new Error('Phiên đăng nhập chưa sẵn sàng.');
+            if (!isPremium(options?.profile || {})) throw new Error('Tính năng phục hồi chuỗi chỉ dành cho tài khoản Premium.');
+            const sessionResult = await client.auth?.getSession?.();
+            if (!sessionResult?.data?.session?.access_token) {
+                const sessionError = new Error('Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại.');
+                sessionError.code = 'AUTH_SESSION_REQUIRED';
+                throw sessionError;
+            }
             const { data, error } = await client.rpc('restore_premium_streak', { p_user_email: email });
             if (error) throw new Error(error.message || 'Không thể phục hồi chuỗi ngày học.');
             const row = Array.isArray(data) ? data[0] : data;
@@ -178,7 +191,9 @@
                 restored: row.restored === true
             };
         } catch (error) {
-            console.warn('[VieGeo Streak] Không thể phục hồi Streak Premium:', error);
+            if (error?.code !== 'AUTH_SESSION_REQUIRED') {
+                console.warn('[VieGeo Streak] Không thể phục hồi Streak Premium:', error);
+            }
             throw error;
         }
     }
