@@ -14,6 +14,8 @@ const ROOT_ADMIN_SESSION_PROOF = 'root:e1d9ebc55fd6baff0590282d9d7d5302047b7ab6c
 const ROOT_ADMIN_ROLES = ['admin', 'cs', 'parent', 'user'];
 const MASTER_ADMIN_USERNAME = 'admin';
 const MASTER_ADMIN_PROFILE_EMAIL = 'admin@viegeo.local';
+const MASTER_ADMIN_PROFILE_ID = '00000000-0000-4000-8000-000000000001';
+const ROOT_ADMIN_PROFILE_ID = '00000000-0000-4000-8000-000000000002';
 const MASTER_ADMIN_PASSWORD_HASH = 'c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f';
 const MASTER_ADMIN_SESSION_PROOF = 'master:c1c224b03cd9bc7b6a86d77f5dace40191766c485cd55dc48caf9ac873335d6f';
 
@@ -182,6 +184,49 @@ async function createAdminServerSession(username, password) {
     }
 }
 
+async function persistBootstrapAdminProfile(adminProfile, profileId) {
+    const client = getAuthClient();
+    if (!client) throw new Error('Supabase Auth chưa sẵn sàng.');
+
+    const email = normalizeEmail(adminProfile.email);
+    const now = new Date().toISOString();
+    const fullPayload = {
+        email,
+        user_name: adminProfile.username || adminProfile.name,
+        name: adminProfile.name,
+        full_name: adminProfile.name,
+        role: 'admin',
+        roles: ROOT_ADMIN_ROLES,
+        active_role: 'admin',
+        account_status: 'premium',
+        xp: 0,
+        score: 0,
+        gems: 500,
+        hearts: 3,
+        current_streak: 0,
+        updated_at: now
+    };
+    const existing = await client.from('users').select('*').eq('email', email).limit(1);
+    if (existing.error) throw existing.error;
+
+    if (existing.data?.[0]) {
+        let result = await client.from('users').update(fullPayload).eq('email', email).select('*').maybeSingle();
+        if (result.error) {
+            result = await client.from('users').update({ role: 'admin' }).eq('email', email).select('*').maybeSingle();
+        }
+        if (result.error) throw result.error;
+        return { ...adminProfile, ...(result.data || {}) };
+    }
+
+    let result = await client.from('users').insert([{ id: profileId, ...fullPayload, created_at: now }]).select('*').maybeSingle();
+    if (result.error) {
+        const { id: _profileId, ...identityPayload } = { id: profileId, ...fullPayload, created_at: now };
+        result = await client.from('users').insert([identityPayload]).select('*').maybeSingle();
+    }
+    if (result.error) throw result.error;
+    return { ...adminProfile, ...(result.data || {}) };
+}
+
 async function ensureMasterAdminProfile() {
     const adminProfile = {
         email: MASTER_ADMIN_PROFILE_EMAIL,
@@ -200,12 +245,7 @@ async function ensureMasterAdminProfile() {
         isSuperAdmin: true,
         updatedAt: new Date().toISOString()
     };
-    try {
-        await db.collection('users').doc(MASTER_ADMIN_PROFILE_EMAIL).set(adminProfile, { merge: true });
-    } catch (error) {
-        console.warn('[VieGeo Admin] Không thể đồng bộ tài khoản Admin Tổng lên Supabase, tiếp tục bằng phiên cục bộ.', error);
-    }
-    return adminProfile;
+    return persistBootstrapAdminProfile(adminProfile, MASTER_ADMIN_PROFILE_ID);
 }
 
 async function startMasterAdminSession(username, password) {
@@ -246,13 +286,7 @@ async function ensureRootAdminProfile() {
         isSuperAdmin: true,
         updatedAt: new Date().toISOString()
     };
-    try {
-        await db.collection('users').doc(ROOT_ADMIN_EMAIL).set(adminProfile, { merge: true });
-        console.log('[VieGeo Admin] Hồ sơ Admin Tổng đã lưu vào users.', { email: ROOT_ADMIN_EMAIL, roles: ROOT_ADMIN_ROLES });
-    } catch (error) {
-        console.warn('[VieGeo Admin] Không thể upsert Admin Tổng lên Supabase, dùng session cục bộ.', error);
-    }
-    return adminProfile;
+    return persistBootstrapAdminProfile(adminProfile, ROOT_ADMIN_PROFILE_ID);
 }
 
 async function ensureAuthenticatedUserProfile(authUser, email, existingData = {}) {

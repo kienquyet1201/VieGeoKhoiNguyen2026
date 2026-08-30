@@ -50,24 +50,55 @@ update public.users
 set score = xp
 where score = 0 and xp > 0;
 
-insert into public.users (
-    email, user_name, name, full_name, role, roles, active_role,
-    account_status, force_logout, xp, score, gems, hearts, current_streak, legacy_data
-)
-values
-    ('kienquyet1201@gmail.com', 'adminQuyet', 'Đặng Kiên Quyết', 'Đặng Kiên Quyết', 'admin', array['admin','cs','parent','user'], 'admin', 'premium', false, 0, 0, 500, 3, 0, '{"isAdmin":true,"isSuperAdmin":true,"unrestrictedAdmin":true}'::jsonb),
-    ('admin@viegeo.local', 'Admin', 'Admin Tổng', 'Admin Tổng', 'admin', array['admin','cs','parent','user'], 'admin', 'premium', false, 0, 0, 500, 3, 0, '{"isAdmin":true,"isSuperAdmin":true,"unrestrictedAdmin":true}'::jsonb)
-on conflict (email) do update set
-    user_name = excluded.user_name,
-    name = excluded.name,
-    full_name = excluded.full_name,
-    role = excluded.role,
-    roles = excluded.roles,
-    active_role = excluded.active_role,
-    account_status = excluded.account_status,
-    force_logout = false,
-    legacy_data = coalesce(public.users.legacy_data, '{}'::jsonb) || excluded.legacy_data,
-    updated_at = now();
+-- Seed the two bootstrap administrators. Some earlier deployments use UUID
+-- users.id while the current base schema uses an identity bigint. Detect the
+-- type rather than inserting a NULL id or a UUID into a numeric column.
+do $$
+declare
+    admin_record record;
+    id_type text;
+    id_udt text;
+    id_default text;
+    id_identity text;
+begin
+    select data_type, udt_name, column_default, is_identity
+    into id_type, id_udt, id_default, id_identity
+    from information_schema.columns
+    where table_schema = 'public' and table_name = 'users' and column_name = 'id';
+
+    for admin_record in
+        select * from (values
+            ('00000000-0000-4000-8000-000000000002'::uuid, 'kienquyet1201@gmail.com', 'adminQuyet', 'Đặng Kiên Quyết'),
+            ('00000000-0000-4000-8000-000000000001'::uuid, 'admin@viegeo.local', 'Admin', 'Admin Tổng')
+        ) as data(profile_id, email, user_name, full_name)
+    loop
+        update public.users
+        set user_name = admin_record.user_name,
+            name = admin_record.full_name,
+            full_name = admin_record.full_name,
+            role = 'admin',
+            roles = array['admin','cs','parent','user'],
+            active_role = 'admin',
+            account_status = 'premium',
+            force_logout = false,
+            legacy_data = coalesce(public.users.legacy_data, '{}'::jsonb) || '{"isAdmin":true,"isSuperAdmin":true,"unrestrictedAdmin":true}'::jsonb,
+            updated_at = now()
+        where lower(trim(email)) = lower(admin_record.email);
+
+        if not found then
+            if id_type = 'uuid' or id_udt = 'uuid' then
+                insert into public.users (id, email, user_name, name, full_name, role, roles, active_role, account_status, force_logout, xp, score, gems, hearts, current_streak, legacy_data)
+                values (admin_record.profile_id, admin_record.email, admin_record.user_name, admin_record.full_name, admin_record.full_name, 'admin', array['admin','cs','parent','user'], 'admin', 'premium', false, 0, 0, 500, 3, 0, '{"isAdmin":true,"isSuperAdmin":true,"unrestrictedAdmin":true}'::jsonb);
+            elsif id_default is not null or id_identity = 'YES' then
+                insert into public.users (email, user_name, name, full_name, role, roles, active_role, account_status, force_logout, xp, score, gems, hearts, current_streak, legacy_data)
+                values (admin_record.email, admin_record.user_name, admin_record.full_name, admin_record.full_name, 'admin', array['admin','cs','parent','user'], 'admin', 'premium', false, 0, 0, 500, 3, 0, '{"isAdmin":true,"isSuperAdmin":true,"unrestrictedAdmin":true}'::jsonb);
+            else
+                raise exception 'public.users.id must be UUID, text, or have a default before creating bootstrap administrators';
+            end if;
+        end if;
+    end loop;
+end
+$$;
 
 create or replace function public.sync_user_ranking_fields()
 returns trigger
