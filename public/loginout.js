@@ -91,20 +91,6 @@ async function updateStreakOnLogin(email, userData) {
     return loginUpdate;
 }
 
-const currentSession = localStorage.getItem('lm_session');
-if (currentSession) {
-    try {
-        const savedSession = JSON.parse(currentSession);
-        const savedRoles = getUserRoles(savedSession);
-        const savedRole = normalizeRole(savedSession.activeRole || savedSession.role);
-        const role = savedRoles.includes(savedRole) ? savedRole : savedRoles[0];
-        window.location.replace(destinationForRole(role));
-    } catch (error) {
-        console.error('Invalid saved session:', error);
-        localStorage.removeItem('lm_session');
-    }
-}
-
 const loginForm = document.getElementById('loginForm');
 const regForm = document.getElementById('registerForm'); // Đã khớp ID HTML
 const loginMsg = document.getElementById('loginMessage'); // Đã khớp ID HTML
@@ -386,9 +372,85 @@ async function signInViaSupabase(email, password) {
         throw configError;
     }
     const { data, error } = await client.auth.signInWithPassword({ email, password });
+    console.log("1. API Response:", data);
     if (error) throw error;
-    return data?.user || null;
+    if (!data?.session?.access_token || !data?.session?.refresh_token) {
+        throw new Error('Supabase chưa trả về phiên đăng nhập hợp lệ.');
+    }
+
+    // Explicitly persist and read the session back before any redirect.  This
+    // prevents a protected page from loading before Supabase storage is ready.
+    const { data: savedData, error: saveError } = await client.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+    });
+    if (saveError) throw saveError;
+
+    const { data: verifiedData, error: verifyError } = await client.auth.getSession();
+    if (verifyError) throw verifyError;
+    const verifiedSession = verifiedData?.session || savedData?.session || null;
+    const token = verifiedSession?.access_token || '';
+    console.log("2. Token saved:", token);
+    if (!token || !verifiedSession?.user) {
+        throw new Error('Không thể lưu phiên đăng nhập trên trình duyệt.');
+    }
+
+    return { user: verifiedSession.user, session: verifiedSession, token };
 }
+
+function persistAuthenticatedLoginSession(authResult, userData, role, roles) {
+    const normalizedRole = normalizeRole(role);
+    const session = {
+        id: authResult?.user?.id || '',
+        user_id: authResult?.user?.id || '',
+        email: normalizeEmail(authResult?.user?.email || userData?.email || ''),
+        name: userData?.name || userData?.full_name || userData?.user_name || '',
+        gender: userData?.gender || '',
+        activeRole: normalizedRole,
+        role: normalizedRole,
+        roles: Array.isArray(roles) ? roles : getUserRoles(userData),
+        streak: Number(userData?.current_streak ?? userData?.currentStreak ?? 0),
+        authReady: true,
+        authenticatedAt: Date.now()
+    };
+    localStorage.setItem('lm_session', JSON.stringify(session));
+    return session;
+}
+
+function redirectAfterAuthenticatedLogin(destination) {
+    console.log("3. Redirecting...");
+    window.location.assign(destination);
+}
+
+async function redirectIfPersistedSessionIsValid() {
+    const currentSession = localStorage.getItem('lm_session');
+    if (!currentSession) return;
+
+    try {
+        const savedSession = JSON.parse(currentSession);
+        const savedRoles = getUserRoles(savedSession);
+        const savedRole = normalizeRole(savedSession.activeRole || savedSession.role);
+        const role = savedRoles.includes(savedRole) ? savedRole : savedRoles[0];
+        const isBootstrapAdmin = Boolean(savedSession.isSuperAdmin && savedSession.adminSessionProof);
+        if (isBootstrapAdmin) {
+            window.location.replace(destinationForRole(role));
+            return;
+        }
+
+        const client = getAuthClient();
+        const { data, error } = client ? await client.auth.getSession() : { data: null, error: null };
+        if (error || !data?.session?.user || data.session.user.email?.toLowerCase() !== savedSession.email?.toLowerCase()) {
+            localStorage.removeItem('lm_session');
+            return;
+        }
+        window.location.replace(destinationForRole(role));
+    } catch (error) {
+        console.warn('[VieGeo Auth] Bỏ qua phiên đăng nhập cũ:', error);
+        localStorage.removeItem('lm_session');
+    }
+}
+
+void redirectIfPersistedSessionIsValid();
 
 async function signUpViaSupabase({ email, password, name, gender, age, schoolGrade }) {
     const client = getAuthClient();
@@ -663,7 +725,7 @@ if (adminLoginForm) {
                 return;
             }
             showToast('Đăng nhập Admin Tổng thành công.');
-            window.location.href = ROLE_DESTINATIONS.admin;
+            redirectAfterAuthenticatedLogin(ROLE_DESTINATIONS.admin);
         } catch (error) {
             console.error('[VieGeo Admin] Lỗi đăng nhập Admin Tổng:', error);
             if (adminLoginMsg) {
@@ -712,7 +774,7 @@ if (loginForm) {
             if (normalizedIdentifier === MASTER_ADMIN_USERNAME) {
                 if (await startMasterAdminSession(identifier, pass)) {
                     showToast('Đăng nhập Admin Tổng thành công.');
-                    window.location.href = ROLE_DESTINATIONS.admin;
+                    redirectAfterAuthenticatedLogin(ROLE_DESTINATIONS.admin);
                     return;
                 }
                 loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
@@ -728,16 +790,18 @@ if (loginForm) {
             if (isRootAdminEmail(email)) {
                 if (await startRootAdminSession(email, pass)) {
                     showToast('Đăng nhập Admin Tổng thành công.');
-                    window.location.href = ROLE_DESTINATIONS.admin;
+                    redirectAfterAuthenticatedLogin(ROLE_DESTINATIONS.admin);
                     return;
                 }
                 loginMsg.textContent = "Sai tài khoản hoặc mật khẩu.";
                 loginMsg.style.display = "block";
                 return;
             }
+            let authResult = null;
             let authUser = null;
             try {
-                authUser = await signInViaSupabase(email, pass);
+                authResult = await signInViaSupabase(email, pass);
+                authUser = authResult?.user || null;
             } catch (authError) {
                 console.warn('[VieGeo Auth] Đăng nhập Supabase thất bại:', authError);
                 loginMsg.textContent = loginErrorMessage(authError);
@@ -783,8 +847,8 @@ if (loginForm) {
                                 btnRole.onmouseout = () => btnRole.style.background = 'rgba(255,255,255,0.1)';
                                 
                                 btnRole.onclick = () => {
-                                    localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, gender: userData.gender || '', activeRole: r, roles: userRoles, role: r, streak: userData.currentStreak }));
-                                    window.location.href = destinationForRole(r);
+                                    persistAuthenticatedLoginSession(authResult, userData, r, userRoles);
+                                    redirectAfterAuthenticatedLogin(destinationForRole(r));
                                 };
                                 container.appendChild(btnRole);
                             });
@@ -794,18 +858,18 @@ if (loginForm) {
                     } else {
                         // Single role redirect
                         const role = activeRole;
-                        localStorage.setItem('lm_session', JSON.stringify({ email: email, name: userData.name, gender: userData.gender || '', activeRole: role, roles: userRoles, role, streak: userData.currentStreak }));
+                        persistAuthenticatedLoginSession(authResult, userData, role, userRoles);
 
                         if (role === 'user') {
                             const pendingAction = localStorage.getItem('pending_action');
                             if (pendingAction) {
                                 localStorage.removeItem('pending_action');
-                                window.location.href = `${MAP_PAGE}${pendingAction.startsWith('?') ? pendingAction : ''}`;
+                                redirectAfterAuthenticatedLogin(`${MAP_PAGE}${pendingAction.startsWith('?') ? pendingAction : ''}`);
                             } else {
-                                window.location.href = destinationForRole(role);
+                                redirectAfterAuthenticatedLogin(destinationForRole(role));
                             }
                         } else {
-                            window.location.href = destinationForRole(role);
+                            redirectAfterAuthenticatedLogin(destinationForRole(role));
                         }
                     }
                 }

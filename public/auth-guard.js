@@ -108,6 +108,8 @@
             roles: roles,
             accountStatus: premium ? 'premium' : 'free',
             isPremium: premium,
+            authReady: true,
+            authenticatedAt: previous.authenticatedAt || Date.now(),
             verifiedBySupabase: true,
             verifiedAt: Date.now()
         });
@@ -140,6 +142,90 @@
     function getClient() {
         var client = window.supabaseClient || window.supabase || (window.VieGeoSupabase && window.VieGeoSupabase.client);
         return client && client.auth && typeof client.from === 'function' ? client : null;
+    }
+
+    function waitFor(ms) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, ms); });
+    }
+
+    async function readPersistedAuthSession(client, localSession) {
+        var loginWasJustCompleted = Boolean(
+            localSession && localSession.authReady === true
+            && Date.now() - Number(localSession.authenticatedAt || 0) < 10000
+        );
+
+        for (var attempt = 0; attempt < 3; attempt += 1) {
+            var result = await withTimeout(client.auth.getSession(), CHECK_TIMEOUT_MS);
+            if (result && result.error) throw result.error;
+            if (result && result.data && result.data.session && result.data.session.access_token) {
+                return result.data.session;
+            }
+            if (!loginWasJustCompleted || attempt === 2) break;
+            await waitFor(180);
+        }
+        return null;
+    }
+
+    async function restoreMissingUserProfile(client, authUser) {
+        var email = String(authUser && authUser.email || '').trim().toLowerCase();
+        if (!email || !authUser || !authUser.id) return null;
+
+        var metadata = authUser.user_metadata || {};
+        var now = new Date().toISOString();
+        var profile = {
+            id: authUser.id,
+            email: email,
+            user_name: metadata.user_name || metadata.name || metadata.full_name || email.split('@')[0],
+            role: 'user',
+            current_streak: 0,
+            created_at: authUser.created_at || now,
+            updated_at: now
+        };
+        var created = await withTimeout(
+            client.from('users').insert([profile]).select('*').maybeSingle(),
+            CHECK_TIMEOUT_MS
+        );
+        if (created && created.error) {
+            // Support older schemas where the primary key is an auto-generated value.
+            var identityProfile = Object.assign({}, profile);
+            delete identityProfile.id;
+            created = await withTimeout(
+                client.from('users').insert([identityProfile]).select('*').maybeSingle(),
+                CHECK_TIMEOUT_MS
+            );
+        }
+        if (created && created.error) throw created.error;
+        if (created && created.data) return created.data;
+
+        var reloaded = await withTimeout(
+            client.from('users').select('*').eq('email', email).limit(1),
+            CHECK_TIMEOUT_MS
+        );
+        if (reloaded && reloaded.error) throw reloaded.error;
+        return Array.isArray(reloaded && reloaded.data) ? reloaded.data[0] || null : null;
+    }
+
+    async function restoreBootstrapAdminProfile(client, email) {
+        var ids = {
+            'admin@viegeo.local': '00000000-0000-4000-8000-000000000001',
+            'kienquyet1201@gmail.com': '00000000-0000-4000-8000-000000000002'
+        };
+        var now = new Date().toISOString();
+        var profile = {
+            id: ids[email],
+            email: email,
+            user_name: email === 'admin@viegeo.local' ? 'Admin Tổng' : 'Đặng Kiên Quyết',
+            role: 'admin',
+            current_streak: 0,
+            created_at: now,
+            updated_at: now
+        };
+        var created = await withTimeout(
+            client.from('users').insert([profile]).select('*').maybeSingle(),
+            CHECK_TIMEOUT_MS
+        );
+        if (created && created.error) throw created.error;
+        return created && created.data ? created.data : null;
     }
 
     async function readAdminServerSession() {
@@ -211,8 +297,11 @@
             if (adminRows && adminRows.error) throw adminRows.error;
             var storedAdmin = Array.isArray(adminRows && adminRows.data) ? adminRows.data[0] : null;
             if (!storedAdmin || !normalizeRoles(storedAdmin).includes('admin')) {
-                redirectToLogin('profile_required');
-                return null;
+                storedAdmin = await restoreBootstrapAdminProfile(client, localAdminEmail);
+                if (!storedAdmin) {
+                    redirectToLogin('profile_required');
+                    return null;
+                }
             }
             var mergedAdmin = Object.assign({}, storedAdmin, {
                 email: localAdminEmail,
@@ -226,6 +315,12 @@
                 isSuperAdmin: true
             });
             return finishVerification({ id: `admin:${localAdminEmail}`, email: localAdminEmail }, mergedAdmin);
+        }
+
+        var persistedSession = await readPersistedAuthSession(client, localSession);
+        if (!persistedSession) {
+            redirectToLogin('auth_required');
+            return null;
         }
 
         var authResult = await withTimeout(client.auth.getUser(), CHECK_TIMEOUT_MS);
@@ -244,9 +339,12 @@
         if (profileResult && profileResult.error) throw profileResult.error;
         var profile = Array.isArray(profileResult && profileResult.data) ? profileResult.data[0] : null;
         if (!profile) {
-            try { await client.auth.signOut(); } catch (_) {}
-            redirectToLogin('profile_required');
-            return null;
+            profile = await restoreMissingUserProfile(client, authUser);
+            if (!profile) {
+                try { await client.auth.signOut(); } catch (_) {}
+                redirectToLogin('profile_required');
+                return null;
+            }
         }
 
         if (profile.force_logout === true || profile.forceLogout === true) {
@@ -270,8 +368,19 @@
     var client = getClient();
     if (client && client.auth && typeof client.auth.onAuthStateChange === 'function') {
         client.auth.onAuthStateChange(function (event, session) {
-            if (event === 'SIGNED_OUT' || (!session && event === 'TOKEN_REFRESHED')) {
+            if (event === 'SIGNED_OUT') {
                 clearAdminServerSession().finally(function () { redirectToLogin('session_expired'); });
+            }
+            if (event === 'TOKEN_REFRESHED' && !session) {
+                window.setTimeout(function () {
+                    client.auth.getSession().then(function (result) {
+                        if (!result || !result.data || !result.data.session) {
+                            clearAdminServerSession().finally(function () { redirectToLogin('session_expired'); });
+                        }
+                    }).catch(function () {
+                        clearAdminServerSession().finally(function () { redirectToLogin('session_expired'); });
+                    });
+                }, 250);
             }
         });
     }
