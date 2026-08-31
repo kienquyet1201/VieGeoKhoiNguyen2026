@@ -213,6 +213,17 @@ async function getCurrentSupabaseAccessToken() {
     }
 }
 
+async function getPremiumAccess() {
+    const token = await getCurrentSupabaseAccessToken();
+    if (token) return 'supabase';
+    try {
+        const session = await window.VieGeoPremiumLearning?.premiumSession?.();
+        return session?.type === 'admin' ? 'admin' : 'none';
+    } catch (_) {
+        return 'none';
+    }
+}
+
 function isPremiumProfile(user) {
     if (window.VieGeoPremium?.isActive) return window.VieGeoPremium.isActive(user);
     const source = user || {};
@@ -350,13 +361,13 @@ function renderPremiumLearningTools(active, currentUser) {
         const remaining = Math.max(0, 3 - used);
         if (premiumStreakRestoreStatus) premiumStreakRestoreStatus.textContent = `Còn ${remaining}/3 lượt phục hồi trong tháng này.`;
         if (premiumStreakRestoreButton) premiumStreakRestoreButton.disabled = remaining <= 0;
-        void getCurrentSupabaseAccessToken().then(token => {
-            const available = Boolean(token);
+        void getPremiumAccess().then(access => {
+            const available = access !== 'none';
             document.querySelectorAll('[data-premium-ai-action]').forEach(button => { button.disabled = !available; });
-            if (premiumStreakRestoreButton) premiumStreakRestoreButton.disabled = !available || remaining <= 0;
-            if (!available && premiumLearningOutput) {
-                premiumLearningOutput.textContent = 'Vui lòng đăng nhập bằng tài khoản Supabase để dùng các công cụ Premium.';
-            }
+            // Streak restoration is a Supabase RPC feature. Bootstrap admins
+            // still receive the AI tools through their secure server session.
+            if (premiumStreakRestoreButton) premiumStreakRestoreButton.disabled = access !== 'supabase' || remaining <= 0;
+            if (premiumLearningOutput) premiumLearningOutput.textContent = '';
         });
     } catch (error) {
         console.warn('[VieGeo Premium] Không thể hiển thị công cụ học tập:', error);
@@ -367,7 +378,7 @@ async function runPremiumLearningAction(action, button) {
     try {
         if (!isPremiumProfile(window.currentUserData || {})) throw new Error('Tính năng này dành cho tài khoản Premium.');
         if (!window.VieGeoPremiumLearning?.request) throw new Error('Trợ lý học tập chưa sẵn sàng.');
-        if (!await getCurrentSupabaseAccessToken()) throw new Error('Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại.');
+        if ((await getPremiumAccess()) === 'none') throw new Error('Trợ lý Premium đang được kết nối. Vui lòng thử lại sau giây lát.');
         if (button) { button.disabled = true; button.textContent = 'Đang chuẩn bị...'; }
         if (premiumLearningOutput) premiumLearningOutput.textContent = 'Trợ lý Premium đang phân tích dữ liệu học tập...';
         const response = await window.VieGeoPremiumLearning.request(action, {});

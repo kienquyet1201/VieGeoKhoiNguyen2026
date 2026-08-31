@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticatedSupabaseUser } from '../../lib/supabase-auth';
 import { selectRows } from '../../lib/supabase-rest';
+import { adminAccountFromRequest } from '../../lib/admin-session';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -186,8 +187,13 @@ function extractReply(data: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await authenticatedSupabaseUser(request);
-    if (!user) return NextResponse.json({ error: 'Vui lòng đăng nhập lại để dùng trợ lý Premium.' }, { status: 401 });
+    const supabaseUser = await authenticatedSupabaseUser(request);
+    // The two system administrators use a signed, HttpOnly server session
+    // rather than a Supabase Auth user. It is verified on the server and is
+    // never inferred from localStorage or any browser supplied profile data.
+    const admin = supabaseUser ? null : adminAccountFromRequest(request);
+    const user = supabaseUser || (admin ? { id: admin.id, email: admin.email } : null);
+    if (!user) return NextResponse.json({ error: 'Phiên Premium không còn hiệu lực.' }, { status: 401 });
     if (isRateLimited(user.id)) return NextResponse.json({ error: 'Bạn đang gửi yêu cầu quá nhanh. Hãy thử lại sau ít phút.' }, { status: 429 });
 
     const body = await request.json();

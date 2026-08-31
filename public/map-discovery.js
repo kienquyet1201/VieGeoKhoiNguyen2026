@@ -121,6 +121,11 @@ function showIslandResultModal(result){
 
 function closeIslandResultModal(){
     if(!islandResultModal){return;}
+    // Release focus before hiding the modal, otherwise Chrome reports that a
+    // focused element is inside an aria-hidden container.
+    if(islandResultModal.contains(document.activeElement)){
+        document.activeElement.blur();
+    }
     islandResultModal.hidden=true;
     islandResultModal.style.removeProperty("display");
     islandResultModal.setAttribute("aria-hidden","true");
@@ -330,7 +335,9 @@ async function hasAuthenticatedMapSession(){
     try{
         var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
         var result=await client?.auth?.getSession?.();
-        return Boolean(result?.data?.session?.access_token);
+        if(result?.data?.session?.access_token){return true;}
+        var premiumSession=await window.VieGeoPremiumLearning?.premiumSession?.();
+        return premiumSession?.type==="admin";
     }catch(error){
         return false;
     }
@@ -352,7 +359,7 @@ async function requestPremiumIslandHint(){
         var question=questions[currentQuestionIndex];
         if(!question||!window.VieGeoPremiumLearning?.request){return;}
         if(!await hasAuthenticatedMapSession()){
-            if(premiumHintOutput){premiumHintOutput.textContent="Vui lòng đăng nhập lại để dùng Gợi ý Premium.";}
+            if(premiumHintOutput){premiumHintOutput.textContent="";}
             return;
         }
         if(premiumHintButton){premiumHintButton.disabled=true;premiumHintButton.textContent="Đang tạo gợi ý...";}

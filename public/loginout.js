@@ -255,7 +255,16 @@ async function ensureMasterAdminProfile() {
 
 async function startMasterAdminSession(username, password) {
     if (!await isMasterAdminCredential(username, password)) return false;
-    const adminProfile = await ensureMasterAdminProfile();
+    const serverProfile = await createAdminServerSession(MASTER_ADMIN_USERNAME, password);
+    if (!serverProfile) throw new Error('Không thể khởi tạo phiên quản trị an toàn.');
+    let adminProfile = serverProfile;
+    try {
+        adminProfile = await ensureMasterAdminProfile();
+    } catch (error) {
+        // The server session is already verified. A legacy users schema must
+        // not prevent the administrator from accessing their Premium tools.
+        console.warn('[VieGeo Admin] Dùng hồ sơ phiên máy chủ do chưa thể đồng bộ users:', error);
+    }
     localStorage.removeItem('VieGeo_state');
     localStorage.setItem('lm_session', JSON.stringify({
         email: adminProfile.email,
@@ -363,12 +372,19 @@ function persistRootAdminSession(adminProfile) {
 
 async function startRootAdminSession(email, password) {
     if (!await isRootAdminCredential(email, password)) return false;
+    const serverProfile = await createAdminServerSession(ROOT_ADMIN_EMAIL, password);
+    if (!serverProfile) throw new Error('Không thể khởi tạo phiên quản trị an toàn.');
     try {
         await signInViaSupabase(ROOT_ADMIN_EMAIL, password);
     } catch (authError) {
         console.warn('[VieGeo Admin] Supabase Auth chưa có tài khoản Admin Tổng hoặc mật khẩu chưa đồng bộ; tiếp tục bằng Admin bootstrap.', authError?.message || authError);
     }
-    const adminProfile = await ensureRootAdminProfile();
+    let adminProfile = serverProfile;
+    try {
+        adminProfile = await ensureRootAdminProfile();
+    } catch (error) {
+        console.warn('[VieGeo Admin] Dùng hồ sơ phiên máy chủ do chưa thể đồng bộ users:', error);
+    }
     persistRootAdminSession(adminProfile);
     security.clearRateLimit(`auth_login_${ROOT_ADMIN_EMAIL}`);
     security.clearRateLimit(`auth_admin_${ROOT_ADMIN_EMAIL}`);

@@ -98,9 +98,21 @@
         }
     }
 
+    async function hasMatchingAuthSession(client, email) {
+        try {
+            const result = await client?.auth?.getSession?.();
+            const session = result?.data?.session;
+            const sessionEmail = String(session?.user?.email || '').trim().toLowerCase();
+            return Boolean(session?.access_token && sessionEmail && sessionEmail === String(email || '').trim().toLowerCase());
+        } catch (_) {
+            return false;
+        }
+    }
+
     async function saveFallbackStreak(client, email, fallback, profile) {
         try {
             if (!client?.from || !email || !profile?.id || Number(profile.current_streak) === Number(fallback.streak)) return fallback;
+            if (!await hasMatchingAuthSession(client, email)) return fallback;
             const { error } = await client.from('users').update({ current_streak: fallback.streak }).eq('id', profile.id);
             if (error) throw error;
             return Object.assign({}, fallback, { synced: true });
@@ -117,6 +129,11 @@
             const stars = Math.max(0, Math.min(3, Number(options?.stars) || 0));
             if (!client || !email) return fallbackStreak(options || {});
 
+            const fallback = fallbackStreak(Object.assign({}, options, { stars }));
+            // Bootstrap/local sessions have no Supabase JWT and must never call
+            // protected RPC functions for another account.
+            if (!await hasMatchingAuthSession(client, email)) return fallback;
+
             const { data, error } = await client.rpc('apply_lesson_streak', {
                 p_user_email: email,
                 p_stars: stars
@@ -132,11 +149,10 @@
                         synced: true
                     };
                 }
-            } else {
+            } else if (String(error.code || '') !== 'P0001') {
                 console.warn('[VieGeo Streak] RPC không khả dụng, dùng cơ chế dự phòng:', error);
             }
 
-            const fallback = fallbackStreak(Object.assign({}, options, { stars }));
             return await saveFallbackStreak(client, email, fallback, options?.profile);
         } catch (error) {
             console.warn('[VieGeo Streak] Không thể áp dụng Streak:', error);
@@ -149,10 +165,7 @@
             const client = options?.client || getClient();
             const email = String(options?.email || '').trim().toLowerCase();
             if (!client || !email) return null;
-            const sessionResult = await client.auth?.getSession?.();
-            const authenticatedEmail = String(sessionResult?.data?.session?.user?.email || '').trim().toLowerCase();
-            // Never call a protected RPC using a local/bootstrap profile only.
-            if (!sessionResult?.data?.session?.access_token || authenticatedEmail !== email) return null;
+            if (!await hasMatchingAuthSession(client, email)) return null;
             const { data, error } = await client.rpc('refresh_user_streak', { p_user_email: email });
             if (error) {
                 if (String(error.code || '') !== 'P0001') {

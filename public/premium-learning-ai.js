@@ -5,29 +5,46 @@
         return window.supabaseClient || window.supabase || window.VieGeoSupabase?.client || null;
     }
 
-    async function accessToken() {
+    async function premiumSession() {
         try {
             const supabase = client();
-            if (!supabase?.auth?.getSession) return '';
-            const result = await supabase.auth.getSession();
-            return String(result?.data?.session?.access_token || '').trim();
+            if (supabase?.auth?.getSession) {
+                const result = await supabase.auth.getSession();
+                const token = String(result?.data?.session?.access_token || '').trim();
+                if (token) return { type: 'supabase', token };
+            }
+
+            // Bootstrap administrators are verified with an HttpOnly cookie.
+            // The server validates it; no role or permission comes from the UI.
+            const adminResponse = await fetch('/api/admin-session', {
+                credentials: 'same-origin',
+                cache: 'no-store'
+            });
+            const adminData = adminResponse.ok ? await adminResponse.json().catch(() => null) : null;
+            if (adminData?.ok && String(adminData?.profile?.account_status || '').toLowerCase() === 'premium') {
+                return { type: 'admin', token: '' };
+            }
+            return { type: 'none', token: '' };
         } catch (error) {
             console.warn('[VieGeo Premium AI] Không thể lấy phiên đăng nhập:', error);
-            return '';
+            return { type: 'none', token: '' };
         }
     }
 
     async function request(action, payload) {
         try {
-            const token = await accessToken();
-            if (!token) {
-                const sessionError = new Error('Phiên đăng nhập chưa sẵn sàng. Vui lòng đăng nhập lại.');
+            const session = await premiumSession();
+            if (session.type === 'none') {
+                const sessionError = new Error('Phiên Premium chưa sẵn sàng.');
                 sessionError.code = 'AUTH_SESSION_REQUIRED';
                 throw sessionError;
             }
+            const headers = { 'Content-Type': 'application/json' };
+            if (session.token) headers.Authorization = `Bearer ${session.token}`;
             const response = await fetch('/api/premium-learning-ai', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                credentials: 'same-origin',
+                headers,
                 body: JSON.stringify(Object.assign({ action }, payload || {}))
             });
             const data = await response.json().catch(() => ({}));
@@ -41,5 +58,5 @@
         }
     }
 
-    window.VieGeoPremiumLearning = Object.freeze({ request });
+    window.VieGeoPremiumLearning = Object.freeze({ request, premiumSession });
 }());
