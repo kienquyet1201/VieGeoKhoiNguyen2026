@@ -296,11 +296,21 @@ function renderStudentLeaderboard(rows,user){
     var list=document.querySelector(".student-main .leaderboard-list");
     if(!list){return;}
     var email=String(user?.email||"").trim().toLowerCase();
+    var displayName=function(row){
+        var candidates=[row?.user_name,row?.username,row?.display_name,row?.full_name,row?.name];
+        for(var candidateIndex=0;candidateIndex<candidates.length;candidateIndex+=1){
+            var candidate=String(candidates[candidateIndex]||"").trim();
+            // A few legacy leaderboard rows saved the email in `name`.
+            // Never expose that address when the user profile has a display name.
+            if(candidate&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)){return candidate;}
+        }
+        return "Học viên";
+    };
     var normalized=(Array.isArray(rows)?rows:[]).map(function(row,index){
         return {
             id:row?.id||row?.email||index,
             email:String(row?.email||row?.user_email||"").trim().toLowerCase(),
-            name:String(row?.name||row?.full_name||row?.display_name||row?.email||row?.user_email||"Học viên"),
+            name:displayName(row),
             score:Number(row?.score??row?.xp??0)||0,
             streak:Number(row?.current_streak??row?.streak??0)||0
         };

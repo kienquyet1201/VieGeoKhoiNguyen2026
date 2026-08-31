@@ -354,9 +354,15 @@
     }
 
     function leaderboardModel(rows) {
+        const displayName = (row) => {
+            const names = [row?.user_name, row?.username, row?.display_name, row?.full_name, row?.name];
+            const found = names.map(value => String(value || '').trim())
+                .find(value => value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
+            return found || 'Học viên';
+        };
         return (Array.isArray(rows) ? rows : []).map((row, index) => ({
             id: row.id || row.user_id || row.email || `rank-${index}`,
-            name: row.name || row.full_name || row.display_name || row.user_name || row.email || 'Thám hiểm gia',
+            name: displayName(row),
             email: row.email || row.user_email || '',
             xp: Number(row.xp ?? row.exp ?? row.score ?? row.total_xp ?? row.points ?? 0),
             streak: Number(row.current_streak ?? row.streak ?? 0)

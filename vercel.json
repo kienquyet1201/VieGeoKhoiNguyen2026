@@ -7,6 +7,12 @@
     },
     "api/support-ai.js": {
       "maxDuration": 30
+    },
+    "api/admin-session.js": {
+      "maxDuration": 10
+    },
+    "api/premium-learning-ai.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [
