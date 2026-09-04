@@ -95,8 +95,8 @@
     }
 
     function readSession() {
-        const session = readJson('lm_session', {});
-        return session && typeof session === 'object' ? session : {};
+        const canonicalUser = window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser;
+        return canonicalUser && typeof canonicalUser === 'object' ? canonicalUser : {};
     }
 
     function readState() {
@@ -180,6 +180,7 @@
 
     function hydrateTopbar(user) {
         try {
+            if (!user || typeof user !== 'object') return;
             const premium = isPremiumAccount(user);
             setText('sharedHeart', premium ? '∞' : String(user.hearts ?? 3));
             setText('sharedStreak', String(user.streak ?? 0));
@@ -209,6 +210,7 @@
 
     function hydrateProfile(user) {
         try {
+            if (!user || typeof user !== 'object') return;
             const state = readState();
             const xp = Number(user.xp ?? 0);
             const completed = Array.isArray(state.completedNodes) ? state.completedNodes.length : Number(state.completedLessons || 0);
@@ -266,7 +268,7 @@
             list.replaceChildren();
             ranks.slice(0, 10).forEach((entry, index) => {
                 const row = document.createElement('div');
-                row.className = `ranking-row${String(entry.email).toLowerCase() === String(user.email || '').toLowerCase() ? ' current-user' : ''}`;
+                row.className = `ranking-row${String(entry.email).toLowerCase() === String(user?.email || '').toLowerCase() ? ' current-user' : ''}`;
                 row.innerHTML = `<span class="rank-number">${index + 1}</span><div class="rank-avatar blue-avatar">${String(entry.name).slice(0, 2).toUpperCase()}</div><div class="rank-user"><strong></strong><span>Cấp ${Math.max(1, Math.floor(entry.xp / 250) + 1)}</span></div><div class="rank-streak">🔥 ${entry.streak}</div><div class="rank-xp">${entry.xp.toLocaleString('vi-VN')} XP</div><div class="rank-change neutral-change">—</div>`;
                 row.querySelector('.rank-user strong').textContent = entry.name;
                 list.appendChild(row);
@@ -284,6 +286,7 @@
 
     function hydrateStudentDashboard(rows, user) {
         try {
+            if (!user || typeof user !== 'object') return;
             const state = readState();
             const completed = completedLessonCount(state);
             const total = Number(user.total_lessons ?? user.totalLessons ?? state.totalLessons ?? state.totalNodes ?? 0) || 0;
@@ -327,6 +330,7 @@
 
     function hydrateParent(user) {
         try {
+            if (!user || typeof user !== 'object') return;
             const state = readState();
             const completed = Array.isArray(state.completedNodes) ? state.completedNodes.length : Number(state.completedLessons || 0);
             const streak = Number(user.current_streak ?? user.streak ?? state.streak ?? 0);
@@ -356,10 +360,12 @@
     async function initializePageData() {
         try {
             const user = await getCurrentUser();
-            writeLocalUser(user);
-            hydrateTopbar(user);
-            hydrateProfile(user);
-            hydrateParent(user);
+            if (user) {
+                writeLocalUser(user);
+                hydrateTopbar(user);
+                hydrateProfile(user);
+                hydrateParent(user);
+            }
             const [questions, boardRows] = await Promise.all([
                 fetchRows('questions', { limit: 500 }),
                 fetchRows('leaderboard', { columns: '*', limit: 100, orderBy: 'score', ascending: false })
@@ -373,6 +379,14 @@
             document.documentElement.dataset.viegeoDataReady = 'fallback';
         }
     }
+
+    window.addEventListener('viegeo:user-hydrated', function (event) {
+        const user = event?.detail;
+        if (!user || typeof user !== 'object') return;
+        hydrateTopbar(user);
+        hydrateProfile(user);
+        hydrateParent(user);
+    });
 
     async function withRequestState(button, task) {
         const trigger = button instanceof HTMLElement ? button : null;

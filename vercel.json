@@ -2,6 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/cs", "destination": "/cs-dashboard.html" }
+    { "source": "/cs", "destination": "/cs-dashboard.html" },
+    { "source": "/favicon.ico", "destination": "/favicon.svg" }
   ]
 }
