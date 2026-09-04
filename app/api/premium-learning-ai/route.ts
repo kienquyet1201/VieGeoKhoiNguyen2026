@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticatedSupabaseUser } from '../../lib/supabase-auth';
 import { selectRows } from '../../lib/supabase-rest';
-import { adminAccountFromRequest } from '../../lib/admin-session';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/interactions';
 const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
@@ -14,13 +14,12 @@ const requestBuckets = new Map<string, { count: number; resetAt: number }>();
 
 type LearningAction = 'analysis' | 'homework' | 'hint';
 type UserProfile = {
+  id?: string;
   email?: string;
-  user_name?: string;
-  name?: string;
+  display_name?: string;
   role?: string;
-  active_role?: string;
   roles?: string[] | string;
-  account_status?: string;
+  is_premium?: boolean;
   age?: number;
   school_grade?: number;
   textbook_curriculum?: string;
@@ -55,12 +54,7 @@ function validAction(value: unknown): LearningAction | null {
 }
 
 function isPremium(profile: UserProfile) {
-  const roles = Array.isArray(profile?.roles)
-    ? profile.roles
-    : String(profile?.roles || '').split(',');
-  const values = [profile?.account_status, profile?.role, profile?.active_role, ...roles]
-    .map(value => cleanText(value, 40).toLowerCase());
-  return values.includes('premium') || values.includes('active') || values.includes('approved');
+  return profile?.is_premium === true;
 }
 
 function isRateLimited(userId: string) {
@@ -187,12 +181,7 @@ function extractReply(data: any) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabaseUser = await authenticatedSupabaseUser(request);
-    // The two system administrators use a signed, HttpOnly server session
-    // rather than a Supabase Auth user. It is verified on the server and is
-    // never inferred from localStorage or any browser supplied profile data.
-    const admin = supabaseUser ? null : adminAccountFromRequest(request);
-    const user = supabaseUser || (admin ? { id: admin.id, email: admin.email } : null);
+    const user = await authenticatedSupabaseUser(request);
     if (!user) return NextResponse.json({ error: 'Phiên Premium không còn hiệu lực.' }, { status: 401 });
     if (isRateLimited(user.id)) return NextResponse.json({ error: 'Bạn đang gửi yêu cầu quá nhanh. Hãy thử lại sau ít phút.' }, { status: 429 });
 
@@ -200,7 +189,7 @@ export async function POST(request: NextRequest) {
     const action = validAction(body?.action);
     if (!action) return NextResponse.json({ error: 'Yêu cầu AI không hợp lệ.' }, { status: 400 });
 
-    const profileRows = await selectRows<UserProfile>('users', `select=email,user_name,name,role,active_role,roles,account_status,age,school_grade,textbook_curriculum&email=eq.${encodeURIComponent(user.email)}&limit=1`, true);
+    const profileRows = await selectRows<UserProfile>('users', `select=id,email,display_name,role,roles,is_premium,age,school_grade,textbook_curriculum&id=eq.${encodeURIComponent(user.id)}&limit=1`, true);
     const profile = profileRows[0];
     if (!profile) return NextResponse.json({ error: 'Không tìm thấy hồ sơ người dùng.' }, { status: 404 });
     if (!isPremium(profile)) return NextResponse.json({ error: 'Tính năng này dành cho tài khoản Premium.' }, { status: 403 });

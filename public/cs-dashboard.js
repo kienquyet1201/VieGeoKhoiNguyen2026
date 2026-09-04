@@ -142,20 +142,16 @@
     }
 
     function currentSession() {
-        try {
-            return JSON.parse(localStorage.getItem('lm_session') || '{}') || {};
-        } catch (_) {
-            return {};
-        }
+        return window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {};
     }
 
     async function loadAgent() {
-        const session = currentSession();
+        const session = await window.VieGeoUserStore?.ready?.({ refreshStreak: false }) || currentSession();
         state.agent = {
-            id: String(session.id || session.user_id || ''),
+            id: String(session.id || ''),
             email: String(session.email || ''),
-            name: String(session.user_name || session.name || session.displayName || session.email || 'Nhân viên CSKH'),
-            role: String(session.activeRole || session.role || 'cs')
+            name: String(session.display_name || session.user_name || session.name || session.email || 'Nhân viên CSKH'),
+            role: String(window.VieGeoUserStore?.getActiveRole?.() || session.role || 'cs')
         };
         try {
             const authResult = await client()?.auth?.getUser?.();

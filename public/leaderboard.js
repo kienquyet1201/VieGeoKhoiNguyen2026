@@ -24,19 +24,11 @@
     }
 
     function getLeaderboardState() {
-        try {
-            return JSON.parse(localStorage.getItem('VieGeo_state') || '{}');
-        } catch (error) {
-            return {};
-        }
+        return window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {};
     }
 
     function getSession() {
-        try {
-            return JSON.parse(localStorage.getItem('lm_session') || '{}');
-        } catch (error) {
-            return {};
-        }
+        return window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {};
     }
 
     function updateStats() {
@@ -80,29 +72,13 @@
     async function fetchLeaderboardRows() {
         const supabase = getClient();
         if (!supabase) throw new Error('Supabase client chưa sẵn sàng.');
-        const usersResult = await supabase.from('users').select('*');
-        if (!usersResult.error && Array.isArray(usersResult.data) && usersResult.data.length) {
-            return usersResult.data;
-        }
-        const leaderboardResult = await supabase.from('leaderboard').select('*').order('score', { ascending: false });
-        if (leaderboardResult.error) throw usersResult.error || leaderboardResult.error;
+        const leaderboardResult = await supabase.rpc('get_leaderboard', { p_limit: 500 });
+        if (leaderboardResult.error) throw leaderboardResult.error;
         return Array.isArray(leaderboardResult.data) ? leaderboardResult.data : [];
     }
 
     async function fetchCurrentUser() {
-        var session = getSession();
-        var authUser = null;
-        var client = getClient();
-        if (client && client.auth && typeof client.auth.getUser === 'function') {
-            var authResult = await client.auth.getUser();
-            authUser = authResult && authResult.data && authResult.data.user;
-        }
-        var email = String((authUser && authUser.email) || session.email || '').trim().toLowerCase();
-        return Object.assign({}, session, authUser || {}, {
-            id: (authUser && authUser.id) || session.id || session.user_id || '',
-            email: email,
-            name: session.name || session.user_name || (authUser && authUser.user_metadata && authUser.user_metadata.name) || ''
-        });
+        return await window.VieGeoUserStore?.ready?.({ refreshStreak: false }) || {};
     }
 
     function isCurrentEntry(entry) {

@@ -11,18 +11,8 @@
             if (supabase?.auth?.getSession) {
                 const result = await supabase.auth.getSession();
                 const token = String(result?.data?.session?.access_token || '').trim();
-                if (token) return { type: 'supabase', token };
-            }
-
-            // Bootstrap administrators are verified with an HttpOnly cookie.
-            // The server validates it; no role or permission comes from the UI.
-            const adminResponse = await fetch('/api/admin-session', {
-                credentials: 'same-origin',
-                cache: 'no-store'
-            });
-            const adminData = adminResponse.ok ? await adminResponse.json().catch(() => null) : null;
-            if (adminData?.ok && String(adminData?.profile?.account_status || '').toLowerCase() === 'premium') {
-                return { type: 'admin', token: '' };
+                const profile = await window.VieGeoUserStore?.ready?.({ refreshStreak: false });
+                if (token && profile?.is_premium === true) return { type: 'supabase', token };
             }
             return { type: 'none', token: '' };
         } catch (error) {

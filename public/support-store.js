@@ -18,9 +18,7 @@ function supportDisableRemoteTables(error){
 }
 
 function supportGetSession(){
-    var raw=localStorage.getItem("lm_session");
-    if(!raw){return {};}
-    try{return JSON.parse(raw)||{};}catch(error){return {};}
+    return window.VieGeoUserStore?.get?.()||window.VieGeoCurrentUser||{};
 }
 
 function supportGetLocalTickets(){

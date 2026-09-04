@@ -34,8 +34,7 @@
     };
 
     function session() {
-        try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); }
-        catch { return {}; }
+        return window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {};
     }
 
     function escapeHtml(value) {

@@ -84,7 +84,7 @@
     }
 
     function displayName(profile) {
-        return cleanText(profile?.user_name || profile?.name || profile?.full_name || profile?.email?.split('@')[0], 'Người chơi');
+        return cleanText(profile?.display_name || profile?.user_name || profile?.name || profile?.full_name || profile?.email?.split('@')[0], 'Người chơi');
     }
 
     function readElo(profile) {
@@ -712,43 +712,22 @@
         if (sessionStorage.getItem(rewardKey)) return { eloDelta: 0, gemDelta: 0, xpDelta: 0 };
         sessionStorage.setItem(rewardKey, 'pending');
         try {
-            const response = await state.client.from('users').select('*').eq('email', state.user.email).maybeSingle();
+            const response = await state.client.rpc('apply_arena_match_reward', {
+                p_match_id: state.roomId,
+                p_elo_delta: Number(eloDelta) || 0,
+                p_gems_reward: Math.max(0, Number(gemDelta) || 0),
+                p_xp_reward: Math.max(0, Number(xpDelta) || 0)
+            });
             if (response.error) throw response.error;
-            const profile = response.data || {};
-            const currentElo = readElo(profile);
-            const currentGems = Number(profile.gems ?? profile.diamonds ?? profile.legacy_data?.gems) || 0;
-            const currentXp = Number(profile.xp ?? profile.score ?? profile.exp) || 0;
-            const nextElo = Math.max(0, currentElo + eloDelta);
-            const nextGems = Math.max(0, currentGems + gemDelta);
-            const nextXp = Math.max(0, currentXp + xpDelta);
-            const actualGemDelta = nextGems - currentGems;
-            const actualXpDelta = nextXp - currentXp;
-            const payload = {};
-            if (Object.prototype.hasOwnProperty.call(profile, 'gems')) payload.gems = nextGems;
-            else if (Object.prototype.hasOwnProperty.call(profile, 'diamonds')) payload.diamonds = nextGems;
-            if (Object.prototype.hasOwnProperty.call(profile, 'xp')) payload.xp = nextXp;
-            else if (Object.prototype.hasOwnProperty.call(profile, 'score')) payload.score = nextXp;
-            else if (Object.prototype.hasOwnProperty.call(profile, 'exp')) payload.exp = nextXp;
-            if (Object.prototype.hasOwnProperty.call(profile, 'elo')) {
-                payload.elo = nextElo;
-            } else if (Object.prototype.hasOwnProperty.call(profile, 'legacy_data')) {
-                payload.legacy_data = Object.assign({}, profile.legacy_data || {}, {
-                    arena_elo: nextElo,
-                    gems: nextGems
-                });
-            }
-            if (Object.prototype.hasOwnProperty.call(profile, 'updated_at')) payload.updated_at = new Date().toISOString();
-            if (Object.keys(payload).length) {
-                const update = await state.client.from('users').update(payload).eq('email', state.user.email);
-                if (update.error) throw update.error;
-            }
-            state.user.elo = nextElo;
-            state.user.gems = nextGems;
-            state.user.xp = nextXp;
-            state.user.score = nextXp;
-            syncLocalReward(nextElo, nextGems, nextXp);
+            const reward = Array.isArray(response.data) ? response.data[0] : response.data;
+            if (!reward) throw new Error('Không nhận được kết quả thưởng Arena.');
+            state.user.elo = Number(reward.elo) || 0;
+            state.user.gems = Number(reward.gems) || 0;
+            state.user.xp = Number(reward.xp) || 0;
+            state.user.score = state.user.xp;
+            await window.VieGeoUserStore?.reload?.();
             sessionStorage.setItem(rewardKey, 'done');
-            return { eloDelta: eloDelta, gemDelta: actualGemDelta, xpDelta: actualXpDelta };
+            return { eloDelta: Number(eloDelta) || 0, gemDelta: Number(reward.gem_delta) || 0, xpDelta: Number(reward.xp_delta) || 0 };
         } catch (error) {
             sessionStorage.removeItem(rewardKey);
             console.error('[VieGeo Arena] Không thể cập nhật phần thưởng:', error);
@@ -758,13 +737,8 @@
     }
 
     function syncLocalReward(elo, gems, xp) {
-        try {
-            const local = JSON.parse(localStorage.getItem('VieGeo_state') || '{}');
-            local.elo = elo;
-            local.gems = gems;
-            local.xp = xp;
-            localStorage.setItem('VieGeo_state', JSON.stringify(local));
-        } catch (_) {}
+        // Phase 1: profile rewards are held only in public.users via RPC.
+        return { elo, gems, xp };
     }
 
     function createExplosion() {
@@ -845,9 +819,7 @@
         try {
             const verified = window.VieGeoAuthReady ? await window.VieGeoAuthReady : window.VieGeoCurrentUser;
             if (!verified?.email) return;
-            const response = await state.client.from('users').select('*').eq('email', verified.email).maybeSingle();
-            if (response.error) throw response.error;
-            const profile = response.data || verified;
+            const profile = await window.VieGeoUserStore?.ready?.({ refreshStreak: false }) || verified;
             state.user = {
                 id: verified.auth_id || verified.id || profile.id || verified.email,
                 email: cleanText(verified.email || profile.email).toLowerCase(),

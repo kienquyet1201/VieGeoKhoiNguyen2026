@@ -16,6 +16,25 @@
 
     function byId(id) { return document.getElementById(id); }
 
+    async function adminUsersApi(path, options) {
+        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
+        const { data: { session } = {} } = await client?.auth?.getSession?.() || {};
+        const token = session?.access_token;
+        if (!token) throw new Error('Phiên quản trị đã hết hạn.');
+        const response = await fetch(path, {
+            method: options?.method || 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+                ...(options?.body ? { 'Content-Type': 'application/json' } : {})
+            },
+            body: options?.body ? JSON.stringify(options.body) : undefined,
+            cache: 'no-store'
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload?.error || 'Không thể xử lý yêu cầu quản trị.');
+        return payload;
+    }
+
     function showToast(message, variant) {
         try {
             const toast = byId('toast');
@@ -126,14 +145,8 @@
     }
 
     async function fetchUsers() {
-        const supabase = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
-        if (!supabase || typeof supabase.from !== 'function') throw new Error('Supabase client chưa sẵn sàng.');
-        const orderedResult = await supabase.from('users').select('*').order('score', { ascending: false });
-        if (!orderedResult.error) return Array.isArray(orderedResult.data) ? orderedResult.data : [];
-        console.warn('[VieGeo Admin] Cột score chưa sẵn sàng, tải danh sách users không sắp xếp:', orderedResult.error.message || orderedResult.error);
-        const { data, error } = await supabase.from('users').select('*');
-        if (error) throw error;
-        return (Array.isArray(data) ? data : []).sort((first, second) => Number(second.score ?? second.xp ?? 0) - Number(first.score ?? first.xp ?? 0));
+        const payload = await adminUsersApi('/api/admin/users');
+        return Array.isArray(payload?.users) ? payload.users : [];
     }
 
     async function fetchSubmissionCount() {
@@ -145,27 +158,19 @@
     }
 
     async function updateUserRoles(user, selectedRoles, button) {
-        const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
         const roles = [...new Set((Array.isArray(selectedRoles) ? selectedRoles : []).map(canonicalRole).filter(role => managedRoles.includes(role)))];
-        if (!client || !roles.length) {
+        if (!roles.length) {
             showToast('Mỗi tài khoản cần có ít nhất một vai trò.', 'error');
             return;
         }
         if (button) button.disabled = true;
         try {
-            const existingRoles = rolesOfUser(user);
-            const previousActive = canonicalRole(user.active_role || existingRoles[0] || user.role);
-            const primaryRole = roles.includes(previousActive) ? previousActive : roles[0];
-            const supportsRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
-            const payload = { role: supportsRoles ? primaryRole : roles.join(',') };
-            if (supportsRoles) payload.roles = roles;
-            if (Object.prototype.hasOwnProperty.call(user || {}, 'active_role')) payload.active_role = primaryRole;
-            if (Object.prototype.hasOwnProperty.call(user || {}, 'updated_at')) payload.updated_at = new Date().toISOString();
-            let query = identifyUserQuery(client.from('users').update(payload), user);
-            const { data, error } = await query.select('*').maybeSingle();
-            if (error) throw error;
+            const result = await adminUsersApi('/api/admin/users', {
+                method: 'PATCH', body: { targetUserId: user.id, roles }
+            });
+            const data = result?.user;
             const index = allUsers.findIndex(item => sameUser(item, user));
-            if (index >= 0) allUsers[index] = data || { ...user, ...payload };
+            if (index >= 0) allUsers[index] = data || user;
             renderUsers(allUsers);
             showToast(`Đã cập nhật ${roles.length} vai trò cho ${displayName(user)}.`, 'success');
         } catch (error) {
@@ -321,32 +326,15 @@
             }
 
             if (status === 'approved') {
-                let linkedUser = allUsers.find(user => userEmail(user) === email) || null;
-                if (!linkedUser) {
-                    const { data: users, error: usersError } = await client.from('users').select('*');
-                    if (usersError) throw usersError;
-                    if (Array.isArray(users)) allUsers = users;
-                    linkedUser = allUsers.find(user => userEmail(user) === email) || null;
-                }
+                const linkedUser = allUsers.find(user => userEmail(user) === email) || null;
                 if (!linkedUser) {
                     console.warn('[VieGeo Admin] Yêu cầu đã duyệt nhưng chưa tìm thấy hồ sơ users:', { email, requestId });
                 } else {
-                    const currentState = linkedUser.game_state && typeof linkedUser.game_state === 'object' ? linkedUser.game_state : {};
-                    const notifications = Array.isArray(currentState.notifications) ? [...currentState.notifications] : [];
-                    if (!notifications.some(item => item?.id === `premium-approved-${requestId}`)) {
-                        notifications.unshift({ id: `premium-approved-${requestId}`, title: 'Premium đã được kích hoạt', message: 'Yêu cầu nâng cấp của bạn đã được duyệt thành công.', created_at: now });
-                    }
-                    const userPayload = {};
-                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'account_status')) userPayload.account_status = 'premium';
-                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'is_premium')) userPayload.is_premium = true;
-                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'game_state')) userPayload.game_state = { ...currentState, notifications };
-                    if (Object.prototype.hasOwnProperty.call(linkedUser, 'updated_at')) userPayload.updated_at = now;
-                    if (Object.keys(userPayload).length > 0) {
-                        const updateResult = await identifyUserQuery(client.from('users').update(userPayload), linkedUser).select('*');
-                        if (updateResult.error) {
-                            console.warn('[VieGeo Admin] Yêu cầu đã duyệt; hồ sơ users sẽ đồng bộ từ premium_requests:', updateResult.error);
-                        }
-                    }
+                    const result = await adminUsersApi('/api/admin/users', {
+                        method: 'PATCH', body: { targetUserId: linkedUser.id, isPremium: true }
+                    });
+                    const index = allUsers.findIndex(user => sameUser(user, linkedUser));
+                    if (index >= 0 && result?.user) allUsers[index] = result.user;
                 }
             }
             showToast(status === 'approved' ? 'Đã duyệt Premium.' : 'Đã từ chối yêu cầu Premium.', 'success');

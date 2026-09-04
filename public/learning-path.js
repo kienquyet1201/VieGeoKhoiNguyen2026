@@ -319,32 +319,26 @@
 
     async function getUserLearningProgress(email) {
         const client = window.supabaseClient || window.supabase || window.VieGeoSupabase?.client;
-        const session = (() => {
-            try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); } catch (error) { return {}; }
-        })();
-        const userEmail = String(email || session.email || '').trim();
-        if (!client || typeof client.from !== 'function' || !userEmail) {
+        const profile = await window.VieGeoUserStore?.ready?.({ refreshStreak: false });
+        if (!client || typeof client.from !== 'function' || !profile?.id) {
             return { completed: 0, total: 0, percent: 0, currentNode: null };
         }
         try {
-            const [userResult, lessonResult] = await Promise.all([
-                client.from('users').select('game_state').eq('email', userEmail).maybeSingle(),
+            const [completionResult, lessonResult] = await Promise.all([
+                client.from('lesson_completions').select('lesson_key').order('completed_at', { ascending: false }),
                 client.from('questions').select('province,island').limit(5000)
             ]);
-            if (userResult.error) throw userResult.error;
-            const state = userResult.data?.game_state && typeof userResult.data.game_state === 'object' ? userResult.data.game_state : {};
-            const completed = Array.isArray(state.completedNodes)
-                ? state.completedNodes.length
-                : (Array.isArray(state.completedLessons) ? state.completedLessons.length : Number(state.completedLessons || 0));
+            if (completionResult.error) throw completionResult.error;
+            const completed = new Set((completionResult.data || []).map(row => String(row.lesson_key || '')).filter(Boolean)).size;
             const lessonIds = new Set((Array.isArray(lessonResult.data) ? lessonResult.data : [])
                 .map(lesson => `${String(lesson.province || '').trim()}:${String(lesson.island || '').trim()}`)
                 .filter(key => key !== ':'));
-            const total = lessonIds.size || Number(state.totalLessons ?? state.totalNodes ?? 0) || 0;
+            const total = lessonIds.size;
             return {
                 completed,
                 total,
                 percent: total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0,
-                currentNode: state.currentNode || null
+                currentNode: null
             };
         } catch (error) {
             console.warn('Không thể tải tiến độ học từ Supabase:', error);

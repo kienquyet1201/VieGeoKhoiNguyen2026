@@ -303,9 +303,8 @@ function renderRegionProgress(){
 
 async function getCurrentMapUserEmail(){
     var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
-    var session={};
-    try{session=JSON.parse(localStorage.getItem("lm_session")||"{}");}catch(error){session={};}
-    var email=String(session.email||session.user_email||"").trim().toLowerCase();
+    var session=window.VieGeoUserStore?.get?.()||window.VieGeoCurrentUser||{};
+    var email=String(session.email||"").trim().toLowerCase();
     if(client?.auth?.getUser){
         var authResult=await client.auth.getUser();
         email=String(authResult?.data?.user?.email||email).trim().toLowerCase();
@@ -314,7 +313,7 @@ async function getCurrentMapUserEmail(){
 }
 
 function getCurrentMapSession(){
-    try{return JSON.parse(localStorage.getItem("lm_session")||"{}")||{};}catch(error){return {};}
+    return window.VieGeoUserStore?.get?.()||window.VieGeoCurrentUser||{};
 }
 
 function isPremiumMapProfile(profile){
@@ -399,35 +398,11 @@ function logMapSupabaseError(context,error,extra){
 }
 
 async function findMapUserProfile(client,email){
-    var columns="id,email,user_email,user_name,role,roles,account_status,score,current_streak,last_active_date,streak_restored_on";
-    var result=await client.from("users").select(columns).eq("email",email).limit(1).maybeSingle();
-    if(result.error){
-        logMapSupabaseError("users.select.email",result.error,{email:email});
-        throw result.error;
-    }
-    if(result.data){return result.data;}
-    result=await client.from("users").select(columns).eq("user_email",email).limit(1).maybeSingle();
-    if(result.error){
-        logMapSupabaseError("users.select.user_email",result.error,{email:email});
-        throw result.error;
-    }
-    return result.data||null;
+    return await window.VieGeoUserStore?.ready?.({refreshStreak:false})||null;
 }
 
 async function ensureMapUserProfile(client,email){
-    var profile=await findMapUserProfile(client,email);
-    if(profile){return profile;}
-    var session=getCurrentMapSession();
-    var displayName=String(session.user_name||session.name||session.displayName||email.split("@")[0]||"Người dùng").trim();
-    var role=String(session.activeRole||session.active_role||session.role||"user").trim().toLowerCase();
-    var payload={email:email,user_email:email,user_name:displayName,role:role,score:0,current_streak:0};
-    var created=await client.from("users").insert([payload]).select("id,email,user_email,user_name,role,roles,account_status,score,current_streak,last_active_date,streak_restored_on").single();
-    if(created.error){
-        if(String(created.error.code||"")==="23505"){return await findMapUserProfile(client,email);}
-        logMapSupabaseError("users.insert.profile",created.error,{email:email});
-        throw created.error;
-    }
-    return created.data;
+    return await window.VieGeoUserStore?.reload?.()||null;
 }
 
 async function fetchRecentMapSubmissions(client,email){
@@ -673,7 +648,9 @@ async function persistCurrentStageCompleted(){
 
     if(!rewardAlreadyApplied){
         var rewardPayload={score:nextScore};
-        var rewardResult=await client.from("users").update(rewardPayload).eq("id",profile.id);
+        // Legacy path is retained only for old UI compatibility. Direct profile
+        // mutation is forbidden; the active Phase 1 implementation below uses complete_lesson RPC.
+        var rewardResult={error:new Error("DIRECT_USER_REWARD_DISABLED")};
         if(rewardResult.error){
             rewardSynced=false;
             logMapSupabaseError("users.update.rewards",rewardResult.error,{email:email,userId:profile.id,payload:rewardPayload});
@@ -1417,3 +1394,110 @@ document.addEventListener("DOMContentLoaded",initializeLearningFlow);
         }
     };
 }());
+
+/* Phase 1 canonical progress adapter: rewards and streaks are granted only by complete_lesson RPC. */
+async function getCurrentMapUserEmail(){
+    try{
+        var client=window.supabaseClient||window.supabase||window.VieGeoSupabase?.client;
+        var result=await client?.auth?.getUser?.();
+        return String(result?.data?.user?.email||'').trim().toLowerCase();
+    }catch(error){
+        console.warn('[VieGeo Map] Không thể đọc phiên Supabase:',error);
+        return '';
+    }
+}
+
+function getCurrentMapSession(){
+    return window.VieGeoUserStore?.get?.()||window.VieGeoCurrentUser||{};
+}
+
+function isPremiumMapProfile(profile){
+    return profile?.is_premium===true;
+}
+
+function readLocalMapRewards(){
+    var user=window.VieGeoUserStore?.get?.()||window.VieGeoCurrentUser||{};
+    return {xp:Number(user.xp)||0,gems:Number(user.gems)||0,streak:Number(user.streak)||0};
+}
+
+function updateLocalIslandRewards(xp,gems,streak){
+    try{
+        var sharedXp=document.getElementById('sharedXp');
+        var sharedGem=document.getElementById('sharedGem');
+        var sharedStreak=document.getElementById('sharedStreak');
+        if(sharedXp){sharedXp.textContent=(Number(xp)||0)+' XP';}
+        if(sharedGem){sharedGem.textContent=String(Number(gems)||0);}
+        if(sharedStreak){sharedStreak.textContent=String(Number(streak)||0);}
+    }catch(error){console.warn('[VieGeo Map] Không thể hiển thị phần thưởng:',error);}
+}
+
+async function findMapUserProfile(){
+    return await window.VieGeoUserStore?.ready?.({refreshStreak:false})||null;
+}
+
+async function ensureMapUserProfile(){
+    return await findMapUserProfile();
+}
+
+async function fetchSubmissionPages(client){
+    try{
+        var result=await client.from('lesson_completions').select('*').order('completed_at',{ascending:false});
+        if(result.error){throw result.error;}
+        return (Array.isArray(result.data)?result.data:[]).map(function(row){
+            return {
+                id:row.id,
+                province:row.province,
+                island:row.island,
+                topic:row.topic,
+                correct_count:row.correct_count,
+                total_count:row.total_count,
+                created_at:row.completed_at,
+                details:{stars:row.stars,island_index:Number(String(row.lesson_key||'').split('-').pop())||0,completed_at:row.completed_at}
+            };
+        });
+    }catch(error){
+        logMapSupabaseError('lesson_completions.select',error,{});
+        return [];
+    }
+}
+
+async function persistCurrentStageCompleted(){
+    try{
+        var provinceKey=normalizeProvinceKey(selectedProvince);
+        var islandLabel='Đảo nhỏ '+selectedStage;
+        var stars=calculateIslandStars(quizCorrectAnswers);
+        var lessonKey=provinceKey+'-'+String(selectedStage);
+        var result=await window.VieGeoUserStore?.completeLesson?.({
+            lessonKey:lessonKey,
+            province:provinceKey,
+            island:islandLabel,
+            topic:islandLabel,
+            stars:stars,
+            correctCount:quizCorrectAnswers,
+            totalCount:ISLAND_QUESTION_LIMIT
+        });
+        if(!result){throw new Error('Không nhận được kết quả lưu bài học.');}
+        var profile=await window.VieGeoUserStore?.reload?.();
+        var xp=Number(profile?.xp)||0;
+        var gems=Number(profile?.gems)||0;
+        var streak=Number(profile?.streak)||0;
+        updateLocalIslandRewards(xp,gems,streak);
+        if(!mapProgressByProvince[provinceKey]){mapProgressByProvince[provinceKey]={total:new Set(),completed:new Set(),stars:new Map()};}
+        mapProgressByProvince[provinceKey].completed.add(selectedStage);
+        if(!(mapProgressByProvince[provinceKey].stars instanceof Map)){mapProgressByProvince[provinceKey].stars=new Map();}
+        mapProgressByProvince[provinceKey].stars.set(selectedStage,Math.max(Number(mapProgressByProvince[provinceKey].stars.get(selectedStage))||0,stars));
+        return {
+            stars:stars,
+            xpReward:Number(result.xp_reward)||0,
+            gemsReward:Number(result.gems_reward)||0,
+            xp:xp,
+            gems:gems,
+            streak:streak,
+            rewardSynced:true,
+            progressSynced:true
+        };
+    }catch(error){
+        logMapSupabaseError('complete_lesson.rpc',error,{province:selectedProvince,island:selectedStage});
+        throw error;
+    }
+}

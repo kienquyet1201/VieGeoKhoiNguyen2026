@@ -152,11 +152,10 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
-// Check auto-redirect for existing users (handled by the root page or loginout.js but we leave it here just in case)
-const sess = localStorage.getItem('lm_session');
-if (!sess) {
-    window.location.href = '/loginout';
-}
+// Route access is based on the Supabase session and canonical public.users profile.
+window.VieGeoUserStore?.ready?.({ refreshStreak: false }).then((profile) => {
+    if (!profile?.id) window.location.href = '/loginout';
+}).catch(() => { window.location.href = '/loginout'; });
 
 // ==========================================================================
 // QUIZ FLOW LOGIC

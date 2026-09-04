@@ -1,79 +1,55 @@
-function getRolePageSession(){
-    var raw=localStorage.getItem("lm_session");
-    if(!raw){return {};}
-    try{return JSON.parse(raw);}catch(error){return {};}
-}
+(function () {
+    'use strict';
 
-function getAllowedRolePages(session){
-    var aliases={student:"user",map:"user",cskh:"cs",support:"cs"};
-    var raw=session&&session.roles;
-    var hasExplicitRoles=Boolean(session&&Object.prototype.hasOwnProperty.call(session,"roles"));
-    var source=hasExplicitRoles?raw:(session.activeRole||session.role||"");
-    var values=[];
-    var append=function(value){
-        if(Array.isArray(value)){value.forEach(append);return;}
-        if(typeof value==="string"){
-            var trimmed=value.trim();
-            if(!trimmed){return;}
-            if((trimmed.startsWith("[")&&trimmed.endsWith("]"))||trimmed.indexOf(",")>=0){
-                try{var parsed=JSON.parse(trimmed);if(Array.isArray(parsed)){parsed.forEach(append);return;}}catch(error){}
-                trimmed.split(",").forEach(append);
-                return;
-            }
-            values.push(trimmed);
-        }
-    };
-    append(source);
-    var roles=[];
-    var index;
-    for(index=0;index<values.length;index+=1){
-        var role=aliases[String(values[index]||"").toLowerCase()]||String(values[index]||"").toLowerCase();
-        if(["user","parent","cs","admin"].indexOf(role)>=0&&roles.indexOf(role)<0){roles.push(role);}
+    var ROUTES = { user: 'student-dashboard.html', parent: 'parent.html', cs: 'cs-dashboard.html', admin: 'admin-dashboard.html' };
+
+    function getUser() {
+        return window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || null;
     }
-    return roles;
-}
 
-function changeRolePage(){
-    var role=this.value;
-    var session=getRolePageSession();
-    var routeMap={user:"student-dashboard.html",parent:"parent.html",cs:"cs-dashboard.html",admin:"admin-dashboard.html"};
-
-    if(getAllowedRolePages(session).indexOf(role)<0){
-        this.value=session.activeRole||session.role||"";
-        return;
+    function allowedRoles() {
+        var user = getUser();
+        return Array.isArray(user?.roles) ? user.roles.filter(function (role) { return Boolean(ROUTES[role]); }) : [];
     }
-    session.role=role;
-    session.activeRole=role;
-    localStorage.setItem("lm_session",JSON.stringify(session));
-    window.location.href=routeMap[role];
-}
 
-function initializeRolePageSwitcher(){
-    var selects=document.querySelectorAll("[data-role-page-select]");
-    var session=getRolePageSession();
-    var allowedRoles=getAllowedRolePages(session);
-    var currentRole=session.activeRole||session.role||allowedRoles[0];
-    var index;
-
-    [document.getElementById("roleButton"),document.getElementById("settingsRoleButton")].forEach(function(button){
-        if(button){button.hidden=allowedRoles.length<2;button.style.display=allowedRoles.length<2?"none":"";}
-    });
-
-    for(index=0;index<selects.length;index+=1){
-        var select=selects[index];
-        Array.prototype.slice.call(select.options).forEach(function(option){
-            option.hidden=allowedRoles.indexOf(option.value)<0;
-            option.disabled=allowedRoles.indexOf(option.value)<0;
-        });
-        select.value=allowedRoles.indexOf(currentRole)>=0?currentRole:(allowedRoles[0]||"");
-        select.disabled=allowedRoles.length<2;
-        if(select.closest(".role-page-switcher")){select.closest(".role-page-switcher").hidden=allowedRoles.length<2;}
-        if(select.dataset.roleSwitchBound!=="true"){
-            select.dataset.roleSwitchBound="true";
-            select.addEventListener("change",changeRolePage);
+    function changeRolePage() {
+        try {
+            var role = this.value;
+            if (!allowedRoles().includes(role)) throw new Error('ROLE_NOT_GRANTED');
+            window.VieGeoUserStore.setActiveRole(role);
+            window.location.href = ROUTES[role];
+        } catch (error) {
+            var active = window.VieGeoUserStore?.getActiveRole?.() || allowedRoles()[0] || '';
+            this.value = active;
+            window.showToast?.('Vai trò này chưa được cấp cho tài khoản của bạn.', 'warning');
         }
     }
-}
 
-document.addEventListener("DOMContentLoaded",initializeRolePageSwitcher);
-window.addEventListener("viegeo:user-hydrated",initializeRolePageSwitcher);
+    function initializeRolePageSwitcher() {
+        try {
+            var roles = allowedRoles();
+            var active = window.VieGeoUserStore?.getActiveRole?.() || roles[0] || '';
+            [document.getElementById('roleButton'), document.getElementById('settingsRoleButton')].forEach(function (button) {
+                if (button) { button.hidden = roles.length < 2; button.style.display = roles.length < 2 ? 'none' : ''; }
+            });
+            document.querySelectorAll('[data-role-page-select]').forEach(function (select) {
+                Array.from(select.options).forEach(function (option) {
+                    option.hidden = !roles.includes(option.value);
+                    option.disabled = !roles.includes(option.value);
+                });
+                select.value = roles.includes(active) ? active : (roles[0] || '');
+                select.disabled = roles.length < 2;
+                if (select.closest('.role-page-switcher')) select.closest('.role-page-switcher').hidden = roles.length < 2;
+                if (select.dataset.roleSwitchBound !== 'true') {
+                    select.dataset.roleSwitchBound = 'true';
+                    select.addEventListener('change', changeRolePage);
+                }
+            });
+        } catch (error) {
+            console.warn('[VieGeo Role] Không thể khởi tạo đổi vai trò:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeRolePageSwitcher);
+    window.addEventListener('viegeo:user-hydrated', initializeRolePageSwitcher);
+}());

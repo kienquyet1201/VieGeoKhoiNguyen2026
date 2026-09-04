@@ -56,8 +56,7 @@ function studentRolesFromUser(user){
 
 function renderStudentRoleSwitcher(user){
     var labels={user:"Học viên",parent:"Phụ huynh",cs:"Chăm sóc KH",admin:"Quản trị viên"};
-    var session=getStudentSession();
-    var requested=normalizeStudentRole(session.activeRole||session.role);
+    var requested=window.VieGeoUserStore?.getActiveRole?.()||normalizeStudentRole(user?.role);
     studentAllowedRoles=studentRolesFromUser(user);
     studentRolesHydrated=true;
 
@@ -74,15 +73,6 @@ function renderStudentRoleSwitcher(user){
     }
     if(studentRoleSwitcher){studentRoleSwitcher.hidden=studentAllowedRoles.length<2;}
 
-    session.roles=studentAllowedRoles.slice();
-    if(studentAllowedRoles.length){
-        session.role=studentRoleSelect.value;
-        session.activeRole=studentRoleSelect.value;
-    }else{
-        delete session.role;
-        delete session.activeRole;
-    }
-    localStorage.setItem("lm_session",JSON.stringify(session));
 }
 
 function applyTheme(theme){
@@ -103,20 +93,11 @@ function switchTheme(){
 }
 
 function getStudentSession(){
-    var raw=localStorage.getItem("lm_session");
-    if(!raw){
-        return {};
-    }
-    try{
-        return JSON.parse(raw);
-    }catch(error){
-        return {};
-    }
+    return window.VieGeoUserStore?.get?.()||window.VieGeoCurrentUser||{};
 }
 
 function updateStudentIdentity(user){
-    var session=getStudentSession();
-    var name=String((user&& (user.user_name||user.name||user.full_name||user.display_name)) || session.name || session.displayName || "Bạn").trim();
+    var name=String(user?.display_name||"Bạn").trim();
     var streak=Number(user&&(user.current_streak!==undefined?user.current_streak:user.streak));
     var exp=Number(user&&(user.score??user.xp));
     var gems=Number(user&&(user.gems??user.diamonds));
@@ -147,6 +128,14 @@ function updateStudentIdentity(user){
 }
 
 async function syncStudentIdentity(){
+    try{
+        var canonicalProfile=await window.VieGeoUserStore?.ready?.({refreshStreak:false});
+        if(canonicalProfile){
+            updateStudentIdentity(canonicalProfile);
+            renderStudentRoleSwitcher(canonicalProfile);
+            return;
+        }
+    }catch(canonicalError){console.warn('Không thể tải hồ sơ chuẩn:',canonicalError);}
     var client=window.supabaseClient||window.supabase||window.VieGeoSupabase&&window.VieGeoSupabase.client;
     var session=getStudentSession();
     var authenticatedUser=null;
@@ -158,10 +147,10 @@ async function syncStudentIdentity(){
             authenticatedUser=authResult&&authResult.data&&authResult.data.user;
             email=String((authenticatedUser&&authenticatedUser.email)||email).trim().toLowerCase();
         }
-        if(client&&typeof client.from==="function"&&email){
+        if(client&&typeof client.from==="function"&&authenticatedUser?.id){
             var result=await client.from("users")
                 .select("*")
-                .eq("email",email)
+                .eq("id",authenticatedUser.id)
                 .maybeSingle();
             if(result.error){throw result.error;}
             updateStudentIdentity(result.data||authenticatedUser||session);
@@ -331,6 +320,25 @@ function renderStudentLeaderboard(rows,user){
 }
 
 async function syncStudentLearningData(){
+    try{
+        var canonicalProfile=await window.VieGeoUserStore?.ready?.({refreshStreak:false});
+        var canonicalClient=getStudentClient();
+        if(canonicalProfile&&canonicalClient){
+            var canonicalResults=await Promise.all([
+                canonicalClient.from('questions').select('province,island'),
+                canonicalClient.from('lesson_completions').select('*'),
+                canonicalClient.rpc('get_leaderboard',{p_limit:500})
+            ]);
+            var completed=(canonicalResults[1].data||[]).map(function(row){
+                return Object.assign({},row,{created_at:row.completed_at,details:{island_index:Number(String(row.lesson_key||'').split('-').pop())||0,stars:row.stars}});
+            });
+            updateStudentIdentity(canonicalProfile);
+            renderStudentProgress(canonicalResults[0].data||[],completed);
+            renderWeeklyActivity(completed);
+            renderStudentLeaderboard(canonicalResults[2].data||[],canonicalProfile);
+            return;
+        }
+    }catch(canonicalError){console.warn('Không thể tải tiến độ chuẩn:',canonicalError);}
     var client=getStudentClient();
     var session=getStudentSession();
     var authenticatedUser=null;
@@ -343,10 +351,10 @@ async function syncStudentLearningData(){
             email=String(authenticatedUser?.email||email).trim().toLowerCase();
         }
         if(!email){throw new Error("Không xác định được tài khoản học viên hiện tại.");}
-        var userResult=await client.from("users").select("*").eq("email",email).maybeSingle();
+        var userResult=await client.from("users").select("*").eq("id",authenticatedUser?.id||"").maybeSingle();
         if(userResult.error){throw userResult.error;}
-        var leaderboardResult=await client.from("leaderboard").select("*").limit(500);
-        var usersResult=await client.from("users").select("*").limit(500);
+        var leaderboardResult=await client.rpc("get_leaderboard",{p_limit:500});
+        var usersResult={data:Array.isArray(leaderboardResult.data)?leaderboardResult.data:[],error:leaderboardResult.error};
         if(usersResult.error){throw usersResult.error;}
         var leaderboardRows=[];
         if(!leaderboardResult.error&&Array.isArray(leaderboardResult.data)&&leaderboardResult.data.length){
@@ -381,7 +389,6 @@ async function syncStudentLearningData(){
 }
 
 function changeStudentRole(){
-    var session=getStudentSession();
     var role=studentRoleSelect.value;
     var routeMap={
         user:"student-dashboard.html",
@@ -392,13 +399,10 @@ function changeStudentRole(){
 
     if(!studentRolesHydrated||studentAllowedRoles.indexOf(role)<0){
         showToast("Tài khoản chưa được cấp vai trò này.");
-        studentRoleSelect.value=studentAllowedRoles.indexOf(normalizeStudentRole(session.activeRole||session.role))>=0?normalizeStudentRole(session.activeRole||session.role):(studentAllowedRoles[0]||"");
+        studentRoleSelect.value=window.VieGeoUserStore?.getActiveRole?.()||studentAllowedRoles[0]||"";
         return;
     }
-
-    session.role=role;
-    session.activeRole=role;
-    localStorage.setItem("lm_session",JSON.stringify(session));
+    window.VieGeoUserStore?.setActiveRole?.(role);
     window.location.href=routeMap[role];
 }
 

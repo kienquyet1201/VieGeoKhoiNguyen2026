@@ -56,29 +56,29 @@ function presentIslandResult(stars, correctAnswers) {
     }, 220);
 }
 
-function syncLessonStreak(stars) {
+async function syncLessonStreak(stars, correctAnswers, totalQuestions) {
     try {
-        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-        const email = String(session.email || '').trim().toLowerCase();
-        if (!email || !window.VieGeoStreak?.applyForLesson) return;
-        window.VieGeoStreak.applyForLesson({
-            email,
-            stars,
-            currentStreak: Number(state.streak) || 0,
-            profile: window.VieGeoCurrentUser || session,
-            lastEligibleDate: state.lastStreakAwardDate || ''
-        }).then(result => {
-            try {
-                if (!result || result.streak === undefined) return;
-                state.streak = Math.max(0, Number(result.streak) || 0);
-                if (result.awarded) state.lastStreakAwardDate = window.VieGeoStreak.vietnamDate();
-                saveGameState(state);
-            } catch (error) {
-                console.warn('[VieGeo Lesson] Không thể đồng bộ chuỗi ngày học:', error);
-            }
-        }).catch(error => console.warn('[VieGeo Lesson] Không thể đồng bộ chuỗi ngày học:', error));
+        if (!window.VieGeoUserStore?.completeLesson) return null;
+        const result = await window.VieGeoUserStore.completeLesson({
+            lessonKey: String(activeLessonId || `lesson-${location.pathname}`),
+            province: '',
+            island: '',
+            topic: String(activeLessonTitle || 'Bài học'),
+            stars: Number(stars) || 0,
+            correctCount: Math.max(0, Number(correctAnswers) || 0),
+            totalCount: Math.max(1, Number(totalQuestions) || 1)
+        });
+        const profile = await window.VieGeoUserStore.reload();
+        if (profile) {
+            state.streak = Math.max(0, Number(profile.streak) || 0);
+            state.xp = Math.max(0, Number(profile.xp) || 0);
+            state.gems = Math.max(0, Number(profile.gems) || 0);
+            saveGameState(state);
+        }
+        return result;
     } catch (error) {
-        console.warn('[VieGeo Lesson] Không thể chuẩn bị dữ liệu chuỗi ngày học:', error);
+        console.warn('[VieGeo Lesson] Không thể ghi nhận kết quả qua RPC:', error);
+        return null;
     }
 }
 
@@ -565,8 +565,8 @@ function finishLesson() {
             </div>
         `;
         
-        state.xp += addedXu;
-        state.gems += addedXu;
+        // The legacy local Arena UI cannot grant rewards. The real-time Arena
+        // grants its verified result only through apply_arena_match_reward RPC.
         if (won) {
             state.pvpWins = (state.pvpWins || 0) + 1;
             if (typeof showToast === 'function') {
@@ -608,8 +608,6 @@ function finishLesson() {
             </div>
         `;
         
-        state.xp += activeLessonReward.xp || 15;
-        state.gems += activeLessonReward.gems || 10;
         if (activeLessonReward.booster === 'random') {
             const boostKey = ['quizFreeze', 'powerup5050', 'quizRemoveOne'][Math.floor(Math.random() * 3)];
             state.inventory[boostKey] = (state.inventory[boostKey] || 0) + 1;
@@ -642,11 +640,10 @@ function finishLesson() {
         }
         if (typeof recordStudyActivity === 'function') recordStudyActivity(state);
         saveGameState(state);
-        syncLessonStreak(earnedStars);
+        void syncLessonStreak(earnedStars, correctAnswers, currentQuestions.length);
         presentIslandResult(earnedStars, correctAnswers);
-        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
         if (typeof updateLearningProfile === 'function') {
-            updateLearningProfile(session.email || '', {
+            updateLearningProfile((window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {}).email || '', {
                 lessonId: activeLessonId,
                 lessonTitle: activeLessonTitle,
                 questionMetrics: lessonTelemetry

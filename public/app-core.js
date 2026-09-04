@@ -84,14 +84,11 @@ function authorizedRoles(source) {
 }
 
 function persistSessionRoles(roles, activeRole) {
-    const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-    const safeRoles = authorizedRoles({ roles });
+    const profile = window.VieGeoUserStore?.get?.() || sessionUser;
+    const safeRoles = authorizedRoles({ roles: profile?.roles || roles });
     const role = safeRoles.includes(normalizeRole(activeRole)) ? normalizeRole(activeRole) : safeRoles[0];
-    session.roles = safeRoles;
-    session.role = role;
-    session.activeRole = role;
-    localStorage.setItem('lm_session', JSON.stringify(session));
-    return session;
+    window.VieGeoUserStore?.setActiveRole?.(role);
+    return { ...profile, roles: safeRoles, role, activeRole: role };
 }
 
 function renderRoleSwitcher(source) {
@@ -115,12 +112,12 @@ function renderRoleSwitcher(source) {
 }
 
 // Canonical role switcher for every dashboard route.
-window.switchRoleClientOnly = function switchRoleClientOnly(role) {
+window.switchRoleClientOnly = async function switchRoleClientOnly(role) {
     try {
         if (!role) return false;
         const normalizedRole = normalizeRole(role);
-        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-        const roles = authorizedRoles(session);
+        const profile = await window.VieGeoUserStore?.ready?.({ refreshStreak: false });
+        const roles = authorizedRoles(profile);
         if (!roles.includes(normalizedRole) || !ROLE_META[normalizedRole]) {
             window.VieGeoUI.warning('Bạn không có quyền chuyển sang vai trò này.');
             return false;
@@ -134,21 +131,11 @@ window.switchRoleClientOnly = function switchRoleClientOnly(role) {
     return false;
 };
 
-const sessionData = localStorage.getItem('lm_session');
-if (!sessionData) {
-    if (window.location.search) {
-        localStorage.setItem('pending_action', window.location.search);
-    }
-    window.location.href = '/loginout';
-}
-let sessionUser = {};
-try {
-    sessionUser = sessionData ? JSON.parse(sessionData) : {};
-} catch (error) {
-    console.error('Dữ liệu phiên đăng nhập không hợp lệ:', error);
-    localStorage.removeItem('lm_session');
-    window.location.replace('/loginout');
-}
+let sessionUser = window.VieGeoUserStore?.get?.() || {};
+window.VieGeoUserStore?.ready?.({ refreshStreak: false }).then((profile) => {
+    sessionUser = profile || {};
+    renderRoleSwitcher(sessionUser);
+}).catch((error) => console.warn('[VieGeo] Không thể tải hồ sơ chuẩn:', error));
 
 const legacyGetGameState = getGameState;
 getGameState = function getHeartAwareGameState() {
@@ -826,15 +813,13 @@ async function renderLeaderboard() {
             if (!supabase || typeof supabase.from !== 'function') {
                 throw new Error('Supabase client chưa sẵn sàng.');
             }
-            const { data, error } = await supabase.from('users').select('user_name, score, current_streak').order('score', { ascending: false });
-            if (!error) return Array.isArray(data) ? data : [];
-            console.warn('[VieGeo Leaderboard] Query users chuẩn chưa sẵn sàng:', error.message || error);
-            const fallback = await supabase.from('users').select('name,full_name,xp,current_streak').order('xp', { ascending: false });
-            if (fallback.error) throw fallback.error;
-            return (Array.isArray(fallback.data) ? fallback.data : []).map(row => ({
-                user_name: row.name || row.full_name || 'Học viên',
+            const { data, error } = await supabase.rpc('get_leaderboard', { p_limit: 10 });
+            if (error) throw error;
+            return (Array.isArray(data) ? data : []).map(row => ({
+                id: row.id,
+                user_name: row.display_name || 'Học viên',
                 score: Number(row.xp) || 0,
-                current_streak: Number(row.current_streak) || 0
+                current_streak: Number(row.streak) || 0
             }));
         };
 
@@ -1497,20 +1482,16 @@ if (btnSaveProfileElem) {
                 updateData.passwordUpdatedAt = new Date().toISOString();
             }
 
-            await db.collection('users').doc(sessionUser.email).update(updateData);
-            
-            sessionUser.name = newName;
-            sessionUser.phone = newPhone;
-            sessionUser.gender = newGender;
+            const updatedProfile = await window.VieGeoUserStore?.updateProfile?.({
+                displayName: newName,
+                age: window.VieGeoUserStore?.get?.()?.age ?? null,
+                schoolGrade: window.VieGeoUserStore?.get?.()?.school_grade ?? null,
+                gender: newGender,
+                phone: newPhone
+            });
+            if (!updatedProfile) throw new Error('Không thể cập nhật hồ sơ chuẩn.');
+            sessionUser = updatedProfile;
             gameState.gender = newGender;
-            localStorage.setItem('lm_session', JSON.stringify(sessionUser));
-            
-            if (gameState.avatar) {
-                await db.collection('users').doc(sessionUser.email).update({
-                    avatar: gameState.avatar,
-                    avatarIsBase64: gameState.avatarIsBase64
-                });
-            }
 
             showToast("Đã lưu thông tin!", true);
             document.getElementById('editOldPass').value = '';

@@ -220,6 +220,14 @@ function getGameState() {
             .map(([lessonId, result]) => [migrateLegacyLearningNodeId(lessonId), result]));
     }
 
+    // Critical progression never comes from the persisted browser game state.
+    // It is populated when the canonical Supabase profile is hydrated.
+    const canonicalUser = window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser;
+    parsed.xp = Math.max(0, Number(canonicalUser?.xp) || 0);
+    parsed.gems = Math.max(0, Number(canonicalUser?.gems) || 0);
+    parsed.streak = Math.max(0, Number(canonicalUser?.streak) || 0);
+    parsed.accountStatus = canonicalUser?.is_premium === true ? 'premium' : 'free';
+
     refreshStreakForToday(parsed);
 
     // Preserve recorded PvP progress. Earlier versions reset it here, which
@@ -319,54 +327,19 @@ function buildPersistedGameState(state) {
 function saveGameState(state) {
     if (!state || typeof state !== 'object') return Promise.resolve(false);
     const persistedState = buildPersistedGameState(state);
+    const canonicalUser = window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser;
+    // XP, gems, streak and Premium are never persisted from browser game state.
+    // They are read back from the authoritative public.users profile.
+    if (canonicalUser) {
+        persistedState.xp = Math.max(0, Number(canonicalUser.xp) || 0);
+        persistedState.gems = Math.max(0, Number(canonicalUser.gems) || 0);
+        persistedState.streak = Math.max(0, Number(canonicalUser.streak) || 0);
+        persistedState.accountStatus = canonicalUser.is_premium === true ? 'premium' : 'free';
+    }
     Object.assign(state, persistedState);
     if (window.gameState && window.gameState !== state) Object.assign(window.gameState, persistedState);
     localStorage.setItem('VieGeo_state', JSON.stringify(persistedState));
-    
-    // Đồng bộ lên Supabase/localStorage (fire and forget)
-    const sessionData = localStorage.getItem('lm_session');
-    if (sessionData && typeof db !== 'undefined') {
-        const sessionUser = JSON.parse(sessionData);
-        return db.collection('users').doc(sessionUser.email).set({
-            xp: state.xp,
-            hearts: state.hearts,
-            streak: state.streak,
-            currentStreak: state.streak,
-            gems: state.gems,
-            pvpWins: state.pvpWins,
-            perfectLessons: state.perfectLessons,
-            chestsOpened: state.chestsOpened,
-            achievementPoints: state.achievementPoints,
-            unlockedAchievements: persistedState.unlockedAchievements,
-            avatar: state.avatar,
-            avatarIsBase64: state.avatarIsBase64,
-            accountStatus: state.accountStatus,
-            lastHeartUpdate: state.lastHeartUpdate,
-            lastHeartRegenTime: state.lastHeartRegenTime,
-            lastLogin: state.lastLogin,
-            lastLoginDate: state.lastLoginDate || state.lastLogin,
-            lastStudyDate: state.lastStudyDate,
-            lastStreakAwardDate: state.lastStreakAwardDate || state.lastStudyDate || null,
-            grade: null,
-            selectedGrade: null,
-            selectedDifficulty: persistedState.selectedDifficulty,
-            gender: state.gender || null,
-            learningProfile: state.learningProfile || {},
-            telemetry: state.telemetry || {},
-            gameState: persistedState,
-            completedNodes: persistedState.completedNodes,
-            studyHistory: persistedState.studyHistory,
-            currentNode: persistedState.currentNode,
-            lessonResults: persistedState.lessonResults,
-            inventory: persistedState.inventory,
-            questsProgress: persistedState.questsProgress,
-            gameStateUpdatedAt: new Date().toISOString()
-        }, { merge: true }).then(() => true).catch(err => {
-            console.error("Lỗi đồng bộ dữ liệu:", err);
-            return false;
-        });
-    }
-    return Promise.resolve(false);
+    return Promise.resolve(true);
 }
 
 function refreshStreakForToday(state) {
@@ -375,27 +348,20 @@ function refreshStreakForToday(state) {
 }
 
 function recordStudyActivity(state) {
-    const now = new Date();
-    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    const previousKey = state.lastStreakAwardDate || state.lastStudyDate;
-
-    // A second completed lesson on the same calendar day receives no extra streak.
-    if (previousKey === todayKey) return state;
-
-    const previousStreak = Math.max(0, Number(state.streak) || 0);
-    if (!previousKey) {
-        state.streak = Math.max(1, previousStreak);
-    } else {
-        const previousDate = new Date(`${previousKey}T00:00:00`);
-        const todayDate = new Date(`${todayKey}T00:00:00`);
-        const daysElapsed = Math.round((todayDate - previousDate) / 86400000);
-        state.streak = daysElapsed === 1 ? Math.max(1, previousStreak + 1) : 1;
-    }
-
-    state.lastStudyDate = todayKey;
-    state.lastStreakAwardDate = todayKey;
+    // complete_lesson RPC owns this mutation. Legacy callers retain local lesson history only.
     return state;
 }
+
+window.addEventListener('viegeo:user-hydrated', function (event) {
+    const profile = event?.detail;
+    if (!profile || !window.gameState) return;
+    window.gameState.xp = Math.max(0, Number(profile.xp) || 0);
+    window.gameState.gems = Math.max(0, Number(profile.gems) || 0);
+    window.gameState.streak = Math.max(0, Number(profile.streak) || 0);
+    window.gameState.accountStatus = profile.is_premium === true ? 'premium' : 'free';
+    saveGameState(window.gameState);
+    window.dispatchEvent(new CustomEvent('viegeo:state-hydrated', { detail: window.gameState }));
+});
 
 // Immutable attempt history feeds the parent dashboard. An entry is recorded
 // whenever an island is completed, including a repeat attempt of the same node.

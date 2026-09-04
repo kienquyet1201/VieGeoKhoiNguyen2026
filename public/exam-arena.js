@@ -322,12 +322,8 @@
     }
 
     function readUserId() {
-        try {
-            const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-            return session.email || session.uid || session.userId || 'guest';
-        } catch (error) {
-            return 'guest';
-        }
+        const profile = window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {};
+        return profile.id || profile.email || 'guest';
     }
 
     async function submitExam(autoSubmitted) {

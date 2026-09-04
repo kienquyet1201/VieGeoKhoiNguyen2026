@@ -1,20 +1,6 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "functions": {
-    "api/public-config.js": {
-      "maxDuration": 10
-    },
-    "api/support-ai.js": {
-      "maxDuration": 30
-    },
-    "api/admin-session.js": {
-      "maxDuration": 10
-    },
-    "api/premium-learning-ai.js": {
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     { "source": "/cs", "destination": "/cs-dashboard.html" }
   ]

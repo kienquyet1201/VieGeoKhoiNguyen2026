@@ -439,14 +439,7 @@ function islandQuizCorrectAnswerIndex(question) {
 }
 
 function isPremiumIslandLearner() {
-    const playerState = window.gameState || state || {};
-    if (String(playerState.accountStatus || '').trim().toLowerCase() === 'premium') return true;
-    try {
-        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-        return String(session.accountStatus || '').trim().toLowerCase() === 'premium';
-    } catch (error) {
-        return false;
-    }
+    return window.VieGeoUserStore?.get?.()?.is_premium === true || window.VieGeoCurrentUser?.is_premium === true;
 }
 
 async function endIslandQuizForGameOver() {
@@ -1202,11 +1195,7 @@ const surveyInterestInputs = [...document.querySelectorAll('input[name="surveyIn
 const surveySubmitButton = document.getElementById('btnSubmitSurvey');
 
 function getSurveySession() {
-    try {
-        return JSON.parse(localStorage.getItem('lm_session') || '{}');
-    } catch (error) {
-        return {};
-    }
+    return window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {};
 }
 
 function surveyCompletionKeys(email) {

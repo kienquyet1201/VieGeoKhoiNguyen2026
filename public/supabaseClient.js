@@ -548,3 +548,244 @@
 
     window.VieGeoSupabase = { client, db: window.db };
 }());
+
+/* Blocks legacy compatibility calls from mutating the canonical users table.
+ * Existing screens may still read a profile through db.collection('users'),
+ * but every write must use a named Supabase RPC. */
+(function () {
+    'use strict';
+    try {
+        if (!window.db?.collection || window.db.__viegeoCanonicalUserGuard) return;
+        var originalCollection = window.db.collection.bind(window.db);
+        window.db.collection = function (name) {
+            var collection = originalCollection(name);
+            if (String(name || '').toLowerCase() !== 'users') return collection;
+            var originalDoc = collection.doc?.bind(collection);
+            collection.doc = function (id) {
+                var reference = originalDoc(id);
+                reference.get = async function () {
+                    var profile = await window.VieGeoUserStore?.ready?.({ refreshStreak: false });
+                    var requested = String(id || '').trim().toLowerCase();
+                    if (!profile || (requested && requested !== String(profile.id).toLowerCase() && requested !== String(profile.email).toLowerCase())) {
+                        return { id: String(id || ''), exists: false, data: function () { return {}; } };
+                    }
+                    var legacyShape = Object.assign({}, profile, {
+                        user_name: profile.display_name, name: profile.display_name, full_name: profile.display_name,
+                        current_streak: profile.streak, score: profile.xp
+                    });
+                    return { id: profile.id, exists: true, data: function () { return legacyShape; } };
+                };
+                reference.set = async function () {
+                    console.warn('[VieGeo] Chặn ghi trực tiếp public.users; hãy dùng Supabase RPC.');
+                    return null;
+                };
+                reference.update = reference.set;
+                reference.delete = reference.set;
+                reference.onSnapshot = function (next) {
+                    reference.get().then(next).catch(function (error) { console.warn('[VieGeo] Không thể đọc hồ sơ chuẩn:', error); });
+                    return function () {};
+                };
+                return reference;
+            };
+            collection.add = async function () {
+                console.warn('[VieGeo] Chặn tạo public.users trực tiếp; hồ sơ được tạo bởi trigger Auth.');
+                return null;
+            };
+            return collection;
+        };
+        window.db.__viegeoCanonicalUserGuard = true;
+    } catch (error) {
+        console.warn('[VieGeo] Không thể gắn bảo vệ users legacy:', error);
+    }
+}());
+
+/*
+ * Phase 1 canonical user store.
+ * Browser storage is deliberately not used for role, Premium, streak, XP or gems.
+ * Supabase Auth identifies the caller; public.users is the only profile source.
+ */
+(function () {
+    'use strict';
+
+    var currentUser = null;
+    var readyPromise = null;
+    var realtimeChannel = null;
+
+    function getClient() {
+        return window.supabaseClient || window.supabase || window.VieGeoSupabase?.client || null;
+    }
+
+    function normaliseRoles(value, primaryRole) {
+        var allowed = ['user', 'parent', 'cs', 'admin'];
+        var aliases = { student: 'user', cskh: 'cs', support: 'cs' };
+        var values = Array.isArray(value) ? value : String(value || '').split(',');
+        if (primaryRole) values.push(primaryRole);
+        var normalisedValues = values.map(function (role) {
+            var normalised = String(role || '').trim().toLowerCase();
+            return aliases[normalised] || normalised;
+        }).filter(function (role) { return allowed.includes(role); });
+        var roles = Array.from(new Set(normalisedValues));
+        return roles.length ? roles : ['user'];
+    }
+
+    function normaliseProfile(profile) {
+        if (!profile || typeof profile !== 'object') return null;
+        var roles = normaliseRoles(profile.roles, profile.role);
+        return Object.freeze({
+            id: String(profile.id || ''),
+            email: String(profile.email || '').trim().toLowerCase(),
+            display_name: String(profile.display_name || profile.user_name || profile.name || 'Người chơi'),
+            role: roles.includes(String(profile.role || '').toLowerCase()) ? String(profile.role).toLowerCase() : roles[0],
+            roles: roles,
+            is_premium: profile.is_premium === true,
+            streak: Math.max(0, Number(profile.streak) || 0),
+            xp: Math.max(0, Number(profile.xp) || 0),
+            gems: Math.max(0, Number(profile.gems) || 0),
+            age: profile.age === null || profile.age === undefined ? null : Number(profile.age),
+            school_grade: profile.school_grade === null || profile.school_grade === undefined ? null : Number(profile.school_grade),
+            gender: profile.gender || '',
+            phone: profile.phone || '',
+            textbook_curriculum: profile.textbook_curriculum || 'Chương trình GDPT 2018',
+            updated_at: profile.updated_at || ''
+        });
+    }
+
+    function emit(profile) {
+        currentUser = normaliseProfile(profile);
+        window.VieGeoCurrentUser = currentUser;
+        window.dispatchEvent(new CustomEvent('viegeo:user-hydrated', { detail: currentUser }));
+        return currentUser;
+    }
+
+    function subscribe(client, userId) {
+        try {
+            if (realtimeChannel) client.removeChannel(realtimeChannel);
+            realtimeChannel = client.channel('viegeo-user-' + userId)
+                .on('postgres_changes', {
+                    event: '*', schema: 'public', table: 'users', filter: 'id=eq.' + userId
+                }, function (payload) {
+                    if (payload && payload.new) emit(payload.new);
+                })
+                .subscribe();
+        } catch (error) {
+            console.warn('[VieGeo UserStore] Không thể đăng ký đồng bộ hồ sơ:', error);
+        }
+    }
+
+    async function load(options) {
+        try {
+            var client = getClient();
+            if (!client || !client.auth || !client.from) throw new Error('SUPABASE_CLIENT_UNAVAILABLE');
+            var sessionResult = await client.auth.getSession();
+            var session = sessionResult?.data?.session;
+            if (!session?.access_token || !session?.user?.id) {
+                currentUser = null;
+                window.VieGeoCurrentUser = null;
+                return null;
+            }
+            var ensure = await client.rpc('ensure_own_user_profile');
+            if (ensure.error) throw ensure.error;
+            var profileResult = await client.from('users').select('*').eq('id', session.user.id).single();
+            if (profileResult.error) throw profileResult.error;
+            var profile = emit(profileResult.data);
+            subscribe(client, session.user.id);
+            if (options?.refreshStreak !== false) {
+                var streakResult = await client.rpc('refresh_own_streak');
+                if (!streakResult.error && streakResult.data) profile = emit(streakResult.data);
+            }
+            return profile;
+        } catch (error) {
+            console.error('[VieGeo UserStore] Không thể tải hồ sơ chuẩn:', error?.message || error);
+            throw error;
+        }
+    }
+
+    function ready(options) {
+        if (!readyPromise || options?.force === true || options?.refreshStreak === true) readyPromise = load(options || {});
+        return readyPromise;
+    }
+
+    function getActiveRole() {
+        try {
+            if (!currentUser) return '';
+            var requested = String(sessionStorage.getItem('viegeo_active_role') || '').trim().toLowerCase();
+            return currentUser.roles.includes(requested) ? requested : currentUser.role;
+        } catch (_) {
+            return currentUser?.role || '';
+        }
+    }
+
+    function setActiveRole(role) {
+        if (!currentUser || !currentUser.roles.includes(role)) throw new Error('ROLE_NOT_GRANTED');
+        sessionStorage.setItem('viegeo_active_role', role);
+        window.dispatchEvent(new CustomEvent('viegeo:role-changed', { detail: { role: role, user: currentUser } }));
+        return role;
+    }
+
+    async function completeLesson(payload) {
+        try {
+            var client = getClient();
+            if (!client) throw new Error('SUPABASE_CLIENT_UNAVAILABLE');
+            var result = await client.rpc('complete_lesson', {
+                p_lesson_key: String(payload?.lessonKey || ''),
+                p_province: String(payload?.province || ''),
+                p_island: String(payload?.island || ''),
+                p_topic: String(payload?.topic || ''),
+                p_stars: Math.max(0, Math.min(3, Number(payload?.stars) || 0)),
+                p_correct_count: Math.max(0, Number(payload?.correctCount) || 0),
+                p_total_count: Math.max(1, Number(payload?.totalCount) || 1)
+            });
+            if (result.error) throw result.error;
+            var row = Array.isArray(result.data) ? result.data[0] : result.data;
+            await load({ refreshStreak: false });
+            return row;
+        } catch (error) {
+            console.error('[VieGeo UserStore] Không thể lưu kết quả bài học:', error?.message || error);
+            throw error;
+        }
+    }
+
+    async function updateProfile(payload) {
+        try {
+            var client = getClient();
+            if (!client) throw new Error('SUPABASE_CLIENT_UNAVAILABLE');
+            var result = await client.rpc('update_own_profile', {
+                p_display_name: String(payload?.displayName || '').trim(),
+                p_age: payload?.age === '' || payload?.age === null ? null : Number(payload?.age),
+                p_school_grade: payload?.schoolGrade === '' || payload?.schoolGrade === null ? null : Number(payload?.schoolGrade),
+                p_gender: String(payload?.gender || ''),
+                p_phone: String(payload?.phone || '')
+            });
+            if (result.error) throw result.error;
+            return emit(result.data);
+        } catch (error) {
+            console.error('[VieGeo UserStore] Không thể cập nhật hồ sơ:', error?.message || error);
+            throw error;
+        }
+    }
+
+    async function signOut() {
+        try {
+            var client = getClient();
+            if (realtimeChannel && client?.removeChannel) await client.removeChannel(realtimeChannel);
+            realtimeChannel = null;
+            currentUser = null;
+            window.VieGeoCurrentUser = null;
+            sessionStorage.removeItem('viegeo_active_role');
+            if (client?.auth?.signOut) await client.auth.signOut();
+        } catch (error) {
+            console.warn('[VieGeo UserStore] Không thể kết thúc phiên:', error);
+        }
+    }
+
+    window.VieGeoUserStore = Object.freeze({
+        ready: ready,
+        reload: function () { return ready({ force: true }); },
+        get: function () { return currentUser; },
+        getActiveRole: getActiveRole,
+        setActiveRole: setActiveRole,
+        completeLesson: completeLesson,
+        updateProfile: updateProfile,
+        signOut: signOut
+    });
+}());

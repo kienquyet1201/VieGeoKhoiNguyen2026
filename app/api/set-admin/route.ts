@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { upsertRows } from '../../lib/supabase-rest';
+import { selectRows, upsertRows } from '../../lib/supabase-rest';
 
 export const runtime = 'nodejs';
 
-const ADMIN_EMAIL = 'kienquyet1201@gmail.com';
+const ADMIN_EMAILS = ['kienquyet1201@gmail.com', 'admin@viegeo.local'];
 
 export async function POST(request: NextRequest) {
   const expectedSecret = process.env.SET_ADMIN_SECRET;
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Không được phép.' }, { status: 401 });
   }
 
-  let requestedEmail = ADMIN_EMAIL;
+  let requestedEmail = ADMIN_EMAILS[0];
   try {
     const body = await request.json();
     if (body?.email) requestedEmail = String(body.email).trim().toLowerCase();
@@ -20,21 +20,25 @@ export async function POST(request: NextRequest) {
     // Safe default: only the approved administrator account.
   }
 
-  if (requestedEmail !== ADMIN_EMAIL) {
+  if (!ADMIN_EMAILS.includes(requestedEmail)) {
     return NextResponse.json({ error: 'API này chỉ cấp quyền cho tài khoản quản trị đã định.' }, { status: 403 });
   }
 
   try {
+    const profiles = await selectRows<{ id: string }>('users', `select=id&email=eq.${encodeURIComponent(requestedEmail)}&limit=1`, true);
+    if (!profiles[0]?.id) {
+      return NextResponse.json({ error: 'Tài khoản này chưa tồn tại trong Supabase Auth.' }, { status: 404 });
+    }
     await upsertRows('users', [{
-      email: ADMIN_EMAIL,
+      id: profiles[0].id,
+      email: requestedEmail,
       role: 'admin',
       roles: ['admin', 'cs', 'parent', 'user'],
-      active_role: 'admin',
-      account_status: 'premium',
+      is_premium: true,
       updated_at: new Date().toISOString(),
-    }], 'email', true);
+    }], 'id', true);
 
-    return NextResponse.json({ ok: true, email: ADMIN_EMAIL, roles: ['admin', 'cs', 'parent', 'user'] });
+    return NextResponse.json({ ok: true, email: requestedEmail, roles: ['admin', 'cs', 'parent', 'user'] });
   } catch (error) {
     console.error('Không thể cấp quyền quản trị qua Supabase:', error);
     return NextResponse.json({ error: 'Không thể cấp quyền. Kiểm tra Supabase key hoặc bảng users.' }, { status: 500 });

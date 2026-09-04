@@ -139,16 +139,7 @@
 
     function isPremiumAccount(user) {
         try {
-            const source = user || {};
-            const status = String(source.account_status ?? source.accountStatus ?? '').trim().toLowerCase();
-            const rawRoles = Array.isArray(source.roles)
-                ? source.roles
-                : String(source.roles || source.role || source.active_role || '').split(',');
-            const hasPremiumRole = rawRoles.some(role => String(role || '').trim().toLowerCase() === 'premium');
-            return ['premium', 'active', 'approved'].includes(status)
-                || source.is_premium === true
-                || source.isPremium === true
-                || hasPremiumRole;
+            return user?.is_premium === true;
         } catch (error) {
             return false;
         }
@@ -159,129 +150,23 @@
     });
 
     async function reconcilePremiumAccount(client, user, email) {
-        const source = user || {};
-        const status = String(source.account_status ?? source.accountStatus ?? '').trim().toLowerCase();
-        if (['premium', 'active', 'approved'].includes(status)) return source;
-
-        const rawRoles = Array.isArray(source.roles) ? source.roles : [source.role, source.active_role];
-        let shouldActivate = source.is_premium === true
-            || source.isPremium === true
-            || rawRoles.some(role => String(role || '').trim().toLowerCase() === 'premium');
-        if (!shouldActivate) {
-            let request = await client
-                .from('premium_requests')
-                .select('id,status')
-                .eq('user_email', email)
-                .eq('status', 'approved')
-                .order('created_at', { ascending: false })
-                .limit(1);
-            if ((!Array.isArray(request.data) || !request.data.length) && !request.error) {
-                request = await client
-                    .from('premium_requests')
-                    .select('id,status')
-                    .eq('email', email)
-                    .eq('status', 'approved')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-            }
-            shouldActivate = !request.error && Array.isArray(request.data) && request.data.length > 0;
-        }
-        if (!shouldActivate) return source;
-
-        if (!Object.prototype.hasOwnProperty.call(source, 'account_status')) {
-            return { ...source, account_status: 'premium', accountStatus: 'premium' };
-        }
-
-        let update = await client
-            .from('users')
-            .update({ account_status: 'premium', updated_at: new Date().toISOString() })
-            .eq('email', email)
-            .select('*')
-            .maybeSingle();
-        if (update.error && /updated_at|column|schema/i.test(String(update.error.message || ''))) {
-            update = await client.from('users').update({ account_status: 'premium' }).eq('email', email).select('*').maybeSingle();
-        }
-        if (update.error) {
-            console.warn('[VieGeo Premium] Không thể đồng bộ account_status:', update.error.message || update.error);
-            return { ...source, account_status: 'premium', accountStatus: 'premium' };
-        }
-        return { ...source, ...(update.data || {}), account_status: 'premium', accountStatus: 'premium' };
+        // Premium is an administrator-controlled public.users field. The UI must never infer or write it.
+        return user || {};
     }
 
     async function getCurrentUser() {
-        const session = readSession();
-        let email = String(session.email || session.user?.email || '').trim().toLowerCase();
         try {
-            const client = getClient();
-            if (client?.auth?.getUser) {
-                const result = await client.auth.getUser();
-                email = String(result?.data?.user?.email || email).trim().toLowerCase();
-            }
-            if (email && client) {
-                let result = await client.from('users').select('*').eq('email', email).maybeSingle();
-                if (result.error && /email|column|schema/i.test(String(result.error.message || ''))) {
-                    const compatible = await client.from('users').select('*');
-                    if (!compatible.error) {
-                        result = {
-                            data: (compatible.data || []).find(row => String(row.email || row.user_email || '').trim().toLowerCase() === email) || null,
-                            error: null
-                        };
-                    }
-                }
-                if (!result.error && result.data) {
-                    const synchronizedUser = await reconcilePremiumAccount(client, result.data, email);
-                    cacheRows('users', [synchronizedUser]);
-                    return synchronizedUser;
-                }
-                if (result.error) console.warn('[VieGeo UI] Không tải được người dùng hiện tại:', result.error.message);
-            }
+            const user = await window.VieGeoUserStore?.ready?.({ refreshStreak: false });
+            if (user) return user;
         } catch (error) {
-            console.warn('[VieGeo UI] Dùng phiên cục bộ cho người dùng hiện tại:', error);
+            console.warn('[VieGeo UI] Không thể tải hồ sơ chuẩn:', error);
         }
-        const cached = readCache('users').find(row => String(row.email || row.user_email || '').toLowerCase() === email);
-        return cached || { ...session, email, roles: session.roles || [session.role || 'user'] };
+        return null;
     }
 
     function writeLocalUser(user) {
-        try {
-            const state = { ...readState() };
-            const remoteState = user.game_state && typeof user.game_state === 'object'
-                ? user.game_state
-                : (user.gameState && typeof user.gameState === 'object' ? user.gameState : {});
-            if (Array.isArray(remoteState.completedNodes)) state.completedNodes = [...new Set(remoteState.completedNodes.map(String))];
-            if (Array.isArray(remoteState.completedLessons)) state.completedLessons = [...new Set(remoteState.completedLessons.map(String))];
-            if (remoteState.currentNode) state.currentNode = remoteState.currentNode;
-            if (remoteState.totalLessons !== undefined) state.totalLessons = Number(remoteState.totalLessons) || 0;
-            if (remoteState.courseProgress && typeof remoteState.courseProgress === 'object') state.courseProgress = remoteState.courseProgress;
-            state.hearts = Number(user.hearts ?? state.hearts ?? 3);
-            state.streak = Number(user.current_streak ?? user.streak ?? state.streak ?? 0);
-            state.gems = Number(user.gems ?? state.gems ?? 500);
-            state.xp = Number(user.xp ?? user.exp ?? state.xp ?? 0);
-            state.accountStatus = isPremiumAccount(user) ? 'premium' : 'free';
-            localStorage.setItem('VieGeo_state', JSON.stringify(state));
-
-            const session = { ...readSession(), email: user.email || user.user_email || readSession().email };
-            const sessionRoleValue = session.activeRole || session.role;
-            const sessionRole = sessionRoleValue ? roleList(sessionRoleValue, 'user')[0] : '';
-            const hasExplicitRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
-            const remoteRoles = roleList(hasExplicitRoles ? user.roles : (user.active_role || user.role));
-            const activeRole = remoteRoles.includes(sessionRole) ? sessionRole : (remoteRoles[0] || '');
-            session.roles = [...new Set(remoteRoles)];
-            if (activeRole) {
-                session.role = activeRole;
-                session.activeRole = activeRole;
-            } else {
-                delete session.role;
-                delete session.activeRole;
-            }
-            session.name = user.name || user.full_name || session.name || '';
-            session.accountStatus = isPremiumAccount(user) ? 'premium' : 'free';
-            session.isPremium = isPremiumAccount(user);
-            localStorage.setItem('lm_session', JSON.stringify(session));
-            window.dispatchEvent(new CustomEvent('viegeo:user-hydrated', { detail: session }));
-        } catch (error) {
-            console.warn('[VieGeo UI] Không thể đồng bộ phiên cục bộ:', error);
-        }
+        // Deliberately retained as a no-op for legacy callers: critical profile state lives in public.users only.
+        return user || null;
     }
 
     function setText(id, value) {
@@ -295,21 +180,17 @@
 
     function hydrateTopbar(user) {
         try {
-            const state = readState();
             const premium = isPremiumAccount(user);
-            setText('sharedHeart', premium ? '∞' : String(user.hearts ?? state.hearts ?? 3));
-            setText('sharedStreak', String(user.current_streak ?? user.streak ?? state.streak ?? 0));
-            setText('sharedGem', String(user.gems ?? state.gems ?? 500));
-            setText('sharedXp', `${Number(user.xp ?? user.exp ?? state.xp ?? 0)} XP`);
+            setText('sharedHeart', premium ? '∞' : String(user.hearts ?? 3));
+            setText('sharedStreak', String(user.streak ?? 0));
+            setText('sharedGem', String(user.gems ?? 0));
+            setText('sharedXp', `${Number(user.xp ?? 0)} XP`);
 
             const select = document.getElementById('sharedRole');
             if (!select) return;
             const labels = { user: 'Học sinh', parent: 'Phụ huynh', cs: 'CSKH', admin: 'Quản trị viên' };
-            const session = readSession();
-            const hasExplicitRoles = Object.prototype.hasOwnProperty.call(user || {}, 'roles');
-            const roles = roleList(hasExplicitRoles ? user.roles : (user.active_role || user.role));
-            const requested = roleList(session.activeRole || session.role || user.active_role || user.role)[0] || '';
-            const active = roles.includes(requested) ? requested : (roles[0] || '');
+            const roles = roleList(user.roles, user.role);
+            const active = window.VieGeoUserStore?.getActiveRole?.() || user.role || roles[0] || '';
             select.replaceChildren();
             roles.forEach(role => {
                 const option = document.createElement('option');
@@ -329,11 +210,11 @@
     function hydrateProfile(user) {
         try {
             const state = readState();
-            const xp = Number(user.xp ?? user.exp ?? state.xp ?? 0);
+            const xp = Number(user.xp ?? 0);
             const completed = Array.isArray(state.completedNodes) ? state.completedNodes.length : Number(state.completedLessons || 0);
-            setText('dispName', user.name || user.full_name || 'Người chơi');
+            setText('dispName', user.display_name || 'Người chơi');
             setText('dispEmail', user.email || '');
-            setText('profStreak', String(user.current_streak ?? user.streak ?? state.streak ?? 0));
+            setText('profStreak', String(user.streak ?? 0));
             setText('profXp', String(xp));
             setText('profStyle', xp >= 500 ? 'Học tập bền vững' : (xp > 0 ? 'Đang khám phá' : 'Chưa có dữ liệu'));
             const premium = isPremiumAccount(user);
@@ -343,7 +224,7 @@
             const name = document.getElementById('profName');
             const phone = document.getElementById('profPhone');
             const gender = document.getElementById('profGender');
-            if (name && !name.value) name.value = user.name || user.full_name || '';
+            if (name && !name.value) name.value = user.display_name || '';
             if (phone && !phone.value) phone.value = user.phone || '';
             if (gender && user.gender) gender.value = user.gender;
             const achievementValue = document.querySelector('.achievement-card strong');

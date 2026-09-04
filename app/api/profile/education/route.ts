@@ -23,12 +23,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     const rows = await upsertRows('users', [{
+      id: user.id,
       email: user.email,
       age,
       school_grade: schoolGrade,
       textbook_curriculum: 'Chương trình GDPT 2018',
       updated_at: new Date().toISOString(),
-    }], 'email', true);
+    }], 'id', true);
 
     return NextResponse.json({ ok: true, profile: rows[0] || { email: user.email, age, school_grade: schoolGrade } });
   } catch (error) {

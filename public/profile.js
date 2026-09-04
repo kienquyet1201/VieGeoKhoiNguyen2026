@@ -183,9 +183,9 @@ document.addEventListener('keydown', event => {
     if (event.key === 'Escape') closeAchievementModal();
 });
 
-// 1. Kiểm tra session
-const sessionData = localStorage.getItem('lm_session');
-const sessionUser = sessionData ? JSON.parse(sessionData) : {};
+// 1. Hồ sơ chuẩn luôn đến từ public.users qua VieGeoUserStore.
+let sessionUser = window.VieGeoUserStore?.get?.() || window.VieGeoCurrentUser || {};
+window.addEventListener('viegeo:user-hydrated', (event) => { sessionUser = event.detail || {}; });
 
 // Load Game State
 function getGameState() {
@@ -256,60 +256,21 @@ async function fetchLatestPremiumRequest(client, email) {
 }
 
 async function reconcileApprovedPremium(client, currentUser, latestRequest, email) {
-    const accountStatus = String(currentUser?.account_status ?? currentUser?.accountStatus ?? '').trim().toLowerCase();
-    const roles = Array.isArray(currentUser?.roles) ? currentUser.roles : [currentUser?.role, currentUser?.active_role];
-    const hasLegacyPremiumSignal = currentUser?.is_premium === true
-        || currentUser?.isPremium === true
-        || roles.some(role => String(role || '').trim().toLowerCase() === 'premium');
-    const shouldActivate = latestRequest?.status === 'approved' || hasLegacyPremiumSignal;
-    if (!shouldActivate || ['premium', 'active', 'approved'].includes(accountStatus)) return currentUser;
-    const now = new Date().toISOString();
-    let result = await client
-        .from('users')
-        .update({ account_status: 'premium', updated_at: now })
-        .eq('email', email)
-        .select('*')
-        .maybeSingle();
-    if (result.error && /updated_at|column|schema/i.test(String(result.error.message || ''))) {
-        result = await client
-            .from('users')
-            .update({ account_status: 'premium' })
-            .eq('email', email)
-            .select('*')
-            .maybeSingle();
-    }
-    if (result.error) {
-        console.warn('[VieGeo Premium] Chưa thể ghi lại trạng thái Premium vào users:', result.error.message || result.error);
-        currentUser.account_status = 'premium';
-        currentUser.accountStatus = 'premium';
-        return currentUser;
-    }
-    return { ...currentUser, ...(result.data || {}), account_status: 'premium', accountStatus: 'premium' };
+    // Premium is issued by the admin workflow on the server. A browser never promotes itself.
+    return currentUser;
 }
 
 function persistPremiumState(premium) {
     try {
-        if (window.VieGeoCurrentUser && typeof window.VieGeoCurrentUser === 'object') {
-            window.VieGeoCurrentUser.account_status = premium ? 'premium' : 'free';
-            window.VieGeoCurrentUser.accountStatus = premium ? 'premium' : 'free';
-            window.VieGeoCurrentUser.isPremium = premium;
-        }
-        const session = JSON.parse(localStorage.getItem('lm_session') || '{}');
-        session.accountStatus = premium ? 'premium' : 'free';
-        session.isPremium = premium;
-        localStorage.setItem('lm_session', JSON.stringify(session));
-
-        const state = JSON.parse(localStorage.getItem('VieGeo_state') || '{}');
-        state.accountStatus = premium ? 'premium' : 'free';
-        localStorage.setItem('VieGeo_state', JSON.stringify(state));
-        window.dispatchEvent(new CustomEvent('viegeo:premium-changed', { detail: { premium } }));
+        return window.VieGeoUserStore?.get?.()?.is_premium === true;
     } catch (error) {
-        console.warn('[VieGeo Premium] Không thể cập nhật trạng thái cục bộ:', error);
+        console.warn('[VieGeo Premium] Không thể đọc trạng thái chuẩn:', error);
+        return false;
     }
 }
 
 function renderPremiumState(currentUser, latestRequest) {
-    const active = isPremiumProfile(currentUser) || latestRequest?.status === 'approved';
+    const active = currentUser?.is_premium === true;
     const pending = !active && latestRequest?.status === 'pending';
     if (premiumStatus) {
         premiumStatus.textContent = active ? 'Tài khoản Premium' : 'Tài khoản Free';
@@ -483,7 +444,7 @@ function renderNotifications(notifications) {
 function renderProfileMetrics(currentUser, leaderboardRows, questionRows, submissionRows) {
     const email = String(currentUser?.email || '').trim().toLowerCase();
     const linkedRank = (Array.isArray(leaderboardRows) ? leaderboardRows : []).find(row =>
-        (currentUser?.id !== undefined && currentUser?.id !== null && String(row?.user_id ?? '') === String(currentUser.id))
+        (currentUser?.id !== undefined && currentUser?.id !== null && String(row?.id ?? row?.user_id ?? '') === String(currentUser.id))
         || String(row?.user_email || row?.email || '').trim().toLowerCase() === email
     );
     const score = Math.max(0, Number(currentUser?.score ?? linkedRank?.score ?? 0) || 0);
@@ -502,35 +463,26 @@ async function loadProfile() {
     try {
         const client = profileClient();
         if (!client) throw new Error('Supabase client chưa sẵn sàng.');
-        let authUser = null;
-        if (client.auth && typeof client.auth.getUser === 'function') {
-            const authResult = await client.auth.getUser();
-            authUser = authResult?.data?.user || null;
-        }
-        const email = String(authUser?.email || sessionUser.email || '').trim().toLowerCase();
-        if (!email) throw new Error('Không xác định được tài khoản hiện tại.');
-
-        let userResult = await client.from('users').select('*').eq('email', email).maybeSingle();
-        if (userResult.error && /email|column|schema/i.test(String(userResult.error.message || ''))) {
-            const compatibleResult = await client.from('users').select('*');
-            if (compatibleResult.error) throw compatibleResult.error;
-            userResult = {
-                data: (compatibleResult.data || []).find(row => String(row.email || row.user_email || '').trim().toLowerCase() === email) || null,
-                error: null
-            };
-        }
-        if (userResult.error) throw userResult.error;
-        let currentUser = userResult.data || {
-            email,
-            name: authUser?.user_metadata?.name || sessionUser.name || sessionUser.displayName || 'Người chơi',
-            phone: '', gender: '', role: 'user', score: 0, current_streak: 0
+        const canonicalProfile = await window.VieGeoUserStore?.ready?.({ refreshStreak: false });
+        if (!canonicalProfile?.id) throw new Error('Không xác định được tài khoản hiện tại.');
+        const email = canonicalProfile.email;
+        let currentUser = {
+            ...canonicalProfile,
+            name: canonicalProfile.display_name,
+            score: canonicalProfile.xp,
+            current_streak: canonicalProfile.streak
         };
-        const [leaderboardResult, questionRows, submissionRows, latestPremiumRequest] = await Promise.all([
-            client.from('leaderboard').select('*').limit(500),
+        const [leaderboardResult, questionRows, completionResult, latestPremiumRequest] = await Promise.all([
+            client.rpc('get_leaderboard', { p_limit: 500 }),
             fetchProfilePages('questions', 'province,island'),
-            fetchProfilePages('submissions', '*', email),
+            client.from('lesson_completions').select('*').order('completed_at', { ascending: false }),
             fetchLatestPremiumRequest(client, email)
         ]);
+        const submissionRows = (Array.isArray(completionResult.data) ? completionResult.data : []).map(row => ({
+            ...row,
+            created_at: row.completed_at,
+            details: { stars: row.stars, island_index: Number(String(row.lesson_key || '').split('-').pop()) || 0 }
+        }));
         currentUser = await reconcileApprovedPremium(client, currentUser, latestPremiumRequest, email);
         const leaderboardRows = leaderboardResult.error ? [] : (Array.isArray(leaderboardResult.data) ? leaderboardResult.data : []);
         
@@ -623,10 +575,13 @@ if (profileForm) {
             btn.disabled = true;
             btn.textContent = "Đang lưu...";
             
-            await db.collection('users').doc(sessionUser.email).update(updateData);
-            
-            // Cập nhật session nếu đổi tên
-            localStorage.setItem('lm_session', JSON.stringify({ ...sessionUser, name: newName, gender: newGender }));
+            await window.VieGeoUserStore.updateProfile({
+                displayName: newName,
+                age: window.VieGeoCurrentUser?.age ?? null,
+                schoolGrade: window.VieGeoCurrentUser?.school_grade ?? null,
+                gender: newGender,
+                phone: newPhone
+            });
             
             showProfileToast('Đã lưu thông tin thành công!', 'success');
             

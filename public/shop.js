@@ -184,36 +184,19 @@ function applyPurchasedItem(itemId){
     }
 }
 
-async function syncShopPurchaseToSupabase(gems,hearts){
+async function syncShopPurchaseToSupabase(cost){
     var client=window.supabaseClient||window.supabase||(window.VieGeoSupabase&&window.VieGeoSupabase.client);
-    var session={};
-    var authResult;
-    var email="";
     var response;
-
-    try{
-        session=JSON.parse(localStorage.getItem("lm_session")||"{}");
-    }catch(error){
-        session={};
-    }
 
     if(!client||typeof client.from!=="function"){
         throw new Error("Supabase chưa sẵn sàng.");
     }
-
-    if(client.auth&&typeof client.auth.getUser==="function"){
-        authResult=await client.auth.getUser();
-        email=String(authResult&&authResult.data&&authResult.data.user&&authResult.data.user.email||"").trim().toLowerCase();
-    }
-    email=email||String(session.email||"").trim().toLowerCase();
-    if(!email){
-        throw new Error("Không xác định được tài khoản đang đăng nhập.");
-    }
-
-    response=await client.from("users").update({gems:gems,hearts:hearts}).eq("email",email);
+    response=await client.rpc("spend_own_gems",{p_cost:Number(cost)||0});
     if(response.error){
         throw response.error;
     }
+    await window.VieGeoUserStore?.reload?.();
+    return response.data;
 }
 
 async function purchaseItem(itemId,price){
@@ -238,23 +221,24 @@ async function purchaseItem(itemId,price){
         return;
     }
 
-    if((Number(shopState.gems)||0)<price){
+    var canonicalUser=await window.VieGeoUserStore?.ready?.({refreshStreak:false});
+    if((Number(canonicalUser?.gems)||0)<price){
         showToast("Bạn không đủ Gem để mua vật phẩm này.","error");
         return;
     }
 
-    remainingGems=(Number(shopState.gems)||0)-price;
+    remainingGems=(Number(canonicalUser?.gems)||0)-price;
     maxHearts=Math.max(1,Number(shopState.maxHearts)||SHOP_MAX_HEARTS);
 
     try{
-        await syncShopPurchaseToSupabase(remainingGems,itemId==="infinite_hearts"?maxHearts:Number(shopState.hearts)||0);
+        await syncShopPurchaseToSupabase(price);
     }catch(error){
         console.error("Không thể đồng bộ giao dịch cửa hàng:",error);
         showToast("Không thể hoàn tất giao dịch lúc này. Vui lòng thử lại.","error");
         return;
     }
 
-    shopState.gems=remainingGems;
+    shopState.gems=Number(window.VieGeoUserStore?.get?.()?.gems)||remainingGems;
     applyPurchasedItem(itemId);
     saveShopState();
     updateShopHeader();

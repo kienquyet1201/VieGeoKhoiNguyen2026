@@ -3,10 +3,9 @@
     'use strict';
 
     const byId = (id) => document.getElementById(id);
-    const session = (() => {
-        try { return JSON.parse(localStorage.getItem('lm_session') || '{}'); }
-        catch { return {}; }
-    })();
+    let session = window.VieGeoUserStore?.get?.() || {};
+    window.VieGeoUserStore?.ready?.({ refreshStreak: false }).then((profile) => { session = profile || {}; })
+        .catch((error) => console.warn('[VieGeo] Không thể tải hồ sơ chuẩn cho taskbar:', error));
 
     function updateThemeIcon() {
         const button = byId('btnThemeToggle');
@@ -32,14 +31,6 @@
         activeGameState.selectedDifficulty = normalizedDifficulty;
         delete activeGameState.selectedGrade;
         if (typeof saveGameState === 'function') saveGameState(activeGameState);
-        if (session.email && typeof db !== 'undefined') {
-            db.collection('users').doc(session.email).set({
-                grade: null,
-                selectedGrade: null,
-                selectedDifficulty: normalizedDifficulty,
-                updatedAt: new Date().toISOString()
-            }, { merge: true }).catch(error => console.warn('Không thể đồng bộ mức độ:', error));
-        }
         if (typeof renderMap === 'function') renderMap();
     }
 
@@ -107,7 +98,6 @@
             await window.VieGeoLogout('/loginout');
             return;
         }
-        localStorage.removeItem('lm_session');
         localStorage.removeItem('VieGeo_state');
         localStorage.removeItem('pending_action');
         window.location.href = '/loginout';
