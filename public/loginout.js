@@ -124,7 +124,7 @@
 
             const { data: { session } } = await client().auth.getSession();
             const token = session?.access_token || '';
-            console.log('2. Token saved:', token);
+            console.log('2. Token saved:', Boolean(token));
             if (!token) throw new Error('SESSION_NOT_PERSISTED');
 
             // This awaits the Auth-triggered profile (or the profile RPC) before navigation.
@@ -188,7 +188,7 @@
 
             const { data: { session } } = await client().auth.getSession();
             const token = session?.access_token || '';
-            console.log('2. Token saved:', token);
+            console.log('2. Token saved:', Boolean(token));
             if (!token) {
                 setMessage(registerMessage, 'Tài khoản đã được tạo. Hãy xác nhận email rồi đăng nhập để bắt đầu.', true);
                 return;
