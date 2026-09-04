@@ -684,6 +684,13 @@
                 return null;
             }
             var ensure = await client.rpc('ensure_own_user_profile');
+            if (ensure.error?.code === 'PGRST202') {
+                // Older deployments expose this equivalent RPC while the Phase 1
+                // alias is being rolled out. It is safe because it derives the
+                // profile only from the active Supabase Auth session.
+                console.warn('[VieGeo UserStore] Dùng RPC hồ sơ tương thích cho database chưa nâng cấp.');
+                ensure = await client.rpc('viegeo_upsert_auth_profile');
+            }
             if (ensure.error) throw ensure.error;
             var profileResult = await client.from('users').select('*').eq('id', session.user.id).single();
             if (profileResult.error) throw profileResult.error;

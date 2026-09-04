@@ -135,7 +135,13 @@
             window.location.assign(roleDestination(profile));
         } catch (error) {
             console.error('[VieGeo Auth] Đăng nhập thất bại:', error);
-            setMessage(message, 'Sai tài khoản hoặc mật khẩu.');
+            const profileRpcMissing = error?.code === 'PGRST202';
+            setMessage(
+                message,
+                profileRpcMissing
+                    ? 'Tài khoản đã xác thực nhưng hồ sơ hệ thống chưa được khởi tạo. Vui lòng chạy bản vá database.'
+                    : 'Sai tài khoản hoặc mật khẩu.'
+            );
         } finally {
             setBusy(form, false);
         }
